@@ -63,7 +63,7 @@
     "@babel/preset-env": "7.29.7",
     "babel-loader": "9.2.1",
     "canvas": "3.2.3",
-    "copy-webpack-plugin": "6.4.1",
+    "copy-webpack-plugin": "13.0.1",
     "eslint": "9.39.4",
     "eslint-config-scratch": "14.1.30",
     "globals": "16.5.0",
@@ -75,7 +75,7 @@
     "tap": "21.7.4",
     "webpack": "5.107.2",
     "webpack-cli": "5.1.4",
-    "webpack-dev-server": "5.2.4"
+    "webpack-dev-server": "5.2.5"
   },
   "peerDependencies": {
     "scratch-render-fonts": "1.0.252"

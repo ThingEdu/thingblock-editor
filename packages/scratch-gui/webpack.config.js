@@ -138,8 +138,7 @@ const distConfig = baseConfig.clone()
             patterns: [
                 {
                     from: 'src/lib/libraries/*.json',
-                    to: 'libraries',
-                    flatten: true
+                    to: 'libraries/[name][ext]'
                 }
             ]
         })
