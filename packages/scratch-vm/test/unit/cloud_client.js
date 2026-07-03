@@ -186,3 +186,10 @@ test('deferred Client methods still throw until their milestone', t => {
     t.throws(() => c.closeMonitor(), /must implement closeMonitor/);
     t.end();
 });
+
+test('platform management is gracefully unsupported (base Client defaults)', async t => {
+    const c = new CloudClient(new Runtime());
+    t.equal(await c.getPlatformStatus({}), null, 'no platform manager: status is null, not a throw');
+    await t.rejects(c.installPlatform({}), /does not support installPlatform/);
+    t.end();
+});

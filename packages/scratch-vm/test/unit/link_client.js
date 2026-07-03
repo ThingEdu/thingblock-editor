@@ -728,6 +728,109 @@ test('cancel after a request settles is a no-op', async t => {
     t.end();
 });
 
+/**
+ * A minimal fetch stand-in: records requested URLs and replies with the queued responses in order.
+ * @param {Array.<{status?: number, body?: object}>} responses - the responses to serve.
+ * @returns {Function} the fake fetch, with a `calls` array of requested URLs.
+ */
+const fakeFetch = responses => {
+    const fn = url => {
+        fn.calls.push(url);
+        const {status = 200, body = {}} = responses.shift() || {};
+        return Promise.resolve({
+            ok: status >= 200 && status < 300,
+            status,
+            json: () => Promise.resolve(body)
+        });
+    };
+    fn.calls = [];
+    return fn;
+};
+
+test('getPlatformStatus fetches the platform by id from the helper HTTP API', async t => {
+    const fetch = fakeFetch([{
+        status: 200,
+        body: {id: 'esp32:esp32', name: 'esp32', installed: false, latestVersion: '3.0.5'}
+    }]);
+    const client = new LinkClient(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
+
+    const status = await client.getPlatformStatus(stubDevice([], {fqbn: 'esp32:esp32:esp32'}));
+
+    t.same(fetch.calls, ['http://test/api/platforms/esp32%3Aesp32'],
+        'the platform id is the first two fqbn segments, fetched from the ws-derived HTTP origin');
+    t.same(status, {id: 'esp32:esp32', name: 'esp32', installed: false, latestVersion: '3.0.5', known: true},
+        'the helper status is passed through, marked known');
+    t.end();
+});
+
+test('getPlatformStatus reports an unindexed platform as uninstalled and unknown', async t => {
+    const fetch = fakeFetch([{status: 404, body: {code: 'invalidRequest', message: 'unknown platform'}}]);
+    const client = new LinkClient(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
+
+    const status = await client.getPlatformStatus(stubDevice([], {fqbn: 'acme:chip:board'}));
+
+    t.same(status, {id: 'acme:chip', name: 'acme:chip', installed: false, known: false});
+    t.end();
+});
+
+test('getPlatformStatus throws on a helper failure', async t => {
+    const fetch = fakeFetch([{status: 502, body: {code: 'daemon', message: 'daemon gone'}}]);
+    const client = new LinkClient(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
+
+    await t.rejects(
+        client.getPlatformStatus(stubDevice([])),
+        /502/,
+        'a non-404 error status rejects'
+    );
+    t.end();
+});
+
+test('installPlatform sends an installPlatform envelope and streams progress to callbacks', async t => {
+    const {client, sockets} = makeClient();
+    const logs = [];
+    const progress = [];
+    const promise = client.installPlatform(stubDevice([], {fqbn: 'esp32:esp32:esp32'}), {
+        onLog: chunk => logs.push(chunk),
+        onProgress: p => progress.push(p)
+    });
+
+    sockets[0].emitOpen();
+    await flush();
+    const frame = sockets[0].sent[0];
+    t.equal(frame.type, 'installPlatform');
+    t.same(frame.payload, {platform: 'esp32:esp32'},
+        'the payload carries the platform id, not the full fqbn');
+
+    sockets[0].emitMessage({id: frame.id, type: 'progress', payload: {phase: 'esp32-arduino-libs', percent: 40}});
+    sockets[0].emitMessage({id: frame.id, type: 'log', payload: {chunk: 'downloaded\n'}});
+    sockets[0].emitMessage({id: frame.id, type: 'result', payload: {}});
+
+    await promise;
+    t.same(progress, [{phase: 'esp32-arduino-libs', percent: 40}], 'progress frames route to onProgress');
+    t.same(logs, ['downloaded\n'], 'log frames route to onLog');
+    t.end();
+});
+
+test('cancel aborts an in-flight platform install, rejecting it with code cancelled', async t => {
+    const {client, sockets} = makeClient();
+    const promise = client.installPlatform(stubDevice([], {fqbn: 'esp32:esp32:esp32'}));
+    sockets[0].emitOpen();
+    await flush();
+    const {id} = sockets[0].sent[0];
+
+    client.cancel();
+    const cancelFrame = sockets[0].sent[1];
+    t.equal(cancelFrame.type, 'cancel', 'sends a cancel frame');
+    t.equal(cancelFrame.id, id, 'cancel targets the in-flight install');
+
+    sockets[0].emitMessage({id, type: 'error', payload: {code: 'cancelled', message: 'cancelled'}});
+    await promise.then(
+        () => t.fail('should not resolve'),
+        err => t.equal(err.code, 'cancelled', 'the install promise rejects with the cancelled code')
+    );
+    t.end();
+});
+
 test('concurrent requests share one lazily-opened socket', t => {
     const {client, sockets} = makeClient();
     client.listBoards(stubDevice([]));

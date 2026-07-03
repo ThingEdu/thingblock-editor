@@ -154,6 +154,45 @@ module.exports = class LinkController {
     }
 
     /**
+     * The install status of the selected device's boards platform (core) via the active link client,
+     * or null when that client has no platform manager (the cloud/Web Serial backend).
+     * @param {string} deviceId - the selected device's id (from `getDeviceList()`).
+     * @returns {Promise<?import('../link/client/client').PlatformStatus>} the status, or null.
+     */
+    getPlatformStatus (deviceId) {
+        const device = this.vm.deviceRegistry.get(deviceId);
+        if (!device) {
+            return Promise.reject(new Error(`getPlatformStatus: no device registered for "${deviceId}"`));
+        }
+        return this.client.getPlatformStatus(device);
+    }
+
+    /**
+     * Download and install the selected device's boards platform via the active link client, streaming
+     * download/install progress to the optional callbacks.
+     * @param {string} deviceId - the selected device's id (from `getDeviceList()`).
+     * @param {import('../link/client/callbacks').StreamCallbacks} [callbacks] - optional
+     *   `{onLog, onProgress}` streaming callbacks.
+     * @returns {Promise<void>} resolves once the platform is installed and compilable.
+     */
+    installPlatform (deviceId, callbacks) {
+        const device = this.vm.deviceRegistry.get(deviceId);
+        if (!device) {
+            return Promise.reject(new Error(`installPlatform: no device registered for "${deviceId}"`));
+        }
+        return this.client.installPlatform(device, callbacks);
+    }
+
+    /**
+     * Abort the in-flight platform install on the active link client, if any. The running
+     * `installPlatform` promise rejects with a cancellation error. A no-op when nothing is running.
+     * @returns {void}
+     */
+    cancelPlatformInstall () {
+        this.client.cancel();
+    }
+
+    /**
      * Open the serial monitor on the connected board via the active link client. Inbound serial bytes
      * are emitted on the runtime as `SERIAL_DATA`. Requires a connected board.
      * @param {{baudRate: number}} options - the monitor baud rate.

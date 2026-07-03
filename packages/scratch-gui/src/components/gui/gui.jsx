@@ -14,6 +14,7 @@ import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
 import SerialLog from '../serial-log/serial-log.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
+import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
 import Loader from '../loader/loader.jsx';
 import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
@@ -501,6 +502,7 @@ const GUIComponent = props => {
                             style={{flex: `0 0 ${devicePanelWidth}px`}}
                         >
                             <DeviceControls />
+                            <PlatformInstallModal />
                             {selectedDeviceId && (
                                 <CodeView
                                     code={generatedCode}

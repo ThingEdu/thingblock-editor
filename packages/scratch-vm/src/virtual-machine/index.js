@@ -372,6 +372,18 @@ class VirtualMachine extends EventEmitter {
         return this._link.cancelUpload();
     }
 
+    getPlatformStatus (deviceId) {
+        return this._link.getPlatformStatus(deviceId);
+    }
+
+    installPlatform (deviceId, callbacks) {
+        return this._link.installPlatform(deviceId, callbacks);
+    }
+
+    cancelPlatformInstall () {
+        return this._link.cancelPlatformInstall();
+    }
+
     openMonitor (options) {
         return this._link.openMonitor(options);
     }

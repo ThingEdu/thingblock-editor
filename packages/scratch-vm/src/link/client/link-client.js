@@ -39,14 +39,22 @@ class LinkClient extends Client {
      * @param {object} [options] - injection points.
      * @param {string} [options.url] - the helper WebSocket URL (defaults to `ws://localhost:3030/`).
      * @param {Function} [options.WebSocket] - the WebSocket constructor (defaults to the global one).
+     * @param {Function} [options.fetch] - the fetch function for the helper's HTTP API (defaults to
+     *   the global one).
      */
-    constructor (runtime, {url = DEFAULT_URL, WebSocket = globalThis.WebSocket} = {}) {
+    constructor (runtime, {
+        url = DEFAULT_URL,
+        WebSocket = globalThis.WebSocket,
+        fetch = globalThis.fetch && globalThis.fetch.bind(globalThis)
+    } = {}) {
         super(runtime);
 
         /** @type {string} */
         this._url = url;
         /** @type {Function} */
         this._WebSocket = WebSocket;
+        /** @type {Function} */
+        this._fetch = fetch;
         /** @type {?WebSocket} the live socket; null until first request opens it. */
         this._ws = null;
         /** @type {?Promise<void>} memoized open handshake; null when the socket is closed. */
@@ -76,13 +84,73 @@ class LinkClient extends Client {
     }
 
     /**
-     * The helper's HTTP resource base, derived from the WebSocket URL: the same helper process serves
-     * the WS and the `/resources` static route on one listener, so the origin is the WS origin with
-     * the scheme swapped (ws→http / wss→https).
+     * The helper's HTTP origin, derived from the WebSocket URL: the same helper process serves the WS
+     * and its HTTP routes (`/resources`, `/api/...`) on one listener, so the origin is the WS origin
+     * with the scheme swapped (ws→http / wss→https).
+     * @returns {string} the HTTP origin, e.g. `http://localhost:3030`.
+     * @private
+     */
+    get _httpOrigin () {
+        return this._url.replace(/^ws/, 'http').replace(/\/$/, '');
+    }
+
+    /**
+     * The helper's HTTP resource base — its `/resources` static route.
      * @returns {string} the resource base, e.g. `http://localhost:3030/resources`.
      */
     get resourceOrigin () {
-        return `${this._url.replace(/^ws/, 'http').replace(/\/$/, '')}/resources`;
+        return `${this._httpOrigin}/resources`;
+    }
+
+    /**
+     * The install status of the device's boards platform, from the helper's `GET /api/platforms/{id}`.
+     * A one-shot read, so it goes over the helper's HTTP API rather than the WS envelope. A 404 means
+     * the helper's package indexes don't know the platform — reported as uninstalled-and-unknown
+     * rather than thrown, so the GUI can message it; other failures (helper down, daemon error) throw.
+     * @param {Device} device - the selected device.
+     * @returns {Promise<import('./client').PlatformStatus>} the platform status.
+     */
+    async getPlatformStatus (device) {
+        const id = LinkClient._platformId(device);
+        const response = await this._fetch(`${this._httpOrigin}/api/platforms/${encodeURIComponent(id)}`);
+        if (response.status === 404) {
+            log.warn(`LinkClient.getPlatformStatus: helper does not index platform ${id}`);
+            return {id, name: id, installed: false, known: false};
+        }
+        if (!response.ok) {
+            throw new Error(`LinkClient.getPlatformStatus: helper returned ${response.status} for ${id}`);
+        }
+        const status = await response.json();
+        return {...status, known: true};
+    }
+
+    /**
+     * Download and install the device's boards platform via the helper's `installPlatform`, streaming
+     * download/install progress and log to `callbacks` until the helper replies. Cancellable via
+     * {@link cancel}, like compile/flash. The helper reinitializes the arduino-cli instance before
+     * replying, so the platform is compilable as soon as this resolves.
+     * @param {Device} device - the selected device.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @returns {Promise<void>} resolves once the platform is installed.
+     */
+    async installPlatform (device, callbacks) {
+        const platform = LinkClient._platformId(device);
+        log.info(`LinkClient.installPlatform: requesting install of ${platform}`);
+        await this._request('installPlatform', {platform}, withDefaults(callbacks), true);
+        log.info(`LinkClient.installPlatform: ${platform} installed`);
+    }
+
+    /**
+     * The boards-platform (core) id for a device: the first two FQBN segments, `vendor:architecture`.
+     * Board-menu options (`_composeFqbn`) never affect it.
+     * @param {Device} device - the device.
+     * @returns {string} the platform id, e.g. `esp32:esp32`.
+     * @private
+     */
+    static _platformId (device) {
+        return device.fqbn.split(':')
+            .slice(0, 2)
+            .join(':');
     }
 
     /**

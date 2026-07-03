@@ -84,6 +84,31 @@ class Client {
     }
 
     /**
+     * The install status of the device's boards platform (its core, e.g. `esp32:esp32`), or null when
+     * this backend has no platform manager. Like `resourceOrigin` this is an optional capability, so
+     * the default is null rather than a throw: a backend that always compiles against ready-made
+     * toolchains (or not at all) simply reports no status, and the GUI skips its install flow.
+     * @param {Device} device - the selected device (supplies the fqbn the platform id derives from).
+     * @returns {Promise<?PlatformStatus>} the platform status, or null.
+     */
+    getPlatformStatus (device) {
+        return Promise.resolve(null);
+    }
+
+    /**
+     * Download and install the device's boards platform via the backend's board manager, streaming
+     * progress and log as it goes. Only meaningful for backends that report a status from
+     * `getPlatformStatus()`; the default rejects.
+     * @param {Device} device - the selected device (supplies the fqbn the platform id derives from).
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`
+     *   streaming callbacks.
+     * @returns {Promise<void>} resolves once the platform is installed and ready to compile against.
+     */
+    installPlatform (device, callbacks) {
+        return Promise.reject(new Error(`${this.constructor.name} does not support installPlatform()`));
+    }
+
+    /**
      * Build firmware for the device from generated source, streaming progress and build log as it goes.
      * @param {Device} device - the selected device (supplies fqbn and compile config).
      * @param {string} source - the generated Arduino C++ source.
@@ -152,6 +177,19 @@ class Client {
  * @typedef {object} ConnectionTarget
  * @property {string} id - stable identifier for this target (e.g. serial path or helper port id).
  * @property {string} name - human-readable label for the connect UI.
+ */
+
+/**
+ * Install status of a boards platform (a core such as `esp32:esp32`), as reported by
+ * `getPlatformStatus()`. `known` is false when the backend's package indexes don't list the platform
+ * at all (as opposed to listing it uninstalled).
+ * @typedef {object} PlatformStatus
+ * @property {string} id - the platform id, `vendor:architecture` (e.g. `esp32:esp32`).
+ * @property {string} name - human-readable platform name.
+ * @property {boolean} installed - whether the platform is installed and compilable.
+ * @property {boolean} known - whether the backend's indexes know the platform.
+ * @property {string} [installedVersion] - the installed version, when installed.
+ * @property {string} [latestVersion] - the latest installable version, when indexed.
  */
 
 /**
