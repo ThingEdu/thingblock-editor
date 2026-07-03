@@ -5,7 +5,6 @@ import {injectIntl, defineMessages} from 'react-intl';
 import intlShape from '../lib/intlShape.js';
 
 import decksLibraryContent from '../lib/libraries/decks/index.jsx';
-import tutorialTags from '../lib/libraries/tutorial-tags';
 
 import analytics from '../lib/analytics';
 import {PLATFORM} from '../lib/platform.js';
@@ -110,7 +109,6 @@ class TipsLibrary extends React.PureComponent {
                 filterable
                 data={decksLibraryThumbnailData}
                 id="tipsLibrary"
-                tags={tutorialTags}
                 title={this.props.intl.formatMessage(messages.tipsLibraryTitle)}
                 visible={this.props.visible}
                 onItemSelected={this.handleItemSelect}

@@ -24,19 +24,17 @@ describe('Working with shortcut to Tutorials library', () => {
 
     test('opens with the Tutorial Library showing', async () => {
         await loadUri(uri);
-        // make sure there is a tutorial visible that doesn't have a shortcut
-        await clickText('Make It Spin');
-        await findByXpath('//div[contains(@class, "step-video")]');
+        await clickText('Getting Started with ThingBot');
+        await findByXpath('//img[contains(@class, "step-image")]');
 
         // Make sure the background is still interactable
-        await clickText('Costumes');
         await clickText('Code');
     });
 
-    test('can open hidden tutorials', async () => {
-        await loadUri(`${uriPrefix}whatsnew`);
-        // should open the tutorial video immediately
-        await findByXpath('//div[contains(@class, "step-video")]');
+    test('can open a tutorial directly by urlId', async () => {
+        await loadUri(`${uriPrefix}thingbot-getting-started`);
+        // should open the tutorial card immediately
+        await findByXpath('//img[contains(@class, "step-image")]');
     });
     // @todo navigating cards, etc.
 });
