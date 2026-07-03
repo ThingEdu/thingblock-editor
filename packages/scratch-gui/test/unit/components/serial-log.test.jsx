@@ -26,6 +26,45 @@ describe('SerialLog', () => {
         expect(onClear).toHaveBeenCalledTimes(1);
     });
 
+    describe('auto-scroll', () => {
+        // jsdom has no layout, so the scrollable element's geometry must be stubbed.
+        const stubGeometry = (el, {scrollHeight, scrollTop, clientHeight}) => {
+            Object.defineProperty(el, 'scrollHeight', {value: scrollHeight, configurable: true});
+            Object.defineProperty(el, 'clientHeight', {value: clientHeight, configurable: true});
+            Object.defineProperty(el, 'scrollTop', {value: scrollTop, writable: true, configurable: true});
+        };
+
+        test('does not show the jump-to-latest button while pinned to the bottom', () => {
+            renderSerialLog({});
+
+            expect(screen.queryByRole('button', {name: 'Scroll to latest output'})).not.toBeInTheDocument();
+        });
+
+        test('shows the jump-to-latest button after the user scrolls up', () => {
+            renderSerialLog({});
+            const content = screen.getByText('first message').parentElement;
+            stubGeometry(content, {scrollHeight: 500, scrollTop: 0, clientHeight: 100});
+
+            fireEvent.scroll(content);
+
+            expect(screen.getByRole('button', {name: 'Scroll to latest output'})).toBeInTheDocument();
+        });
+
+        test('jumping to latest scrolls to the bottom and hides the button', () => {
+            const scrollTo = jest.fn();
+            Element.prototype.scrollTo = scrollTo;
+            renderSerialLog({});
+            const content = screen.getByText('first message').parentElement;
+            stubGeometry(content, {scrollHeight: 500, scrollTop: 0, clientHeight: 100});
+            fireEvent.scroll(content);
+
+            fireEvent.click(screen.getByRole('button', {name: 'Scroll to latest output'}));
+
+            expect(scrollTo).toHaveBeenCalledWith({top: 500, behavior: 'smooth'});
+            expect(screen.queryByRole('button', {name: 'Scroll to latest output'})).not.toBeInTheDocument();
+        });
+    });
+
     describe('prompt prompt', () => {
         test('shows prompt text and answer placeholder when prompt prop is set', () => {
             renderSerialLog({prompt: 'What is your name?'});

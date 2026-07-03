@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {useState, useCallback, useEffect, useLayoutEffect, useRef} from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
@@ -49,8 +49,22 @@ const messages = defineMessages({
         id: 'gui.serialLog.promptedInputPlaceholder',
         defaultMessage: 'Type your answer...',
         description: 'Placeholder text for the monitor input when the program is waiting for a response'
+    },
+    jumpToLatest: {
+        id: 'gui.serialLog.jumpToLatest',
+        defaultMessage: 'Latest',
+        description: 'Label for the button that scrolls the serial monitor back to the newest output'
+    },
+    jumpToLatestLabel: {
+        id: 'gui.serialLog.jumpToLatestLabel',
+        defaultMessage: 'Scroll to latest output',
+        description: 'Accessible label for the button that scrolls the serial monitor to the newest output'
     }
 });
+
+// Distance in pixels from the bottom within which the view still counts as "pinned" to the
+// newest line; absorbs sub-pixel scroll rounding.
+const BOTTOM_THRESHOLD = 16;
 
 const SerialLog = ({
     logs = [],
@@ -66,7 +80,13 @@ const SerialLog = ({
     const hasPrompt = prompt !== null && typeof prompt !== 'undefined';
     const [height, setHeight] = useState(DEFAULT_HEIGHT);
     const [inputValue, setInputValue] = useState('');
+    const [atBottom, setAtBottom] = useState(true);
     const inputRef = useRef(null);
+    const contentRef = useRef(null);
+    // Mirror of atBottom the pin effect can read without re-running when only atBottom changes
+    // (e.g. after a smooth jump), which would otherwise clobber the smooth scroll with a jump.
+    const atBottomRef = useRef(true);
+    atBottomRef.current = atBottom;
 
     // Clear and focus the input when a prompt arrives.
     useEffect(() => {
@@ -75,6 +95,25 @@ const SerialLog = ({
             if (inputRef.current) inputRef.current.focus();
         }
     }, [hasPrompt, prompt]);
+
+    // Pin the view to the newest line as logs stream in, unless the user has scrolled up.
+    // useLayoutEffect scrolls before paint so the newest line never visibly flickers.
+    useLayoutEffect(() => {
+        const el = contentRef.current;
+        if (el && atBottomRef.current) el.scrollTop = el.scrollHeight;
+    }, [logs]);
+
+    const handleScroll = useCallback(() => {
+        const el = contentRef.current;
+        if (!el) return;
+        setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_THRESHOLD);
+    }, []);
+
+    const handleJumpToLatest = useCallback(() => {
+        const el = contentRef.current;
+        if (el) el.scrollTo({top: el.scrollHeight, behavior: 'smooth'});
+        setAtBottom(true);
+    }, []);
 
     const handleResizeMouseDown = useCallback(e => {
         const startY = e.clientY;
@@ -168,15 +207,43 @@ const SerialLog = ({
                         </button>
                     </div>
                 </div>
-                <div className={styles.content}>
-                    {logs && logs.map((entry, i) => (
-                        <div
-                            key={i}
-                            className={styles.entry}
+                <div className={styles.contentWrap}>
+                    <div
+                        ref={contentRef}
+                        className={styles.content}
+                        onScroll={handleScroll}
+                    >
+                        {logs && logs.map((entry, i) => (
+                            <div
+                                key={i}
+                                className={styles.entry}
+                            >
+                                {entry.message}
+                            </div>
+                        ))}
+                    </div>
+                    {!atBottom && (
+                        <button
+                            className={styles.jumpButton}
+                            onClick={handleJumpToLatest}
+                            aria-label={intl.formatMessage(messages.jumpToLatestLabel)}
                         >
-                            {entry.message}
-                        </div>
-                    ))}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                            <FormattedMessage {...messages.jumpToLatest} />
+                        </button>
+                    )}
                 </div>
                 {hasPrompt && (
                     <div className={styles.promptBanner}>{prompt}</div>
