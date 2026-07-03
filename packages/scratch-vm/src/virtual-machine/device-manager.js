@@ -118,19 +118,17 @@ module.exports = class DeviceManager {
     }
 
     /**
-     * The HTTP origin the native helper serves resource packs from, derived from the active link
-     * client's WebSocket URL (same process, sibling route). Null unless the link client is active
-     * (cloud mode has no helper), so resource loading is a no-op outside link mode.
+     * The HTTP base the active link client serves resource packs from, or null when that backend
+     * serves none (cloud mode today), making resource loading a no-op there.
      *
-     * The helper roots its `/resources` static route at the pack directory itself (its `--resource-root`
-     * is the `thingblock-resource` dir), so the pack name is the root and does not appear in the path:
-     * `extensions/…` sits directly under `/resources`.
+     * The backend's `resourceOrigin` is rooted at the pack directory itself (the helper's
+     * `--resource-root` is the `thingblock-resource` dir), so the pack name is the root and does not
+     * appear in the path: `extensions/…` sits directly under it.
      * @returns {?string} the resource base, e.g. `http://localhost:3030/resources/extensions`.
      */
     getResourceOrigin () {
-        if (this.vm.client !== this.vm.linkClient) return null;
-        const httpBase = this.vm.linkClient.url.replace(/^ws/, 'http').replace(/\/$/, '');
-        return `${httpBase}/resources/extensions`;
+        const origin = this.vm.client.resourceOrigin;
+        return origin && `${origin}/extensions`;
     }
 
     /**

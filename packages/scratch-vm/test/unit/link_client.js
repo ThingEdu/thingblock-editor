@@ -6,12 +6,14 @@ const test = tap.test;
 /**
  * A minimal WebSocket stand-in: records sent frames and exposes hooks for the test to drive the
  * socket lifecycle (`open`, inbound `message`, `close`). Mirrors the `onopen`/`onmessage`/`onclose`
- * surface LinkClient wires.
+ * surface LinkClient wires, plus the standard `readyState`/`send` semantics: `send` throws while
+ * CONNECTING and silently discards once past OPEN, like the real one.
  */
 class FakeWebSocket {
     constructor (url) {
         this.url = url;
         this.sent = [];
+        this.readyState = FakeWebSocket.CONNECTING;
         this.onopen = null;
         this.onmessage = null;
         this.onerror = null;
@@ -19,11 +21,29 @@ class FakeWebSocket {
         FakeWebSocket.instances.push(this);
     }
 
+    static get CONNECTING () {
+        return 0;
+    }
+    static get OPEN () {
+        return 1;
+    }
+    static get CLOSING () {
+        return 2;
+    }
+    static get CLOSED () {
+        return 3;
+    }
+
     send (data) {
+        if (this.readyState === FakeWebSocket.CONNECTING) {
+            throw new Error('InvalidStateError: still in CONNECTING state');
+        }
+        if (this.readyState !== FakeWebSocket.OPEN) return;
         this.sent.push(JSON.parse(data));
     }
 
     emitOpen () {
+        this.readyState = FakeWebSocket.OPEN;
         this.onopen();
     }
 
@@ -32,6 +52,7 @@ class FakeWebSocket {
     }
 
     emitClose () {
+        this.readyState = FakeWebSocket.CLOSED;
         this.onclose();
     }
 }
@@ -630,6 +651,63 @@ test('cancel with nothing in flight is a no-op', t => {
     const {client, sockets} = makeClient();
     client.cancel();
     t.equal(sockets.length, 0, 'opens no socket and sends nothing');
+    t.end();
+});
+
+test('cancel while the socket is still connecting is dropped, not a crash', async t => {
+    const {client, sockets} = makeClient();
+    const promise = client.compile(stubDevice([]), 'src');
+    // The socket is lazily opening (CONNECTING); a real WebSocket's send() throws in this state.
+    t.doesNotThrow(() => client.cancel(), 'cancel on a connecting socket does not throw');
+
+    sockets[0].emitOpen();
+    await flush();
+    t.same(sockets[0].sent.map(f => f.type), ['compile'], 'no cancel frame was sent');
+
+    sockets[0].emitMessage({
+        id: sockets[0].sent[0].id,
+        type: 'result',
+        payload: {artifact: {format: 'bin', path: '/p'}}
+    });
+    await promise;
+    t.end();
+});
+
+test('writeMonitor on a closing socket is dropped, not sent', async t => {
+    const {client, sockets} = makeClient();
+    await openMonitorClient(client, sockets);
+
+    // The server initiated a close: readyState leaves OPEN before the close event fires.
+    sockets[0].readyState = FakeWebSocket.CLOSING;
+    t.doesNotThrow(() => client.writeMonitor('x'), 'writing during the close race does not throw');
+    t.equal(sockets[0].sent.filter(f => f.type === 'monitorWrite').length, 0, 'no write is sent');
+    t.end();
+});
+
+test('a monitorOpen that fails leaves no monitor routing behind', async t => {
+    const {client, sockets, runtime} = makeClient();
+    await connectClient(client, sockets, {id: '/dev/ttyACM0', name: 'Uno'});
+
+    const promise = client.openMonitor({baudRate: 115200});
+    await flush();
+    const openFrame = sockets[0].sent[1];
+    sockets[0].emitMessage({id: openFrame.id, type: 'error', payload: {code: 'grpc', message: 'busy'}});
+    await t.rejects(promise, /busy/, 'the failed open rejects');
+
+    // The routing must be gone: no write goes out and stray data on the dead id does not emit.
+    client.writeMonitor('x');
+    sockets[0].emitMessage({id: openFrame.id, type: 'monitorData', payload: {data: 'late'}});
+    t.equal(sockets[0].sent.filter(f => f.type === 'monitorWrite').length, 0, 'no write is sent');
+    t.same(runtime.serialData, [], 'no data routes on the failed monitor id');
+    t.end();
+});
+
+test('resourceOrigin derives the helper HTTP resource base from the WebSocket URL', t => {
+    const {client} = makeClient();
+    t.equal(client.resourceOrigin, 'http://test/resources', 'ws:// maps to http:// plus /resources');
+
+    const secure = new LinkClient(new FakeRuntime(), {url: 'wss://helper.local:3030/', WebSocket: FakeWebSocket});
+    t.equal(secure.resourceOrigin, 'https://helper.local:3030/resources', 'wss:// maps to https://');
     t.end();
 });
 

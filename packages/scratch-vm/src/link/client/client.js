@@ -73,12 +73,23 @@ class Client {
     }
 
     /**
+     * The backend's HTTP base URL for served resource packs (device/peripheral manifests, block
+     * definitions, vendored libs), or null when this backend serves none. Unlike the operations
+     * above this is an optional capability, so the default is null rather than a throw: a backend
+     * without resources simply contributes no packs.
+     * @returns {?string} the resource base URL (e.g. `http://localhost:3030/resources`), or null.
+     */
+    get resourceOrigin () {
+        return null;
+    }
+
+    /**
      * Build firmware for the device from generated source, streaming progress and build log as it goes.
      * @param {Device} device - the selected device (supplies fqbn and compile config).
      * @param {string} source - the generated Arduino C++ source.
      * @param {Array.<{pack: string, lib: string}>} [libs] - vendored-library references the backend
      *   resolves from its resource root (no lib bytes cross the link).
-     * @param {import('./callbacks').CompileCallbacks} [callbacks] - optional `{onLog, onProgress}`
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`
      *   streaming callbacks.
      * @returns {Promise<Artifact>} the compiled binary.
      */
@@ -90,7 +101,7 @@ class Client {
      * Flash a compiled artifact to the connected device, streaming the upload tool's output as it goes.
      * @param {Device} device - the selected device (supplies upload config).
      * @param {Artifact} artifact - the binary produced by `compile()`.
-     * @param {import('./callbacks').CompileCallbacks} [callbacks] - optional `{onLog, onProgress}`
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`
      *   streaming callbacks.
      * @returns {Promise<void>} resolves once flashed.
      */

@@ -105,7 +105,7 @@ module.exports = class LinkController {
      * passed as references the helper resolves from its resource root (no lib bytes cross the link).
      * @param {string} deviceId - the selected device's id (from `getDeviceList()`).
      * @param {string} source - the generated Arduino C++ source.
-     * @param {import('../link/client/callbacks').CompileCallbacks} [callbacks] - optional
+     * @param {import('../link/client/callbacks').StreamCallbacks} [callbacks] - optional
      *   `{onLog, onProgress}` streaming callbacks.
      * @returns {Promise<object>} the compiled artifact `{format, path}`.
      */
@@ -122,7 +122,7 @@ module.exports = class LinkController {
      * client, streaming the upload tool's output to the optional callbacks. Requires a connected board.
      * @param {string} deviceId - the selected device's id (from `getDeviceList()`).
      * @param {object} artifact - the artifact from `compile()` (`{format, path}`).
-     * @param {import('../link/client/callbacks').CompileCallbacks} [callbacks] - optional
+     * @param {import('../link/client/callbacks').StreamCallbacks} [callbacks] - optional
      *   `{onLog, onProgress}` streaming callbacks.
      * @returns {Promise<void>} resolves once the flash completes.
      */

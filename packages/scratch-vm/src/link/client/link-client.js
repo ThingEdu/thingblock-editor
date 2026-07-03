@@ -10,6 +10,14 @@ const log = require('../../util/log');
 const DEFAULT_URL = 'ws://localhost:3030/';
 
 /**
+ * The WebSocket OPEN readyState (spec-fixed value, identical across implementations). Fire-and-forget
+ * sends (`cancel`, `writeMonitor`) check it because `send()` throws while CONNECTING and silently
+ * discards after OPEN — both better surfaced as an explicit warn-and-drop.
+ * @type {number}
+ */
+const WS_OPEN = 1;
+
+/**
  * A {@link Client} backed by the native helper (thingblock-link) over a WebSocket. The helper is a
  * translating proxy in front of the arduino-cli daemon; this class speaks its minimal JSON envelope
  * — `{id, type, payload}` — and never sees an arduino-cli message type.
@@ -68,12 +76,13 @@ class LinkClient extends Client {
     }
 
     /**
-     * The helper's WebSocket URL. The VM derives the helper's HTTP resource origin from it (swap the
-     * scheme, append the resource path), since the same helper process serves both.
-     * @returns {string} the helper WebSocket URL.
+     * The helper's HTTP resource base, derived from the WebSocket URL: the same helper process serves
+     * the WS and the `/resources` static route on one listener, so the origin is the WS origin with
+     * the scheme swapped (ws→http / wss→https).
+     * @returns {string} the resource base, e.g. `http://localhost:3030/resources`.
      */
-    get url () {
-        return this._url;
+    get resourceOrigin () {
+        return `${this._url.replace(/^ws/, 'http').replace(/\/$/, '')}/resources`;
     }
 
     /**
@@ -137,7 +146,7 @@ class LinkClient extends Client {
      * @param {Device} device - the selected device (supplies fqbn and compile config).
      * @param {string} source - the generated Arduino C++ source.
      * @param {Array.<{pack: string, lib: string}>} [libs] - vendored-library references.
-     * @param {import('./callbacks').CompileCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
      * @returns {Promise<Artifact>} the compiled artifact `{format, path}`.
      */
     async compile (device, source, libs = [], callbacks) {
@@ -161,7 +170,7 @@ class LinkClient extends Client {
      * `log` chunks (routed to `onLog`) and no structured `progress`.
      * @param {Device} device - the selected device (supplies fqbn, compile options, and upload config).
      * @param {Artifact} artifact - the binary produced by `compile()` (`{format, path}`).
-     * @param {import('./callbacks').CompileCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
      * @returns {Promise<void>} resolves once the flash completes.
      */
     async flash (device, artifact, callbacks) {
@@ -200,7 +209,13 @@ class LinkClient extends Client {
         const id = String(this._nextId++);
         this._monitor = {id, opened: false};
         log.info(`LinkClient.openMonitor: opening serial monitor on ${port} at ${baudRate} baud`);
-        await this._request('monitorOpen', {port, baudRate}, undefined, false, id);
+        try {
+            await this._request('monitorOpen', {port, baudRate}, null, false, id);
+        } catch (err) {
+            // A failed open must leave no routing behind, whichever path rejected it.
+            if (this._monitor && this._monitor.id === id) this._monitor = null;
+            throw err;
+        }
     }
 
     /**
@@ -213,6 +228,10 @@ class LinkClient extends Client {
     writeMonitor (data) {
         if (!this._monitor) {
             log.warn('LinkClient.writeMonitor: no open monitor; dropping write');
+            return;
+        }
+        if (!this._ws || this._ws.readyState !== WS_OPEN) {
+            log.warn(`LinkClient.writeMonitor: socket not open (monitor ${this._monitor.id}); dropping write`);
             return;
         }
         this._ws.send(JSON.stringify({id: this._monitor.id, type: 'monitorWrite', payload: {data}}));
@@ -282,6 +301,13 @@ class LinkClient extends Client {
      */
     cancel () {
         if (this._cancellable.size === 0) return;
+        if (!this._ws || this._ws.readyState !== WS_OPEN) {
+            // Nothing reached the helper yet (or the socket is going away), so there is nothing to
+            // abort remotely; the pending request settles via the open failure or close path.
+            log.warn(`LinkClient.cancel: socket not open; dropping cancel of ` +
+                `request(s) ${[...this._cancellable].join(', ')}`);
+            return;
+        }
         for (const id of this._cancellable) {
             log.info(`LinkClient.cancel: requesting cancel of in-flight request ${id}`);
             this._ws.send(JSON.stringify({id, type: 'cancel', payload: {}}));
