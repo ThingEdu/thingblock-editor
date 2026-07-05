@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const MouseWheel = require('../../src/io/mouseWheel');
+const MouseWheel = require('../../src/io/hid/mouse-wheel');
 const Runtime = require('../../src/engine/runtime');
 
 test('spec', t => {

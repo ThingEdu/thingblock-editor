@@ -1,4 +1,4 @@
-const Cast = require('../util/cast');
+const Cast = require('../../util/cast');
 
 /**
  * Names used internally for keys used in scratch, also known as "scratch keys".

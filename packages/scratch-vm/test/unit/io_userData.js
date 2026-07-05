@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const UserData = require('../../src/io/userData');
+const UserData = require('../../src/io/input/user-data');
 
 test('spec', t => {
     const userData = new UserData();

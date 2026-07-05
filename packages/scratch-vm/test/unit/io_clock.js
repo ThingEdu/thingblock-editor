@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const Clock = require('../../src/io/clock');
+const Clock = require('../../src/io/input/clock');
 const Runtime = require('../../src/engine/runtime');
 
 test('spec', t => {

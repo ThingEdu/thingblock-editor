@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const Keyboard = require('../../src/io/keyboard');
+const Keyboard = require('../../src/io/hid/keyboard');
 const Runtime = require('../../src/engine/runtime');
 
 test('spec', t => {

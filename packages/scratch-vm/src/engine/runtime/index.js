@@ -23,11 +23,11 @@ const PeripheralHandler = require('./peripheral-handler');
 const fetchWithTimeout = require('../../util/fetch-with-timeout');
 
 // Virtual I/O devices.
-const Clock = require('../../io/clock');
-const Keyboard = require('../../io/keyboard');
-const Mouse = require('../../io/mouse');
-const MouseWheel = require('../../io/mouseWheel');
-const UserData = require('../../io/userData');
+const Clock = require('../../io/input/clock');
+const Keyboard = require('../../io/hid/keyboard');
+const Mouse = require('../../io/hid/mouse');
+const MouseWheel = require('../../io/hid/mouse-wheel');
+const UserData = require('../../io/input/user-data');
 
 const StringUtil = require('../../util/string-util');
 const uid = require('../../util/uid');

@@ -1,4 +1,4 @@
-const Timer = require('../util/timer');
+const Timer = require('../../util/timer');
 
 class Clock {
     constructor (runtime) {
