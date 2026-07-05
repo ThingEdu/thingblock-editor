@@ -403,14 +403,6 @@ class VirtualMachine extends EventEmitter {
     disconnectBoard () {
         return this._link.disconnectBoard();
     }
-
-    /**
-     * Allow VM consumer to configure the ScratchLink socket creator.
-     * @param {Function} factory The custom ScratchLink socket factory.
-     */
-    configureScratchLinkSocketFactory (factory) {
-        this.runtime.configureScratchLinkSocketFactory(factory);
-    }
 }
 
 for (const Mixin of [ProjectIoMixin, AssetsMixin, EngineMixin, WorkspaceMixin, TargetsMixin]) {

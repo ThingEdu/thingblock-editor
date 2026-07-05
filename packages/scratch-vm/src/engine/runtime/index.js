@@ -366,24 +366,6 @@ class Runtime extends EventEmitter {
     }
 
     /**
-     * Get a scratch link socket.
-     * @param {string} type Either BLE or BT
-     * @returns {ScratchLinkSocket} The scratch link socket.
-     */
-    getScratchLinkSocket (type) {
-        return this.peripherals.getScratchLinkSocket(type);
-    }
-
-    /**
-     * Configure how ScratchLink sockets are created. Factory must consume a "type" parameter
-     * either BT or BLE.
-     * @param {Function} factory The new factory for creating ScratchLink sockets.
-     */
-    configureScratchLinkSocketFactory (factory) {
-        this.peripherals.configureScratchLinkSocketFactory(factory);
-    }
-
-    /**
      * Register an extension that communicates with a hardware peripheral by id,
      * to have access to it and its peripheral functions in the future.
      * @param {string} extensionId - the id of the extension.

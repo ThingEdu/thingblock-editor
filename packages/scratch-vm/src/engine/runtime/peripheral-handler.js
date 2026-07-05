@@ -1,8 +1,7 @@
-const ScratchLinkWebSocket = require('../../util/scratch-link-websocket');
-
 /**
  * Owns the hardware-peripheral side of the runtime: the registry of extensions that manage a
- * peripheral connection, and the creation of Scratch Link sockets used to reach peripherals.
+ * peripheral connection. Extensions bring their own transport; this class only routes scan,
+ * connect, disconnect, and connection-state calls to the extension registered for an id.
  */
 class PeripheralHandler {
     constructor () {
@@ -11,80 +10,6 @@ class PeripheralHandler {
          * @type {Object.<string, object>}
          */
         this._extensions = {};
-
-        /**
-         * Optional override for the Scratch Link socket factory.
-         * @type {?Function}
-         */
-        this._linkSocketFactory = null;
-
-        this._initScratchLink();
-    }
-
-    /**
-     * One-time initialization for Scratch Link support.
-     * @private
-     */
-    _initScratchLink () {
-        // Check that we're actually in a real browser, not Node.js or JSDOM, and we have a valid-looking origin.
-        // note that `if (self?....)` will throw if `self` is undefined, so check for that first!
-        if (typeof self !== 'undefined' &&
-            typeof document !== 'undefined' &&
-            document.getElementById &&
-            self.origin &&
-            self.origin !== 'null' && // note this is a string comparison, not a null check
-            self.navigator &&
-            self.navigator.userAgent &&
-            !(
-                self.navigator.userAgent.includes('Node.js') ||
-                self.navigator.userAgent.includes('jsdom')
-            )
-        ) {
-            // Create a script tag for the Scratch Link browser extension, unless one already exists
-            const scriptElement = document.getElementById('scratch-link-extension-script');
-            if (!scriptElement) {
-                const script = document.createElement('script');
-                script.id = 'scratch-link-extension-script';
-                document.body.appendChild(script);
-
-                // Tell the browser extension to inject its script.
-                // If the extension isn't present or isn't active, this will do nothing.
-                self.postMessage('inject-scratch-link-script', self.origin);
-            }
-        }
-    }
-
-    /**
-     * Get a scratch link socket.
-     * @param {string} type Either BLE or BT
-     * @returns {ScratchLinkSocket} The scratch link socket.
-     */
-    getScratchLinkSocket (type) {
-        const factory = this._linkSocketFactory || this._defaultScratchLinkSocketFactory;
-        return factory(type);
-    }
-
-    /**
-     * Configure how ScratchLink sockets are created. Factory must consume a "type" parameter
-     * either BT or BLE.
-     * @param {Function} factory The new factory for creating ScratchLink sockets.
-     */
-    configureScratchLinkSocketFactory (factory) {
-        this._linkSocketFactory = factory;
-    }
-
-    /**
-     * The default scratch link socket creator, using websockets to the installed device manager.
-     * @param {string} type Either BLE or BT
-     * @returns {ScratchLinkSocket} The new scratch link socket (a WebSocket object)
-     * @private
-     */
-    _defaultScratchLinkSocketFactory (type) {
-        const Scratch = self.Scratch;
-        const ScratchLinkSafariSocket = Scratch && Scratch.ScratchLinkSafariSocket;
-        // detect this every time in case the user turns on the extension after loading the page
-        const useSafariSocket = ScratchLinkSafariSocket && ScratchLinkSafariSocket.isSafariHelperCompatible();
-        return useSafariSocket ? new ScratchLinkSafariSocket(type) : new ScratchLinkWebSocket(type);
     }
 
     /**

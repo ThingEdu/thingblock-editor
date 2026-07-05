@@ -13,15 +13,10 @@ const builtinExtensions = {
     // but serves as a reference for loading core blocks as extensions.
     coreExample: () => require('../blocks/scratch3_core_example'),
     // These are the non-core built-in extensions.
-    wedo2: () => require('../extensions/scratch3_wedo2'),
     music: () => require('../extensions/scratch3_music'),
-    microbit: () => require('../extensions/scratch3_microbit'),
     text2speech: () => require('../extensions/scratch3_text2speech'),
     translate: () => require('../extensions/scratch3_translate'),
-    ev3: () => require('../extensions/scratch3_ev3'),
     makeymakey: () => require('../extensions/scratch3_makeymakey'),
-    boost: () => require('../extensions/scratch3_boost'),
-    gdxfor: () => require('../extensions/scratch3_gdx_for'),
     thingbotTelemetrix: () => require('../extensions/scratch3_thingbot_telemetrix'),
     arduino: () => require('../extensions/common-board')
 };

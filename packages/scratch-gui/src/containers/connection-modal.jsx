@@ -71,7 +71,7 @@ class ConnectionModal extends React.Component {
     }
     handleError () {
         // Assume errors that come in during scanning phase are the result of not
-        // having scratch-link installed.
+        // having ThingBlock Link installed.
         if (this.state.phase === PHASES.scanning || this.state.phase === PHASES.unavailable) {
             this.setState({
                 phase: PHASES.unavailable

@@ -19,8 +19,7 @@ const WEB_SERIAL_TARGET_ID = 'web-serial';
 /**
  * A {@link Client} for the server-build (full-web) mode. It connects to and holds the board in the
  * browser via the Web Serial API — the API is a native browser global, not a bundled dependency, so
- * the logic lives in the VM (mirroring how `io/ble.js` holds BLE logic). This is the web-mode peer to
- * {@link LinkClient} (local helper).
+ * the logic lives in the VM. This is the web-mode peer to {@link LinkClient} (local helper).
  *
  * Wired incrementally, mirroring LinkClient: `listBoards`, `connect`, and `disconnect` are live today.
  * `compile` (server REST build), `flash` (esptool), and the serial monitor land in later milestones
