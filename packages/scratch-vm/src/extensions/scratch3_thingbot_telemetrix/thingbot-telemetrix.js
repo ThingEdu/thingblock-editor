@@ -46,8 +46,8 @@ class ThingBotTelemetrix {
 
     // ─── Transport wrappers ───
 
-    scan () {
-        return this._transport.scan();
+    scan (callbacks) {
+        return this._transport.scan(callbacks);
     }
 
     connect (device, onDisconnect) {

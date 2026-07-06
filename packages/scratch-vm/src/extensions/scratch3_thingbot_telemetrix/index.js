@@ -20,7 +20,11 @@ class ThingBotTelemetrixExtension {
     constructor (runtime) {
         this.runtime = runtime;
         this._telemetrix = new ThingBotTelemetrix(new BLETransport());
-        this._pendingDevice = null;
+        // Devices discovered by the in-progress scan, keyed by peripheralId, so
+        // connect() can resolve the one the user picked. Scanning streams these:
+        // Web Bluetooth yields one, the helper yields many.
+        this._devices = {};
+        this._stopScan = null;
 
         this.runtime.registerPeripheralExtension(EXTENSION_ID, this);
     }
@@ -28,44 +32,39 @@ class ThingBotTelemetrixExtension {
     // ─── Peripheral interface ───
 
     scan () {
-        this._pendingDevice = null;
+        this._devices = {};
 
-        if (!navigator.bluetooth) {
-            // eslint-disable-next-line no-console
-            console.error('[ThingBot] Web Bluetooth not available — needs HTTPS or localhost, Chrome/Edge only');
-            this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
-                message: 'Web Bluetooth not available. Use HTTPS or localhost in Chrome/Edge.'
-            });
-            return;
-        }
-
-        this._telemetrix.scan()
-            .then(device => {
-                this._pendingDevice = device;
-                this.runtime.emit(
-                    this.runtime.constructor.PERIPHERAL_LIST_UPDATE,
-                    {
-                        [device.id]: {
-                            name: device.name || 'ThingBot',
-                            peripheralId: device.id,
-                            rssi: 0
-                        }
-                    }
-                );
-            })
-            .catch(err => {
-                if (err.name !== 'NotFoundError') {
-                    // eslint-disable-next-line no-console
-                    console.error('[ThingBot] BLE scan error:', err);
-                    this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
-                        message: err.message
-                    });
+        this._stopScan = this._telemetrix.scan({
+            onDevice: device => {
+                this._devices[device.id] = device;
+                // The GUI expects the full list each update, not a delta.
+                const list = {};
+                for (const id of Object.keys(this._devices)) {
+                    const d = this._devices[id];
+                    list[id] = {
+                        name: d.name || 'ThingBot',
+                        peripheralId: id,
+                        rssi: d.rssi || 0
+                    };
                 }
-            });
+                this.runtime.emit(this.runtime.constructor.PERIPHERAL_LIST_UPDATE, list);
+            },
+            onError: err => {
+                // eslint-disable-next-line no-console
+                console.error('[ThingBot] BLE scan error:', err);
+                this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
+                    message: err.message
+                });
+            }
+        });
     }
 
-    connect () {
-        const device = this._pendingDevice;
+    connect (peripheralId) {
+        if (this._stopScan) {
+            this._stopScan();
+            this._stopScan = null;
+        }
+        const device = this._devices[peripheralId];
         if (!device) {
             this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
                 message: 'No device selected'
@@ -74,7 +73,7 @@ class ThingBotTelemetrixExtension {
         }
         this._telemetrix.connect(device, () => this._onDisconnect())
             .then(() => {
-                this._pendingDevice = null;
+                this._devices = {};
                 this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
             })
             .catch(err => {

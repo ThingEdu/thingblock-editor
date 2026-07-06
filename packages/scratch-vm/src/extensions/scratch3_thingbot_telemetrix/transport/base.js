@@ -4,7 +4,7 @@
  * Reports delivered to handlers are plain objects: {id: number, data: number[]}
  */
 class BaseTransport {
-    scan () {
+    scan (callbacks) { // eslint-disable-line no-unused-vars
         throw new Error('scan() not implemented');
     }
 

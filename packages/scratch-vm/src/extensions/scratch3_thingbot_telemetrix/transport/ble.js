@@ -1,4 +1,5 @@
 const BaseTransport = require('./base');
+const BleTransport = require('../../../io/transport/ble');
 
 const SERVICE_UUID = 'aa700001-8f6a-4e2c-b369-4060e0bb33aa';
 const RX_CHAR_UUID = 'aa700002-8f6a-4e2c-b369-4060e0bb33aa'; // browser → device
@@ -11,43 +12,33 @@ const HANDSHAKE_TIMEOUT = 5000;
 class BLETransport extends BaseTransport {
     constructor () {
         super();
+        this._ble = new BleTransport();
+        this._connection = null;
         this._rxChar = null;
-        this._txChar = null;
-        this._connected = false;
-        this._device = null;
         this._reportHandlers = [];
-        this._disconnectCallback = null;
-        this._onNotify = this._onNotify.bind(this);
-        this._onDeviceDisconnect = this._onDeviceDisconnect.bind(this);
+        this._unsubscribeData = null;
     }
 
-    scan () {
-        return navigator.bluetooth.requestDevice({
-            filters: [{services: [SERVICE_UUID]}]
-        });
+    scan (callbacks) {
+        return this._ble.scan({services: [SERVICE_UUID]}, callbacks);
     }
 
     async connect (device, onDisconnect) {
-        this._disconnectCallback = onDisconnect;
-        device.addEventListener('gattserverdisconnected', this._onDeviceDisconnect);
+        this._connection = await this._ble.connect(device, () => {
+            this._cleanup();
+            if (onDisconnect) onDisconnect();
+        });
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(SERVICE_UUID);
-
-        this._rxChar = await service.getCharacteristic(RX_CHAR_UUID);
-        this._txChar = await service.getCharacteristic(TX_CHAR_UUID);
-
-        await this._txChar.startNotifications();
-        this._txChar.addEventListener('characteristicvaluechanged', this._onNotify);
+        this._rxChar = await this._connection.getCharacteristic(SERVICE_UUID, RX_CHAR_UUID);
+        const txChar = await this._connection.getCharacteristic(SERVICE_UUID, TX_CHAR_UUID);
+        this._unsubscribeData = await txChar.subscribe(bytes => this._onData(bytes));
 
         await this._handshake();
-        this._connected = true;
-        this._device = device;
     }
 
     send (packet) {
         if (!this._rxChar) return;
-        this._rxChar.writeValueWithoutResponse(packet).catch(() => {});
+        this._rxChar.write(packet).catch(() => {});
     }
 
     onReport (handler) {
@@ -58,14 +49,14 @@ class BLETransport extends BaseTransport {
     }
 
     disconnect () {
-        if (this._device && this._device.gatt.connected) {
-            this._device.gatt.disconnect();
+        if (this._connection) {
+            this._connection.disconnect();
         }
         this._cleanup();
     }
 
     isConnected () {
-        return this._connected;
+        return !!this._connection && this._connection.isConnected();
     }
 
     _handshake () {
@@ -90,28 +81,25 @@ class BLETransport extends BaseTransport {
         });
     }
 
-    _onNotify (event) {
-        const dv = event.target.value;
-        if (dv.byteLength < 2) return;
-        const length = dv.getUint8(0);
-        const id = dv.getUint8(1);
+    // Deframe raw BLE bytes: [len, id, ...data]
+    _onData (bytes) {
+        if (bytes.length < 2) return;
+        const length = bytes[0];
+        const id = bytes[1];
         const data = [];
         for (let i = 2; i < 1 + length; i++) {
-            data.push(dv.getUint8(i));
+            data.push(bytes[i]);
         }
         this._reportHandlers.forEach(h => h({id, data}));
     }
 
-    _onDeviceDisconnect () {
-        this._cleanup();
-        if (this._disconnectCallback) this._disconnectCallback();
-    }
-
     _cleanup () {
-        this._connected = false;
+        this._connection = null;
         this._rxChar = null;
-        this._txChar = null;
-        this._device = null;
+        if (this._unsubscribeData) {
+            this._unsubscribeData();
+            this._unsubscribeData = null;
+        }
     }
 }
 
