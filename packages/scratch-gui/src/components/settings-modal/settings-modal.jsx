@@ -48,8 +48,14 @@ const messages = defineMessages({
     },
     cloudClientDescription: {
         id: 'gui.settingsModal.cloudClientDescription',
-        defaultMessage: 'Build in the cloud and flash from the browser over Web Serial.',
-        description: 'Description of the web/cloud device-link option'
+        defaultMessage: 'Not available yet — building and flashing from the browser over ' +
+            'Web Serial is coming in a future update.',
+        description: 'Description of the web/cloud device-link option, currently unavailable'
+    },
+    cloudClientBadge: {
+        id: 'gui.settingsModal.cloudClientBadge',
+        defaultMessage: 'Coming soon',
+        description: 'Badge shown next to a device-link option that is not yet available'
     }
 });
 
@@ -57,7 +63,12 @@ const SettingsModal = ({intl, isRtl, linkMode, onRequestClose, onSetLinkMode}) =
     const handleSelect = mode => () => onSetLinkMode(mode);
     const options = [
         {mode: LINK_MODE, label: messages.linkClient, description: messages.linkClientDescription},
-        {mode: CLOUD_MODE, label: messages.cloudClient, description: messages.cloudClientDescription}
+        {
+            mode: CLOUD_MODE,
+            label: messages.cloudClient,
+            description: messages.cloudClientDescription,
+            disabled: true
+        }
     ];
     return (
         <Modal
@@ -84,11 +95,13 @@ const SettingsModal = ({intl, isRtl, linkMode, onRequestClose, onSetLinkMode}) =
                             <label
                                 key={option.mode}
                                 className={classNames(styles.option, {
-                                    [styles.optionSelected]: linkMode === option.mode
+                                    [styles.optionSelected]: linkMode === option.mode,
+                                    [styles.optionDisabled]: option.disabled
                                 })}
                             >
                                 <input
                                     className={styles.optionRadio}
+                                    disabled={option.disabled}
                                     name="linkMode"
                                     type="radio"
                                     value={option.mode}
@@ -98,6 +111,11 @@ const SettingsModal = ({intl, isRtl, linkMode, onRequestClose, onSetLinkMode}) =
                                 <span className={styles.optionText}>
                                     <span className={styles.optionLabel}>
                                         <FormattedMessage {...option.label} />
+                                        {option.disabled && (
+                                            <span className={styles.optionBadge}>
+                                                <FormattedMessage {...messages.cloudClientBadge} />
+                                            </span>
+                                        )}
                                     </span>
                                     <span className={styles.optionDescription}>
                                         <FormattedMessage {...option.description} />
