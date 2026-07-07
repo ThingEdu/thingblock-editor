@@ -114,7 +114,11 @@ export default [
             />
         ),
         featured: true,
-        useAutoScan: true,
+        // Helper backend streams multiple named devices, so let the user pick from a
+        // list (ScanningStep). The Web Bluetooth backend has no such list — its native
+        // OS chooser is treated as an external list and forces AutoScanningStep instead;
+        // see the connection-modal container's dynamic useExternalPeripheralList.
+        useAutoScan: false,
         connectionSmallIconURL: thingbotTelemetrixInsetIconURL,
         connectingMessage: (
             <FormattedMessage

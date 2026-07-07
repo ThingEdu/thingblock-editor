@@ -106,6 +106,14 @@ class ConnectionModal extends React.Component {
         });
     }
     render () {
+        // Web Bluetooth's device selection is the browser's native OS chooser, not an
+        // app-drawn list — the same "external list" case as Android CDM. Detect it with
+        // the exact signal the VM's backend selection uses (navigator.bluetooth), so the
+        // modal forces AutoScanningStep for Web Bluetooth and falls back to the in-app
+        // ScanningStep list only for the helper backend. See scratch-vm's
+        // io/transport/ble/web-bluetooth.js isSupported().
+        const webBluetoothAvailable = typeof navigator !== 'undefined' && !!navigator.bluetooth;
+        const useExternalPeripheralList = this.props.useExternalPeripheralList || webBluetoothAvailable;
         return (
             <ConnectionModalComponent
                 connectingMessage={this.state.extension && this.state.extension.connectingMessage}
@@ -119,7 +127,7 @@ class ConnectionModal extends React.Component {
                 scanBeginMessage={this.state.extension && this.state.extension.scanBeginMessage}
                 title={this.props.extensionId}
                 useAutoScan={this.state.extension && this.state.extension.useAutoScan}
-                useExternalPeripheralList={this.props.useExternalPeripheralList}
+                useExternalPeripheralList={useExternalPeripheralList}
                 vm={this.props.vm}
                 onCancel={this.handleCancel}
                 onConnected={this.handleConnected}
