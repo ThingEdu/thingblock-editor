@@ -10,7 +10,7 @@ const manifest: DeviceManifest = {
   kind: 'device',
   name: 'VIA Banh Mi',
   fqbn: 'esp32:esp32:esp32',
-  icon: './icon.svg',
+  icon: './viaBanhMi.png',
   description: {
     id: 'device.viaBanhMi.description',
     default:
