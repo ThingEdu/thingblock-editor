@@ -119,7 +119,7 @@ module.exports = class DeviceManager {
 
     /**
      * The HTTP base the active link client serves resource packs from, or null when that backend
-     * serves none (cloud mode today), making resource loading a no-op there.
+     * serves none, making resource loading a no-op there.
      *
      * The backend's `resourceOrigin` is rooted at the pack directory itself (the helper's
      * `--resource-root` is the `thingblock-resource` dir), so the pack name is the root and does not
