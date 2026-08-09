@@ -29,15 +29,25 @@ describe('DHT blocks', () => {
 })
 
 describe('DHT generator', () => {
-  it('emits the include and one DHT object keyed by instance number', () => {
+  it('emits the include, one DHT object keyed by instance number, and its begin() call', () => {
     const gen = makeGenerator()
     registerGenerators(gen as unknown as ArduinoGenerator, Order)
 
     const code = gen.forBlock.dht_init(makeBlock({ NO: '1' }, { PIN: '2', MODEL: '22' }))
 
-    expect(code).toBe('')
+    expect(code).toBe('dht_1.begin();\n')
     expect(gen.includes.get('dht')).toBe('#include <DHT.h>')
     expect(gen.globals.get('dht_1')).toBe('DHT dht_1(2, 22);')
+  })
+
+  it('begins the same instance the globals declare', () => {
+    const gen = makeGenerator()
+    registerGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.dht_init(makeBlock({ NO: '3' }, { PIN: '4', MODEL: '11' }))
+
+    expect(gen.globals.get('dht_3')).toBe('DHT dht_3(4, 11);')
+    expect(code).toBe('dht_3.begin();\n')
   })
 
   it('falls back to instance 1, pin 2, and dht11 when inputs are empty', () => {

@@ -19,7 +19,8 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     generator.includes.set('dht', '#include <DHT.h>')
     generator.globals.set(`dht_${no}`, `DHT dht_${no}(${pin}, ${model});`)
 
-    return ''
+    // begin() derives the bit-decoding timeout from the CPU clock; without it every read times out.
+    return `dht_${no}.begin();\n`
   }
 
   generator.forBlock.dht_readHumidity = (block) => {
