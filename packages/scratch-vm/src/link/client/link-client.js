@@ -41,16 +41,21 @@ class LinkClient extends Client {
      * @param {Function} [options.WebSocket] - the WebSocket constructor (defaults to the global one).
      * @param {Function} [options.fetch] - the fetch function for the helper's HTTP API (defaults to
      *   the global one).
+     * @param {string} [options.resourceBase] - a host-supplied base URL for the resource packs,
+     *   overriding the helper-served default (see {@link resourceOrigin}).
      */
     constructor (runtime, {
         url = DEFAULT_URL,
         WebSocket = globalThis.WebSocket,
-        fetch = globalThis.fetch && globalThis.fetch.bind(globalThis)
+        fetch = globalThis.fetch && globalThis.fetch.bind(globalThis),
+        resourceBase = null
     } = {}) {
         super(runtime);
 
         /** @type {string} */
         this._url = url;
+        /** @type {?string} */
+        this._resourceBase = resourceBase;
         /** @type {Function} */
         this._WebSocket = WebSocket;
         /** @type {Function} */
@@ -95,11 +100,16 @@ class LinkClient extends Client {
     }
 
     /**
-     * The helper's HTTP resource base — its `/resources` static route.
+     * The base URL the resource packs are served from: the host's `resourceBase` when it supplied one,
+     * otherwise the helper's own `/resources` static route.
+     *
+     * A host that ships the packs itself passes its own base so the editor never crosses origins to
+     * read them — which the desktop shell does, because Chromium gates cross-address-space requests
+     * into loopback and would otherwise block the pack fetches.
      * @returns {string} the resource base, e.g. `http://localhost:3030/resources`.
      */
     get resourceOrigin () {
-        return `${this._httpOrigin}/resources`;
+        return this._resourceBase || `${this._httpOrigin}/resources`;
     }
 
     /**

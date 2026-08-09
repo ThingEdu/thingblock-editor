@@ -711,6 +711,16 @@ test('resourceOrigin derives the helper HTTP resource base from the WebSocket UR
     t.end();
 });
 
+test('resourceOrigin prefers a host-supplied resourceBase over the helper route', t => {
+    const hosted = new LinkClient(new FakeRuntime(), {
+        url: 'ws://test/',
+        WebSocket: FakeWebSocket,
+        resourceBase: '/thingblock-resource'
+    });
+    t.equal(hosted.resourceOrigin, '/thingblock-resource', 'the host base wins');
+    t.end();
+});
+
 test('cancel after a request settles is a no-op', async t => {
     const {client, sockets} = makeClient();
     const promise = client.compile(stubDevice([]), 'src');

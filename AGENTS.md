@@ -146,6 +146,11 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   (`serialization/sb3.js`/`sb2.js`) persists blocks/variables/sounds plus the firmware `board` field and drops
   all costume/render/motion fields, so saved projects no longer round-trip through stock Scratch. Sounds and
   `soundBank` are retained because the `scratch3_music` and `scratch3_text2speech` extensions still consume them.
+- Resource packs are served by the link helper (`LinkClient.resourceOrigin` → its `/resources` route) unless the
+  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.js`
+  and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —
+  the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
+  loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
 
 ## npm workflow
 

@@ -26,9 +26,15 @@ module.exports = class LinkController {
         /**
          * Device link to the native helper (thingblock-link), over a WebSocket. Constructing it is
          * free — the socket opens lazily on first use.
+         *
+         * `__THINGBLOCK_RESOURCE_BASE__` is the seam for a host that serves the resource packs itself
+         * (the desktop shell, which bundles them alongside the editor); unset everywhere else, leaving
+         * the helper's own `/resources` route in play.
          * @type {LinkClient}
          */
-        this.linkClient = new LinkClient(this.vm.runtime);
+        this.linkClient = new LinkClient(this.vm.runtime, {
+            resourceBase: globalThis.__THINGBLOCK_RESOURCE_BASE__ || null
+        });
 
         /**
          * Device link for the server-build (full-web) mode, over Web Serial. The web-mode peer to
