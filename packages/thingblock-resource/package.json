@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-resource",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scratch-plane resource pack: device manifests, peripheral blocks, Arduino codegen, and vendored library sources, built to importable ESM and served by the local helper.",
   "keywords": [
     "arduino",
