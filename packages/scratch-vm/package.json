@@ -70,6 +70,7 @@
     "canvas-toBlob": "1.0.0",
     "decode-html": "2.0.0",
     "diff-match-patch": "1.0.5",
+    "esptool-js": "^0.6.0",
     "format-message": "6.2.4",
     "htmlparser2": "3.10.1",
     "immutable": "3.8.3",
@@ -85,6 +86,7 @@
   "devDependencies": {
     "@babel/core": "7.29.7",
     "@babel/preset-env": "7.29.7",
+    "@scratch/scratch-blocks": "14.1.0",
     "adm-zip": "0.4.11",
     "babel-loader": "9.2.1",
     "callsite": "1.0.0",
@@ -99,7 +101,6 @@
     "in-publish": "2.0.1",
     "js-md5": "0.7.3",
     "pngjs": "3.4.0",
-    "@scratch/scratch-blocks": "14.1.0",
     "scratch-l10n": "6.1.85",
     "scratch-render-fonts": "1.0.252",
     "scratch-webpack-configuration": "3.1.2",

@@ -21,6 +21,13 @@ export function registerValues(gen: ArduinoGenerator): void {
   gen.forBlock.math_whole_number = number
   gen.forBlock.math_positive_number = number
 
+  // The picker's field is a CSS `#rrggbb` string; Arduino code wants the same 24-bit value as a
+  // hex literal, which is what the LED-strip libraries take.
+  gen.forBlock.colour_picker = (block) => {
+    const raw = String(block.getFieldValue('COLOUR') ?? '#000000')
+    return [`0x${raw.replace(/^#/, '')}`, Order.ATOMIC]
+  }
+
   gen.forBlock.text = (block, generator) => [
     generator.quote_(String(block.getFieldValue('TEXT') ?? '')),
     Order.ATOMIC,

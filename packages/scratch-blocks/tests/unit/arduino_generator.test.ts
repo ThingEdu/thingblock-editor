@@ -22,6 +22,7 @@ const BLOCK_TYPES = [
   'operator_add',
   'operator_multiply',
   'math_number',
+  'colour_picker',
   'arduino_digitalWrite',
   'data_setvariableto',
   'sensing_timer',
@@ -140,6 +141,13 @@ beforeEach(() => {
     {
       type: 'sensing_timer',
       message0: 'timer',
+      output: null,
+    },
+    {
+      type: 'colour_picker',
+      message0: '%1',
+      // A text field stands in for `field_colour_slider`: the generator only reads COLOUR by name.
+      args0: [{ type: 'field_input', name: 'COLOUR', text: '#000000' }],
       output: null,
     },
   ])
@@ -341,6 +349,17 @@ describe('ArduinoGenerator', () => {
     connectNext(loop, wait)
 
     expect(arduinoGenerator.workspaceToCode(workspace)).toContain('millis() / 1000.0')
+  })
+
+  it('maps the colour picker to a hex literal', () => {
+    const loop = workspace.newBlock('event_whenarduinoloop')
+    const wait = workspace.newBlock('control_wait')
+    const colour = workspace.newBlock('colour_picker')
+    colour.setFieldValue('#ff8800', 'COLOUR')
+    connectValue(wait, 'DURATION', colour)
+    connectNext(loop, wait)
+
+    expect(arduinoGenerator.workspaceToCode(workspace)).toContain('0xff8800')
   })
 
   it('emits a procedures_definition as a file-scope function', () => {
