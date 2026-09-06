@@ -269,6 +269,14 @@ class LinkClient extends Client {
     }
 
     /**
+     * The helper implements `flashFirmware()`, so the GUI may offer the board menu's restore item.
+     * @returns {boolean} always true.
+     */
+    get canFlashFirmware () {
+        return true;
+    }
+
+    /**
      * Flash a firmware image the device's pack ships, by resource-root-relative reference. The
      * counterpart to `flash()`, which uploads an artifact the helper just compiled; here nothing is
      * compiled and the helper resolves the image itself.
