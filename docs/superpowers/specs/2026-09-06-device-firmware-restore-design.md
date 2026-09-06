@@ -119,7 +119,7 @@ terminal reply are shared.
 `_resourceDevicePacks` already holds each device's manifest and served base. Add:
 
 - a getter listing the selected device's firmware entries (id + localized name), for the GUI;
-- `flashDeviceFirmware(id)`, which sends `upload` with `importFile` set to the entry's path,
+- `flashDeviceFirmware(id)`, which sends `flashFirmware` (§3) with the entry's `{pack, file}`,
   resolved relative to the pack, and surfaces the same events an ordinary upload does.
 
 ### 5. GUI — `scratch-gui`
@@ -135,8 +135,8 @@ A board-menu item, enabled only when the selected board declares firmware. On cl
 | Layer | Test |
 | - | - |
 | `thingblock-resource` | manifest carries the firmware entry; the image is copied into `dist` |
-| `thingblock-link` | `upload` with `importFile` flashes the named image; a traversal path is refused |
-| `scratch-vm` | `flashDeviceFirmware` sends `upload` with the resolved `importFile` |
+| `thingblock-link` | `flashFirmware` flashes the named image; a traversal path is refused |
+| `scratch-vm` | `flashDeviceFirmware` sends `flashFirmware` with the resolved `{pack, file}` |
 | `scratch-gui` | the item is disabled without a declaring board; confirm gates the flash |
 | hardware | flash from the menu on a real ThingBot, then scan and connect with the Telemetrix extension |
 

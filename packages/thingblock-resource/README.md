@@ -34,7 +34,7 @@ src/
     peripheral/servo/                   worked peripheral: manifest, blocks, generator, toolbox, libs/
     peripheral/ps2/                     PS2 controller blocks, codegen, icon, and vendored PS2X library
     peripheral/thingbot-core/           ThingBot's hidden peripheral: its blocks, generator, toolbox
-    devices/thingbot/                   worked device: ESP32-C3 manifest + icon
+    devices/thingbot/                   worked device: ESP32-C3 manifest, icon, and live-mode firmware/
 ```
 
 The build wraps everything under one served root that preserves that layout:
@@ -45,10 +45,10 @@ dist/thingblock-resource/extensions/
   peripheral/servo/{manifest,blocks,generator,toolbox}.js + libs/Servo/…
   peripheral/ps2/{manifest,blocks,generator,toolbox}.js + icon.png + libs/PS2X_lib/…
   peripheral/thingbot-core/{manifest,blocks,generator,toolbox}.js
-  devices/thingbot/manifest.js + icon.svg
+  devices/thingbot/manifest.js + icon.svg + firmware/telemetrix-ble/…
 ```
 
-Modules compile to ESM; `libs/` and icons are copied verbatim. The build also writes
+Modules compile to ESM; `libs/`, `firmware/`, and icons are copied verbatim. The build also writes
 `extensions/index.json` (`{packs:[{kind,path}]}`) because the helper's `ServeDir` serves files, not
 directory listings — the editor reads it to learn which packs exist before importing them. The helper
 roots its `/resources` route at this pack directory, so the served path is
@@ -71,7 +71,13 @@ THINGBLOCK_RESOURCE_ROOT=<helper-resource-dir> \
 2. For a device, add the board `icon.svg`. Device-exclusive blocks live in their own peripheral pack
    published with `hidden: true` (so the peripheral library skips it); the device activates it — and any
    reusable peripherals — by listing their ids in `extensions: ['<id>', …]` (the device's own pack
-   first, since order is the palette order).
+   first, since order is the palette order). A device may also declare `firmware`: prebuilt images
+   (app image plus any siblings the upload tool needs by name, e.g. bootloader/partition table for an
+   ESP32 build) under `firmware/<id>/`, offered in the editor's board menu as a way to restore the
+   board's factory/live-mode firmware after a compiled program has overwritten it. Each entry is
+   `{id, path, name, source?}` — `path` names the app image relative to the pack root, `name` is the
+   localized menu label, and `source` records the firmware repo commit the image was built from.
+   Optional: a device that declares none gets no restore menu item.
 3. For a peripheral, add only the surfaces it needs: `blocks.ts`, `generator.ts`, and `toolbox.ts` are
    optional; vendored `libs/` sources can exist without a toolbox. A non-hidden peripheral may add an
    `icon` (`./icon.svg`) and a localized `description` for its library card. Set `hidden: true` for a
