@@ -132,6 +132,57 @@ module.exports = class DeviceManager {
     }
 
     /**
+     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field, derived from
+     * the stored served base by stripping the resource origin the base was built from
+     * ({@link getResourceOrigin}'s own origin, one level up — the resource root itself, without the
+     * `/extensions` suffix `getResourceOrigin` appends). e.g. base
+     * `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
+     * `extensions/devices/thingbot`.
+     * @param {string} deviceId - the device whose pack path to derive.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packPath (deviceId) {
+        const {base} = this._resourceDevicePacks.get(deviceId);
+        const origin = this.vm.client.resourceOrigin;
+        return base.slice(origin.length + 1);
+    }
+
+    /**
+     * The firmware images the selected device's pack ships, for the GUI's restore menu. Empty when
+     * the device declares none, which is how a pack opts out of the feature.
+     * @param {string} deviceId - the device to list images for.
+     * @returns {Array.<object>} `{id, name}` entries, names resolved to the active locale.
+     */
+    getDeviceFirmware (deviceId) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        if (!pack) return [];
+        return (pack.manifest.firmware || []).map(fw => ({
+            id: fw.id,
+            name: formatMessage(fw.name)
+        }));
+    }
+
+    /**
+     * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
+     * board. The pack path is expressed relative to the resource root because the browser cannot
+     * name a path on the helper's filesystem.
+     * @param {string} deviceId - the selected device.
+     * @param {string} firmwareId - the image's manifest id.
+     * @param {object} [callbacks] - log/progress callbacks, as `upload` takes.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    async flashDeviceFirmware (deviceId, firmwareId, callbacks) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        const firmware = pack && (pack.manifest.firmware || []).find(fw => fw.id === firmwareId);
+        if (!firmware) {
+            throw new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`);
+        }
+        const device = this.deviceRegistry.get(deviceId);
+        await this.vm.client.flashFirmware(device, this._packPath(deviceId), firmware.path, callbacks);
+    }
+
+    /**
      * Register a helper-served device manifest as a selectable device. Idempotent: a manifest whose id
      * is already registered is skipped, so a repeated load never throws on a duplicate id.
      * @param {object} manifest - the pack's device manifest (its `manifest.js` default export).
