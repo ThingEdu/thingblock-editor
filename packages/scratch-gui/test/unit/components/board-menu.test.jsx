@@ -115,4 +115,38 @@ describe('BoardMenu', () => {
 
         expect(screen.getByText(/erase|replace/i)).toBeInTheDocument();
     });
+
+    // Cloud mode's client has no working flashFirmware (CloudClient throws "not available in cloud
+    // mode"); a learner must never be offered a rescue that is doomed to reject.
+    test('hides the firmware item when the active client cannot flash firmware', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        const originalClient = vm.client;
+        vm.client = {canFlashFirmware: false};
+
+        try {
+            renderBoardMenu(selectedDevice.deviceId);
+            fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+
+            expect(screen.queryByText('Live mode (Telemetrix over BLE)')).not.toBeInTheDocument();
+        } finally {
+            vm.client = originalClient;
+        }
+    });
+
+    test('a rejection with no error object does not throw inside the catch', async () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        jest.spyOn(vm, 'flashDeviceFirmware').mockRejectedValue(null);
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+        fireEvent.click(screen.getByRole('button', {name: /flash|confirm/i}));
+
+        // The guard must not throw inside the catch; the status still moves to 'error'.
+        await waitFor(() => expect(screen.getByText(/didn.t finish/i)).toBeInTheDocument());
+    });
 });

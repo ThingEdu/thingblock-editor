@@ -24,12 +24,6 @@ const selectBoardMessage = defineMessage({
 });
 
 const messages = defineMessages({
-    restoreFirmwareItem: {
-        id: 'gui.menuBar.restoreFirmwareItem',
-        defaultMessage: '{firmwareName}',
-        description: 'Menu item offering to restore one of the board\'s live-mode firmware images; ' +
-            'the name is already localized by the device pack'
-    },
     confirmWarning: {
         id: 'gui.menuBar.restoreFirmwareConfirm',
         defaultMessage: 'Restoring "{firmwareName}" erases and replaces whatever program is ' +
@@ -73,9 +67,11 @@ const BoardMenu = ({
     const label = selectedDevice ?
         intl.formatMessage(boardMenuMessage, {boardName: selectedDevice.name}) :
         intl.formatMessage(selectBoardMessage);
-    // Firmware is only offered for a selected, connected-capable device; a board pack that declares
-    // none opts out of the restore feature entirely.
-    const firmwareList = selectedDevice ? vm.getDeviceFirmware(selectedDeviceId) : [];
+    // Firmware is only offered for a selected device whose pack declares images, on a client that can
+    // actually flash one — cloud mode's client cannot, and a learner must never be offered a rescue
+    // that is doomed to reject.
+    const canFlashFirmware = Boolean(vm.client && vm.client.canFlashFirmware);
+    const firmwareList = selectedDevice && canFlashFirmware ? vm.getDeviceFirmware(selectedDeviceId) : [];
 
     const handleSelectFirmware = useCallback(event => {
         const firmware = firmwareList.find(candidate => candidate.id === event.currentTarget.dataset.firmwareId);
@@ -111,7 +107,7 @@ const BoardMenu = ({
                     return;
                 }
                 setFlashStatus('error');
-                setFlashError(error.message);
+                setFlashError(error && error.message);
             });
     }, [pendingFirmware, selectedDeviceId, vm]);
 
@@ -140,7 +136,7 @@ const BoardMenu = ({
                     disabled={flashStatus === 'uploading'}
                     onClick={handleSelectFirmware}
                 >
-                    {intl.formatMessage(messages.restoreFirmwareItem, {firmwareName: firmware.name})}
+                    {firmware.name}
                 </button>
             ))}
             {pendingFirmware && (
