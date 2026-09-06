@@ -593,11 +593,15 @@ test('flashDeviceFirmware sends flashFirmware with the pack-relative image', asy
     const vm = new VirtualMachine();
     vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
+    // `LinkClient._request(type, payload, callbacks, cancellable)` is the single send path every
+    // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket.
     const sent = [];
-    vm.client.request = (type, payload) => {
+    vm.client._request = (type, payload) => {
         sent.push({type, payload});
         return Promise.resolve({});
     };
+    vm.client.isConnected = true;
+    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
 
     await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
 
@@ -622,7 +626,9 @@ test('flashDeviceFirmware rejects an unknown image id', async t => {
 });
 ```
 
-Adjust the `vm.client.request` seam to whatever `LinkClient` actually exposes — read `link-client.js` around its `flash()` method first and stub at the same level.
+`flash()` reads `this._connectedTarget.id` for the port and throws when `isConnected` is false, so the
+stub sets both. Keep `flashFirmware` on that same guard: flashing without a connected port must fail
+the same way an upload does.
 
 - [ ] **Step 2: Run them to verify they fail**
 
@@ -673,7 +679,36 @@ Expected: FAIL — `vm.getDeviceFirmware is not a function`.
 
 - [ ] **Step 4: Add the client sender**
 
-In `link-client.js`, beside `flash()`, add `flashFirmware(device, pack, file, callbacks)` that sends the `flashFirmware` request with `fqbn`, `port`, `uploadSpeed` taken exactly the way `flash()` takes them, and streams the same log callbacks.
+In `link-client.js`, beside `flash()`:
+
+```js
+    /**
+     * Flash a firmware image the device's pack ships, by resource-root-relative reference. The
+     * counterpart to `flash()`, which uploads an artifact the helper just compiled; here nothing is
+     * compiled and the helper resolves the image itself.
+     * @param {Device} device - the selected device (supplies fqbn and upload config).
+     * @param {string} pack - pack directory under the resource root, e.g. `extensions/devices/thingbot`.
+     * @param {string} file - app image within the pack.
+     * @param {object} [callbacks] - log/progress callbacks, as `flash()` takes.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    async flashFirmware (device, pack, file, callbacks) {
+        if (!this.isConnected) {
+            throw new Error('LinkClient.flashFirmware: no connected port; call connect() first');
+        }
+        const fqbn = this._composeFqbn(device);
+        const {uploadSpeed = 0} = device.getUploadConfig();
+        const port = this._connectedTarget.id;
+        log.info(`LinkClient.flashFirmware: flashing ${pack}/${file} to ${port} for ${fqbn}`);
+        await this._request(
+            'flashFirmware',
+            {fqbn, port, uploadSpeed, pack, file},
+            withDefaults(callbacks),
+            true
+        );
+        log.info('LinkClient.flashFirmware: flash complete');
+    }
+```
 
 - [ ] **Step 5: Add the VM delegators**
 
@@ -708,37 +743,69 @@ git commit -m "feat(scratch-vm): flash a device's pack-shipped firmware"
 **Repo:** `thingblock-editor`
 
 **Files:**
-- Modify: `packages/scratch-gui/src/components/menu-bar/board-menu.jsx`
-- Modify: its container (read the file's imports to find it)
-- Test: alongside the existing menu-bar tests in `packages/scratch-gui/test/unit/`
+- Modify: `packages/scratch-gui/src/components/menu-bar/board-menu.jsx` (props at line 49; it is
+  `connect`-ed in the same file, mapping `state.scratchGui.board.selectedDeviceId` and
+  `state.scratchGui.vm`)
+- Test: `packages/scratch-gui/test/unit/components/board-menu.test.jsx` (exists; extend it)
 
 **Interfaces:**
 - Consumes: `vm.getDeviceFirmware`, `vm.flashDeviceFirmware` from Task 6.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing tests**
 
-Follow the existing menu-bar unit tests for mounting and Redux wiring. Assert three things:
+Append to the existing `test/unit/components/board-menu.test.jsx`, reusing its `renderBoardMenu`
+helper and its `vm` instance:
 
 ```jsx
-test('the firmware item is absent when the board declares none', () => {
-    // vm.getDeviceFirmware returns [] -> no menu item rendered
-});
+    test('offers no firmware item when the board declares none', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([]);
+        renderBoardMenu(selectedDevice.deviceId);
 
-test('the firmware item does not flash until the dialog is confirmed', () => {
-    // click item -> vm.flashDeviceFirmware not called; confirm -> called once with the image id
-});
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
 
-test('the confirm dialog says the board program will be erased', () => {
-    // the dialog's message mentions erasing, via the message id, not a hardcoded English string
-});
+        expect(screen.queryByText(/live mode/i)).not.toBeInTheDocument();
+    });
+
+    test('does not flash until the dialog is confirmed', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        const flash = jest.spyOn(vm, 'flashDeviceFirmware').mockResolvedValue();
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+
+        // Opening the dialog must not flash: this erases whatever the learner uploaded.
+        expect(flash).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole('button', {name: /flash|confirm/i}));
+
+        expect(flash).toHaveBeenCalledTimes(1);
+        expect(flash).toHaveBeenCalledWith(selectedDevice.deviceId, 'telemetrix-ble', expect.anything());
+    });
+
+    test('the confirm dialog warns that the board program is erased', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+
+        expect(screen.getByText(/erase|replace/i)).toBeInTheDocument();
+    });
 ```
+
+Add `afterEach(() => jest.restoreAllMocks())` to the describe block if it has none.
 
 The second test is the one that matters: flashing without confirmation destroys a learner's work.
 
 - [ ] **Step 2: Run them to verify they fail**
 
-Run: `npx jest test/unit/<the menu-bar test file>` from `packages/scratch-gui`
-Expected: FAIL — no such menu item.
+Run: `npx jest test/unit/components/board-menu.test.jsx` from `packages/scratch-gui`
+Expected: FAIL — `vm.getDeviceFirmware is not a function` (Task 6 supplies it), then no such menu item.
 
 - [ ] **Step 3: Render the item**
 
