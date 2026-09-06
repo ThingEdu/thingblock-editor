@@ -1,3 +1,43 @@
 .label {
     margin: 0 .25rem;
 }
+
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.confirmDialog {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1;
+    width: max-content;
+    max-width: 18rem;
+    margin-top: .25rem;
+    padding: .75rem;
+    border-radius: .5rem;
+    background: #fff;
+    color: #575e75;
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .3);
+}
+
+.confirmMessage {
+    margin: 0 0 .5rem;
+}
+
+.confirmActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+
+.flashStatus {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 0 .5rem;
+    color: #fff;
+}
