@@ -132,20 +132,33 @@ module.exports = class DeviceManager {
     }
 
     /**
-     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field, derived from
-     * the stored served base by stripping the resource origin the base was built from
-     * ({@link getResourceOrigin}'s own origin, one level up — the resource root itself, without the
-     * `/extensions` suffix `getResourceOrigin` appends). e.g. base
-     * `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
+     * Strip a pack's resource origin from its served base, yielding the path relative to the resource
+     * root that the helper's `{pack, lib}` (compile) and `{pack, file}` (flashFirmware) references
+     * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
      * `extensions/devices/thingbot`.
+     *
+     * Derived from `this.vm.client.resourceOrigin` rather than a literal `/resources/` split: the
+     * latter only holds for the helper's own route and yields `undefined` under a
+     * `__THINGBLOCK_RESOURCE_BASE__`-style host override, whose base need not contain `/resources/`
+     * at all (see `LinkClient#resourceOrigin`).
+     * @param {string} base - a pack's served base URL.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packRelativePath (base) {
+        const origin = this.vm.client.resourceOrigin;
+        return base.slice(origin.length + 1);
+    }
+
+    /**
+     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field.
      * @param {string} deviceId - the device whose pack path to derive.
      * @returns {string} the pack directory, relative to the helper's resource root.
      * @private
      */
     _packPath (deviceId) {
         const {base} = this._resourceDevicePacks.get(deviceId);
-        const origin = this.vm.client.resourceOrigin;
-        return base.slice(origin.length + 1);
+        return this._packRelativePath(base);
     }
 
     /**
@@ -487,9 +500,9 @@ module.exports = class DeviceManager {
                 )).default;
             }
             // Compile lib references the helper resolves from its resource root: `pack` is this pack's
-            // directory relative to that root (the path after `/resources/` in its served base), `lib`
-            // the manifest's lib directory within the pack. The helper joins root/pack/lib in place.
-            const packPath = base.split('/resources/')[1];
+            // directory relative to that root, `lib` the manifest's lib directory within the pack. The
+            // helper joins root/pack/lib in place.
+            const packPath = this._packRelativePath(base);
             const libs = (manifest.libs || []).map(lib => ({pack: packPath, lib: lib.path}));
             if (this._scratchBlocks && manifest.blocks) {
                 const {registerBlocks} = await this._importPackModule(
