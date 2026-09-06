@@ -99,6 +99,25 @@ A board-menu item, enabled only when the selected board declares firmware. On cl
 
 The hardware check is the one that matters: it closes the loop the feature exists for.
 
+## Open decision: which image ships
+
+The only BLE Telemetrix build known to work on ThingBot hardware is a **locally patched** one. The
+released build drives `pinMode(8, OUTPUT)` + `digitalWrite(8, LOW)` in `setup()`, and GPIO8 is the
+board's I2C SDA — so the PCA9685 is held low through NimBLE init and **every LED, buzzer, servo and
+motor is dead over BLE**, while the handshake and DHT keep working and make the firmware look fine.
+The fix (dropping those three lines) is verified on hardware but sits in an unmerged PR on the
+firmware repo.
+
+Shipping the patched image inside a public pack means shipping a binary that does not correspond to
+any released firmware tag. The alternatives:
+
+1. Land the firmware fix upstream first, tag a release, ship that image. Correct, but blocks this
+   feature on another repo's review.
+2. Ship the patched image now with its `source` commit recorded, and replace it when the fix lands.
+   Unblocks the feature; the traceability field carries the debt.
+
+This needs a decision before the pack payload step; every other step can proceed without it.
+
 ## Accepted risks
 
 - **The image is versioned with the resource pack, not the firmware repo.** Rebuilding the firmware
