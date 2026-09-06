@@ -34,6 +34,7 @@ const manifest: DeviceManifest = {
         default: 'Live mode (Telemetrix over BLE)',
         description: 'Name of the ThingBot live-mode firmware image',
       },
+      source: 'd4d72de',
     },
   ],
 }
