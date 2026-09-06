@@ -194,4 +194,12 @@ describe('manifests', () => {
     const motor = thingbotToolbox.contents.find((item) => item.type === 'thingBotC3_setMotor')
     expect(motor?.inputs).toEqual({ SPEED: { type: 'math_number', fields: { NUM: 0 } } })
   })
+
+  it('thingbot declares the live-mode firmware image its pack ships', () => {
+    const firmware = thingbotManifest.firmware ?? []
+    expect(firmware).toHaveLength(1)
+    expect(firmware[0].id).toBe('telemetrix-ble')
+    expect(firmware[0].path).toBe('firmware/telemetrix-ble/telemetrix-ble.ino.bin')
+    expect(firmware[0].name.id).toBe('device.thingbot.firmware.telemetrixBle')
+  })
 })

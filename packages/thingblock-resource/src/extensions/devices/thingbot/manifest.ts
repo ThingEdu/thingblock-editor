@@ -25,6 +25,17 @@ const manifest: DeviceManifest = {
     pnpid: ['USB\\VID_303A&PID_1001', 'USB\\VID_10C4&PID_EA60', 'USB\\VID_1A86&PID_7523'],
     uploadSpeed: 921600,
   },
+  firmware: [
+    {
+      id: 'telemetrix-ble',
+      path: 'firmware/telemetrix-ble/telemetrix-ble.ino.bin',
+      name: {
+        id: 'device.thingbot.firmware.telemetrixBle',
+        default: 'Live mode (Telemetrix over BLE)',
+        description: 'Name of the ThingBot live-mode firmware image',
+      },
+    },
+  ],
 }
 
 export default manifest
