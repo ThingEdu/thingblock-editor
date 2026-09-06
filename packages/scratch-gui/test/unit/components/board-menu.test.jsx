@@ -2,11 +2,23 @@ import React from 'react';
 import {IntlProvider} from 'react-intl';
 import {Provider} from 'react-redux';
 import configureStore from 'redux-mock-store';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import VM from '@scratch/scratch-vm';
 
 import BoardMenu from '../../../src/components/menu-bar/board-menu.jsx';
+
+// BoardMenu reuses UploadModal for flash progress, which renders through the connected
+// containers/modal.jsx (needs state.locales.isRtl and pushes browser history). Mock it the same way
+// upload-modal.test.jsx does, since this suite's store only models scratchGui state.
+jest.mock('../../../src/containers/modal.jsx', () => {
+    const MockModal = ({children, contentLabel}) => (
+        <div aria-label={contentLabel}>
+            {children}
+        </div>
+    );
+    return MockModal;
+});
 
 describe('BoardMenu', () => {
     const vm = new VM();
@@ -69,7 +81,7 @@ describe('BoardMenu', () => {
         expect(screen.queryByText(/live mode/i)).not.toBeInTheDocument();
     });
 
-    test('does not flash until the dialog is confirmed', () => {
+    test('does not flash until the dialog is confirmed', async () => {
         jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
             {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
         ]);
@@ -86,6 +98,10 @@ describe('BoardMenu', () => {
 
         expect(flash).toHaveBeenCalledTimes(1);
         expect(flash).toHaveBeenCalledWith(selectedDevice.deviceId, 'telemetrix-ble', expect.anything());
+
+        // Let the mocked flash's resolved promise settle inside `act` so its state update (the
+        // upload modal moving to "done") doesn't leak into a later test as a console warning.
+        await waitFor(() => expect(screen.getByText(/ready to go/i)).toBeInTheDocument());
     });
 
     test('the confirm dialog warns that the board program is erased', () => {

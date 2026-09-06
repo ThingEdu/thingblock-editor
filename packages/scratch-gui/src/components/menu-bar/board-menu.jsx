@@ -6,6 +6,7 @@ import {connect} from 'react-redux';
 import VM from '@scratch/scratch-vm';
 
 import {openBoardLibrary} from '../../reducers/modals';
+import UploadModal from '../device-controls/upload-modal.jsx';
 
 import menuBarStyles from './menu-bar.css';
 import styles from './board-menu.css';
@@ -44,26 +45,6 @@ const messages = defineMessages({
         id: 'gui.menuBar.restoreFirmwareConfirmCancel',
         defaultMessage: 'Cancel',
         description: 'Button that backs out of restoring live-mode firmware'
-    },
-    flashing: {
-        id: 'gui.menuBar.restoreFirmwareFlashing',
-        defaultMessage: 'Restoring live mode…',
-        description: 'Status shown while the board\'s live-mode firmware is being flashed'
-    },
-    flashDone: {
-        id: 'gui.menuBar.restoreFirmwareDone',
-        defaultMessage: 'Live mode restored.',
-        description: 'Status shown after the board\'s live-mode firmware finished flashing'
-    },
-    flashError: {
-        id: 'gui.menuBar.restoreFirmwareError',
-        defaultMessage: 'Couldn’t restore live mode: {error}',
-        description: 'Status shown when restoring live-mode firmware fails'
-    },
-    dismiss: {
-        id: 'gui.menuBar.restoreFirmwareDismiss',
-        defaultMessage: 'OK',
-        description: 'Button that dismisses the live-mode firmware restore result'
     }
 });
 
@@ -76,8 +57,10 @@ const BoardMenu = ({
     // The firmware entry awaiting confirmation, or null; flashing must not start before this is
     // confirmed, since it erases whatever program is on the board.
     const [pendingFirmware, setPendingFirmware] = useState(null);
-    // null | 'flashing' | 'done' | 'error'.
+    // null while idle; otherwise one of the states UploadModal understands. A firmware flash has no
+    // compile phase, so this only ever moves through 'uploading' -> 'done' | 'cancelled' | 'error'.
     const [flashStatus, setFlashStatus] = useState(null);
+    const [flashLogs, setFlashLogs] = useState([]);
     const [flashError, setFlashError] = useState(null);
     const unmountedRef = useRef(false);
     useEffect(() => () => {
@@ -106,23 +89,38 @@ const BoardMenu = ({
     const handleConfirmFlash = useCallback(() => {
         const firmware = pendingFirmware;
         setPendingFirmware(null);
-        setFlashStatus('flashing');
+        setFlashStatus('uploading');
+        setFlashLogs([]);
         setFlashError(null);
-        vm.flashDeviceFirmware(selectedDeviceId, firmware.id, {})
+        vm.flashDeviceFirmware(selectedDeviceId, firmware.id, {
+            onLog: chunk => {
+                if (unmountedRef.current) return;
+                setFlashLogs(logs => [...logs, chunk]);
+            }
+        })
             .then(() => {
                 if (unmountedRef.current) return;
                 setFlashStatus('done');
             })
             .catch(error => {
                 if (unmountedRef.current) return;
+                // A user cancel rejects with the helper's 'cancelled' code, same as an ordinary
+                // upload; show it as cancelled rather than a failure.
+                if (error && error.code === 'cancelled') {
+                    setFlashStatus('cancelled');
+                    return;
+                }
                 setFlashStatus('error');
                 setFlashError(error.message);
             });
     }, [pendingFirmware, selectedDeviceId, vm]);
 
-    const handleDismissFlashStatus = useCallback(() => {
+    const handleCancelFlash = useCallback(() => {
+        vm.cancelUpload();
+    }, [vm]);
+
+    const handleCloseFlash = useCallback(() => {
         setFlashStatus(null);
-        setFlashError(null);
     }, []);
 
     return (
@@ -139,7 +137,7 @@ const BoardMenu = ({
                     key={firmware.id}
                     data-firmware-id={firmware.id}
                     className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
-                    disabled={flashStatus === 'flashing'}
+                    disabled={flashStatus === 'uploading'}
                     onClick={handleSelectFirmware}
                 >
                     {intl.formatMessage(messages.restoreFirmwareItem, {firmwareName: firmware.name})}
@@ -167,30 +165,13 @@ const BoardMenu = ({
                 </div>
             )}
             {flashStatus && (
-                <div
-                    className={styles.flashStatus}
-                    role="status"
-                >
-                    {flashStatus === 'flashing' && (
-                        <span>{intl.formatMessage(messages.flashing)}</span>
-                    )}
-                    {flashStatus === 'done' && (
-                        <React.Fragment>
-                            <span>{intl.formatMessage(messages.flashDone)}</span>
-                            <button onClick={handleDismissFlashStatus}>
-                                {intl.formatMessage(messages.dismiss)}
-                            </button>
-                        </React.Fragment>
-                    )}
-                    {flashStatus === 'error' && (
-                        <React.Fragment>
-                            <span>{intl.formatMessage(messages.flashError, {error: flashError})}</span>
-                            <button onClick={handleDismissFlashStatus}>
-                                {intl.formatMessage(messages.dismiss)}
-                            </button>
-                        </React.Fragment>
-                    )}
-                </div>
+                <UploadModal
+                    status={flashStatus}
+                    logs={flashLogs}
+                    error={flashError}
+                    onCancel={handleCancelFlash}
+                    onClose={handleCloseFlash}
+                />
             )}
         </div>
     );
