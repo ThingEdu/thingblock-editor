@@ -33,6 +33,9 @@ const thingbotBlockIds = [
   'thingBotC3_setMotor',
   'thingBotC3_setServo',
   'thingBotC3_buzzer',
+  'thingBotC3_setTempo',
+  'thingBotC3_playNote',
+  'thingBotC3_rest',
   'thingBotC3_setLed',
   'thingBotC3_switch',
   'thingBotC3_initPS2',
@@ -107,6 +110,66 @@ describe('thingbot-core peripheral', () => {
     expect(gen.forBlock.thingBotC3_setLed(makeBlock({ BRIGHTNESS: '50' }, { LED: 'LED_2' }))).toBe(
       'pwm.setPin(LED_2, mapToPulse(50));\n',
     )
+  })
+
+  it('emits the music helpers and a note at its concert-pitch frequency', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_playNote(makeBlock({ BEATS: '1' }, { NOTE: 'A', OCTAVE: '4' }))
+
+    expect(code).toBe('musicPlay(440, 1);\n')
+    const helpers = gen.globals.get('thingbot_music')
+    expect(helpers).toContain('void musicPlay(int hz, float beats)')
+    expect(helpers).toContain('int musicBPM')
+  })
+
+  it('resolves every note name and octave to an equal-tempered frequency', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+    const hz = (note: string, octave: string) =>
+      gen.forBlock.thingBotC3_playNote(makeBlock({ BEATS: '1' }, { NOTE: note, OCTAVE: octave }))
+
+    expect(hz('C', '4')).toBe('musicPlay(262, 1);\n')
+    expect(hz('G', '4')).toBe('musicPlay(392, 1);\n')
+    expect(hz('C', '5')).toBe('musicPlay(523, 1);\n')
+    expect(hz('A', '3')).toBe('musicPlay(220, 1);\n')
+    expect(hz('A#', '4')).toBe('musicPlay(466, 1);\n')
+  })
+
+  it('defaults an empty note block to C4 for one beat', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_playNote(makeBlock())).toBe('musicPlay(262, 1);\n')
+  })
+
+  it('emits a rest as a silent note of the same duration', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_rest(makeBlock({ BEATS: '0.5' }))).toBe('musicPlay(0, 0.5);\n')
+    expect(gen.globals.get('thingbot_music')).toContain('void musicPlay(int hz, float beats)')
+  })
+
+  it('emits the tempo assignment and defaults to 120 BPM', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_setTempo(makeBlock({ TEMPO: '76' }))).toBe('musicBPM = 76;\n')
+    expect(gen.forBlock.thingBotC3_setTempo(makeBlock())).toBe('musicBPM = 120;\n')
+  })
+
+  it('restores the servo frame rate after every note', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+    gen.forBlock.thingBotC3_playNote(makeBlock())
+
+    const helpers = gen.globals.get('thingbot_music') ?? ''
+
+    // PCA9685 has one prescaler for all 16 channels, so a note's frequency is also the servo frame
+    // rate. Leaving it there would strand every servo on a broken frame once the music stops.
+    expect(helpers).toContain('pwm.setPWMFreq(50)')
   })
 
   it('preserves the PS2 initialization and switch reporter generators', () => {
@@ -188,6 +251,24 @@ describe('manifests', () => {
   it('thingbot toolbox preserves the legacy block order', () => {
     expect(thingbotToolbox.colour).toBe('#42CCFF')
     expect(thingbotToolbox.contents.map((item) => item.type)).toEqual(thingbotBlockIds)
+  })
+
+  it('thingbot toolbox offers the music blocks with math_number shadows', () => {
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_setTempo',
+      inputs: { TEMPO: { type: 'math_number', fields: { NUM: 120 } } },
+    })
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_playNote',
+      inputs: { BEATS: { type: 'math_number', fields: { NUM: 1 } } },
+    })
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_rest',
+      inputs: { BEATS: { type: 'math_number', fields: { NUM: 1 } } },
+    })
   })
 
   it('thingbot toolbox fills the value inputs with math_number shadows', () => {
