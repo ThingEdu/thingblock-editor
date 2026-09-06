@@ -53,23 +53,66 @@ another contract change.
 
 ### 2. Pack payload — `devices/thingbot/`
 
-Ship `firmware/telemetrix-ble.bin` (~643 KB) and declare it in the manifest. `scripts/copy-assets.mjs`
-already copies `libs/` and icons verbatim; firmware images join that list. The pack zip grows by the
-image size.
+**An ESP32 image is a set of files, not one file.** Tested on hardware: handing arduino-cli a merged
+`.bin` through `import_file` fails, because the esp32 platform's upload recipe reads siblings by
+name:
+
+```
+Invalid value for '<address> <filename>...': [Errno 2] No such file or directory:
+'…/full_firmware_ble_patched.bootloader.bin'
+```
+
+Supplying the set under the convention arduino-cli expects flashes correctly — also verified on
+hardware, end to end:
+
+```
+firmware/telemetrix-ble/telemetrix-ble.ino.bin             app image
+firmware/telemetrix-ble/telemetrix-ble.ino.bootloader.bin  bootloader
+firmware/telemetrix-ble/telemetrix-ble.ino.partitions.bin  partition table
+```
+
+`boot_app0.bin` comes from the installed core, not the pack. The manifest's `path` names the app
+image; the recipe finds the rest. `scripts/copy-assets.mjs` already copies `libs/` and icons
+verbatim; firmware directories join that list. The pack grows by roughly 650 KB.
+
+### 2b. Firmware provenance
+
+The editor's `scratch3_thingbot_telemetrix` extension sends opcodes **101–104** (`DC_WRITE`,
+`SERVO_WRITE`, `BUZZER_WRITE`, `LED_WRITE`). Two forks of the firmware exist and they **disagree on
+these numbers** — `MEO-3/thingbot-telemetrix-arduino` uses 101–104, while
+`tuanln/thingbot-telemetrix-arduino` uses 7–10. Flashing the wrong one leaves a board that answers
+the handshake and reports DHT while every motor, servo, LED and buzzer command is silently ignored.
+
+The image set must therefore be built from **`MEO-3/thingbot-telemetrix-arduino`**, with the GPIO8
+patch described below applied.
 
 ### 3. Link protocol — `thingblock-link`
 
-The existing `upload` request gains an optional `importFile`: a path relative to the resource root.
+A new request, `flashFirmware`, rather than a flag on `upload`. Reading the code settled this:
+`upload` takes an `Artifact` whose `path` is a **helper-filesystem path**, produced by the preceding
+compile and passed straight to arduino-cli with no containment check. The browser cannot name such a
+path — it never sees the helper's filesystem — so firmware needs a resource-relative reference, which
+is a different shape from what `upload` carries.
 
-- **Present** — the helper resolves it through `ResourceRoot` and passes it as arduino-cli's
-  `import_file`, which "overrides `sketch_path`/`import_dir`". No compile step runs.
-- **Absent** — unchanged: the artifact from the preceding compile is flashed.
+```rust
+FlashFirmware {
+    fqbn: String,
+    port: String,
+    upload_speed: u32,
+    /// Pack directory under the resource root, e.g. `extensions/devices/thingbot`.
+    pack: String,
+    /// App image within that pack, e.g. `firmware/telemetrix-ble/telemetrix-ble.ino.bin`.
+    file: String,
+}
+```
 
-`ResourceRoot` already refuses paths escaping the root, with a test (`traversal_outside_the_root_is_refused`).
-Reusing `upload` rather than adding a request keeps that guard as the single containment check;
-a new request would have to reimplement it.
+The two-part `{pack, file}` shape mirrors the existing `LibRef {pack, lib}`, which `compile` already
+resolves through `ResourceRoot::resolve_lib_dir`. Containment is a new sibling method,
+`resolve_firmware_file`, built the same way: join, canonicalize, and reject anything not under the
+root. It reuses the guard rather than reimplementing it, and it does not widen `upload`'s contract.
 
-`fqbn` and `port` come from the request as they do today.
+Both requests then converge on the same `upload_stream`, so cancellation, log streaming and the
+terminal reply are shared.
 
 ### 4. VM — `scratch-vm/src/virtual-machine/device-manager.js`
 
