@@ -32,6 +32,9 @@ const thingbotBlockIds = [
   'thingBotC3_init',
   'thingBotC3_setMotor',
   'thingBotC3_setServo',
+  'thingBotC3_setServoAngle',
+  'thingBotC3_moveServoAngle',
+  'thingBotC3_releaseServo',
   'thingBotC3_buzzer',
   'thingBotC3_setLed',
   'thingBotC3_switch',
@@ -107,6 +110,65 @@ describe('thingbot-core peripheral', () => {
     expect(gen.forBlock.thingBotC3_setLed(makeBlock({ BRIGHTNESS: '50' }, { LED: 'LED_2' }))).toBe(
       'pwm.setPin(LED_2, mapToPulse(50));\n',
     )
+  })
+
+  it('emits the angle helpers and the degree-based servo command', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_setServoAngle(makeBlock({ ANGLE: '90' }, { SERVO: '1' }))
+
+    expect(code).toBe('servoSetAngle(SERVO_1, 90);\n')
+    const helpers = gen.globals.get('thingbot_servo_angle')
+    expect(helpers).toContain('void servoSetAngle(int ch, int deg)')
+    expect(helpers).toContain('SERVO_PULSE_MIN')
+  })
+
+  it('defaults the degree-based servo command to S1 at 90 degrees', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_setServoAngle(makeBlock())).toBe('servoSetAngle(SERVO_1, 90);\n')
+  })
+
+  it('emits a timed sweep that carries the duration in seconds', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_moveServoAngle(makeBlock({ ANGLE: '180', SECONDS: '1.5' }, { SERVO: '2' }))
+
+    expect(code).toBe('servoMoveTo(SERVO_2, 180, 1.5);\n')
+    expect(gen.globals.get('thingbot_servo_angle')).toContain('void servoMoveTo(int ch, int deg, float seconds)')
+  })
+
+  it('defaults the timed sweep to one second', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_moveServoAngle(makeBlock())).toBe('servoMoveTo(SERVO_1, 90, 1);\n')
+  })
+
+  it('emits the release command and its helper, so releasing alone still compiles', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_releaseServo(makeBlock({}, { SERVO: '3' }))
+
+    expect(code).toBe('servoRelease(SERVO_3);\n')
+    expect(gen.globals.get('thingbot_servo_angle')).toContain('void servoRelease(int ch)')
+  })
+
+  it('remembers the last angle per channel so a sweep knows where it starts', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+    gen.forBlock.thingBotC3_setServoAngle(makeBlock())
+
+    const helpers = gen.globals.get('thingbot_servo_angle') ?? ''
+
+    // Chỉ số là số kênh PCA9685 nên lời gọi truyền thẳng macro SERVO_n, không phụ thuộc
+    // thứ tự hai mục globals trong tệp sinh ra.
+    expect(helpers).toContain('int servoAngle[16]')
+    expect(helpers).toContain('servoAngle[ch]')
   })
 
   it('preserves the PS2 initialization and switch reporter generators', () => {
@@ -188,6 +250,23 @@ describe('manifests', () => {
   it('thingbot toolbox preserves the legacy block order', () => {
     expect(thingbotToolbox.colour).toBe('#42CCFF')
     expect(thingbotToolbox.contents.map((item) => item.type)).toEqual(thingbotBlockIds)
+  })
+
+  it('thingbot toolbox offers the degree blocks with math_number shadows', () => {
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_setServoAngle',
+      inputs: { ANGLE: { type: 'math_number', fields: { NUM: 90 } } },
+    })
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_moveServoAngle',
+      inputs: {
+        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
+        SECONDS: { type: 'math_number', fields: { NUM: 1 } },
+      },
+    })
+    expect(thingbotToolbox.contents).toContainEqual({ kind: 'block', type: 'thingBotC3_releaseServo' })
   })
 
   it('thingbot toolbox fills the value inputs with math_number shadows', () => {
