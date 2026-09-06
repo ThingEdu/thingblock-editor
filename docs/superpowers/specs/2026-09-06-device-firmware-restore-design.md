@@ -1,6 +1,6 @@
 # Device firmware restore — design
 
-**Status:** approved, not yet implemented
+**Status:** approved, implementation in progress
 **Spans:** `thingblock-resource` (pack contract + payload) · `thingblock-link` (upload request) · `scratch-vm` (device manager) · `scratch-gui` (menu + confirm)
 
 ## The problem
@@ -116,7 +116,9 @@ any released firmware tag. The alternatives:
 2. Ship the patched image now with its `source` commit recorded, and replace it when the fix lands.
    Unblocks the feature; the traceability field carries the debt.
 
-This needs a decision before the pack payload step; every other step can proceed without it.
+**Decided: option 2.** The patched image ships now, with its `source` commit recorded in the
+manifest, and is replaced once the firmware fix lands upstream. The feature is not held behind
+another repo's review; the traceability field carries the debt until then.
 
 ## Accepted risks
 
