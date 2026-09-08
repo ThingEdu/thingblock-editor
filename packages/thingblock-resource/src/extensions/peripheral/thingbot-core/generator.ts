@@ -39,7 +39,20 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     return typeof value === 'string' ? value : fallback
   }
 
-  generator.forBlock.thingBotC3_init = () => {
+  /**
+   * Populates the buckets any block that touches the PCA9685 driver needs: the `Wire`/PWM-driver
+   * include, the pin `#define`s, the `pwm` object, `mapToPulse`, and the boot-time PWM init. Every
+   * hardware block below calls this itself, so a program compiles cleanly whether or not `init
+   * ThingBot` is on the workspace. It is idempotent — each write lands on a fixed key, so calling it
+   * from several block generators in one pass still yields one `#include`, one pin map, one `pwm`
+   * object, and one init sequence.
+   *
+   * `generator.setups` runs before the `when Arduino starts` hat's own body (`ArduinoGenerator.assemble`
+   * concatenates the setups bucket ahead of the hat's generated code), so the PWM driver is always
+   * initialized before any user code that references it, regardless of where — or whether — `init
+   * ThingBot` sits in the stack.
+   */
+  const registerBoardHardware = (): void => {
     generator.includes.set('thingbot_pwm', '#include <Wire.h>\n#include <Adafruit_PWMServoDriver.h>')
     generator.globals.set(
       'thingbot_pins',
@@ -68,10 +81,24 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
       'thingbot_map_to_pulse',
       'int mapToPulse(int value) {\n\treturn map(min(100, max(0, value)), 0, 100, 0, 4095);\n}',
     )
-    return 'pwm.begin();\npwm.setOscillatorFrequency(27000000);\npwm.setPWMFreq(50);\npinMode(SW, INPUT);\n'
+    generator.setups.set(
+      'thingbot_pwm_init',
+      ['pwm.begin();', 'pwm.setOscillatorFrequency(27000000);', 'pwm.setPWMFreq(50);', 'pinMode(SW, INPUT);'].join(
+        '\n',
+      ),
+    )
+  }
+
+  generator.forBlock.thingBotC3_init = () => {
+    // Every hardware block registers `registerBoardHardware()` itself, so placing this block no
+    // longer changes what gets generated — it is kept as a no-op for saved projects and existing
+    // workspaces that still include it.
+    registerBoardHardware()
+    return ''
   }
 
   generator.forBlock.thingBotC3_setMotor = (block) => {
+    registerBoardHardware()
     const motor = fieldValue(block, 'MOTOR', '1')
     const direction = fieldValue(block, 'DIRECTION', 'forward')
     const speed = generator.valueToCode(block, 'SPEED', Order.ATOMIC) || '0'
@@ -82,6 +109,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   }
 
   generator.forBlock.thingBotC3_setServo = (block) => {
+    registerBoardHardware()
     const servo = fieldValue(block, 'SERVO', '1')
     const pulse = generator.valueToCode(block, 'PULSE', Order.ATOMIC) || '0'
     return `pwm.setPWM(SERVO_${servo}, 0, ${pulse});\n`
@@ -94,6 +122,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
    * the sweep's starting point until a program sets an angle of its own.
    */
   const registerServoAngleHelpers = () => {
+    registerBoardHardware()
     generator.globals.set(
       'thingbot_servo_angle',
       [
@@ -186,6 +215,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   }
 
   generator.forBlock.thingBotC3_buzzer = (block) => {
+    registerBoardHardware()
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
     return `pwm.setPin(BUZZER, 0, ${sound});\n`
   }
@@ -236,6 +266,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   }
 
   generator.forBlock.thingBotC3_setLed = (block) => {
+    registerBoardHardware()
     const led = fieldValue(block, 'LED', 'LED_1')
     const brightness = generator.valueToCode(block, 'BRIGHTNESS', Order.ATOMIC) || '0'
     return `pwm.setPin(${led}, mapToPulse(${brightness}));\n`
@@ -268,5 +299,8 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     ].join('\n')
   }
 
-  generator.forBlock.thingBotC3_switch = () => ['!digitalRead(SW)', Order.ATOMIC]
+  generator.forBlock.thingBotC3_switch = () => {
+    registerBoardHardware()
+    return ['!digitalRead(SW)', Order.ATOMIC]
+  }
 }
