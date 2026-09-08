@@ -110,25 +110,81 @@ test('loadResourcePacks retries the index while the helper is still starting', a
 test('loadResourcePacks gives up after a bounded number of attempts', async t => {
     const vm = new VirtualMachine();
     const realFetch = global.fetch;
+    const realSetTimeout = global.setTimeout;
     let attempts = 0;
+    const requestedDelaysMs = [];
 
     global.fetch = () => {
         attempts++;
         return Promise.reject(new Error('ECONNREFUSED'));
+    };
+    // Record the backoff the production code asks for without actually spending it — this test only
+    // needs to see the bound, not wait it out.
+    global.setTimeout = (fn, ms) => {
+        requestedDelaysMs.push(ms);
+        return realSetTimeout(fn, 0);
     };
 
     try {
         await vm.loadResourcePacks();
     } finally {
         global.fetch = realFetch;
+        global.setTimeout = realSetTimeout;
     }
 
-    t.ok(attempts > 1, 'retried rather than giving up on the first failure');
-    t.ok(attempts <= 8, 'stops instead of retrying forever');
+    t.equal(attempts, 14, 'stops after the bounded number of attempts');
+    t.ok(requestedDelaysMs.reduce((total, ms) => total + ms, 0) > 47000,
+        'the bounded window still covers the 47s worst case measured on real hardware');
     t.notOk(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered');
 
     // Not marked loaded, so entering link mode from Settings still retries.
     t.equal(attempts > 0, true, 'a later call is still allowed to try again');
+    t.end();
+});
+
+test('loadResourcePacks still gets the packs when the helper answers well past the old 2s window', async t => {
+    const vm = new VirtualMachine();
+    const realFetch = global.fetch;
+    const realSetTimeout = global.setTimeout;
+    let attempts = 0;
+    const requestedDelaysMs = [];
+
+    // Stand in for the wait itself: record what the retry loop asks to wait, but fire on the next
+    // tick instead of really waiting. This is what keeps the test fast while still proving the
+    // *bound* the production code computes, not a fake one built into the test.
+    global.setTimeout = (fn, ms) => {
+        requestedDelaysMs.push(ms);
+        return realSetTimeout(fn, 0);
+    };
+
+    // Measured on real hardware, the helper has taken up to 47s to open its port (it starts an
+    // arduino-cli daemon and probes a Bluetooth adapter before it serves). Answering only on the
+    // 11th attempt means the retry loop must have already asked to wait more than 47s in total
+    // before this attempt fires — well past the old 5-attempt/500ms-fixed window (~2s), under which
+    // the helper would never have gotten this far: that code gave up for good after its 5th failure.
+    global.fetch = () => {
+        attempts++;
+        if (attempts < 11) return Promise.reject(new Error('ECONNREFUSED'));
+        return Promise.resolve({json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})});
+    };
+    vm.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
+
+    try {
+        await vm.loadResourcePacks();
+    } finally {
+        global.fetch = realFetch;
+        global.setTimeout = realSetTimeout;
+    }
+
+    const cumulativeDelayMs = requestedDelaysMs.reduce((total, ms) => total + ms, 0);
+
+    t.equal(attempts, 11, 'kept retrying past the old window until the helper answered');
+    t.ok(cumulativeDelayMs > 47000,
+        `retry window before this attempt (${cumulativeDelayMs}ms) covers the 47s worst case measured ` +
+        'on real hardware');
+    t.ok(vm.getDeviceList().find(d => d.deviceId === 'thingbot'),
+        'the pack device joins the list once the helper finally answers');
+
     t.end();
 });
 

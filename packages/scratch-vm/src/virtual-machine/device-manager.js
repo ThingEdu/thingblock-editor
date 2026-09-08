@@ -6,16 +6,42 @@ const {DeviceRegistry, PeripheralRegistry, ManifestDevice} = require('../devices
 const {boards} = require('../extensions/devices');
 
 /**
- * How many times the pack index is fetched before giving up, and how long to wait between attempts.
- * The helper is a sidecar the host spawns alongside the editor, so the first attempts can lose the
- * race to its port; without retrying, its packs stay missing for the whole session and the boards
- * they contribute never reach the board list.
+ * How many times the pack index is fetched before giving up. The helper is a sidecar the host spawns
+ * alongside the editor — on real hardware it has taken as long as 47s to open its port before serving
+ * (it starts an arduino-cli daemon and probes a Bluetooth adapter first) — so the retry window has to
+ * clear that measured worst case with margin, not a guess. `loadResourcePacks()` is never awaited by
+ * its GUI callers (`vm-manager-hoc`'s startup call, `settings-modal`'s link-mode retry), so a wide
+ * window costs nothing but log noise: it never blocks the editor, whose built-in devices are already
+ * registered before this runs.
+ *
+ * Paired with {@link RESOURCE_INDEX_RETRY_MS}/{@link RESOURCE_INDEX_RETRY_FACTOR}/
+ * {@link RESOURCE_INDEX_RETRY_MAX_MS}, the capped-exponential backoff below sums to ~79.5s of waiting
+ * across these attempts before giving up — comfortably past the 47s worst case, while still bounded so
+ * a session with no helper at all does not retry forever.
  * @type {number}
  */
-const RESOURCE_INDEX_ATTEMPTS = 5;
+const RESOURCE_INDEX_ATTEMPTS = 14;
 
-/** @type {number} milliseconds between pack-index attempts. */
+/** @type {number} milliseconds before the first retry. */
 const RESOURCE_INDEX_RETRY_MS = 500;
+
+/** @type {number} multiplier applied to the retry delay after each failed attempt. */
+const RESOURCE_INDEX_RETRY_FACTOR = 2;
+
+/** @type {number} milliseconds the backoff delay is capped at, once it grows past this. */
+const RESOURCE_INDEX_RETRY_MAX_MS = 8000;
+
+/**
+ * The delay before the next pack-index attempt: capped exponential backoff, so an unresponsive helper
+ * is polled quickly at first (in case it is seconds from ready) and increasingly gently thereafter (in
+ * case it is tens of seconds from ready), without either starving the fast case or hammering the slow
+ * one.
+ * @param {number} attempt - the 1-based attempt number that just failed.
+ * @returns {number} milliseconds to wait before the next attempt.
+ * @private
+ */
+const _resourceIndexRetryDelayMs = attempt =>
+    Math.min(RESOURCE_INDEX_RETRY_MS * Math.pow(RESOURCE_INDEX_RETRY_FACTOR, attempt - 1), RESOURCE_INDEX_RETRY_MAX_MS);
 
 /**
  * The board-mode device subsystem owned by the VM: the device registry, helper-served resource packs,
@@ -237,10 +263,10 @@ module.exports = class DeviceManager {
     /**
      * Fetch the helper-served pack index and register each device pack against the device registry, so
      * helper-provided boards join the built-in list. One successful run per VM instance (guarded). The
-     * index fetch is retried a few times because the helper is a sidecar spawned alongside the editor
-     * and may not have its port open yet; once the attempts are spent it logs and returns, leaving
-     * built-in devices working and the next link-mode entry free to retry. Peripheral packs are
-     * recorded here and activated on device selection.
+     * index fetch is retried, backing off between attempts, because the helper is a sidecar spawned
+     * alongside the editor and can take tens of seconds to open its port; once the attempts are spent
+     * it logs and returns, leaving built-in devices working and the next link-mode entry free to retry.
+     * Peripheral packs are recorded here and activated on device selection.
      * @returns {Promise<void>} resolves once packs are loaded (or skipped).
      */
     async loadResourcePacks () {
@@ -260,7 +286,7 @@ module.exports = class DeviceManager {
                         `${attempt} attempts; using built-in devices only`, e);
                     return;
                 }
-                await new Promise(resolve => setTimeout(resolve, RESOURCE_INDEX_RETRY_MS));
+                await new Promise(resolve => setTimeout(resolve, _resourceIndexRetryDelayMs(attempt)));
             }
         }
 
