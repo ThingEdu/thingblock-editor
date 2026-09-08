@@ -1,6 +1,6 @@
 # Device firmware restore — design
 
-**Status:** approved, implementation in progress
+**Status:** implemented, verified on hardware 2026-09-09
 **Spans:** `thingblock-resource` (pack contract + payload) · `thingblock-link` (upload request) · `scratch-vm` (device manager) · `scratch-gui` (menu + confirm)
 
 ## The problem
@@ -173,3 +173,40 @@ another repo's review; the traceability field carries the debt until then.
 - **A menu item requires the learner to know when to press it.** The moment they actually get stuck
   — scanning and finding no board — stays silent. Adding the same action to the connection modal's
   empty state is a small follow-up if classroom use shows it is needed.
+
+
+## Hardware acceptance, 2026-09-09
+
+Run on a real ThingBot (ESP32-C3) with the desktop shell built from this work:
+
+1. A compiled block program was uploaded, which overwrote the Telemetrix firmware. A BLE scan then
+   found 21 other devices and **no ThingBot** — the stuck state this feature exists to remove,
+   reproduced before fixing it.
+2. The board menu's firmware item was used to restore the live-mode image. The flash completed.
+3. A BLE scan then found `ThingBot-50787de7b9da`, and the helper's own `/io` channel streamed it at
+   about −56 dBm — the board was back in live mode.
+4. The Telemetrix extension connected to it and drove the board.
+
+Three defects surfaced only on hardware, none of which the per-task or whole-branch reviews caught,
+because each is an interaction between components rather than a fault inside one:
+
+- **The flash could not take the serial port.** The editor reopens a serial monitor when a board
+  connects, and the board has one port. `LinkController.upload()` already closed the monitor around an
+  ordinary upload; `flashDeviceFirmware` bypassed that and failed with `Resource busy`. Both paths now
+  share one helper that frees the monitor and restores it afterwards.
+- **A missing `init ThingBot` block produced a C++ compiler error** (`'SERVO_1' was not declared in
+  this scope`) — a macro the learner never typed. Every hardware-touching block now registers the
+  board's setup itself, so the block is no longer load-bearing.
+- **The pack-index retry window was too short.** It was set to 5 attempts 500 ms apart — 2 seconds —
+  without checking it against a measurement. The helper took 7 s to answer on one launch and 47 s on
+  another, so every helper-served board silently vanished from the board picker. The window is now a
+  capped exponential backoff summing to ~79.5 s, justified against that 47 s figure.
+
+## Known usability trap, not fixed
+
+Restoring the firmware requires **selecting** the board, because the menu item lives on the board
+menu. Using the restored live mode requires **deselecting** it, because the extension button opens the
+peripheral library instead of the extension library while a board is selected (`gui.jsx:479`). So the
+working sequence is: select board, restore, deselect board, add the Telemetrix extension, connect —
+and step three is not discoverable. Worth addressing where the restore succeeds, by saying what to do
+next and offering to do it.
