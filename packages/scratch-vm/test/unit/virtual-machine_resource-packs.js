@@ -137,8 +137,53 @@ test('loadResourcePacks gives up after a bounded number of attempts', async t =>
         'the bounded window still covers the 47s worst case measured on real hardware');
     t.notOk(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered');
 
-    // Not marked loaded, so entering link mode from Settings still retries.
-    t.equal(attempts > 0, true, 'a later call is still allowed to try again');
+    t.end();
+});
+
+test('loadResourcePacks does not latch after a failed run, so a later call still retries', async t => {
+    const vm = new VirtualMachine();
+    const realFetch = global.fetch;
+    const realSetTimeout = global.setTimeout;
+    let attempts = 0;
+    const requestedDelaysMs = [];
+
+    global.setTimeout = (fn, ms) => {
+        requestedDelaysMs.push(ms);
+        return realSetTimeout(fn, 0);
+    };
+    vm.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
+
+    try {
+        // First call: the helper never answers, so this run exhausts its bounded attempts and gives up.
+        global.fetch = () => {
+            attempts++;
+            return Promise.reject(new Error('ECONNREFUSED'));
+        };
+        await vm.loadResourcePacks();
+
+        t.equal(attempts, 14, 'the first run gives up after the bounded number of attempts');
+        t.notOk(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered yet');
+
+        // Second call: the helper now answers. If the failed run had set the loaded guard, this call
+        // would short-circuit at the top of loadResourcePacks and never call fetch again.
+        const attemptsAfterFirstRun = attempts;
+        global.fetch = () => {
+            attempts++;
+            return Promise.resolve({
+                json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})
+            });
+        };
+        await vm.loadResourcePacks();
+
+        t.ok(attempts > attemptsAfterFirstRun,
+            'the second call actually re-fetched instead of short-circuiting on the guard');
+        t.ok(vm.getDeviceList().find(d => d.deviceId === 'thingbot'),
+            'the pack device from the second call is registered');
+    } finally {
+        global.fetch = realFetch;
+        global.setTimeout = realSetTimeout;
+    }
+
     t.end();
 });
 
