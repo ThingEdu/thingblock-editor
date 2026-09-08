@@ -191,9 +191,9 @@ module.exports = class DeviceManager {
     /**
      * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
      * board. The pack path is expressed relative to the resource root because the browser cannot
-     * name a path on the helper's filesystem. Delegates to `LinkController#flashFirmware`, which gives
-     * this the same serial-monitor close/reopen discipline as `upload()` — the board's one serial port
-     * can't be monitored while the upload tool drives it.
+     * name a path on the helper's filesystem. Delegates to `VirtualMachine#flashFirmware` (backed by
+     * `LinkController#flashFirmware`), which gives this the same serial-monitor close/reopen discipline
+     * as `upload()` — the board's one serial port can't be monitored while the upload tool drives it.
      * @param {string} deviceId - the selected device.
      * @param {string} firmwareId - the image's manifest id.
      * @param {object} [callbacks] - log/progress callbacks, as `upload` takes.
@@ -205,7 +205,7 @@ module.exports = class DeviceManager {
         if (!firmware) {
             return Promise.reject(new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`));
         }
-        return this.vm._link.flashFirmware(deviceId, this._packPath(deviceId), firmware.path, callbacks);
+        return this.vm.flashFirmware(deviceId, this._packPath(deviceId), firmware.path, callbacks);
     }
 
     /**

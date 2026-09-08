@@ -376,6 +376,10 @@ class VirtualMachine extends EventEmitter {
         return this._link.upload(deviceId, artifact, callbacks);
     }
 
+    flashFirmware (deviceId, pack, file, callbacks) {
+        return this._link.flashFirmware(deviceId, pack, file, callbacks);
+    }
+
     cancelUpload () {
         return this._link.cancelUpload();
     }
