@@ -85,6 +85,37 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
         '\t\tdelay(20);',
         '\t}',
         '}',
+        'struct ServoMotion { int from; int to; unsigned long start; unsigned long dur; bool active; };',
+        'ServoMotion servoMotion[16];  // zero-initialized: every channel starts inactive',
+        'void servoStart(int ch, int deg, float seconds) {',
+        '\tservoMotion[ch].from = servoAngle[ch];',
+        '\tservoMotion[ch].to = deg;',
+        '\tservoMotion[ch].start = millis();',
+        '\tservoMotion[ch].dur = seconds > 0 ? (unsigned long)(seconds * 1000) : 0;',
+        '\tservoMotion[ch].active = true;',
+        '}',
+        '// Nudges every running motion to where it should be right now. Returns true while at least',
+        '// one is still moving, so callers can loop on it without tracking channels themselves.',
+        'bool servoTickAll() {',
+        '\tbool running = false;',
+        '\tfor (int ch = 0; ch < 16; ch++) {',
+        '\t\tif (!servoMotion[ch].active) continue;',
+        '\t\tunsigned long elapsed = millis() - servoMotion[ch].start;',
+        '\t\tif (servoMotion[ch].dur == 0 || elapsed >= servoMotion[ch].dur) {',
+        '\t\t\tservoSetAngle(ch, servoMotion[ch].to);  // land exactly on target, never one step short',
+        '\t\t\tservoMotion[ch].active = false;',
+        '\t\t} else {',
+        '\t\t\tint from = servoMotion[ch].from;',
+        '\t\t\tint to = servoMotion[ch].to;',
+        '\t\t\tservoSetAngle(ch, from + (to - from) * (int)elapsed / (int)servoMotion[ch].dur);',
+        '\t\t\trunning = true;',
+        '\t\t}',
+        '\t}',
+        '\treturn running;',
+        '}',
+        'void servoWaitAll() {',
+        '\twhile (servoTickAll()) delay(20);',
+        '}',
         'void servoRelease(int ch) {',
         '\tpwm.setPWM(ch, 0, 4096);  // full-off: the channel stops pulsing and the servo goes slack',
         '}',
@@ -105,6 +136,19 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
     registerServoAngleHelpers()
     return `servoMoveTo(SERVO_${servo}, ${angle}, ${seconds});\n`
+  }
+
+  generator.forBlock.thingBotC3_startServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
+    registerServoAngleHelpers()
+    return `servoStart(SERVO_${servo}, ${angle}, ${seconds});\n`
+  }
+
+  generator.forBlock.thingBotC3_waitServos = () => {
+    registerServoAngleHelpers()
+    return 'servoWaitAll();\n'
   }
 
   generator.forBlock.thingBotC3_releaseServo = (block) => {

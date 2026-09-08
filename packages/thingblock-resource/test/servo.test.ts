@@ -34,6 +34,8 @@ const thingbotBlockIds = [
   'thingBotC3_setServo',
   'thingBotC3_setServoAngle',
   'thingBotC3_moveServoAngle',
+  'thingBotC3_startServoAngle',
+  'thingBotC3_waitServos',
   'thingBotC3_releaseServo',
   'thingBotC3_buzzer',
   'thingBotC3_setLed',
@@ -146,6 +148,49 @@ describe('thingbot-core peripheral', () => {
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
 
     expect(gen.forBlock.thingBotC3_moveServoAngle(makeBlock())).toBe('servoMoveTo(SERVO_1, 90, 1);\n')
+  })
+
+  it('emits a non-blocking start command that records the motion instead of sweeping', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_startServoAngle(makeBlock({ ANGLE: '180', SECONDS: '1.5' }, { SERVO: '2' }))
+
+    expect(code).toBe('servoStart(SERVO_2, 180, 1.5);\n')
+    const helpers = gen.globals.get('thingbot_servo_angle') ?? ''
+    expect(helpers).toContain('void servoStart(int ch, int deg, float seconds)')
+    expect(helpers).toContain('bool servoTickAll()')
+    expect(helpers).toContain('void servoWaitAll()')
+    // servoMoveTo keeps its own step-based loop; it must not depend on the new tick machinery,
+    // otherwise servoWaitAll's "wait for every channel" semantics would leak into the single-servo block.
+    expect(helpers).toContain('void servoMoveTo(int ch, int deg, float seconds)')
+  })
+
+  it('defaults the non-blocking start command to S1 at 90 degrees over one second', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    expect(gen.forBlock.thingBotC3_startServoAngle(makeBlock())).toBe('servoStart(SERVO_1, 90, 1);\n')
+  })
+
+  it('guards the tick against a zero or negative duration instead of dividing by it', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+    gen.forBlock.thingBotC3_startServoAngle(makeBlock())
+
+    const helpers = gen.globals.get('thingbot_servo_angle') ?? ''
+
+    expect(helpers).toMatch(/dur = seconds > 0/)
+  })
+
+  it('emits the wait-for-all command and registers the same helper bucket', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.thingBotC3_waitServos(makeBlock())
+
+    expect(code).toBe('servoWaitAll();\n')
+    expect(gen.globals.get('thingbot_servo_angle')).toContain('void servoWaitAll()')
   })
 
   it('emits the release command and its helper, so releasing alone still compiles', () => {
@@ -266,6 +311,15 @@ describe('manifests', () => {
         SECONDS: { type: 'math_number', fields: { NUM: 1 } },
       },
     })
+    expect(thingbotToolbox.contents).toContainEqual({
+      kind: 'block',
+      type: 'thingBotC3_startServoAngle',
+      inputs: {
+        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
+        SECONDS: { type: 'math_number', fields: { NUM: 1 } },
+      },
+    })
+    expect(thingbotToolbox.contents).toContainEqual({ kind: 'block', type: 'thingBotC3_waitServos' })
     expect(thingbotToolbox.contents).toContainEqual({ kind: 'block', type: 'thingBotC3_releaseServo' })
   })
 
