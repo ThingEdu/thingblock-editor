@@ -129,6 +129,71 @@ test('loadResourcePacks gives up after a bounded number of attempts', async t =>
 
     // Not marked loaded, so entering link mode from Settings still retries.
     t.equal(attempts > 0, true, 'a later call is still allowed to try again');
+    t.end();
+});
 
+const firmwareManifest = Object.assign({}, sampleManifest, {
+    firmware: [{
+        id: 'telemetrix-ble',
+        path: 'firmware/telemetrix-ble/telemetrix-ble.ino.bin',
+        name: {id: 'device.thingbot.firmware.telemetrixBle', default: 'Live mode (Telemetrix over BLE)'}
+    }]
+});
+
+test('getDeviceFirmware lists what the pack declared', t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    const list = vm.getDeviceFirmware('thingbot');
+
+    t.equal(list.length, 1, 'one image offered');
+    t.equal(list[0].id, 'telemetrix-ble', 'carries the id');
+    t.equal(list[0].name, 'Live mode (Telemetrix over BLE)', 'resolves the localized name');
+    t.end();
+});
+
+test('getDeviceFirmware is empty for a device that declares none', t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(sampleManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    t.same(vm.getDeviceFirmware('thingbot'), [], 'no images, no menu entry');
+    t.end();
+});
+
+test('flashDeviceFirmware sends flashFirmware with the pack-relative image', async t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    // `LinkClient._request(type, payload, callbacks, cancellable)` is the single send path every
+    // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket.
+    const sent = [];
+    vm.client._request = (type, payload) => {
+        sent.push({type, payload});
+        return Promise.resolve({});
+    };
+    vm.client.isConnected = true;
+    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+
+    await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
+
+    t.equal(sent.length, 1, 'one request');
+    t.equal(sent[0].type, 'flashFirmware', 'uses the firmware request, not upload');
+    t.equal(sent[0].payload.pack, 'extensions/devices/thingbot', 'pack is relative to the resource root');
+    t.equal(sent[0].payload.file, 'firmware/telemetrix-ble/telemetrix-ble.ino.bin', 'names the app image');
+    // sampleManifest declares compile.options {CDCOnBoot: 'cdc'}, which `_composeFqbn` (shared with
+    // `flash()`) folds onto the base fqbn as arduino-cli board-menu selections.
+    t.equal(sent[0].payload.fqbn, 'esp32:esp32:esp32c3:CDCOnBoot=cdc', 'carries the composed board fqbn');
+    t.end();
+});
+
+test('flashDeviceFirmware rejects an unknown image id', async t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    await t.rejects(
+        vm.flashDeviceFirmware('thingbot', 'no-such-image'),
+        /no firmware "no-such-image"/,
+        'names the missing id rather than failing silently'
+    );
     t.end();
 });

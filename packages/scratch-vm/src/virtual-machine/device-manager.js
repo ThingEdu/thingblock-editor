@@ -144,6 +144,70 @@ module.exports = class DeviceManager {
     }
 
     /**
+     * Strip a pack's resource origin from its served base, yielding the path relative to the resource
+     * root that the helper's `{pack, lib}` (compile) and `{pack, file}` (flashFirmware) references
+     * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
+     * `extensions/devices/thingbot`.
+     *
+     * Derived from `this.vm.client.resourceOrigin` rather than a literal `/resources/` split: the
+     * latter only holds for the helper's own route and yields `undefined` under a
+     * `__THINGBLOCK_RESOURCE_BASE__`-style host override, whose base need not contain `/resources/`
+     * at all (see `LinkClient#resourceOrigin`).
+     * @param {string} base - a pack's served base URL.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packRelativePath (base) {
+        const origin = this.vm.client.resourceOrigin;
+        return base.slice(origin.length + 1);
+    }
+
+    /**
+     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field.
+     * @param {string} deviceId - the device whose pack path to derive.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packPath (deviceId) {
+        const {base} = this._resourceDevicePacks.get(deviceId);
+        return this._packRelativePath(base);
+    }
+
+    /**
+     * The firmware images the selected device's pack ships, for the GUI's restore menu. Empty when
+     * the device declares none, which is how a pack opts out of the feature.
+     * @param {string} deviceId - the device to list images for.
+     * @returns {Array.<object>} `{id, name}` entries, names resolved to the active locale.
+     */
+    getDeviceFirmware (deviceId) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        if (!pack) return [];
+        return (pack.manifest.firmware || []).map(fw => ({
+            id: fw.id,
+            name: formatMessage(fw.name)
+        }));
+    }
+
+    /**
+     * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
+     * board. The pack path is expressed relative to the resource root because the browser cannot
+     * name a path on the helper's filesystem.
+     * @param {string} deviceId - the selected device.
+     * @param {string} firmwareId - the image's manifest id.
+     * @param {object} [callbacks] - log/progress callbacks, as `upload` takes.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    async flashDeviceFirmware (deviceId, firmwareId, callbacks) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        const firmware = pack && (pack.manifest.firmware || []).find(fw => fw.id === firmwareId);
+        if (!firmware) {
+            throw new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`);
+        }
+        const device = this.deviceRegistry.get(deviceId);
+        await this.vm.client.flashFirmware(device, this._packPath(deviceId), firmware.path, callbacks);
+    }
+
+    /**
      * Register a helper-served device manifest as a selectable device. Idempotent: a manifest whose id
      * is already registered is skipped, so a repeated load never throws on a duplicate id.
      * @param {object} manifest - the pack's device manifest (its `manifest.js` default export).
@@ -456,9 +520,9 @@ module.exports = class DeviceManager {
                 )).default;
             }
             // Compile lib references the helper resolves from its resource root: `pack` is this pack's
-            // directory relative to that root (the path after `/resources/` in its served base), `lib`
-            // the manifest's lib directory within the pack. The helper joins root/pack/lib in place.
-            const packPath = base.split('/resources/')[1];
+            // directory relative to that root, `lib` the manifest's lib directory within the pack. The
+            // helper joins root/pack/lib in place.
+            const packPath = this._packRelativePath(base);
             const libs = (manifest.libs || []).map(lib => ({pack: packPath, lib: lib.path}));
             if (this._scratchBlocks && manifest.blocks) {
                 const {registerBlocks} = await this._importPackModule(
