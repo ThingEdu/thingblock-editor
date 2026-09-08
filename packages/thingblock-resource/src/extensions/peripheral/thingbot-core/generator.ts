@@ -226,6 +226,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
    * every note ends by restoring the 50 Hz servo frame rather than leaving servos on a broken frame.
    */
   const registerMusicHelpers = () => {
+    registerBoardHardware()
     generator.globals.set(
       'thingbot_music',
       [
