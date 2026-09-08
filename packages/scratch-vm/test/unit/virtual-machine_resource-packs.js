@@ -115,7 +115,9 @@ test('flashDeviceFirmware sends flashFirmware with the pack-relative image', asy
     vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
     // `LinkClient._request(type, payload, callbacks, cancellable)` is the single send path every
-    // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket.
+    // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket. The
+    // flash is followed by a real `monitorOpen` reopen (the board stays connected), so this sees two
+    // requests; the flashFirmware payload assertions below only care about the first.
     const sent = [];
     vm.client._request = (type, payload) => {
         sent.push({type, payload});
@@ -126,13 +128,87 @@ test('flashDeviceFirmware sends flashFirmware with the pack-relative image', asy
 
     await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
 
-    t.equal(sent.length, 1, 'one request');
     t.equal(sent[0].type, 'flashFirmware', 'uses the firmware request, not upload');
     t.equal(sent[0].payload.pack, 'extensions/devices/thingbot', 'pack is relative to the resource root');
     t.equal(sent[0].payload.file, 'firmware/telemetrix-ble/telemetrix-ble.ino.bin', 'names the app image');
     // sampleManifest declares compile.options {CDCOnBoot: 'cdc'}, which `_composeFqbn` (shared with
     // `flash()`) folds onto the base fqbn as arduino-cli board-menu selections.
     t.equal(sent[0].payload.fqbn, 'esp32:esp32:esp32c3:CDCOnBoot=cdc', 'carries the composed board fqbn');
+    t.end();
+});
+
+test('flashDeviceFirmware closes the monitor before the flash and reopens it after', async t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    // The board's one serial port can't be monitored while esptool drives it (confirmed on real
+    // hardware: arduino-cli's serial-monitor holds the port and the flash fails with EBUSY), so
+    // `flashDeviceFirmware` must free it first, same as `upload()`.
+    const order = [];
+    vm.client._request = type => {
+        order.push(type);
+        return Promise.resolve({});
+    };
+    vm.client.closeMonitor = () => {
+        order.push('closeMonitor');
+        return Promise.resolve();
+    };
+    vm.client.openMonitor = opts => {
+        order.push(`openMonitor:${opts.baudRate}`);
+        return Promise.resolve();
+    };
+    vm.client.isConnected = true;
+    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+
+    await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
+
+    t.same(order, ['closeMonitor', 'flashFirmware', 'openMonitor:115200'],
+        'frees the port for the flash, then restores the monitor at the stored baud, in that order');
+    t.end();
+});
+
+test('flashDeviceFirmware reopens the monitor even when the flash rejects', async t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    let reopened = false;
+    vm.client._request = () => Promise.reject(new Error('flash failed'));
+    vm.client.closeMonitor = () => Promise.resolve();
+    vm.client.openMonitor = () => {
+        reopened = true;
+        return Promise.resolve();
+    };
+    vm.client.isConnected = true;
+    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+
+    await t.rejects(
+        vm.flashDeviceFirmware('thingbot', 'telemetrix-ble'),
+        /flash failed/,
+        'the flash rejection still surfaces'
+    );
+    t.equal(reopened, true, 'a failed restore does not leave the learner without a monitor');
+    t.end();
+});
+
+test('flashDeviceFirmware does not fail the flash when the monitor fails to reopen', async t => {
+    const vm = new VirtualMachine();
+    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    let reopenAttempted = false;
+    vm.client._request = () => Promise.resolve({});
+    vm.client.closeMonitor = () => Promise.resolve();
+    vm.client.openMonitor = () => {
+        reopenAttempted = true;
+        return Promise.reject(new Error('port busy'));
+    };
+    vm.client.isConnected = true;
+    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+
+    await t.resolves(
+        vm.flashDeviceFirmware('thingbot', 'telemetrix-ble'),
+        'a reopen failure is swallowed to a warning, not turned into a flash failure'
+    );
+    t.equal(reopenAttempted, true, 'the reopen was actually attempted, not skipped');
     t.end();
 });
 

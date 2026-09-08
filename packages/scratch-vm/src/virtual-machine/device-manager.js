@@ -179,20 +179,21 @@ module.exports = class DeviceManager {
     /**
      * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
      * board. The pack path is expressed relative to the resource root because the browser cannot
-     * name a path on the helper's filesystem.
+     * name a path on the helper's filesystem. Delegates to `LinkController#flashFirmware`, which gives
+     * this the same serial-monitor close/reopen discipline as `upload()` — the board's one serial port
+     * can't be monitored while the upload tool drives it.
      * @param {string} deviceId - the selected device.
      * @param {string} firmwareId - the image's manifest id.
      * @param {object} [callbacks] - log/progress callbacks, as `upload` takes.
      * @returns {Promise<void>} resolves when the flash completes.
      */
-    async flashDeviceFirmware (deviceId, firmwareId, callbacks) {
+    flashDeviceFirmware (deviceId, firmwareId, callbacks) {
         const pack = this._resourceDevicePacks.get(deviceId);
         const firmware = pack && (pack.manifest.firmware || []).find(fw => fw.id === firmwareId);
         if (!firmware) {
-            throw new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`);
+            return Promise.reject(new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`));
         }
-        const device = this.deviceRegistry.get(deviceId);
-        await this.vm.client.flashFirmware(device, this._packPath(deviceId), firmware.path, callbacks);
+        return this.vm._link.flashFirmware(deviceId, this._packPath(deviceId), firmware.path, callbacks);
     }
 
     /**
