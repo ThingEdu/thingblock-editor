@@ -214,12 +214,15 @@ module.exports = class ProjectIoMixin {
                     performance.measure('scratch-vm-deserialize',
                         'scratch-vm-deserialize-start', 'scratch-vm-deserialize-end');
                 }
-                return this.installTargets(targets, extensions, true)
-                    .then(async installed => {
-                        // Restore the project's saved board (sb3 only; sb2 has none) once targets are in.
-                        await this._applyBoard(board || null);
-                        return installed;
-                    });
+                // Restore the project's saved board (sb3 only; sb2 has none) BEFORE installing
+                // targets. Installing ends by emitting a workspace update, and the GUI answers
+                // that by handing the project's XML to Blockly, which throws on any block type it
+                // has no definition for. A board's blocks come from resource packs registered by
+                // `_applyBoard`, so applying it afterwards left every board project rendering
+                // against an empty block registry. Board restoration reads no targets, so it is
+                // safe this early.
+                return Promise.resolve(this._applyBoard(board || null))
+                    .then(() => this.installTargets(targets, extensions, true));
             });
     }
 
