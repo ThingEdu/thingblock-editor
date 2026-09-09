@@ -6,7 +6,7 @@
 import type { PeripheralManifest } from '../../../shared/types'
 
 const manifest: PeripheralManifest = {
-  id: 'thingbot-core',
+  id: 'thingBotC3',
   kind: 'peripheral',
   name: 'ThingBot',
   hidden: true,

@@ -151,6 +151,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —
   the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
   loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
+- A peripheral pack's manifest `id` must equal the opcode prefix its `blocks.ts` registers (pack `serial` owns
+  `serial_*`). The sb3 deserializer resolves a saved project's blocks by opcode prefix, so a pack whose id
+  differs cannot be recognized as pack-owned. `test/packIds.test.ts` enforces this across every pack.
 
 ## npm workflow
 

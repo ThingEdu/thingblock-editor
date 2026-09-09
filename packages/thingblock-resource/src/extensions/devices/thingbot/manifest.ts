@@ -1,7 +1,7 @@
 /**
  * ThingBot device manifest. A ThingEdu ESP32-C3 variant: a single-core RISC-V SoC on the built-in USB
  * Serial/JTAG, built with `CDCOnBoot=cdc` so `Serial` output reaches the Monitor over USB. The hidden
- * `thingbot-core` peripheral is its programming surface, activated only when this device is selected.
+ * `thingBotC3` peripheral is its programming surface, activated only when this device is selected.
  */
 import type { DeviceManifest } from '../../../shared/types'
 
@@ -19,7 +19,7 @@ const manifest: DeviceManifest = {
   manufacturer: 'ThingEdu',
   requires: 'serial',
   learnMore: 'https://thingedges.com/collections/thing-edu',
-  extensions: ['thingbot-core', 'ps2'],
+  extensions: ['thingBotC3', 'ps2'],
   compile: { options: { CDCOnBoot: 'cdc' } },
   upload: {
     pnpid: ['USB\\VID_303A&PID_1001', 'USB\\VID_10C4&PID_EA60', 'USB\\VID_1A86&PID_7523'],
