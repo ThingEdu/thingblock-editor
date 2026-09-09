@@ -88,6 +88,8 @@ class ExtensionManager {
          * unknown extension when a project asks for one.
          * @type {Set.<string>}
          * @private
+         * 
+         * @author lgthevinh
          */
         this._resourcePackIds = new Set();
 
