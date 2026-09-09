@@ -1,4 +1,5 @@
 const Variable = require('../../engine/variable');
+const log = require('../../util/log');
 const newBlockIds = require('../../util/new-block-ids');
 
 module.exports = class WorkspaceMixin {
@@ -104,10 +105,20 @@ module.exports = class WorkspaceMixin {
             .filter(id => !this.extensionManager.isExtensionLoaded(id)) // and remove loaded extensions
         );
 
-        // Create an array promises for extensions to load
-        const extensionPromises = Array.from(extensionIDs,
-            id => this.extensionManager.loadExtensionURL(id)
-        );
+        // Create an array of promises for extensions to load. As in installTargets, an id derived from
+        // a block's opcode prefix is not necessarily a VM extension id -- it may belong to a
+        // resource-pack block instead -- so ids that don't resolve to a loadable URL are skipped rather
+        // than handed to loadExtensionURL, which would take the remote-extension Worker path and fail.
+        const extensionPromises = [];
+        extensionIDs.forEach(id => {
+            const resolvedURL = this.extensionManager.resolveExtensionURL(id);
+            if (!resolvedURL) {
+                log.warn(`Skipping unresolvable extension id "${id}" while sharing blocks; ` +
+                    'its blocks are expected to come from a resource pack, not a VM extension.');
+                return;
+            }
+            extensionPromises.push(this.extensionManager.loadExtensionURL(resolvedURL));
+        });
 
         return Promise.all(extensionPromises).then(() => {
             copiedBlocks.forEach(block => {

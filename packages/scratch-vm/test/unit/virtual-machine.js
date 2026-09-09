@@ -814,6 +814,61 @@ test('shareBlocksToTarget without a source target creates broadcasts when pasted
     });
 });
 
+test('shareBlocksToTarget succeeds when shared blocks carry a resource-pack opcode prefix', t => {
+    // Regression guard: shareBlocksToTarget derives an extension id from a shared block's opcode
+    // prefix the same way installTargets does, and used to call the real
+    // extensionManager.loadExtensionURL with that bare id unconditionally. Resource-pack blocks
+    // (e.g. thingBotC3, dht, serial, oled) are registered into Blockly and the Arduino generator by
+    // the selected board, not loaded through the extension manager, so that id is neither builtin nor
+    // a real remote extension -- loadExtensionURL took the remote-extension Worker path and rejected.
+    // Dragging such a block between targets (e.g. via the backpack) must not fail.
+    const vm = new VirtualMachine();
+    const runtime = vm.runtime;
+    const spr1 = new Sprite(null, runtime);
+    const stage = spr1.createClone();
+    stage.isStage = true;
+    runtime.targets = [stage];
+
+    const fakeBlocks = [{id: 'a block', opcode: 'thingBotC3_setPin', fields: {}, inputs: {}, topLevel: true}];
+
+    return vm.shareBlocksToTarget(fakeBlocks, stage.id)
+        .then(() => {
+            t.pass('shareBlocksToTarget resolved instead of rejecting');
+            t.end();
+        })
+        .catch(err => {
+            t.fail(`shareBlocksToTarget should not reject for a resource-pack extension id: ${err}`);
+            t.end();
+        });
+});
+
+test('shareBlocksToTarget logs the skipped id when a shared block carries a resource-pack opcode prefix', t => {
+    const vm = new VirtualMachine();
+    const runtime = vm.runtime;
+    const spr1 = new Sprite(null, runtime);
+    const stage = spr1.createClone();
+    stage.isStage = true;
+    runtime.targets = [stage];
+
+    const originalWarn = log.warn;
+    const warnings = [];
+    log.warn = (...args) => warnings.push(args.join(' '));
+
+    const fakeBlocks = [{id: 'a block', opcode: 'thingBotC3_setPin', fields: {}, inputs: {}, topLevel: true}];
+
+    return vm.shareBlocksToTarget(fakeBlocks, stage.id)
+        .then(() => {
+            log.warn = originalWarn;
+            t.match(warnings.join('\n'), /thingBotC3/, 'skip of thingBotC3 is logged');
+            t.end();
+        })
+        .catch(err => {
+            log.warn = originalWarn;
+            t.fail(`shareBlocksToTarget should not reject for a resource-pack extension id: ${err}`);
+            t.end();
+        });
+});
+
 test('shareBlocksToTarget loads extensions that have not yet been loaded', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
@@ -823,13 +878,17 @@ test('shareBlocksToTarget loads extensions that have not yet been loaded', t => 
 
     const fakeBlocks = [
         {opcode: 'loaded_fakeblock'},
-        {opcode: 'notloaded_fakeblock'}
+        {opcode: 'notloaded_fakeblock'},
+        {opcode: 'resourcepack_fakeblock'}
     ];
 
-    // Stub the extension manager
+    // Stub the extension manager. resolveExtensionURL simulates the real ExtensionManager's
+    // decision of whether an id is loadable (builtin, recorded URL, or URL-shaped) -- "resourcepack"
+    // stands in for a resource-pack id that isn't, and must be skipped without being loaded.
     const loadedIds = [];
     vm.extensionManager = {
         isExtensionLoaded: id => id === 'loaded',
+        resolveExtensionURL: id => (id === 'resourcepack' ? null : id),
         loadExtensionURL: id => new Promise(resolve => {
             loadedIds.push(id);
             resolve();
@@ -837,7 +896,8 @@ test('shareBlocksToTarget loads extensions that have not yet been loaded', t => 
     };
 
     vm.shareBlocksToTarget(fakeBlocks, stage.id).then(() => {
-        // Verify that only the not-loaded extension gets loaded
+        // Verify that only the not-loaded, resolvable extension gets loaded: the already-loaded id
+        // and the id that resolveExtensionURL rejects are both left out.
         t.same(loadedIds, ['notloaded']);
         t.end();
     });
@@ -1026,6 +1086,11 @@ test('installTargets still loads an extension id that has a real URL recorded in
     vm.extensionManager = {
         isExtensionLoaded: () => false,
         isBuiltinExtension: () => false,
+        resolveExtensionURL (extensionID, recordedURL) {
+            if (recordedURL) return recordedURL;
+            if (this.isBuiltinExtension(extensionID)) return extensionID;
+            return null;
+        },
         loadExtensionURL: url => {
             loadedURLs.push(url);
             return Promise.resolve();

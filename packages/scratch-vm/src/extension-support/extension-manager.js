@@ -114,6 +114,29 @@ class ExtensionManager {
     }
 
     /**
+     * Decide whether an extension id derived from a block's opcode prefix is genuinely loadable, and
+     * resolve it to the URL `loadExtensionURL` should be called with.
+     *
+     * A block's opcode prefix is not necessarily a VM extension id: resource-pack blocks (device and
+     * peripheral packs served by the link helper, e.g. thingBotC3, dht, serial, oled) use the same
+     * opcode-prefix convention as VM extensions but are registered into Blockly and the Arduino
+     * generator when a board is selected, not loaded through the extension manager. Calling
+     * `loadExtensionURL` with such an id takes the remote-extension Worker-loading path, which cannot
+     * resolve a bare pack id. Only ids that are genuinely resolvable should be loaded: built-in
+     * extensions, ids with a real URL recorded in project metadata, or ids that already look like a URL.
+     * @param {string} extensionID - id derived from a block's opcode prefix.
+     * @param {string} [recordedURL] - URL recorded for this id in project metadata, if any.
+     * @returns {?string} - the URL to pass to `loadExtensionURL`, or null if `extensionID` should be
+     * skipped instead of loaded.
+     */
+    resolveExtensionURL (extensionID, recordedURL) {
+        if (recordedURL) return recordedURL;
+        if (this.isBuiltinExtension(extensionID)) return extensionID;
+        if (/^[a-z][a-z\d+.-]*:/i.test(extensionID)) return extensionID;
+        return null;
+    }
+
+    /**
      * Synchronously load an internal extension (core or non-core) by ID. This call will
      * fail if the provided id is not does not match an internal extension.
      * @param {string} extensionId - the ID of an internal extension
