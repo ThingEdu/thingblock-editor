@@ -22,13 +22,51 @@ export function registerOperators(gen: ArduinoGenerator): void {
       return [`${a} ${op} ${b}`, order]
     }
 
+  // `=`, `<` and `>` take a `text` shadow on each operand (Scratch has no
+  // number shadow for comparisons), so a learner's numeric literal (e.g. `0`)
+  // reaches `gen.forBlock.text` and comes back quoted as a C string. Comparing
+  // a numeric operand against that string either fails to compile (comparing
+  // against a numeric variable) or silently compares pointers instead of
+  // values (comparing two literals) — the string quoting only belongs on a
+  // genuine text comparison, or one side of a comparison against a `String`
+  // variable, where Arduino's `String == "0"` is valid and must keep working.
+  const comparisonOperand = (
+    generator: ArduinoGenerator,
+    block: Block,
+    name: string,
+    siblingName: string,
+    order: Order,
+  ): string => {
+    const code = generator.valueToCode(block, name, order) || '0'
+    const target = block.getInputTargetBlock(name)
+    if (target?.type !== 'text') return code
+
+    const raw = String(target.getFieldValue('TEXT') ?? '').trim()
+    if (raw === '' || !Number.isFinite(Number(raw))) return code
+
+    const sibling = block.getInputTargetBlock(siblingName)
+    if (sibling?.type === 'data_variable') {
+      const siblingId = String(sibling.getFieldValue('VARIABLE'))
+      if (generator.variableCppType(block, siblingId) === 'String') return code
+    }
+    return raw
+  }
+
+  const comparison =
+    (op: string, order: Order) =>
+    (block: Block, generator: ArduinoGenerator): [string, number] => {
+      const a = comparisonOperand(generator, block, 'OPERAND1', 'OPERAND2', order)
+      const b = comparisonOperand(generator, block, 'OPERAND2', 'OPERAND1', order)
+      return [`${a} ${op} ${b}`, order]
+    }
+
   gen.forBlock.operator_add = binary('NUM1', 'NUM2', '+', Order.ADDITIVE)
   gen.forBlock.operator_subtract = binary('NUM1', 'NUM2', '-', Order.ADDITIVE)
   gen.forBlock.operator_multiply = binary('NUM1', 'NUM2', '*', Order.MULTIPLICATIVE)
   gen.forBlock.operator_divide = binary('NUM1', 'NUM2', '/', Order.MULTIPLICATIVE)
-  gen.forBlock.operator_lt = binary('OPERAND1', 'OPERAND2', '<', Order.RELATIONAL)
-  gen.forBlock.operator_gt = binary('OPERAND1', 'OPERAND2', '>', Order.RELATIONAL)
-  gen.forBlock.operator_equals = binary('OPERAND1', 'OPERAND2', '==', Order.EQUALITY)
+  gen.forBlock.operator_lt = comparison('<', Order.RELATIONAL)
+  gen.forBlock.operator_gt = comparison('>', Order.RELATIONAL)
+  gen.forBlock.operator_equals = comparison('==', Order.EQUALITY)
   gen.forBlock.operator_and = binary('OPERAND1', 'OPERAND2', '&&', Order.LOGICAL_AND)
   gen.forBlock.operator_or = binary('OPERAND1', 'OPERAND2', '||', Order.LOGICAL_OR)
 

@@ -19,12 +19,16 @@ const BLOCK_TYPES = [
   'control_repeat',
   'control_wait',
   'operator_gt',
+  'operator_lt',
+  'operator_equals',
   'operator_add',
   'operator_multiply',
   'math_number',
+  'text',
   'colour_picker',
   'arduino_digitalWrite',
   'data_setvariableto',
+  'data_variable',
   'sensing_timer',
   'procedures_definition',
   'procedures_prototype',
@@ -79,6 +83,24 @@ beforeEach(() => {
       output: null,
     },
     {
+      type: 'operator_lt',
+      message0: '%1 < %2',
+      args0: [
+        { type: 'input_value', name: 'OPERAND1' },
+        { type: 'input_value', name: 'OPERAND2' },
+      ],
+      output: null,
+    },
+    {
+      type: 'operator_equals',
+      message0: '%1 = %2',
+      args0: [
+        { type: 'input_value', name: 'OPERAND1' },
+        { type: 'input_value', name: 'OPERAND2' },
+      ],
+      output: null,
+    },
+    {
       type: 'operator_add',
       message0: '%1 + %2',
       args0: [
@@ -100,6 +122,12 @@ beforeEach(() => {
       type: 'math_number',
       message0: '%1',
       args0: [{ type: 'field_number', name: 'NUM' }],
+      output: null,
+    },
+    {
+      type: 'text',
+      message0: '%1',
+      args0: [{ type: 'field_input', name: 'TEXT', text: '' }],
       output: null,
     },
     {
@@ -137,6 +165,12 @@ beforeEach(() => {
       ],
       previousStatement: null,
       nextStatement: null,
+    },
+    {
+      type: 'data_variable',
+      message0: '%1',
+      args0: [{ type: 'field_variable', name: 'VARIABLE', variable: 'S' }],
+      output: null,
     },
     {
       type: 'sensing_timer',
@@ -188,6 +222,19 @@ afterEach(() => {
 function num(value: number): Blockly.Block {
   const block = workspace.newBlock('math_number')
   block.setFieldValue(value, 'NUM')
+  return block
+}
+
+/**
+ * A `text` shadow reporter carrying `value`. This is the actual shadow that
+ * fills a comparison operator's operand inputs in Scratch, even for a value the
+ * learner typed that looks numeric (e.g. `0`).
+ * @param value The text literal the block reports.
+ * @returns The new reporter block.
+ */
+function text(value: string): Blockly.Block {
+  const block = workspace.newBlock('text')
+  block.setFieldValue(value, 'TEXT')
   return block
 }
 
@@ -375,5 +422,71 @@ describe('ArduinoGenerator', () => {
     expect(code).toContain('delay(1 * 1000);')
     // The function is file-scope: it precedes setup().
     expect(code.indexOf('void blink()')).toBeLessThan(code.indexOf('void setup()'))
+  })
+
+  it('compares a numeric variable against a numeric-looking literal unquoted', () => {
+    // `if <S = 0>` after `set S to 60` / `set S to (S - 1)`: the `0` the learner
+    // typed reaches the `=` block's text shadow, which must not surface as a
+    // quoted C string when S is a numeric variable.
+    const begin = workspace.newBlock('event_whenarduinobegin')
+    const ifBlock = workspace.newBlock('control_if')
+    const eq = workspace.newBlock('operator_equals')
+    connectValue(eq, 'OPERAND1', workspace.newBlock('data_variable'))
+    connectValue(eq, 'OPERAND2', text('0'))
+    connectValue(ifBlock, 'CONDITION', eq)
+    connectNext(begin, ifBlock)
+
+    const code = arduinoGenerator.workspaceToCode(workspace)
+    expect(code).toContain('if (S == 0) {')
+    expect(code).not.toContain('"0"')
+  })
+
+  it('compares two numeric literals unquoted, not as pointer-comparing string literals', () => {
+    // `if <60 > 50>`: both operands are text shadows filled with numeric
+    // literals and no typed variable to consult. Before the fix this emitted
+    // `"60" > "50"`, which compiles (string-literal pointer comparison) and
+    // is silently wrong rather than loudly broken.
+    const begin = workspace.newBlock('event_whenarduinobegin')
+    const ifBlock = workspace.newBlock('control_if')
+    const gt = workspace.newBlock('operator_gt')
+    connectValue(gt, 'OPERAND1', text('60'))
+    connectValue(gt, 'OPERAND2', text('50'))
+    connectValue(ifBlock, 'CONDITION', gt)
+    connectNext(begin, ifBlock)
+
+    const code = arduinoGenerator.workspaceToCode(workspace)
+    expect(code).toContain('if (60 > 50) {')
+    expect(code).not.toContain('"60"')
+    expect(code).not.toContain('"50"')
+  })
+
+  it('keeps quotes for a genuine text comparison', () => {
+    const begin = workspace.newBlock('event_whenarduinobegin')
+    const ifBlock = workspace.newBlock('control_if')
+    const eq = workspace.newBlock('operator_equals')
+    connectValue(eq, 'OPERAND1', text('hello'))
+    connectValue(eq, 'OPERAND2', text('world'))
+    connectValue(ifBlock, 'CONDITION', eq)
+    connectNext(begin, ifBlock)
+
+    expect(arduinoGenerator.workspaceToCode(workspace)).toContain('if ("hello" == "world") {')
+  })
+
+  it('keeps quotes when a numeric-looking literal is compared to a String variable', () => {
+    // A String variable compared to a quoted literal is valid Arduino
+    // (`String == "0"`) and must keep working exactly as before.
+    const begin = workspace.newBlock('event_whenarduinobegin')
+    const ifBlock = workspace.newBlock('control_if')
+    const eq = workspace.newBlock('operator_equals')
+    const s = workspace.newBlock('data_variable')
+    const variableId = String(s.getFieldValue('VARIABLE'))
+    const model = workspace.getVariableMap().getVariableById(variableId) as { dataType?: string }
+    model.dataType = 'string'
+    connectValue(eq, 'OPERAND1', s)
+    connectValue(eq, 'OPERAND2', text('0'))
+    connectValue(ifBlock, 'CONDITION', eq)
+    connectNext(begin, ifBlock)
+
+    expect(arduinoGenerator.workspaceToCode(workspace)).toContain('if (S == "0") {')
   })
 })
