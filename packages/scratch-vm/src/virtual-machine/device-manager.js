@@ -480,6 +480,8 @@ module.exports = class DeviceManager {
      * @private
      */
     async _applyBoard (board) {
+        // A board held pending means the workspace was already rendered without its blocks.
+        const wasPending = Boolean(this._pendingBoard);
         this._selectedDeviceId = null;
         this._projectPeripheralIds = new Set();
         this.peripheralRegistry.clearActive();
@@ -493,6 +495,13 @@ module.exports = class DeviceManager {
         if (board && board.device) {
             this._projectPeripheralIds = new Set(board.peripherals || []);
             await this.selectDevice(board.device);
+            if (wasPending && this.vm.editingTarget) {
+                // The workspace already rendered once, before this board's packs existed,
+                // so every one of the project's board blocks was dropped as an unknown
+                // type. Re-render now that they are defined. No editing target means no
+                // project is loaded and there is nothing to re-render.
+                this.vm.emitWorkspaceUpdate();
+            }
         }
         this.vm.emit(Runtime.BOARD_RESTORED, {
             device: this._selectedDeviceId,
