@@ -153,7 +153,7 @@ describe('manifests', () => {
     expect(thingbotManifest.kind).toBe('device')
     expect(thingbotManifest.id).toBe('thingbot')
     expect(thingbotManifest.fqbn).toBe('esp32:esp32:esp32c3')
-    expect(thingbotManifest.extensions).toEqual(['thingbot-core', 'ps2'])
+    expect(thingbotManifest.extensions).toEqual(['thingBotC3', 'ps2'])
     expect(thingbotManifest.compile?.options).toEqual({ CDCOnBoot: 'cdc' })
   })
 
@@ -175,7 +175,7 @@ describe('manifests', () => {
 
   it('thingbot-core is a hidden peripheral pointing at its served modules', () => {
     expect(thingbotCoreManifest.kind).toBe('peripheral')
-    expect(thingbotCoreManifest.id).toBe('thingbot-core')
+    expect(thingbotCoreManifest.id).toBe('thingBotC3')
     expect(thingbotCoreManifest.hidden).toBe(true)
     expect(thingbotCoreManifest.blocks).toBe('./blocks.js')
     expect(thingbotCoreManifest.generator).toBe('./generator.js')

@@ -155,6 +155,7 @@ module.exports = class DeviceManager {
      */
     registerPeripheralManifest (manifest, base) {
         this._resourcePeripheralPacks.set(manifest.id, {manifest, base});
+        this.vm.extensionManager.markResourcePack(manifest.id);
     }
 
     /**
@@ -197,7 +198,12 @@ module.exports = class DeviceManager {
         this.vm.emit(Runtime.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
-        if (this._pendingBoard) await this._applyBoard(this._pendingBoard);
+        // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
+        // re-rendered afterward — the update emitted during the load dropped every block it lacked.
+        if (this._pendingBoard) {
+            await this._applyBoard(this._pendingBoard);
+            if (this.vm.editingTarget) this.vm.emitWorkspaceUpdate();
+        }
     }
 
     /**
