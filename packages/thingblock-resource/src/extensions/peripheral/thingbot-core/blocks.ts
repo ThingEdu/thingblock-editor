@@ -116,6 +116,31 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 
+  Blockly.Blocks.thingBotC3_startServoAngle = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'start servo %1 to angle %2 degrees over %3 seconds',
+        args0: [
+          servoField(),
+          { type: 'input_value', name: 'ANGLE', check: 'Number' },
+          { type: 'input_value', name: 'SECONDS', check: 'Number' },
+        ],
+        colour: ACTUATOR_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_waitServos = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'wait for servos',
+        colour: ACTUATOR_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
   Blockly.Blocks.thingBotC3_releaseServo = {
     init(this: Block) {
       this.jsonInit({
