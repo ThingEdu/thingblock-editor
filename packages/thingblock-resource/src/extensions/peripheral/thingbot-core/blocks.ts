@@ -8,6 +8,22 @@ const CORE_COLOUR = '#009933'
 const ACTUATOR_COLOUR = '#cc0000'
 const ELECTRONIC_COLOUR = '#6600ff'
 
+/**
+ * The board's five servo headers, as the dropdown the degree-based blocks share.
+ * @returns The `SERVO` dropdown field definition.
+ */
+const servoField = () => ({
+  type: 'field_dropdown' as const,
+  name: 'SERVO',
+  options: [
+    ['S1', '1'],
+    ['S2', '2'],
+    ['S3', '3'],
+    ['S4', '4'],
+    ['S5', '5'],
+  ],
+})
+
 export const registerBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.thingBotC3_init = {
     init(this: Block) {
@@ -68,6 +84,43 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
           },
           { type: 'input_value', name: 'PULSE', check: 'Number' },
         ],
+        colour: ACTUATOR_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_setServoAngle = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'set servo %1 to angle %2 degrees',
+        args0: [servoField(), { type: 'input_value', name: 'ANGLE', check: 'Number' }],
+        colour: ACTUATOR_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_moveServoAngle = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'move servo %1 to angle %2 degrees over %3 seconds',
+        args0: [
+          servoField(),
+          { type: 'input_value', name: 'ANGLE', check: 'Number' },
+          { type: 'input_value', name: 'SECONDS', check: 'Number' },
+        ],
+        colour: ACTUATOR_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_releaseServo = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'release servo %1',
+        args0: [servoField()],
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
       })

@@ -59,6 +59,60 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     return `pwm.setPWM(SERVO_${servo}, 0, ${pulse});\n`
   }
 
+  /**
+   * Shared C helpers for the degree-based servo blocks. `servoAngle` is indexed by PCA9685 channel and
+   * the call sites pass the `SERVO_n` macro, so the helpers never depend on the order the globals land
+   * in the generated file. It starts at 90 because that is where a servo idles after power-up, which is
+   * the sweep's starting point until a program sets an angle of its own.
+   */
+  const registerServoAngleHelpers = () => {
+    generator.globals.set(
+      'thingbot_servo_angle',
+      [
+        '#define SERVO_PULSE_MIN 102  // 0.5 ms',
+        '#define SERVO_PULSE_MAX 512  // 2.5 ms',
+        'int servoAngle[16] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90};',
+        'void servoSetAngle(int ch, int deg) {',
+        '\tdeg = constrain(deg, 0, 180);',
+        '\tpwm.setPWM(ch, 0, map(deg, 0, 180, SERVO_PULSE_MIN, SERVO_PULSE_MAX));',
+        '\tservoAngle[ch] = deg;',
+        '}',
+        'void servoMoveTo(int ch, int deg, float seconds) {',
+        '\tint from = servoAngle[ch];',
+        '\tint steps = max(1, (int)(seconds * 50));  // one step per 20 ms PWM frame',
+        '\tfor (int i = 1; i <= steps; i++) {',
+        '\t\tservoSetAngle(ch, from + (deg - from) * i / steps);',
+        '\t\tdelay(20);',
+        '\t}',
+        '}',
+        'void servoRelease(int ch) {',
+        '\tpwm.setPWM(ch, 0, 4096);  // full-off: the channel stops pulsing and the servo goes slack',
+        '}',
+      ].join('\n'),
+    )
+  }
+
+  generator.forBlock.thingBotC3_setServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    registerServoAngleHelpers()
+    return `servoSetAngle(SERVO_${servo}, ${angle});\n`
+  }
+
+  generator.forBlock.thingBotC3_moveServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
+    registerServoAngleHelpers()
+    return `servoMoveTo(SERVO_${servo}, ${angle}, ${seconds});\n`
+  }
+
+  generator.forBlock.thingBotC3_releaseServo = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    registerServoAngleHelpers()
+    return `servoRelease(SERVO_${servo});\n`
+  }
+
   generator.forBlock.thingBotC3_buzzer = (block) => {
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
     return `pwm.setPin(BUZZER, 0, ${sound});\n`
