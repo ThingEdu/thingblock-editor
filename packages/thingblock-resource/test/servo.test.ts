@@ -273,4 +273,15 @@ describe('manifests', () => {
     const motor = thingbotToolbox.contents.find((item) => item.type === 'thingBotC3_setMotor')
     expect(motor?.inputs).toEqual({ SPEED: { type: 'math_number', fields: { NUM: 0 } } })
   })
+
+  it('thingbot declares the live-mode firmware image its pack ships', () => {
+    const firmware = thingbotManifest.firmware ?? []
+    expect(firmware).toHaveLength(1)
+    expect(firmware[0].id).toBe('telemetrix-ble')
+    expect(firmware[0].path).toBe('firmware/telemetrix-ble/telemetrix-ble.ino.bin')
+    expect(firmware[0].name.id).toBe('device.thingbot.firmware.telemetrixBle')
+    // The image must be traceable to the firmware commit it was built from; a pack rebuilt without
+    // rebuilding the firmware would otherwise ship a stale binary invisibly.
+    expect(firmware[0].source).toMatch(/^[0-9a-f]{7,40}$/)
+  })
 })

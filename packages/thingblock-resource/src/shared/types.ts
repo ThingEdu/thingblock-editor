@@ -81,6 +81,22 @@ export interface PeripheralManifest extends BaseManifest {
   libs?: LibFile[]
 }
 
+/** A prebuilt firmware image a device pack ships, offered in the editor as a restore target. */
+export interface DeviceFirmware {
+  /** Stable id, unique within the pack, e.g. `telemetrix-ble`. */
+  id: string
+  /**
+   * The app image, relative to the pack root. An ESP32 image is a set: arduino-cli reads the
+   * bootloader and partition table from siblings named after this file, so the whole directory
+   * ships together and only the app image is named here.
+   */
+  path: string
+  /** Menu label; the VM resolves it via `format-message`. */
+  name: LocalizedMessage
+  /** Commit of the firmware repo this image was built from, so a stale image is traceable. */
+  source?: string
+}
+
 /** A device pack: board selection data plus the peripherals (hidden and reusable) it activates. */
 export interface DeviceManifest extends BaseManifest {
   kind: 'device'
@@ -110,6 +126,8 @@ export interface DeviceManifest extends BaseManifest {
     pnpid?: string[]
     uploadSpeed?: number
   }
+  /** Prebuilt firmware images this board can be restored to. Absent means the editor offers none. */
+  firmware?: DeviceFirmware[]
 }
 
 export type PackManifest = PeripheralManifest | DeviceManifest

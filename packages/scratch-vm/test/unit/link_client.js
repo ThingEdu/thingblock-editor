@@ -711,6 +711,12 @@ test('resourceOrigin derives the helper HTTP resource base from the WebSocket UR
     t.end();
 });
 
+test('canFlashFirmware is true: LinkClient implements flashFirmware', t => {
+    const {client} = makeClient();
+    t.equal(client.canFlashFirmware, true);
+    t.end();
+});
+
 test('resourceOrigin prefers a host-supplied resourceBase over the helper route', t => {
     const hosted = new LinkClient(new FakeRuntime(), {
         url: 'ws://test/',

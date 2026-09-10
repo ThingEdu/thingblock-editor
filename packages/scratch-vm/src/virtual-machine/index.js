@@ -342,6 +342,14 @@ class VirtualMachine extends EventEmitter {
         return this._devices.getActivePeripheralLibs();
     }
 
+    getDeviceFirmware (deviceId) {
+        return this._devices.getDeviceFirmware(deviceId);
+    }
+
+    flashDeviceFirmware (deviceId, firmwareId, callbacks) {
+        return this._devices.flashDeviceFirmware(deviceId, firmwareId, callbacks);
+    }
+
     _applyBoard (board) {
         return this._devices._applyBoard(board);
     }
@@ -366,6 +374,10 @@ class VirtualMachine extends EventEmitter {
 
     upload (deviceId, artifact, callbacks) {
         return this._link.upload(deviceId, artifact, callbacks);
+    }
+
+    flashFirmware (deviceId, pack, file, callbacks) {
+        return this._link.flashFirmware(deviceId, pack, file, callbacks);
     }
 
     cancelUpload () {
