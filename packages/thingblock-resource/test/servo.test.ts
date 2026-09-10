@@ -82,17 +82,77 @@ describe('thingbot-core peripheral', () => {
     expect(Object.keys(Blocks).sort()).toEqual([...thingbotBlockIds].sort())
   })
 
-  it('emits the ThingBot PWM declarations and initialization', () => {
+  it('registers the ThingBot PWM declarations and boot-time setup', () => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
 
-    const code = gen.forBlock.thingBotC3_init(makeBlock())
+    gen.forBlock.thingBotC3_init(makeBlock())
 
-    expect(code).toContain('pwm.begin();')
     expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
     expect(gen.globals.get('thingbot_pins')).toContain('#define SERVO_5 8')
     expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
     expect(gen.globals.get('thingbot_map_to_pulse')).toContain('int mapToPulse(int value)')
+    const setup = [...gen.setups.values()].join('\n')
+    expect(setup).toContain('pwm.begin();')
+    expect(setup).toContain('pwm.setOscillatorFrequency(27000000);')
+    expect(setup).toContain('pwm.setPWMFreq(50);')
+    expect(setup).toContain('pinMode(SW, INPUT);')
+  })
+
+  it('registers the PWM declarations and setup from a servo-angle block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_startServoAngle(makeBlock({ ANGLE: '180', SECONDS: '2' }, { SERVO: '1' }))
+
+    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
+    expect(gen.globals.get('thingbot_pins')).toContain('#define SERVO_1 12')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
+  it('registers the PWM declarations and setup from the buzzer block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_buzzer(makeBlock({ SOUND: '440' }))
+
+    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
+  it('registers the PWM declarations and setup from a motor block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_setMotor(makeBlock({ SPEED: '60' }, { MOTOR: '1', DIRECTION: 'forward' }))
+
+    expect(gen.globals.get('thingbot_pins')).toContain('#define M1_A 2')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
+  it('collapses the PWM registration to one entry per bucket no matter how many hardware blocks are used', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_setMotor(makeBlock())
+    gen.forBlock.thingBotC3_setServoAngle(makeBlock())
+    gen.forBlock.thingBotC3_buzzer(makeBlock())
+    gen.forBlock.thingBotC3_setLed(makeBlock({}, { LED: 'LED_1' }))
+    gen.forBlock.thingBotC3_switch(makeBlock())
+    gen.forBlock.thingBotC3_init(makeBlock())
+
+    // One include line, one PWM setup sequence; globals holds the pin map, the pwm object,
+    // mapToPulse, and the servo-angle helper bucket brought in by thingBotC3_setServoAngle.
+    expect(gen.includes.size).toBe(1)
+    expect(gen.globals.size).toBe(4)
+    expect(gen.setups.size).toBe(1)
+    // The setup sequence itself is not duplicated even though thingBotC3_init ran after five
+    // other hardware blocks already registered it.
+    const setup = [...gen.setups.values()].join('\n')
+    expect(setup.match(/pwm\.begin\(\);/g)).toHaveLength(1)
   })
 
   it('emits motor, servo, buzzer, and LED commands with safe empty-input defaults', () => {
