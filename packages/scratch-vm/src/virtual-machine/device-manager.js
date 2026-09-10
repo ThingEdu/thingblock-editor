@@ -155,7 +155,7 @@ module.exports = class DeviceManager {
      */
     registerPeripheralManifest (manifest, base) {
         this._resourcePeripheralPacks.set(manifest.id, {manifest, base});
-        this.vm.extensionManager.markResourcePack(manifest.id);
+        this.vm.extensionManager.addResourcePackId(manifest.id);
     }
 
     /**

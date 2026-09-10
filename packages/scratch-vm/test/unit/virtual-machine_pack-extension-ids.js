@@ -89,17 +89,17 @@ test('a project using resource-pack blocks loads when no packs have been registe
     t.end();
 });
 
-test('registering a peripheral manifest marks its id as pack-owned', async t => {
+test('registering a peripheral manifest records its id as pack-owned', async t => {
     const vm = new VirtualMachine();
-    const marked = [];
-    vm.extensionManager.markResourcePack = id => marked.push(id);
+    const recorded = [];
+    vm.extensionManager.addResourcePackId = id => recorded.push(id);
 
     vm.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
 
-    t.same(marked, ['serial'], 'the pack id, which is also its opcode prefix, was marked');
+    t.same(recorded, ['serial'], 'the pack id, which is also its opcode prefix, was recorded');
     t.end();
 });
 

@@ -146,7 +146,7 @@ class ExtensionManager {
      * @param {string} id - the pack id, which is also the opcode prefix its blocks use.
      * @returns {void}
      */
-    markResourcePack (id) {
+    addResourcePackId (id) {
         this._resourcePackIds.add(id);
     }
 
