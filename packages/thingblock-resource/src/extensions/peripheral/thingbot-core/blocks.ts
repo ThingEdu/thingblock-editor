@@ -9,6 +9,30 @@ const ACTUATOR_COLOUR = '#cc0000'
 const ELECTRONIC_COLOUR = '#6600ff'
 
 /**
+ * Note names carrying both notations: the international letter the block emits, and the solfège
+ * syllable Vietnamese pupils learn first, so a learner can play from either.
+ */
+const NOTE_OPTIONS: [string, string][] = [
+  ['C (Do)', 'C'],
+  ['C# (Do#)', 'C#'],
+  ['D (Re)', 'D'],
+  ['D# (Re#)', 'D#'],
+  ['E (Mi)', 'E'],
+  ['F (Fa)', 'F'],
+  ['F# (Fa#)', 'F#'],
+  ['G (Sol)', 'G'],
+  ['G# (Sol#)', 'G#'],
+  ['A (La)', 'A'],
+  ['A# (La#)', 'A#'],
+  ['B (Si)', 'B'],
+]
+
+const OCTAVE_OPTIONS: [string, string][] = [
+  ['3', '3'],
+  ['4', '4'],
+  ['5', '5'],
+  ['6', '6'],
+]
  * The board's five servo headers, as the dropdown the degree-based blocks share.
  * @returns The `SERVO` dropdown field definition.
  */
@@ -132,6 +156,43 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
       this.jsonInit({
         message0: 'set buzzer to %1 pulse',
         args0: [{ type: 'input_value', name: 'SOUND', check: 'Number' }],
+        colour: ELECTRONIC_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_setTempo = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'set tempo to %1 BPM',
+        args0: [{ type: 'input_value', name: 'TEMPO', check: 'Number' }],
+        colour: ELECTRONIC_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_playNote = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'play note %1 octave %2 for %3 beats',
+        args0: [
+          { type: 'field_dropdown', name: 'NOTE', options: NOTE_OPTIONS },
+          { type: 'field_dropdown', name: 'OCTAVE', options: OCTAVE_OPTIONS },
+          { type: 'input_value', name: 'BEATS', check: 'Number' },
+        ],
+        colour: ELECTRONIC_COLOUR,
+        extensions: ['shape_statement'],
+      })
+    },
+  }
+
+  Blockly.Blocks.thingBotC3_rest = {
+    init(this: Block) {
+      this.jsonInit({
+        message0: 'rest for %1 beats',
+        args0: [{ type: 'input_value', name: 'BEATS', check: 'Number' }],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
       })

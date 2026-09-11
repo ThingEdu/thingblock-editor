@@ -5,6 +5,34 @@
 import type { Block } from '@scratch/scratch-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
+/** Semitone offset of each note name within its octave, for the equal-tempered frequency. */
+const SEMITONES: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  D: 2,
+  'D#': 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  G: 7,
+  'G#': 8,
+  A: 9,
+  'A#': 10,
+  B: 11,
+}
+
+/**
+ * Equal-tempered frequency of a note, rounded to whole Hz because that is the resolution the
+ * PCA9685 prescaler offers anyway. A4 = 440 Hz is MIDI number 69.
+ * @param note The note name, e.g. `C#`.
+ * @param octave The octave number, e.g. `4`.
+ * @returns The frequency in Hz.
+ */
+const noteFrequency = (note: string, octave: string): number => {
+  const midi = (Number(octave) + 1) * 12 + (SEMITONES[note] ?? 0)
+  return Math.round(440 * Math.pow(2, (midi - 69) / 12))
+}
+
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
   const fieldValue = (block: Block, name: string, fallback: string): string => {
     const value: unknown = block.getFieldValue(name)
@@ -116,6 +144,51 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   generator.forBlock.thingBotC3_buzzer = (block) => {
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
     return `pwm.setPin(BUZZER, 0, ${sound});\n`
+  }
+
+  /**
+   * Shared C helpers for the music blocks. The buzzer is a passive one on PCA9685 channel 14, so its
+   * pitch is the chip's PWM frequency — and that prescaler is shared by all 16 channels, which is why
+   * every note ends by restoring the 50 Hz servo frame rather than leaving servos on a broken frame.
+   */
+  const registerMusicHelpers = () => {
+    generator.globals.set(
+      'thingbot_music',
+      [
+        'int musicBPM = 120;',
+        'void musicPlay(int hz, float beats) {',
+        '\tint ms = (int)(beats * (60000.0 / musicBPM));',
+        '\tif (hz > 0) {',
+        '\t\tpwm.setPWMFreq(hz);',
+        '\t\tpwm.setPWM(BUZZER, 0, 2048);  // 50% duty: a square wave, the loudest a passive buzzer gets',
+        '\t}',
+        '\tdelay(ms > 50 ? ms - 50 : ms);',
+        '\tpwm.setPWM(BUZZER, 0, 0);',
+        '\tpwm.setPWMFreq(50);',
+        '\tdelay(50);  // the gap that keeps two notes of the same pitch from running together',
+        '}',
+      ].join('\n'),
+    )
+  }
+
+  generator.forBlock.thingBotC3_setTempo = (block) => {
+    const tempo = generator.valueToCode(block, 'TEMPO', Order.ATOMIC) || '120'
+    registerMusicHelpers()
+    return `musicBPM = ${tempo};\n`
+  }
+
+  generator.forBlock.thingBotC3_playNote = (block) => {
+    const note = fieldValue(block, 'NOTE', 'C')
+    const octave = fieldValue(block, 'OCTAVE', '4')
+    const beats = generator.valueToCode(block, 'BEATS', Order.ATOMIC) || '1'
+    registerMusicHelpers()
+    return `musicPlay(${noteFrequency(note, octave)}, ${beats});\n`
+  }
+
+  generator.forBlock.thingBotC3_rest = (block) => {
+    const beats = generator.valueToCode(block, 'BEATS', Order.ATOMIC) || '1'
+    registerMusicHelpers()
+    return `musicPlay(0, ${beats});\n`
   }
 
   generator.forBlock.thingBotC3_setLed = (block) => {
