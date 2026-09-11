@@ -33,6 +33,8 @@ const OCTAVE_OPTIONS: [string, string][] = [
   ['5', '5'],
   ['6', '6'],
 ]
+
+/**
  * The board's five servo headers, as the dropdown the degree-based blocks share.
  * @returns The `SERVO` dropdown field definition.
  */

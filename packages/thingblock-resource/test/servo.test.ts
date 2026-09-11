@@ -173,6 +173,8 @@ describe('thingbot-core peripheral', () => {
     // PCA9685 has one prescaler for all 16 channels, so a note's frequency is also the servo frame
     // rate. Leaving it there would strand every servo on a broken frame once the music stops.
     expect(helpers).toContain('pwm.setPWMFreq(50)')
+  })
+
   it('emits the angle helpers and the degree-based servo command', () => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
@@ -329,6 +331,8 @@ describe('manifests', () => {
       type: 'thingBotC3_rest',
       inputs: { BEATS: { type: 'math_number', fields: { NUM: 1 } } },
     })
+  })
+
   it('thingbot toolbox offers the degree blocks with math_number shadows', () => {
     expect(thingbotToolbox.contents).toContainEqual({
       kind: 'block',
