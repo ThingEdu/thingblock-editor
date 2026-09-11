@@ -6,6 +6,18 @@ const {DeviceRegistry, PeripheralRegistry, ManifestDevice} = require('../devices
 const {boards} = require('../extensions/devices');
 
 /**
+ * How many times the pack index is fetched before giving up, and how long to wait between attempts.
+ * The helper is a sidecar the host spawns alongside the editor, so the first attempts can lose the
+ * race to its port; without retrying, its packs stay missing for the whole session and the boards
+ * they contribute never reach the board list.
+ * @type {number}
+ */
+const RESOURCE_INDEX_ATTEMPTS = 5;
+
+/** @type {number} milliseconds between pack-index attempts. */
+const RESOURCE_INDEX_RETRY_MS = 500;
+
+/**
  * The board-mode device subsystem owned by the VM: the device registry, helper-served resource packs,
  * and the selected board's active peripherals. The VM exposes its public surface through delegators
  * and exposes `deviceRegistry`/`peripheralRegistry` through getters. Cross-subsystem state (the
@@ -160,9 +172,11 @@ module.exports = class DeviceManager {
 
     /**
      * Fetch the helper-served pack index and register each device pack against the device registry, so
-     * helper-provided boards join the built-in list. One successful run per VM instance (guarded); a
-     * missing or unreachable helper logs and returns, leaving built-in devices working and the next
-     * link-mode entry free to retry. Peripheral packs are recorded here and activated on device selection.
+     * helper-provided boards join the built-in list. One successful run per VM instance (guarded). The
+     * index fetch is retried a few times because the helper is a sidecar spawned alongside the editor
+     * and may not have its port open yet; once the attempts are spent it logs and returns, leaving
+     * built-in devices working and the next link-mode entry free to retry. Peripheral packs are
+     * recorded here and activated on device selection.
      * @returns {Promise<void>} resolves once packs are loaded (or skipped).
      */
     async loadResourcePacks () {
@@ -171,13 +185,19 @@ module.exports = class DeviceManager {
         if (!origin) return;
 
         let packs;
-        try {
-            const response = await fetch(`${origin}/index.json`);
-            ({packs} = await response.json());
-        } catch (e) {
-            log.warn(`loadResourcePacks: resource index unreachable at ${origin}; ` +
-                'using built-in devices only', e);
-            return;
+        for (let attempt = 1; attempt <= RESOURCE_INDEX_ATTEMPTS; attempt++) {
+            try {
+                const response = await fetch(`${origin}/index.json`);
+                ({packs} = await response.json());
+                break;
+            } catch (e) {
+                if (attempt === RESOURCE_INDEX_ATTEMPTS) {
+                    log.warn(`loadResourcePacks: resource index unreachable at ${origin} after ` +
+                        `${attempt} attempts; using built-in devices only`, e);
+                    return;
+                }
+                await new Promise(resolve => setTimeout(resolve, RESOURCE_INDEX_RETRY_MS));
+            }
         }
 
         for (const {kind, path} of packs) {
