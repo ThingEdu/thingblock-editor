@@ -104,13 +104,13 @@ describe('viaBanhMi manifests', () => {
     expect(viaBanhMiManifest.fqbn).toBe('esp32:esp32:esp32')
     expect(viaBanhMiManifest.requires).toBe('serial')
     expect(viaBanhMiManifest.manufacturer).toBe('MakerViet')
-    expect(viaBanhMiManifest.extensions).toEqual(['viaBanhMi-core'])
+    expect(viaBanhMiManifest.extensions).toEqual(['viaBanhMi'])
     expect(viaBanhMiManifest.compile).toBeUndefined()
   })
 
   it('viaBanhMi-core is a hidden peripheral vendoring the PWM and MPU libraries', () => {
     expect(viaBanhMiCoreManifest.kind).toBe('peripheral')
-    expect(viaBanhMiCoreManifest.id).toBe('viaBanhMi-core')
+    expect(viaBanhMiCoreManifest.id).toBe('viaBanhMi')
     expect(viaBanhMiCoreManifest.hidden).toBe(true)
     expect(viaBanhMiCoreManifest.libs).toEqual([
       { path: 'libs/Adafruit_PWM_Servo_Driver_Library' },

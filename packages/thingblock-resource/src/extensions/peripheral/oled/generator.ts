@@ -46,7 +46,12 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     generator.includes.set('oled', '#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>')
     generator.globals.set('oled', `Adafruit_SSD1306 oled(${w}, ${h}, &Wire);`)
 
-    return `oled.begin(SSD1306_SWITCHCAPVCC, ${addr});\n`
+    // Adafruit_GFX starts with textcolor 0xFFFF, and Adafruit_SSD1306::drawPixel only acts on
+    // WHITE/BLACK/INVERSE — every other value is silently dropped. So a display that is wired
+    // and initialized correctly still shows nothing for `oled print` until a colour is set, with
+    // no error to explain it. Establish a drawable default here, the way every Adafruit example
+    // does; `set text` still overrides it.
+    return `oled.begin(SSD1306_SWITCHCAPVCC, ${addr});\noled.setTextColor(SSD1306_WHITE);\n`
   }
 
   generator.forBlock.oled_drawLine = draw('drawLine', ['X0', 'Y0', 'X1', 'Y1'])

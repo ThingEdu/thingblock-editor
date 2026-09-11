@@ -57,7 +57,21 @@ describe('OLED generator', () => {
 
     expect(gen.includes.get('oled')).toContain('#include <Adafruit_SSD1306.h>')
     expect(gen.globals.get('oled')).toBe('Adafruit_SSD1306 oled(128, 32, &Wire);')
-    expect(code).toBe('oled.begin(SSD1306_SWITCHCAPVCC, 0x3d);\n')
+    expect(code).toBe('oled.begin(SSD1306_SWITCHCAPVCC, 0x3d);\noled.setTextColor(SSD1306_WHITE);\n')
+  })
+
+  it('gives the display a drawable text colour, so printing without `set text` still shows', () => {
+    // Adafruit_GFX starts with textcolor 0xFFFF, and Adafruit_SSD1306::drawPixel only
+    // handles WHITE/BLACK/INVERSE — any other value silently draws nothing. Without a
+    // colour set at init, every `oled print` fills the buffer with no pixels and the
+    // screen stays blank with no error anywhere.
+    const gen = makeGenerator()
+    registerGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.oled_init(makeBlock({ W: '128', H: '64' }, { ADDR: '0x3c' }))
+
+    expect(code).toContain('oled.setTextColor(SSD1306_WHITE);')
+    expect(code.indexOf('oled.begin')).toBeLessThan(code.indexOf('oled.setTextColor'))
   })
 
   it('emits each drawing primitive with its coordinates then the colour', () => {

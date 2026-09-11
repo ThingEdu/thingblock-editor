@@ -214,12 +214,11 @@ module.exports = class ProjectIoMixin {
                     performance.measure('scratch-vm-deserialize',
                         'scratch-vm-deserialize-start', 'scratch-vm-deserialize-end');
                 }
-                return this.installTargets(targets, extensions, true)
-                    .then(async installed => {
-                        // Restore the project's saved board (sb3 only; sb2 has none) once targets are in.
-                        await this._applyBoard(board || null);
-                        return installed;
-                    });
+                // The board's peripherals register their blocks on the shared Blockly, so the board is
+                // restored (sb3 only; sb2 has none) before `installTargets` emits the workspace update
+                // that renders those blocks.
+                return this._applyBoard(board || null)
+                    .then(() => this.installTargets(targets, extensions, true));
             });
     }
 
