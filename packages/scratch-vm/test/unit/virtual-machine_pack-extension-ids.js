@@ -89,17 +89,72 @@ test('a project using resource-pack blocks loads when no packs have been registe
     t.end();
 });
 
-test('registering a peripheral manifest records its id as pack-owned', async t => {
+test('registering a peripheral manifest makes its id a device extension', async t => {
     const vm = new VirtualMachine();
-    const recorded = [];
-    vm.extensionManager.addResourcePackId = id => recorded.push(id);
+    t.notOk(vm._devices.isDeviceExtension('serial'), 'unknown before registration');
 
     vm.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
 
-    t.same(recorded, ['serial'], 'the pack id, which is also its opcode prefix, was recorded');
+    t.ok(vm._devices.isDeviceExtension('serial'), 'the pack id, which is also its opcode prefix, is recognized');
+    t.end();
+});
+
+const registerPackPeripherals = vm => {
+    vm.registerPeripheralManifest(
+        {id: 'thingBotC3', kind: 'peripheral', name: 'ThingBot', hidden: true},
+        'http://localhost:3030/resources/extensions/peripheral/thingBotC3'
+    );
+    vm.registerPeripheralManifest(
+        {id: 'serial', kind: 'peripheral', name: 'Serial'},
+        'http://localhost:3030/resources/extensions/peripheral/serial'
+    );
+};
+
+const spyExtensionLoads = vm => {
+    const requested = [];
+    const load = vm.extensionManager.loadExtensionURL.bind(vm.extensionManager);
+    vm.extensionManager.loadExtensionURL = id => {
+        requested.push(id);
+        return load(id);
+    };
+    return requested;
+};
+
+test('loading a project does not ask the extension manager for device extensions', async t => {
+    const vm = new VirtualMachine();
+    registerPackPeripherals(vm);
+    const requested = spyExtensionLoads(vm);
+
+    await vm.loadProject(projectWithPackBlocks());
+
+    t.same(requested, [], 'device-owned and reusable pack ids never reach loadExtensionURL');
+    t.end();
+});
+
+test('sharing blocks does not ask the extension manager for device extensions', async t => {
+    const vm = new VirtualMachine();
+    await vm.loadProject(projectWithPackBlocks());
+    registerPackPeripherals(vm);
+    const requested = spyExtensionLoads(vm);
+    const sprite = vm.runtime.targets.find(target => !target.isStage);
+
+    await vm.shareBlocksToTarget([{
+        id: 'shared',
+        opcode: 'serial_begin',
+        inputs: {},
+        fields: {},
+        next: null,
+        parent: null,
+        shadow: false,
+        topLevel: true,
+        x: 0,
+        y: 0
+    }], sprite.id);
+
+    t.same(requested, [], 'the pack id never reaches loadExtensionURL');
     t.end();
 });
 

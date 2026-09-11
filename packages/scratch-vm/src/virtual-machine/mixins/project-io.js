@@ -233,7 +233,8 @@ module.exports = class ProjectIoMixin {
         const extensionPromises = [];
 
         extensions.extensionIDs.forEach(extensionID => {
-            if (!this.extensionManager.isExtensionLoaded(extensionID)) {
+            if (!this.extensionManager.isExtensionLoaded(extensionID) &&
+                !this._devices.isDeviceExtension(extensionID)) {
                 const extensionURL = extensions.extensionURLs.get(extensionID) || extensionID;
                 extensionPromises.push(this.extensionManager.loadExtensionURL(extensionURL));
             }

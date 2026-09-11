@@ -82,18 +82,6 @@ class ExtensionManager {
         this._loadedExtensions = new Map();
 
         /**
-         * Block-opcode prefixes owned by helper-served resource packs rather than by VM extensions.
-         * Their blocks compile to firmware and have no VM primitives, so a project referencing them
-         * needs nothing loaded here; the ids are recorded only to tell a pack apart from a genuinely
-         * unknown extension when a project asks for one.
-         * @type {Set.<string>}
-         * @private
-         * 
-         * @author lgthevinh
-         */
-        this._resourcePackIds = new Set();
-
-        /**
          * Keep a reference to the runtime so we can construct internal extension objects.
          * TODO: remove this in favor of extensions accessing the runtime as a service.
          * @type {Runtime}
@@ -141,16 +129,6 @@ class ExtensionManager {
     }
 
     /**
-     * Record a resource pack's block-opcode prefix so `loadExtensionURL` recognizes it as pack-owned
-     * rather than an unknown extension. Called as each peripheral manifest is registered.
-     * @param {string} id - the pack id, which is also the opcode prefix its blocks use.
-     * @returns {void}
-     */
-    addResourcePackId (id) {
-        this._resourcePackIds.add(id);
-    }
-
-    /**
      * Load an extension by URL or internal extension ID
      * @param {string} extensionURL - the URL for the extension to load OR the ID of an internal extension
      * @returns {Promise} resolved once the extension is loaded and initialized or rejected on failure
@@ -171,13 +149,11 @@ class ExtensionManager {
             return Promise.resolve();
         }
 
-        // A bare id that is not a builtin names either a resource pack's blocks (firmware blocks with
-        // no VM primitives, restored from the project's `board`) or an extension this VM does not have.
-        // Neither is loadable as a worker, and neither should fail the project load that asked for it.
+        // A bare id that is not a builtin cannot be loaded as a worker. It is an extension this VM lacks,
+        // or a device extension whose pack has not registered yet (the project loaded before the resource
+        // packs did); either way the project load that asked for it must still succeed.
         if (!extensionURL.includes('://')) {
-            if (!this._resourcePackIds.has(extensionURL)) {
-                log.warn(`Ignoring unknown extension ID while loading project: ${extensionURL}`);
-            }
+            log.warn(`Ignoring unknown extension ID while loading project: ${extensionURL}`);
             return Promise.resolve();
         }
 

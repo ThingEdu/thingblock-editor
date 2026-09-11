@@ -102,6 +102,7 @@ module.exports = class WorkspaceMixin {
             .map(b => sb3.getExtensionIdForOpcode(b.opcode))
             .filter(id => !!id) // Remove ids that do not exist
             .filter(id => !this.extensionManager.isExtensionLoaded(id)) // and remove loaded extensions
+            .filter(id => !this._devices.isDeviceExtension(id)) // and device extensions
         );
 
         // Create an array promises for extensions to load

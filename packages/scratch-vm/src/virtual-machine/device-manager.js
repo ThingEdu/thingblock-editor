@@ -155,7 +155,18 @@ module.exports = class DeviceManager {
      */
     registerPeripheralManifest (manifest, base) {
         this._resourcePeripheralPacks.set(manifest.id, {manifest, base});
-        this.vm.extensionManager.addResourcePackId(manifest.id);
+    }
+
+    /**
+     * Whether an extension id names a device extension — a registered peripheral pack, device-owned or
+     * reusable — rather than a VM extension. A pack's id is also the opcode prefix its blocks use, so
+     * this is how project load tells the sb3-derived extension ids it owns from ones the
+     * {@link ExtensionManager} should load.
+     * @param {string} id - the extension id (an opcode prefix).
+     * @returns {boolean} true when a registered peripheral pack owns the id.
+     */
+    isDeviceExtension (id) {
+        return this._resourcePeripheralPacks.has(id);
     }
 
     /**
