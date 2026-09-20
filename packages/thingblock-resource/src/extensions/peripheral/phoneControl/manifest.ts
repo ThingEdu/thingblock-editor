@@ -14,6 +14,7 @@ const manifest: PeripheralManifest = {
   id: 'phoneControl',
   kind: 'peripheral',
   name: 'Phone control',
+  icon: './icon.svg',
   description: {
     id: 'peripheral.phoneControl.description',
     default: 'Let a phone drive the board over Bluetooth while the program runs.',
