@@ -25,6 +25,15 @@ const toolbox: ToolboxCategory = {
         SECONDS: { type: 'math_number', fields: { NUM: 1 } },
       },
     },
+    {
+      kind: 'block',
+      type: 'thingBotC3_startServoAngle',
+      inputs: {
+        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
+        SECONDS: { type: 'math_number', fields: { NUM: 1 } },
+      },
+    },
+    { kind: 'block', type: 'thingBotC3_waitServos' },
     { kind: 'block', type: 'thingBotC3_releaseServo' },
     { kind: 'block', type: 'thingBotC3_buzzer', inputs: { SOUND: { type: 'math_number', fields: { NUM: 0 } } } },
     { kind: 'block', type: 'thingBotC3_setTempo', inputs: { TEMPO: { type: 'math_number', fields: { NUM: 120 } } } },
