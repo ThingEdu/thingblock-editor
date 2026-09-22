@@ -233,10 +233,19 @@ module.exports = class ProjectIoMixin {
         const extensionPromises = [];
 
         extensions.extensionIDs.forEach(extensionID => {
-            if (!this.extensionManager.isExtensionLoaded(extensionID) &&
-                !this._devices.isDeviceExtension(extensionID)) {
-                const extensionURL = extensions.extensionURLs.get(extensionID) || extensionID;
-                extensionPromises.push(this.extensionManager.loadExtensionURL(extensionURL));
+            if (this.extensionManager.isExtensionLoaded(extensionID)) return;
+            // A resource pack's blocks are registered by board selection, not by the extension manager.
+            if (this._devices.isDeviceExtension(extensionID)) return;
+
+            // A block's opcode prefix is not necessarily a VM extension id, so only attempt the ids that
+            // are genuinely resolvable: built-in extensions, ids with a real URL recorded in project
+            // metadata, or ids that already look like a URL themselves.
+            const recordedURL = extensions.extensionURLs.get(extensionID);
+            const looksLikeURL = /^[a-z][a-z\d+.-]*:/i.test(extensionID);
+            if (!recordedURL && !looksLikeURL && !this.extensionManager.isBuiltinExtension(extensionID)) {
+                log.warn(`Skipping unresolvable extension id "${extensionID}" on project load; ` +
+                    'its blocks are expected to come from a resource pack, not a VM extension.');
+                return;
             }
 
             extensionPromises.push(this.extensionManager.loadExtensionURL(recordedURL || extensionID));
