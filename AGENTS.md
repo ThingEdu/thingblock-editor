@@ -144,7 +144,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
   VM devices.
-- i18n strings in extensions are extracted with `format-message`. Run `npm run i18n:src` after changing them.
+- i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
+  call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
+  through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.
 - The target model is firmware-only: targets host blocks, variables, comments, and sounds, but no costumes,
   rendering, or motion (no x/y/direction/size/visible/rotation/effects/drawable). Serialization
   (`serialization/sb3.js`/`sb2.js`) persists blocks/variables/sounds plus the firmware `board` field and drops
