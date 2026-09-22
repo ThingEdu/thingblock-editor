@@ -91,7 +91,7 @@ scripts/                    Monorepo-level utility scripts
 | Package | Language | Bundler | Tests |
 | - | - | - | - |
 | `scratch-gui` | JavaScript / JSX (some TypeScript) | webpack | Jest |
-| `scratch-vm` | JavaScript | webpack | Tap |
+| `scratch-vm` | JavaScript (migrating to TypeScript) | webpack | Tap |
 | `scratch-blocks` | TypeScript | webpack | Vitest |
 | `scratch-render` | JavaScript | webpack | Tap |
 | `scratch-storage` | JavaScript | webpack | Jest |
@@ -140,7 +140,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 ### scratch-vm specifics
 
 - Extension entry points live in `src/extensions/`. Each extension exports a class with `getInfo()` and block
-  implementation methods.
+  implementation methods. New and converted extensions are TypeScript and implement `Extension` from
+  `src/extensions/extension.ts`; because they compile to ES modules, `extension-manager.js` must require them
+  with `.default`. `npm run typecheck` (part of `npm test`) is what checks them — eslint alone does not.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
   VM devices.

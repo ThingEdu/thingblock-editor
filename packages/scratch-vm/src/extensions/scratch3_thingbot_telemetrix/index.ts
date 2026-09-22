@@ -1,8 +1,12 @@
-const ArgumentType = require('../../extension-support/argument-type');
-const BlockType = require('../../extension-support/block-type');
-const formatMessage = require('format-message');
-const ThingBotTelemetrix = require('./thingbot-telemetrix');
-const BLETransport = require('./transport/ble');
+import ArgumentType from '../../extension-support/argument-type';
+import BlockType from '../../extension-support/block-type';
+import formatMessage from 'format-message';
+import ThingBotTelemetrix from './thingbot-telemetrix';
+import BLETransport from './transport/ble';
+import type {Extension, ExtensionInfo} from '../extension';
+
+/** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
+type ArgValue = string | number;
 
 // eslint-disable-next-line @stylistic/max-len
 const blockIconURI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9ImhzbCgxNjMsIDg1JSwgNDAlKSIvPgogIDxnIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CiAgICA8cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgcng9IjIiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMTIpIi8+CiAgICA8cGF0aCBkPSJNIDE1LDEwIGEgNSw1IDAgMCwwIDEwLDAiIHN0cm9rZS13aWR0aD0iMS4yIi8+CiAgICA8bGluZSB4MT0iNiIgeTE9IjE1IiB4Mj0iMTAiIHkyPSIxNSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxsaW5lIHgxPSI2IiB5MT0iMjAiIHgyPSIxMCIgeTI9IjIwIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjYiIHkxPSIyNSIgeDI9IjEwIiB5Mj0iMjUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iMzAiIHkxPSIxNSIgeDI9IjM0IiB5Mj0iMTUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iMzAiIHkxPSIyMCIgeDI9IjM0IiB5Mj0iMjAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iMzAiIHkxPSIyNSIgeDI9IjM0IiB5Mj0iMjUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iMTYiIHkxPSI2IiB4Mj0iMTYiIHkyPSIxMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjYiIHgyPSIyNCIgeTI9IjEwIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjE2IiB5MT0iMzAiIHgyPSIxNiIgeTI9IjM0IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjI0IiB5MT0iMzAiIHgyPSIyNCIgeTI9IjM0IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDwvZz4KPC9zdmc+';
@@ -16,7 +20,12 @@ const DigitalLevel = {
     LOW: 'LOW'
 };
 
-class ThingBotTelemetrixExtension {
+class ThingBotTelemetrixExtension implements Extension {
+    runtime;
+    _telemetrix;
+    _devices;
+    _stopScan;
+
     constructor (runtime) {
         this.runtime = runtime;
         this._telemetrix = new ThingBotTelemetrix(new BLETransport());
@@ -50,7 +59,6 @@ class ThingBotTelemetrixExtension {
                 this.runtime.emit(this.runtime.constructor.PERIPHERAL_LIST_UPDATE, list);
             },
             onError: err => {
-                // eslint-disable-next-line no-console
                 console.error('[ThingBot] BLE scan error:', err);
                 this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
                     message: err.message
@@ -97,7 +105,7 @@ class ThingBotTelemetrixExtension {
 
     // ─── Extension metadata ───
 
-    getInfo () {
+    getInfo (): ExtensionInfo {
         return {
             id: EXTENSION_ID,
             name: formatMessage({
@@ -379,64 +387,64 @@ class ThingBotTelemetrixExtension {
 
     // ─── Block handlers ───
 
-    setPinMode ({PIN, MODE}) {
-        const pin = parseInt(PIN, 10);
+    setPinMode ({PIN, MODE}: {PIN: ArgValue, MODE: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
         const mode = PIN_MODE[MODE] ?? PIN_MODE.OUTPUT;
         this._telemetrix.setPinMode(pin, mode);
         return Promise.resolve();
     }
 
-    digitalWrite ({PIN, LEVEL}) {
-        const pin = parseInt(PIN, 10);
+    digitalWrite ({PIN, LEVEL}: {PIN: ArgValue, LEVEL: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
         const value = LEVEL === DigitalLevel.HIGH ? 1 : 0;
         this._telemetrix.digitalWrite(pin, value);
         return Promise.resolve();
     }
 
-    digitalRead ({PIN}) {
-        return this._telemetrix.digitalRead(parseInt(PIN, 10));
+    digitalRead ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.digitalRead(parseInt(String(PIN), 10));
     }
 
-    analogRead ({PIN}) {
-        return this._telemetrix.analogRead(parseInt(PIN, 10));
+    analogRead ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.analogRead(parseInt(String(PIN), 10));
     }
 
-    pwmWrite ({PIN, VALUE}) {
-        const pin = parseInt(PIN, 10);
+    pwmWrite ({PIN, VALUE}: {PIN: ArgValue, VALUE: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
         const val = Math.max(0, Math.min(255, Math.round(Number(VALUE))));
         this._telemetrix.pwmWrite(pin, val);
         return Promise.resolve();
     }
 
-    servoWrite ({SERVO_ID, ANGLE}) {
-        const servoId = parseInt(SERVO_ID, 10);
+    servoWrite ({SERVO_ID, ANGLE}: {SERVO_ID: ArgValue, ANGLE: ArgValue}) {
+        const servoId = parseInt(String(SERVO_ID), 10);
         const angle = Math.max(0, Math.min(180, Math.round(Number(ANGLE))));
         this._telemetrix.servoWrite(servoId, angle);
         return Promise.resolve();
     }
 
-    controlDC ({MOTOR_ID, SPEED}) {
-        const motorId = parseInt(MOTOR_ID, 10);
+    controlDC ({MOTOR_ID, SPEED}: {MOTOR_ID: ArgValue, SPEED: ArgValue}) {
+        const motorId = parseInt(String(MOTOR_ID), 10);
         const speed = Math.max(0, Math.min(100, Math.round(Number(SPEED))));
         this._telemetrix.controlDC(motorId, speed);
         return Promise.resolve();
     }
 
-    controlBuzzer ({FREQ}) {
+    controlBuzzer ({FREQ}: {FREQ: ArgValue}) {
         const freq = Math.max(0, Math.min(100, Math.round(Number(FREQ))));
         this._telemetrix.controlBuzzer(freq);
         return Promise.resolve();
     }
 
-    controlLED ({LED_ID, LED_STATE}) {
-        const ledId = parseInt(LED_ID, 10);
+    controlLED ({LED_ID, LED_STATE}: {LED_ID: ArgValue, LED_STATE: ArgValue}) {
+        const ledId = parseInt(String(LED_ID), 10);
         const state = LED_STATE === 'on' ? 100 : 0;
         this._telemetrix.controlLED(ledId, state);
         return Promise.resolve();
     }
 
-    setupUltrasonic ({TRIG, ECHO}) {
-        this._telemetrix.setupUltrasonic(parseInt(TRIG, 10), parseInt(ECHO, 10));
+    setupUltrasonic ({TRIG, ECHO}: {TRIG: ArgValue, ECHO: ArgValue}) {
+        this._telemetrix.setupUltrasonic(parseInt(String(TRIG), 10), parseInt(String(ECHO), 10));
         return Promise.resolve();
     }
 
@@ -444,20 +452,20 @@ class ThingBotTelemetrixExtension {
         return this._telemetrix.readDistance();
     }
 
-    setupDHT ({DHT_TYPE: type, PIN}) {
-        const pin = parseInt(PIN, 10);
+    setupDHT ({DHT_TYPE: type, PIN}: {DHT_TYPE: ArgValue, PIN: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
         const dhtType = DHT_TYPE[type] ?? DHT_TYPE.DHT11;
         this._telemetrix.setupDHT(pin, dhtType);
         return Promise.resolve();
     }
 
-    readTemperature ({PIN}) {
-        return this._telemetrix.readTemperature(parseInt(PIN, 10));
+    readTemperature ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.readTemperature(parseInt(String(PIN), 10));
     }
 
-    readHumidity ({PIN}) {
-        return this._telemetrix.readHumidity(parseInt(PIN, 10));
+    readHumidity ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.readHumidity(parseInt(String(PIN), 10));
     }
 }
 
-module.exports = ThingBotTelemetrixExtension;
+export default ThingBotTelemetrixExtension;

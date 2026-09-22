@@ -5,12 +5,10 @@
         "module": "ESNext",
         "target": "ESNext",
         "moduleResolution": "bundler",
-        "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "noEmit": true,
         "lib": [
             "ESNext",
             "DOM"

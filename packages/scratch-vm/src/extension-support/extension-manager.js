@@ -17,7 +17,8 @@ const builtinExtensions = {
     text2speech: () => require('../extensions/scratch3_text2speech'),
     translate: () => require('../extensions/scratch3_translate'),
     makeymakey: () => require('../extensions/scratch3_makeymakey'),
-    thingbotTelemetrix: () => require('../extensions/scratch3_thingbot_telemetrix'),
+    // `.default` because this extension is TypeScript: it compiles to an ES module, not `module.exports`.
+    thingbotTelemetrix: () => require('../extensions/scratch3_thingbot_telemetrix').default,
     arduino: () => require('../extensions/common-board')
 };
 
