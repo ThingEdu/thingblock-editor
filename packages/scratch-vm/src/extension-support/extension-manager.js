@@ -158,6 +158,14 @@ class ExtensionManager {
             return Promise.resolve();
         }
 
+        // A bare id that is not a builtin cannot be loaded as a worker. It is an extension this VM lacks,
+        // or a device extension whose pack has not registered yet (the project loaded before the resource
+        // packs did); either way the project load that asked for it must still succeed.
+        if (!extensionURL.includes('://')) {
+            log.warn(`Ignoring unknown extension ID while loading project: ${extensionURL}`);
+            return Promise.resolve();
+        }
+
         return new Promise((resolve, reject) => {
             // If we `require` this at the global level it breaks non-webpack targets, including tests
             const worker = new Worker('./extension-worker.js');

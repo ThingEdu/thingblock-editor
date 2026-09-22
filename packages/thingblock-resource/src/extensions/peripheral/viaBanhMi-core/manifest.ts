@@ -6,7 +6,7 @@
 import type { PeripheralManifest } from '../../../shared/types'
 
 const manifest: PeripheralManifest = {
-  id: 'viaBanhMi-core',
+  id: 'viaBanhMi',
   kind: 'peripheral',
   name: 'VIA Banh Mi',
   hidden: true,

@@ -261,6 +261,18 @@ module.exports = class DeviceManager {
     }
 
     /**
+     * Whether an extension id names a device extension — a registered peripheral pack, device-owned or
+     * reusable — rather than a VM extension. A pack's id is also the opcode prefix its blocks use, so
+     * this is how project load tells the sb3-derived extension ids it owns from ones the
+     * {@link ExtensionManager} should load.
+     * @param {string} id - the extension id (an opcode prefix).
+     * @returns {boolean} true when a registered peripheral pack owns the id.
+     */
+    isDeviceExtension (id) {
+        return this._resourcePeripheralPacks.has(id);
+    }
+
+    /**
      * Fetch the helper-served pack index and register each device pack against the device registry, so
      * helper-provided boards join the built-in list. One successful run per VM instance (guarded). The
      * index fetch is retried, backing off between attempts, because the helper is a sidecar spawned
@@ -308,7 +320,12 @@ module.exports = class DeviceManager {
         this.vm.emit(Runtime.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
-        if (this._pendingBoard) await this._applyBoard(this._pendingBoard);
+        // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
+        // re-rendered afterward — the update emitted during the load dropped every block it lacked.
+        if (this._pendingBoard) {
+            await this._applyBoard(this._pendingBoard);
+            if (this.vm.editingTarget) this.vm.emitWorkspaceUpdate();
+        }
     }
 
     /**

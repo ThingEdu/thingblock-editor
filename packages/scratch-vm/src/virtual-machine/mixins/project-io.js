@@ -214,14 +214,10 @@ module.exports = class ProjectIoMixin {
                     performance.measure('scratch-vm-deserialize',
                         'scratch-vm-deserialize-start', 'scratch-vm-deserialize-end');
                 }
-                // Restore the project's saved board (sb3 only; sb2 has none) BEFORE installing
-                // targets. Installing ends by emitting a workspace update, and the GUI answers
-                // that by handing the project's XML to Blockly, which throws on any block type it
-                // has no definition for. A board's blocks come from resource packs registered by
-                // `_applyBoard`, so applying it afterwards left every board project rendering
-                // against an empty block registry. Board restoration reads no targets, so it is
-                // safe this early.
-                return Promise.resolve(this._applyBoard(board || null))
+                // The board's peripherals register their blocks on the shared Blockly, so the board is
+                // restored (sb3 only; sb2 has none) before `installTargets` emits the workspace update
+                // that renders those blocks.
+                return this._applyBoard(board || null)
                     .then(() => this.installTargets(targets, extensions, true));
             });
     }
@@ -237,20 +233,10 @@ module.exports = class ProjectIoMixin {
         const extensionPromises = [];
 
         extensions.extensionIDs.forEach(extensionID => {
-            if (this.extensionManager.isExtensionLoaded(extensionID)) return;
-
-            // A block's opcode prefix is not necessarily a VM extension id: resource-pack blocks
-            // (device and peripheral packs served by the helper, e.g. thingBotC3, dht, serial) use
-            // the same opcode-prefix convention but are registered into Blockly and the Arduino
-            // generator when a board is selected, not loaded through the extension manager. Only
-            // attempt to load ids that are genuinely resolvable: built-in extensions, ids with a
-            // real URL recorded in project metadata, or ids that already look like a URL themselves.
-            const recordedURL = extensions.extensionURLs.get(extensionID);
-            const looksLikeURL = /^[a-z][a-z\d+.-]*:/i.test(extensionID);
-            if (!recordedURL && !looksLikeURL && !this.extensionManager.isBuiltinExtension(extensionID)) {
-                log.warn(`Skipping unresolvable extension id "${extensionID}" on project load; ` +
-                    'its blocks are expected to come from a resource pack, not a VM extension.');
-                return;
+            if (!this.extensionManager.isExtensionLoaded(extensionID) &&
+                !this._devices.isDeviceExtension(extensionID)) {
+                const extensionURL = extensions.extensionURLs.get(extensionID) || extensionID;
+                extensionPromises.push(this.extensionManager.loadExtensionURL(extensionURL));
             }
 
             extensionPromises.push(this.extensionManager.loadExtensionURL(recordedURL || extensionID));

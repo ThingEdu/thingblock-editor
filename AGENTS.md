@@ -155,6 +155,12 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —
   the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
   loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
+- A peripheral pack's manifest `id` must equal the opcode prefix its `blocks.ts` registers (pack `serial` owns
+  `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
+  skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
+  cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
+- `virtual-machine/resource-pack-manager.js` is a placeholder recording the direction for resource packs as the
+  general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 
 ## npm workflow
 
