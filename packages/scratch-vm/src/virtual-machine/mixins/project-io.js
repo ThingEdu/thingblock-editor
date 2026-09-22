@@ -238,6 +238,8 @@ module.exports = class ProjectIoMixin {
                 const extensionURL = extensions.extensionURLs.get(extensionID) || extensionID;
                 extensionPromises.push(this.extensionManager.loadExtensionURL(extensionURL));
             }
+
+            extensionPromises.push(this.extensionManager.loadExtensionURL(recordedURL || extensionID));
         });
 
         targets = targets.filter(target => !!target);

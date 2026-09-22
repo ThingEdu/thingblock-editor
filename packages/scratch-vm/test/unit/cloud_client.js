@@ -232,6 +232,17 @@ test('platform management is gracefully unsupported (base Client defaults)', asy
     t.end();
 });
 
+test('firmware restore is unsupported in cloud mode', async t => {
+    const c = new CloudClient(new Runtime());
+    t.equal(c.canFlashFirmware, false, 'the GUI must not offer the restore item in cloud mode');
+    await t.rejects(
+        () => c.flashFirmware({}, 'extensions/devices/thingbot', 'firmware/telemetrix-ble/telemetrix-ble.ino.bin'),
+        /not available in cloud mode/,
+        'flashFirmware fails with a clear, mode-specific message rather than a generic must-implement one'
+    );
+    t.end();
+});
+
 // A device stub supplying just what compile() reads.
 const fakeDevice = (options = {}) => ({
     fqbn: 'esp32:esp32:esp32c3',

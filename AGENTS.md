@@ -126,6 +126,10 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
   collapsible serial/input panel). The VM's sprite/target execution model is kept intact — one implicit device
   target — but no sprite UI renders.
+- `scratch-gui` resolves `@scratch/scratch-vm` to its gitignored `dist/` bundle, not its source. A fresh
+  checkout — or any change to `scratch-vm` source — needs `npx webpack --progress` in `packages/scratch-vm`
+  before `scratch-gui` tests or the dev server can see the change; otherwise it silently runs against a stale
+  bundle.
 
 ### scratch-blocks specifics
 

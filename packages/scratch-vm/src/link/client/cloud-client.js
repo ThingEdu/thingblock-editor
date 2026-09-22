@@ -259,6 +259,17 @@ class CloudClient extends Client {
     }
 
     /**
+     * Firmware restore needs a pack-shipped image file arduino-cli reads from a local resource root;
+     * cloud mode compiles server-side and flashes over Web Serial with no such local image available.
+     * Overridden (rather than inheriting the base's generic "must implement" throw) to name the real,
+     * mode-specific reason.
+     * @returns {Promise<void>} never resolves; always rejects.
+     */
+    flashFirmware () {
+        throw new Error('CloudClient.flashFirmware: firmware restore is not available in cloud mode');
+    }
+
+    /**
      * Yield each newline-delimited JSON frame from a streamed response body.
      * @param {ReadableStream} body - the response body.
      * @yields {{type: string, payload: object}} one frame per line.

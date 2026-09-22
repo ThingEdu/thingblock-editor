@@ -2,11 +2,23 @@ import React from 'react';
 import {IntlProvider} from 'react-intl';
 import {Provider} from 'react-redux';
 import configureStore from 'redux-mock-store';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import VM from '@scratch/scratch-vm';
 
 import BoardMenu from '../../../src/components/menu-bar/board-menu.jsx';
+
+// BoardMenu reuses UploadModal for flash progress, which renders through the connected
+// containers/modal.jsx (needs state.locales.isRtl and pushes browser history). Mock it the same way
+// upload-modal.test.jsx does, since this suite's store only models scratchGui state.
+jest.mock('../../../src/containers/modal.jsx', () => {
+    const MockModal = ({children, contentLabel}) => (
+        <div aria-label={contentLabel}>
+            {children}
+        </div>
+    );
+    return MockModal;
+});
 
 describe('BoardMenu', () => {
     const vm = new VM();
@@ -56,5 +68,85 @@ describe('BoardMenu', () => {
             type: 'scratch-gui/modals/OPEN_MODAL',
             modal: 'boardLibrary'
         }]);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    test('offers no firmware item when the board declares none', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([]);
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+
+        expect(screen.queryByText(/live mode/i)).not.toBeInTheDocument();
+    });
+
+    test('does not flash until the dialog is confirmed', async () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        const flash = jest.spyOn(vm, 'flashDeviceFirmware').mockResolvedValue();
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+
+        // Opening the dialog must not flash: this erases whatever the learner uploaded.
+        expect(flash).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole('button', {name: /flash|confirm/i}));
+
+        expect(flash).toHaveBeenCalledTimes(1);
+        expect(flash).toHaveBeenCalledWith(selectedDevice.deviceId, 'telemetrix-ble', expect.anything());
+
+        // Let the mocked flash's resolved promise settle inside `act` so its state update (the
+        // upload modal moving to "done") doesn't leak into a later test as a console warning.
+        await waitFor(() => expect(screen.getByText(/ready to go/i)).toBeInTheDocument());
+    });
+
+    test('the confirm dialog warns that the board program is erased', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+
+        expect(screen.getByText(/erase|replace/i)).toBeInTheDocument();
+    });
+
+    // Cloud mode's client has no working flashFirmware (CloudClient throws "not available in cloud
+    // mode"); a learner must never be offered a rescue that is doomed to reject.
+    test('hides the firmware item when the active client cannot flash firmware', () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        const originalClient = vm.client;
+        vm.client = {canFlashFirmware: false};
+
+        try {
+            renderBoardMenu(selectedDevice.deviceId);
+            fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+
+            expect(screen.queryByText('Live mode (Telemetrix over BLE)')).not.toBeInTheDocument();
+        } finally {
+            vm.client = originalClient;
+        }
+    });
+
+    test('a rejection with no error object does not throw inside the catch', async () => {
+        jest.spyOn(vm, 'getDeviceFirmware').mockReturnValue([
+            {id: 'telemetrix-ble', name: 'Live mode (Telemetrix over BLE)'}
+        ]);
+        jest.spyOn(vm, 'flashDeviceFirmware').mockRejectedValue(null);
+        renderBoardMenu(selectedDevice.deviceId);
+
+        fireEvent.click(screen.getByRole('button', {name: `Board: ${selectedDevice.name}`}));
+        fireEvent.click(screen.getByText('Live mode (Telemetrix over BLE)'));
+        fireEvent.click(screen.getByRole('button', {name: /flash|confirm/i}));
+
+        // The guard must not throw inside the catch; the status still moves to 'error'.
+        await waitFor(() => expect(screen.getByText(/didn.t finish/i)).toBeInTheDocument());
     });
 });

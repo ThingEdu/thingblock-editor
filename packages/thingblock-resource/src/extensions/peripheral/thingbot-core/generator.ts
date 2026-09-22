@@ -5,13 +5,54 @@
 import type { Block } from '@scratch/scratch-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
+/** Semitone offset of each note name within its octave, for the equal-tempered frequency. */
+const SEMITONES: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  D: 2,
+  'D#': 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  G: 7,
+  'G#': 8,
+  A: 9,
+  'A#': 10,
+  B: 11,
+}
+
+/**
+ * Equal-tempered frequency of a note, rounded to whole Hz because that is the resolution the
+ * PCA9685 prescaler offers anyway. A4 = 440 Hz is MIDI number 69.
+ * @param note The note name, e.g. `C#`.
+ * @param octave The octave number, e.g. `4`.
+ * @returns The frequency in Hz.
+ */
+const noteFrequency = (note: string, octave: string): number => {
+  const midi = (Number(octave) + 1) * 12 + (SEMITONES[note] ?? 0)
+  return Math.round(440 * Math.pow(2, (midi - 69) / 12))
+}
+
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
   const fieldValue = (block: Block, name: string, fallback: string): string => {
     const value: unknown = block.getFieldValue(name)
     return typeof value === 'string' ? value : fallback
   }
 
-  generator.forBlock.thingBotC3_init = () => {
+  /**
+   * Populates the buckets any block that touches the PCA9685 driver needs: the `Wire`/PWM-driver
+   * include, the pin `#define`s, the `pwm` object, `mapToPulse`, and the boot-time PWM init. Every
+   * hardware block below calls this itself, so a program compiles cleanly whether or not `init
+   * ThingBot` is on the workspace. It is idempotent — each write lands on a fixed key, so calling it
+   * from several block generators in one pass still yields one `#include`, one pin map, one `pwm`
+   * object, and one init sequence.
+   *
+   * `generator.setups` runs before the `when Arduino starts` hat's own body (`ArduinoGenerator.assemble`
+   * concatenates the setups bucket ahead of the hat's generated code), so the PWM driver is always
+   * initialized before any user code that references it, regardless of where — or whether — `init
+   * ThingBot` sits in the stack.
+   */
+  const registerBoardHardware = (): void => {
     generator.includes.set('thingbot_pwm', '#include <Wire.h>\n#include <Adafruit_PWMServoDriver.h>')
     generator.globals.set(
       'thingbot_pins',
@@ -40,10 +81,24 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
       'thingbot_map_to_pulse',
       'int mapToPulse(int value) {\n\treturn map(min(100, max(0, value)), 0, 100, 0, 4095);\n}',
     )
-    return 'pwm.begin();\npwm.setOscillatorFrequency(27000000);\npwm.setPWMFreq(50);\npinMode(SW, INPUT);\n'
+    generator.setups.set(
+      'thingbot_pwm_init',
+      ['pwm.begin();', 'pwm.setOscillatorFrequency(27000000);', 'pwm.setPWMFreq(50);', 'pinMode(SW, INPUT);'].join(
+        '\n',
+      ),
+    )
+  }
+
+  generator.forBlock.thingBotC3_init = () => {
+    // Every hardware block registers `registerBoardHardware()` itself, so placing this block no
+    // longer changes what gets generated — it is kept as a no-op for saved projects and existing
+    // workspaces that still include it.
+    registerBoardHardware()
+    return ''
   }
 
   generator.forBlock.thingBotC3_setMotor = (block) => {
+    registerBoardHardware()
     const motor = fieldValue(block, 'MOTOR', '1')
     const direction = fieldValue(block, 'DIRECTION', 'forward')
     const speed = generator.valueToCode(block, 'SPEED', Order.ATOMIC) || '0'
@@ -54,17 +109,165 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   }
 
   generator.forBlock.thingBotC3_setServo = (block) => {
+    registerBoardHardware()
     const servo = fieldValue(block, 'SERVO', '1')
     const pulse = generator.valueToCode(block, 'PULSE', Order.ATOMIC) || '0'
     return `pwm.setPWM(SERVO_${servo}, 0, ${pulse});\n`
   }
 
+  /**
+   * Shared C helpers for the degree-based servo blocks. `servoAngle` is indexed by PCA9685 channel and
+   * the call sites pass the `SERVO_n` macro, so the helpers never depend on the order the globals land
+   * in the generated file. It starts at 90 because that is where a servo idles after power-up, which is
+   * the sweep's starting point until a program sets an angle of its own.
+   */
+  const registerServoAngleHelpers = () => {
+    registerBoardHardware()
+    generator.globals.set(
+      'thingbot_servo_angle',
+      [
+        '#define SERVO_PULSE_MIN 102  // 0.5 ms',
+        '#define SERVO_PULSE_MAX 512  // 2.5 ms',
+        'int servoAngle[16] = {90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90};',
+        'void servoSetAngle(int ch, int deg) {',
+        '\tdeg = constrain(deg, 0, 180);',
+        '\tpwm.setPWM(ch, 0, map(deg, 0, 180, SERVO_PULSE_MIN, SERVO_PULSE_MAX));',
+        '\tservoAngle[ch] = deg;',
+        '}',
+        'void servoMoveTo(int ch, int deg, float seconds) {',
+        '\tint from = servoAngle[ch];',
+        '\tint steps = max(1, (int)(seconds * 50));  // one step per 20 ms PWM frame',
+        '\tfor (int i = 1; i <= steps; i++) {',
+        '\t\tservoSetAngle(ch, from + (deg - from) * i / steps);',
+        '\t\tdelay(20);',
+        '\t}',
+        '}',
+        'struct ServoMotion { int from; int to; unsigned long start; unsigned long dur; bool active; };',
+        'ServoMotion servoMotion[16];  // zero-initialized: every channel starts inactive',
+        'void servoStart(int ch, int deg, float seconds) {',
+        '\tservoMotion[ch].from = servoAngle[ch];',
+        '\tservoMotion[ch].to = deg;',
+        '\tservoMotion[ch].start = millis();',
+        '\tservoMotion[ch].dur = seconds > 0 ? (unsigned long)(seconds * 1000) : 0;',
+        '\tservoMotion[ch].active = true;',
+        '}',
+        '// Nudges every running motion to where it should be right now. Returns true while at least',
+        '// one is still moving, so callers can loop on it without tracking channels themselves.',
+        'bool servoTickAll() {',
+        '\tbool running = false;',
+        '\tfor (int ch = 0; ch < 16; ch++) {',
+        '\t\tif (!servoMotion[ch].active) continue;',
+        '\t\tunsigned long elapsed = millis() - servoMotion[ch].start;',
+        '\t\tif (servoMotion[ch].dur == 0 || elapsed >= servoMotion[ch].dur) {',
+        '\t\t\tservoSetAngle(ch, servoMotion[ch].to);  // land exactly on target, never one step short',
+        '\t\t\tservoMotion[ch].active = false;',
+        '\t\t} else {',
+        '\t\t\tint from = servoMotion[ch].from;',
+        '\t\t\tint to = servoMotion[ch].to;',
+        '\t\t\tservoSetAngle(ch, from + (to - from) * (int)elapsed / (int)servoMotion[ch].dur);',
+        '\t\t\trunning = true;',
+        '\t\t}',
+        '\t}',
+        '\treturn running;',
+        '}',
+        'void servoWaitAll() {',
+        '\twhile (servoTickAll()) delay(20);',
+        '}',
+        'void servoRelease(int ch) {',
+        '\tpwm.setPWM(ch, 0, 4096);  // full-off: the channel stops pulsing and the servo goes slack',
+        '}',
+      ].join('\n'),
+    )
+  }
+
+  generator.forBlock.thingBotC3_setServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    registerServoAngleHelpers()
+    return `servoSetAngle(SERVO_${servo}, ${angle});\n`
+  }
+
+  generator.forBlock.thingBotC3_moveServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
+    registerServoAngleHelpers()
+    return `servoMoveTo(SERVO_${servo}, ${angle}, ${seconds});\n`
+  }
+
+  generator.forBlock.thingBotC3_startServoAngle = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
+    const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
+    registerServoAngleHelpers()
+    return `servoStart(SERVO_${servo}, ${angle}, ${seconds});\n`
+  }
+
+  generator.forBlock.thingBotC3_waitServos = () => {
+    registerServoAngleHelpers()
+    return 'servoWaitAll();\n'
+  }
+
+  generator.forBlock.thingBotC3_releaseServo = (block) => {
+    const servo = fieldValue(block, 'SERVO', '1')
+    registerServoAngleHelpers()
+    return `servoRelease(SERVO_${servo});\n`
+  }
+
   generator.forBlock.thingBotC3_buzzer = (block) => {
+    registerBoardHardware()
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
     return `pwm.setPin(BUZZER, 0, ${sound});\n`
   }
 
+  /**
+   * Shared C helpers for the music blocks. The buzzer is a passive one on PCA9685 channel 14, so its
+   * pitch is the chip's PWM frequency — and that prescaler is shared by all 16 channels, which is why
+   * every note ends by restoring the 50 Hz servo frame rather than leaving servos on a broken frame.
+   */
+  const registerMusicHelpers = () => {
+    registerBoardHardware()
+    generator.globals.set(
+      'thingbot_music',
+      [
+        'int musicBPM = 120;',
+        'void musicPlay(int hz, float beats) {',
+        '\tint ms = (int)(beats * (60000.0 / musicBPM));',
+        '\tif (hz > 0) {',
+        '\t\tpwm.setPWMFreq(hz);',
+        '\t\tpwm.setPWM(BUZZER, 0, 2048);  // 50% duty: a square wave, the loudest a passive buzzer gets',
+        '\t}',
+        '\tdelay(ms > 50 ? ms - 50 : ms);',
+        '\tpwm.setPWM(BUZZER, 0, 0);',
+        '\tpwm.setPWMFreq(50);',
+        '\tdelay(50);  // the gap that keeps two notes of the same pitch from running together',
+        '}',
+      ].join('\n'),
+    )
+  }
+
+  generator.forBlock.thingBotC3_setTempo = (block) => {
+    const tempo = generator.valueToCode(block, 'TEMPO', Order.ATOMIC) || '120'
+    registerMusicHelpers()
+    return `musicBPM = ${tempo};\n`
+  }
+
+  generator.forBlock.thingBotC3_playNote = (block) => {
+    const note = fieldValue(block, 'NOTE', 'C')
+    const octave = fieldValue(block, 'OCTAVE', '4')
+    const beats = generator.valueToCode(block, 'BEATS', Order.ATOMIC) || '1'
+    registerMusicHelpers()
+    return `musicPlay(${noteFrequency(note, octave)}, ${beats});\n`
+  }
+
+  generator.forBlock.thingBotC3_rest = (block) => {
+    const beats = generator.valueToCode(block, 'BEATS', Order.ATOMIC) || '1'
+    registerMusicHelpers()
+    return `musicPlay(0, ${beats});\n`
+  }
+
   generator.forBlock.thingBotC3_setLed = (block) => {
+    registerBoardHardware()
     const led = fieldValue(block, 'LED', 'LED_1')
     const brightness = generator.valueToCode(block, 'BRIGHTNESS', Order.ATOMIC) || '0'
     return `pwm.setPin(${led}, mapToPulse(${brightness}));\n`
@@ -97,5 +300,8 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     ].join('\n')
   }
 
-  generator.forBlock.thingBotC3_switch = () => ['!digitalRead(SW)', Order.ATOMIC]
+  generator.forBlock.thingBotC3_switch = () => {
+    registerBoardHardware()
+    return ['!digitalRead(SW)', Order.ATOMIC]
+  }
 }

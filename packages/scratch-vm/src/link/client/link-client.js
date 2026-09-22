@@ -269,6 +269,41 @@ class LinkClient extends Client {
     }
 
     /**
+     * The helper implements `flashFirmware()`, so the GUI may offer the board menu's restore item.
+     * @returns {boolean} always true.
+     */
+    get canFlashFirmware () {
+        return true;
+    }
+
+    /**
+     * Flash a firmware image the device's pack ships, by resource-root-relative reference. The
+     * counterpart to `flash()`, which uploads an artifact the helper just compiled; here nothing is
+     * compiled and the helper resolves the image itself.
+     * @param {Device} device - the selected device (supplies fqbn and upload config).
+     * @param {string} pack - pack directory under the resource root, e.g. `extensions/devices/thingbot`.
+     * @param {string} file - app image within the pack.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    async flashFirmware (device, pack, file, callbacks) {
+        if (!this.isConnected) {
+            throw new Error('LinkClient.flashFirmware: no connected port; call connect() first');
+        }
+        const fqbn = this._composeFqbn(device);
+        const {uploadSpeed = 0} = device.getUploadConfig();
+        const port = this._connectedTarget.id;
+        log.info(`LinkClient.flashFirmware: flashing ${pack}/${file} to ${port} for ${fqbn}`);
+        await this._request(
+            'flashFirmware',
+            {fqbn, port, uploadSpeed, pack, file},
+            withDefaults(callbacks),
+            true
+        );
+        log.info('LinkClient.flashFirmware: flash complete');
+    }
+
+    /**
      * Open the serial monitor on the connected port via the helper's `monitorOpen`, resolving once the
      * port is open. The monitor borrows the connected transport (like `flash`), so the port comes from
      * the current selection rather than `options`. After the open resolves, inbound serial bytes arrive

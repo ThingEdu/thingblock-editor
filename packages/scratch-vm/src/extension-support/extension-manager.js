@@ -105,6 +105,15 @@ class ExtensionManager {
     }
 
     /**
+     * Check whether an extension ID refers to one of the extensions built into this VM.
+     * @param {string} extensionID - the ID to check.
+     * @returns {boolean} - true if `extensionID` names a built-in extension.
+     */
+    isBuiltinExtension (extensionID) {
+        return Object.prototype.hasOwnProperty.call(builtinExtensions, extensionID);
+    }
+
+    /**
      * Synchronously load an internal extension (core or non-core) by ID. This call will
      * fail if the provided id is not does not match an internal extension.
      * @param {string} extensionId - the ID of an internal extension
