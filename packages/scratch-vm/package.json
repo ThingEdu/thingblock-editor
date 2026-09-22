@@ -47,7 +47,8 @@
     "tap": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/{unit,integration}/*.js",
     "tap:integration": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/integration/*.js",
     "tap:unit": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/unit/*.js",
-    "test": "npm run lint && npm run tap",
+    "test": "npm run typecheck && npm run lint && npm run tap",
+    "typecheck": "tsc --noEmit",
     "watch": "webpack --progress --watch"
   },
   "browserslist": [
@@ -108,7 +109,9 @@
     "stats.js": "0.17.0",
     "tap": "21.7.4",
     "tiny-worker": "2.3.0",
+    "ts-loader": "9.6.0",
     "typedoc": "0.28.18",
+    "typescript": "5.9.3",
     "webpack": "5.107.2",
     "webpack-cli": "4.10.0",
     "webpack-dev-server": "5.2.5"

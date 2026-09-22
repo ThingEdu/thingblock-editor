@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ScratchWebpackConfigBuilder = require('scratch-webpack-configuration');
 
 const common = {
+    enableTs: true,
     libraryName: 'scratch-vm',
     rootPath: path.resolve(__dirname)
 };
