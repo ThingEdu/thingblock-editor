@@ -1,40 +1,22 @@
-const test = require('tap').test;
-const Blocks = require('../../src/engine/blocks');
-const Variable = require('../../src/engine/variable');
-const adapter = require('../../src/engine/adapter');
-const events = require('../fixtures/events.json');
-const Runtime = require('../../src/engine/runtime');
+import {test} from 'tap';
+import {EventEmitter} from 'events';
+import Blocks from '../../src/engine/blocks.ts';
+import Variable from '../../src/engine/variable.ts';
+import adapter from '../../src/engine/adapter.ts';
+import {getScripts} from '../../src/engine/blocks-runtime-cache.ts';
+import {getCached} from '../../src/engine/blocks-execute-cache.ts';
+import type {Block} from '../../src/engine/block-types.ts';
+import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
+import events from '../fixtures/events.json';
 
-test('spec', t => {
-    const b = new Blocks(new Runtime());
+const newBlocks = () => new Blocks(new EventEmitter<RuntimeEvents>());
 
-    t.type(Blocks, 'function');
-    t.type(b, 'object');
-    t.ok(b instanceof Blocks);
+/** Test blocks leave out the properties a case doesn't read. */
+const createBlock = (b: Blocks, block: object) => b.createBlock(block as Block);
 
-    t.type(b._blocks, 'object');
-    t.type(b._scripts, 'object');
-    t.ok(Array.isArray(b._scripts));
-
-    t.type(b.createBlock, 'function');
-    t.type(b.moveBlock, 'function');
-    t.type(b.changeBlock, 'function');
-    t.type(b.deleteBlock, 'function');
-    t.type(b.getBlock, 'function');
-    t.type(b.getScripts, 'function');
-    t.type(b.getNextBlock, 'function');
-    t.type(b.getBranch, 'function');
-    t.type(b.getOpcode, 'function');
-    t.type(b.mutationToXML, 'function');
-    t.type(b.updateSensingOfReference, 'function');
-
-    t.end();
-});
-
-// Getter tests
 test('getBlock', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -50,12 +32,12 @@ test('getBlock', t => {
 });
 
 test('getScripts', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     let scripts = b.getScripts();
     t.type(scripts, 'object');
     t.equal(scripts.length, 0);
     // Create two top-level blocks and one not.
-    b.createBlock({
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -63,7 +45,7 @@ test('getScripts', t => {
         inputs: {},
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -71,7 +53,7 @@ test('getScripts', t => {
         inputs: {},
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo3',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -91,8 +73,8 @@ test('getScripts', t => {
 });
 
 test('getNextBlock', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -105,7 +87,7 @@ test('getNextBlock', t => {
     t.equal(next, null);
 
     // Add a block with "foo" as its next.
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: 'foo',
@@ -125,9 +107,9 @@ test('getNextBlock', t => {
 });
 
 test('getBranch', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     // Single branch
-    b.createBlock({
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -141,7 +123,7 @@ test('getBranch', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -160,9 +142,9 @@ test('getBranch', t => {
 });
 
 test('getBranch2', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     // Second branch
-    b.createBlock({
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -181,7 +163,7 @@ test('getBranch2', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -189,7 +171,7 @@ test('getBranch2', t => {
         inputs: {},
         topLevel: false
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo3',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -207,8 +189,8 @@ test('getBranch2', t => {
 });
 
 test('getBranch with none', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -222,7 +204,7 @@ test('getBranch with none', t => {
 });
 
 test('getOpcode', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     const block = {
         id: 'foo',
         opcode: 'TEST_BLOCK',
@@ -231,8 +213,8 @@ test('getOpcode', t => {
         inputs: {},
         topLevel: true
     };
-    b.createBlock(block);
-    const opcode = b.getOpcode(block);
+    createBlock(b, block);
+    const opcode = b.getOpcode(block as Block);
     t.equal(opcode, 'TEST_BLOCK');
     const undefinedBlock = b.getBlock('?');
     const undefinedOpcode = b.getOpcode(undefinedBlock);
@@ -241,7 +223,7 @@ test('getOpcode', t => {
 });
 
 test('mutationToXML', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     const testStringRaw = '"arbitrary" & \'complicated\' test string';
     const testStringEscaped = '\\&quot;arbitrary\\&quot; &amp; &apos;complicated&apos; test string';
     const mutation = {
@@ -260,9 +242,10 @@ test('mutationToXML', t => {
 });
 
 // Block events tests
+
 test('create', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -278,8 +261,8 @@ test('create', t => {
 });
 
 test('move', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -287,7 +270,7 @@ test('move', t => {
         inputs: {},
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'bar',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -318,8 +301,8 @@ test('move', t => {
 });
 
 test('move into empty', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -327,7 +310,7 @@ test('move into empty', t => {
         inputs: {},
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'bar',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -345,8 +328,8 @@ test('move into empty', t => {
 });
 
 test('move no obscure shadow', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -360,7 +343,7 @@ test('move no obscure shadow', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'bar',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -379,10 +362,10 @@ test('move no obscure shadow', t => {
 });
 
 test('move - attaching new shadow', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     // Block/shadow are null to mimic state right after a procedure_call block
     // is mutated by adding an input. The "move" will attach the new shadow.
-    b.createBlock({
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -396,7 +379,7 @@ test('move - attaching new shadow', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'bar',
         opcode: 'TEST_BLOCK',
         shadow: true,
@@ -416,9 +399,9 @@ test('move - attaching new shadow', t => {
 });
 
 test('move out of input with shadow clears parent', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     // Create a stack block with an input that has a shadow
-    b.createBlock({
+    createBlock(b, {
         id: 'stack',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -433,7 +416,7 @@ test('move out of input with shadow clears parent', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'myShadow',
         opcode: 'TEST_SHADOW',
         next: null,
@@ -442,7 +425,7 @@ test('move out of input with shadow clears parent', t => {
         inputs: {},
         shadow: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'reporter',
         opcode: 'TEST_REPORTER',
         next: null,
@@ -481,9 +464,9 @@ test('move out of input with shadow clears parent', t => {
     t.end();
 });
 
-test('change', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+test('changeField and changeMutation', t => {
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -491,64 +474,39 @@ test('change', t => {
             someField: {
                 name: 'someField',
                 value: 'initial-value'
+            },
+            VARIABLE: {
+                name: 'VARIABLE',
+                id: 'oldVarId',
+                value: 'old name'
             }
         },
         inputs: {},
         topLevel: true
     });
 
-    // Test that the field is updated
-    t.equal(b._blocks.foo.fields.someField.value, 'initial-value');
-
-    b.changeBlock({
-        element: 'field',
-        id: 'foo',
-        name: 'someField',
-        value: 'final-value'
-    });
-
+    b.changeField('foo', 'someField', 'final-value');
     t.equal(b._blocks.foo.fields.someField.value, 'final-value');
 
-    // Invalid cases
-    // No `element`
-    b.changeBlock({
-        id: 'foo',
-        name: 'someField',
-        value: 'invalid-value'
-    });
-    t.equal(b._blocks.foo.fields.someField.value, 'final-value');
+    b.changeField('foo', 'VARIABLE', 'new name', 'newVarId');
+    t.strictSame(b._blocks.foo.fields.VARIABLE, {name: 'VARIABLE', id: 'newVarId', value: 'new name'});
 
-    // No block ID
-    b.changeBlock({
-        element: 'field',
-        name: 'someField',
-        value: 'invalid-value'
-    });
+    // Missing blocks and fields are ignored
+    b.changeField('nope', 'someField', 'invalid-value');
+    b.changeField('foo', 'someWrongField', 'invalid-value');
     t.equal(b._blocks.foo.fields.someField.value, 'final-value');
+    t.notOk(Object.hasOwn(b._blocks.foo.fields, 'someWrongField'));
 
-    // No such field
-    b.changeBlock({
-        element: 'field',
-        id: 'foo',
-        name: 'someWrongField',
-        value: 'final-value'
-    });
-    t.equal(b._blocks.foo.fields.someField.value, 'final-value');
-
+    const mutation = {tagName: 'mutation', children: [], proccode: 'a %s'};
+    b.changeMutation('foo', mutation);
+    t.equal(b._blocks.foo.mutation, mutation);
     t.end();
 });
 
-test('block_field_intermediate_change updates field value', t => {
-    const rt = new Runtime();
-    rt.addTarget({
-        id: 'target1',
-        isStage: true,
-        blocks: new Blocks(rt, true),
-        variables: {},
-        comments: {}
-    });
-    const b = new Blocks(rt);
-    b.createBlock({
+test('changeFieldWhileEditing updates the field without a project change', t => {
+    const events = new EventEmitter<RuntimeEvents>();
+    const b = new Blocks(events);
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -561,27 +519,20 @@ test('block_field_intermediate_change updates field value', t => {
         inputs: {},
         topLevel: true
     });
+    let changes = 0;
+    events.on('PROJECT_CHANGED', () => changes++);
+    b._cache._executeCached.foo = {};
 
-    t.equal(b._blocks.foo.fields.TEXT.value, 'Hello!');
-
-    // Simulate an intermediate field change (keystroke during editing)
-    b.blocklyListen({
-        type: 'block_field_intermediate_change',
-        blockId: 'foo',
-        name: 'TEXT',
-        oldValue: 'Hello!',
-        newValue: 'Hello world'
-    });
-
-    t.equal(b._blocks.foo.fields.TEXT.value, 'Hello world',
-        'field value should update on intermediate change');
-
+    b.changeFieldWhileEditing('foo', 'TEXT', 'Hello world');
+    t.equal(b._blocks.foo.fields.TEXT.value, 'Hello world');
+    t.equal(changes, 0);
+    t.strictSame(b._cache._executeCached, {});
     t.end();
 });
 
 test('delete', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -599,8 +550,8 @@ test('delete', t => {
 test('delete chain', t => {
     // Create a chain of connected blocks and delete the top one.
     // All of them should be deleted.
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: 'foo2',
@@ -608,7 +559,7 @@ test('delete chain', t => {
         inputs: {},
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: 'foo3',
@@ -616,7 +567,7 @@ test('delete chain', t => {
         inputs: {},
         topLevel: false
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo3',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -637,8 +588,8 @@ test('delete chain', t => {
 test('delete inputs', t => {
     // Create a block with two inputs, one of which has its own input.
     // Delete the block - all of them should be deleted.
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -657,7 +608,7 @@ test('delete inputs', t => {
         },
         topLevel: true
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo2',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -665,7 +616,7 @@ test('delete inputs', t => {
         inputs: {},
         topLevel: false
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo5',
         opcode: 'TEST_OBSCURED_SHADOW',
         next: null,
@@ -673,7 +624,7 @@ test('delete inputs', t => {
         inputs: {},
         topLevel: false
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo3',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -687,7 +638,7 @@ test('delete inputs', t => {
         },
         topLevel: false
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'foo4',
         opcode: 'TEST_BLOCK',
         next: null,
@@ -707,9 +658,9 @@ test('delete inputs', t => {
     t.end();
 });
 
-test('updateAssetName function updates name in sound field', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+test('updateSoundName updates sound menus', t => {
+    const b = newBlocks();
+    createBlock(b, {
         id: 'foo',
         fields: {
             SOUND_MENU: {
@@ -719,131 +670,14 @@ test('updateAssetName function updates name in sound field', t => {
         }
     });
     t.equal(b.getBlock('foo').fields.SOUND_MENU.value, 'name1');
-    b.updateAssetName('name1', 'name2', 'sound');
+    b.updateSoundName('name1', 'name2');
     t.equal(b.getBlock('foo').fields.SOUND_MENU.value, 'name2');
     t.end();
 });
 
-test('updateAssetName function updates name in costume field', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'foo',
-        fields: {
-            COSTUME: {
-                name: 'COSTUME',
-                value: 'name1'
-            }
-        }
-    });
-    t.equal(b.getBlock('foo').fields.COSTUME.value, 'name1');
-    b.updateAssetName('name1', 'name2', 'costume');
-    t.equal(b.getBlock('foo').fields.COSTUME.value, 'name2');
-    t.end();
-});
-
-test('updateAssetName function updates name in backdrop field', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'foo',
-        fields: {
-            BACKDROP: {
-                name: 'BACKDROP',
-                value: 'name1'
-            }
-        }
-    });
-    t.equal(b.getBlock('foo').fields.BACKDROP.value, 'name1');
-    b.updateAssetName('name1', 'name2', 'backdrop');
-    t.equal(b.getBlock('foo').fields.BACKDROP.value, 'name2');
-    t.end();
-});
-
-test('updateAssetName function updates name in all sprite fields', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'id1',
-        fields: {
-            TOWARDS: {
-                name: 'TOWARDS',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id2',
-        fields: {
-            TO: {
-                name: 'TO',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id3',
-        fields: {
-            OBJECT: {
-                name: 'OBJECT',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id4',
-        fields: {
-            VIDEOONMENU2: {
-                name: 'VIDEOONMENU2',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id5',
-        fields: {
-            DISTANCETOMENU: {
-                name: 'DISTANCETOMENU',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id6',
-        fields: {
-            TOUCHINGOBJECTMENU: {
-                name: 'TOUCHINGOBJECTMENU',
-                value: 'name1'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id7',
-        fields: {
-            CLONE_OPTION: {
-                name: 'CLONE_OPTION',
-                value: 'name1'
-            }
-        }
-    });
-    t.equal(b.getBlock('id1').fields.TOWARDS.value, 'name1');
-    t.equal(b.getBlock('id2').fields.TO.value, 'name1');
-    t.equal(b.getBlock('id3').fields.OBJECT.value, 'name1');
-    t.equal(b.getBlock('id4').fields.VIDEOONMENU2.value, 'name1');
-    t.equal(b.getBlock('id5').fields.DISTANCETOMENU.value, 'name1');
-    t.equal(b.getBlock('id6').fields.TOUCHINGOBJECTMENU.value, 'name1');
-    t.equal(b.getBlock('id7').fields.CLONE_OPTION.value, 'name1');
-    b.updateAssetName('name1', 'name2', 'sprite');
-    t.equal(b.getBlock('id1').fields.TOWARDS.value, 'name2');
-    t.equal(b.getBlock('id2').fields.TO.value, 'name2');
-    t.equal(b.getBlock('id3').fields.OBJECT.value, 'name2');
-    t.equal(b.getBlock('id4').fields.VIDEOONMENU2.value, 'name2');
-    t.equal(b.getBlock('id5').fields.DISTANCETOMENU.value, 'name2');
-    t.equal(b.getBlock('id6').fields.TOUCHINGOBJECTMENU.value, 'name2');
-    t.equal(b.getBlock('id7').fields.CLONE_OPTION.value, 'name2');
-    t.end();
-});
-
-test('updateAssetName function updates name according to asset type', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+test('updateSoundName leaves other fields', t => {
+    const b = newBlocks();
+    createBlock(b, {
         id: 'id1',
         fields: {
             SOUND_MENU: {
@@ -852,7 +686,7 @@ test('updateAssetName function updates name according to asset type', t => {
             }
         }
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'id2',
         fields: {
             COSTUME: {
@@ -863,242 +697,71 @@ test('updateAssetName function updates name according to asset type', t => {
     });
     t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'name1');
     t.equal(b.getBlock('id2').fields.COSTUME.value, 'name1');
-    b.updateAssetName('name1', 'name2', 'sound');
-    // only sound should get renamed
+    b.updateSoundName('name1', 'name2');
     t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'name2');
     t.equal(b.getBlock('id2').fields.COSTUME.value, 'name1');
     t.end();
 });
 
-test('updateAssetName only updates given name', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+test('updateSoundName only updates the given name', t => {
+    const b = newBlocks();
+    createBlock(b, {
         id: 'id1',
         fields: {
-            COSTUME: {
-                name: 'COSTUME',
+            SOUND_MENU: {
+                name: 'SOUND_MENU',
                 value: 'name1'
             }
         }
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'id2',
         fields: {
-            COSTUME: {
-                name: 'COSTUME',
+            SOUND_MENU: {
+                name: 'SOUND_MENU',
                 value: 'foo'
             }
         }
     });
-    t.equal(b.getBlock('id1').fields.COSTUME.value, 'name1');
-    t.equal(b.getBlock('id2').fields.COSTUME.value, 'foo');
-    b.updateAssetName('name1', 'name2', 'costume');
-    t.equal(b.getBlock('id1').fields.COSTUME.value, 'name2');
-    t.equal(b.getBlock('id2').fields.COSTUME.value, 'foo');
+    t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'name1');
+    t.equal(b.getBlock('id2').fields.SOUND_MENU.value, 'foo');
+    b.updateSoundName('name1', 'name2');
+    t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'name2');
+    t.equal(b.getBlock('id2').fields.SOUND_MENU.value, 'foo');
     t.end();
 });
 
-test('updateAssetName doesn\'t update name if name isn\'t being used', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+test('updateSoundName ignores unused names', t => {
+    const b = newBlocks();
+    createBlock(b, {
         id: 'id1',
         fields: {
-            BACKDROP: {
-                name: 'BACKDROP',
+            SOUND_MENU: {
+                name: 'SOUND_MENU',
                 value: 'foo'
             }
         }
     });
-    t.equal(b.getBlock('id1').fields.BACKDROP.value, 'foo');
-    b.updateAssetName('name1', 'name2', 'backdrop');
-    t.equal(b.getBlock('id1').fields.BACKDROP.value, 'foo');
-    t.end();
-});
-
-test('updateSensingOfReference renames variables in sensing_of block', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'id1',
-        opcode: 'sensing_of',
-        fields: {
-            PROPERTY: {
-                name: 'PROPERTY',
-                value: 'foo'
-            }
-        },
-        inputs: {
-            OBJECT: {
-                name: 'OBJECT',
-                block: 'id2',
-                shadow: 'id2'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id2',
-        fields: {
-            OBJECT: {
-                name: 'OBJECT',
-                value: '_stage_'
-            }
-        }
-    });
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    b.updateSensingOfReference('foo', 'bar', '_stage_');
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'bar');
-    t.end();
-});
-
-test('updateSensingOfReference doesn\'t rename if block is inserted', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'id1',
-        opcode: 'sensing_of',
-        fields: {
-            PROPERTY: {
-                name: 'PROPERTY',
-                value: 'foo'
-            }
-        },
-        inputs: {
-            OBJECT: {
-                name: 'OBJECT',
-                block: 'id3',
-                shadow: 'id2'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id2',
-        fields: {
-            OBJECT: {
-                name: 'OBJECT',
-                value: '_stage_'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id3',
-        opcode: 'answer'
-    });
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    b.updateSensingOfReference('foo', 'bar', '_stage_');
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    t.end();
-});
-
-test('updateSensingOfReference doesn\'t rename if name is not being used', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'id1',
-        opcode: 'sensing_of',
-        fields: {
-            PROPERTY: {
-                name: 'PROPERTY',
-                value: 'foo'
-            }
-        },
-        inputs: {
-            OBJECT: {
-                name: 'OBJECT',
-                block: 'id2',
-                shadow: 'id2'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id2',
-        fields: {
-            OBJECT: {
-                name: 'OBJECT',
-                value: '_stage_'
-            }
-        }
-    });
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    b.updateSensingOfReference('meow', 'meow2', '_stage_');
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    t.end();
-});
-
-test('updateSensingOfReference doesn\'t rename other targets\' variables', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'id1',
-        opcode: 'sensing_of',
-        fields: {
-            PROPERTY: {
-                name: 'PROPERTY',
-                value: 'foo'
-            }
-        },
-        inputs: {
-            OBJECT: {
-                name: 'OBJECT',
-                block: 'id2',
-                shadow: 'id2'
-            }
-        }
-    });
-    b.createBlock({
-        id: 'id2',
-        fields: {
-            OBJECT: {
-                name: 'OBJECT',
-                value: '_stage_'
-            }
-        }
-    });
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    b.updateSensingOfReference('foo', 'bar', 'Cat');
-    t.equal(b.getBlock('id1').fields.PROPERTY.value, 'foo');
-    t.end();
-});
-
-test('updateTargetSpecificBlocks changes sprite clicked hat to stage clicked for stage', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
-        id: 'originallySpriteClicked',
-        opcode: 'event_whenthisspriteclicked'
-    });
-    b.createBlock({
-        id: 'originallyStageClicked',
-        opcode: 'event_whenstageclicked'
-    });
-
-    // originallySpriteClicked does not update when on a non-stage target
-    b.updateTargetSpecificBlocks(false /* isStage */);
-    t.equal(b.getBlock('originallySpriteClicked').opcode, 'event_whenthisspriteclicked');
-
-    // originallySpriteClicked does update when on a stage target
-    b.updateTargetSpecificBlocks(true /* isStage */);
-    t.equal(b.getBlock('originallySpriteClicked').opcode, 'event_whenstageclicked');
-
-    // originallyStageClicked does not update when on a stage target
-    b.updateTargetSpecificBlocks(true /* isStage */);
-    t.equal(b.getBlock('originallyStageClicked').opcode, 'event_whenstageclicked');
-
-    // originallyStageClicked does update when on a non-stage target
-    b.updateTargetSpecificBlocks(false/* isStage */);
-    t.equal(b.getBlock('originallyStageClicked').opcode, 'event_whenthisspriteclicked');
-
+    t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'foo');
+    b.updateSoundName('name1', 'name2');
+    t.equal(b.getBlock('id1').fields.SOUND_MENU.value, 'foo');
     t.end();
 });
 
 test('getAllVariableAndListReferences returns an empty map references when variable blocks do not exist', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
     t.equal(Object.keys(b.getAllVariableAndListReferences()).length, 0);
     t.end();
 });
 
 test('getAllVariableAndListReferences returns references when variable blocks exist', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
 
     let varListRefs = b.getAllVariableAndListReferences();
     t.equal(Object.keys(varListRefs).length, 0);
 
-    b.createBlock(adapter(events.mockVariableBlock)[0]);
-    b.createBlock(adapter(events.mockListBlock)[0]);
+    createBlock(b, adapter(events.mockVariableBlock)[0]);
+    createBlock(b, adapter(events.mockListBlock)[0]);
 
     varListRefs = b.getAllVariableAndListReferences();
     t.equal(Object.keys(varListRefs).length, 2);
@@ -1115,21 +778,21 @@ test('getAllVariableAndListReferences returns references when variable blocks ex
 });
 
 test('getAllVariableAndListReferences does not return broadcast blocks if the flag is left out', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock(adapter(events.mockBroadcastBlock)[0]);
-    b.createBlock(adapter(events.mockBroadcastBlock)[1]);
+    const b = newBlocks();
+    createBlock(b, adapter(events.mockBroadcastBlock)[0]);
+    createBlock(b, adapter(events.mockBroadcastBlock)[1]);
 
     t.equal(Object.keys(b.getAllVariableAndListReferences()).length, 0);
     t.end();
 });
 
 test('getAllVariableAndListReferences returns broadcast when we tell it to', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
 
-    b.createBlock(adapter(events.mockVariableBlock)[0]);
+    createBlock(b, adapter(events.mockVariableBlock)[0]);
     // Make the broadcast block and its shadow (which includes the actual broadcast field).
-    b.createBlock(adapter(events.mockBroadcastBlock)[0]);
-    b.createBlock(adapter(events.mockBroadcastBlock)[1]);
+    createBlock(b, adapter(events.mockBroadcastBlock)[0]);
+    createBlock(b, adapter(events.mockBroadcastBlock)[1]);
 
     const varListRefs = b.getAllVariableAndListReferences(null, true);
 
@@ -1148,11 +811,12 @@ test('getAllVariableAndListReferences returns broadcast when we tell it to', t =
 
 // Regression test for bug 878291: moveBlock should not crash when a
 // shadow reference points to a block that does not exist.
+
 test('moveBlock tolerates missing shadow block', t => {
-    const b = new Blocks(new Runtime());
+    const b = newBlocks();
 
     // Create a parent block with an input whose shadow reference is stale
-    b.createBlock({
+    createBlock(b, {
         id: 'parent',
         opcode: 'data_setvariableto',
         next: null,
@@ -1168,7 +832,7 @@ test('moveBlock tolerates missing shadow block', t => {
         },
         fields: {}
     });
-    b.createBlock({
+    createBlock(b, {
         id: 'reporter',
         opcode: 'sensing_answer',
         next: null,
@@ -1203,9 +867,10 @@ test('moveBlock tolerates missing shadow block', t => {
 // a top-level shadow in _scripts causes "Workspace Update Error"
 // on sprite switch because toXML serializes it as a root <shadow>
 // element that Blockly cannot load.
+
 test('createBlock does not add shadow blocks to _scripts', t => {
-    const b = new Blocks(new Runtime());
-    b.createBlock({
+    const b = newBlocks();
+    createBlock(b, {
         id: 'shadow_1',
         opcode: 'math_number',
         next: null,
@@ -1218,5 +883,86 @@ test('createBlock does not add shadow blocks to _scripts', t => {
         'shadow block should not be in _scripts even with topLevel:true');
     t.ok(Object.prototype.hasOwnProperty.call(b._blocks, 'shadow_1'),
         'shadow block should still be in _blocks');
+    t.end();
+});
+
+test('changes emit PROJECT_CHANGED except in no-glow containers', t => {
+    const events = new EventEmitter<RuntimeEvents>();
+    let changes = 0;
+    events.on('PROJECT_CHANGED', () => changes++);
+
+    createBlock(new Blocks(events), {id: 'foo', opcode: 'TEST_BLOCK', next: null, fields: {}, inputs: {}});
+    t.equal(changes, 1);
+    createBlock(new Blocks(events, true), {id: 'foo', opcode: 'TEST_BLOCK', next: null, fields: {}, inputs: {}});
+    t.equal(changes, 1);
+    t.end();
+});
+
+test('getMonitoredBlocks is cached until blocks change', t => {
+    const b = newBlocks();
+    createBlock(b, {id: 'global', opcode: 'data_variable', next: null, fields: {}, inputs: {}, isMonitored: true});
+    createBlock(b, {id: 'local', opcode: 'data_variable', next: null, fields: {}, inputs: {}, isMonitored: true,
+        targetId: 'sprite'});
+    createBlock(b, {id: 'hidden', opcode: 'data_variable', next: null, fields: {}, inputs: {}, isMonitored: false});
+
+    const monitored = b.getMonitoredBlocks();
+    t.strictSame(monitored, [{blockId: 'global', targetId: null}, {blockId: 'local', targetId: 'sprite'}]);
+    t.equal(b.getMonitoredBlocks(), monitored);
+
+    b.deleteBlock('local');
+    t.strictSame(b.getMonitoredBlocks(), [{blockId: 'global', targetId: null}]);
+    t.end();
+});
+
+test('getProcedureParamNamesAndIds throws for an unknown procedure', t => {
+    t.throws(() => newBlocks().getProcedureParamNamesAndIds('missing %s'), /no prototype for procedure missing %s/);
+    t.end();
+});
+
+test('getScripts caches uppercased hat fields until blocks change', t => {
+    const b = newBlocks();
+    createBlock(b, {id: 'hat', opcode: 'event_whenkeypressed', next: null, inputs: {}, topLevel: true,
+        fields: {KEY_OPTION: {name: 'KEY_OPTION', value: 'space'}}});
+    createBlock(b, {id: 'other', opcode: 'event_whenflagclicked', next: null, inputs: {}, fields: {}, topLevel: true});
+
+    const scripts = getScripts(b, 'event_whenkeypressed');
+    t.strictSame(scripts.map(script => script.blockId), ['hat']);
+    t.equal(scripts[0].fieldsOfInputs.KEY_OPTION.value, 'SPACE');
+    t.equal(b.getBlock('hat').fields.KEY_OPTION.value, 'space');
+    t.equal(getScripts(b, 'event_whenkeypressed'), scripts);
+
+    b.deleteBlock('hat');
+    t.strictSame(getScripts(b, 'event_whenkeypressed'), []);
+    t.end();
+});
+
+test('getScripts reads input block fields for hats without fields', t => {
+    const b = newBlocks();
+    createBlock(b, {id: 'hat', opcode: 'event_whenbroadcastreceived', next: null, fields: {}, topLevel: true,
+        inputs: {MENU: {name: 'MENU', block: 'menu', shadow: 'menu'}}});
+    createBlock(b, {id: 'menu', opcode: 'menu', next: null, inputs: {}, parent: 'hat', shadow: true,
+        fields: {OPTION: {name: 'OPTION', value: 'go'}}});
+
+    t.equal(getScripts(b, 'event_whenbroadcastreceived')[0].fieldsOfInputs.OPTION.value, 'GO');
+    t.end();
+});
+
+test('getCached builds once, and again after blocks change', t => {
+    const b = newBlocks();
+    createBlock(b, {id: 'foo', opcode: 'TEST_BLOCK', next: null, fields: {}, inputs: {}, topLevel: true});
+    class Cached {
+        opcode: string;
+        constructor (_blocks: Blocks, data: {opcode: string}) {
+            this.opcode = data.opcode;
+        }
+    }
+
+    const cached = getCached(b, 'foo', Cached);
+    t.equal(cached.opcode, 'TEST_BLOCK');
+    t.equal(getCached(b, 'foo', Cached), cached);
+    t.equal(getCached(b, 'missing', Cached), null);
+
+    b.changeMutation('foo', {tagName: 'mutation', children: []});
+    t.not(getCached(b, 'foo', Cached), cached);
     t.end();
 });

@@ -3,7 +3,7 @@ import uuid from 'uuid';
 import type {ScratchStorage} from '@scratch/scratch-storage';
 
 import Blocks from './blocks';
-import BlocksRuntimeCache from './blocks-runtime-cache';
+import {getScripts, type RuntimeScriptCache} from './blocks-runtime-cache';
 import execute from './execute';
 import Profiler from './profiler';
 import Sequencer from './sequencer';
@@ -39,12 +39,6 @@ export interface HatInfo {
 
 /** Hat fields to match, e.g. `{KEY_OPTION: 'space'}`; compared case-insensitively. */
 export type HatMatchFields = Record<string, string>;
-
-/** A script's cached top block, with its field values uppercased for matching. */
-interface HatScript {
-    blockId: string
-    fieldsOfInputs: Record<string, {value: string}>
-}
 
 export type HatStarter = Pick<Runtime, 'startHats'>;
 
@@ -129,8 +123,8 @@ class Runtime {
 
     constructor () {
         this.sequencer = new Sequencer(this);
-        this.flyoutBlocks = new Blocks(this, true /* force no glow */);
-        this.monitorBlocks = new Blocks(this, true /* force no glow */);
+        this.flyoutBlocks = new Blocks(this.events, true /* force no glow */);
+        this.monitorBlocks = new Blocks(this.events, true /* force no glow */);
         this.glows = new GlowFeedback(this);
         this.monitors = new MonitorHandler(this.events);
         this.updateCurrentMSecs();
@@ -165,10 +159,12 @@ class Runtime {
     }
 
     /** Calls `f` for each script topped by `opcode`, in execution order (`executableTargets` is stored reversed). */
-    allScriptsByOpcodeDo (opcode: string, f: (script: HatScript, target: Target) => void, optTarget?: Target) {
+    allScriptsByOpcodeDo (
+        opcode: string,
+        f: (script: RuntimeScriptCache, target: Target) => void,
+        optTarget?: Target
+    ) {
         const targets = optTarget ? [optTarget] : this.executableTargets;
-        // blocks.js replaces the cache's throwing placeholder on load, so TS can't see the real signature.
-        const getScripts = BlocksRuntimeCache.getScripts as (blocks: Blocks, opcode: string) => HatScript[];
         for (let t = targets.length - 1; t >= 0; t--) {
             for (const script of getScripts(targets[t].blocks, opcode)) {
                 f(script, targets[t]);

@@ -1,10 +1,15 @@
 import {test} from 'tap';
-import Blocks from '../../src/engine/blocks';
+import {EventEmitter} from 'events';
+import * as blocksModule from '../../src/engine/blocks.ts';
+import Blocks from '../../src/engine/blocks.ts';
+import * as runtimeCacheModule from '../../src/engine/blocks-runtime-cache.ts';
 import * as threadModule from '../../src/engine/thread.ts';
 import Thread from '../../src/engine/thread.ts';
 import type RuntimeType from '../../src/engine/runtime.ts';
 import type Sequencer from '../../src/engine/sequencer';
 import type Target from '../../src/engine/target';
+import type {Block} from '../../src/engine/block-types.ts';
+import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
 
 const keyHat = (id: string, key: string, next: string | null = null) => ({
     id,
@@ -20,8 +25,8 @@ const keyHat = (id: string, key: string, next: string | null = null) => ({
 const flagHat = (id: string) => ({...keyHat(id, ''), opcode: 'event_whenflagclicked', fields: {}});
 
 const newTarget = (...blocks: object[]) => {
-    const container = new Blocks({emitProjectChanged: () => {}});
-    blocks.forEach(block => container.createBlock(block));
+    const container = new Blocks(new EventEmitter<RuntimeEvents>());
+    blocks.forEach(block => container.createBlock(block as Block));
     return {blocks: container} as unknown as Target;
 };
 
@@ -30,8 +35,10 @@ const setup = (t: tap.Test, ...targets: Target[]) => {
     const executed: Thread[] = [];
     const Runtime: typeof RuntimeType = t.mockRequire('../../src/engine/runtime.ts', {
         '../../src/engine/execute.js': (_sequencer: Sequencer, thread: Thread) => executed.push(thread),
-        // Under tap `./thread` resolves to thread.js; the bundle resolves it to the TS port.
-        '../../src/engine/thread.js': threadModule
+        // Under tap these resolve to the JS files; the bundle resolves them to the TS ports.
+        '../../src/engine/thread.js': threadModule,
+        '../../src/engine/blocks.js': blocksModule,
+        '../../src/engine/blocks-runtime-cache.js': runtimeCacheModule
     }).default;
     const rt = Object.assign(Object.create(Runtime.prototype) as RuntimeType, {
         _hats: {

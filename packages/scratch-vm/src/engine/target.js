@@ -19,7 +19,7 @@ class Target extends EventEmitter {
 
     /**
      * @param {Runtime} runtime Reference to the runtime.
-     * @param {?Blocks} blocks Blocks instance for the blocks owned by this target.
+     * @param {?import('./blocks').default} blocks Blocks instance for the blocks owned by this target.
      * @class
      */
     constructor (runtime, blocks) {
@@ -41,7 +41,7 @@ class Target extends EventEmitter {
         this.id = uid();
         /**
          * Blocks run as code for this target.
-         * @type {!Blocks}
+         * @type {!import('./blocks').default}
          */
         this.blocks = blocks;
         /**

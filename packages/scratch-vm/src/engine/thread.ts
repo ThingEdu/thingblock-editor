@@ -8,12 +8,6 @@ export interface ReportedInput {
     inputValue: unknown
 }
 
-/** The block fields Thread reads; the JS Blocks types `getBlock` as a bare object. */
-interface ScriptBlock {
-    opcode: string
-    mutation?: {proccode: string}
-}
-
 const stackFrameFreeList: StackFrame[] = [];
 
 /** Execution context for one level of a thread's stack. */
@@ -132,7 +126,7 @@ class Thread {
     stopThisScript () {
         let blockId = this.peekStack();
         while (blockId !== null) {
-            if (this._getBlock(blockId)?.opcode === 'procedures_call') break;
+            if (this.blockContainer.getBlock(blockId)?.opcode === 'procedures_call') break;
             this.popStack();
             blockId = this.peekStack();
         }
@@ -193,17 +187,13 @@ class Thread {
         let callCount = 5; // Max number of enclosing procedure calls to examine.
         for (let i = this.stack.length - 2; i >= 0; i--) {
             // A block clicked in the flyout is not in the container, so it can't be a recursive call.
-            const block = this._getBlock(this.stack[i]);
+            const block = this.blockContainer.getBlock(this.stack[i]);
             if (block?.opcode === 'procedures_call' && block.mutation.proccode === procedureCode) {
                 return true;
             }
             if (--callCount < 0) return false;
         }
         return false;
-    }
-
-    _getBlock (blockId: string | null): ScriptBlock | undefined {
-        return this.blockContainer.getBlock(blockId) as ScriptBlock | undefined;
     }
 
     _topFrame (caller: string): StackFrame {
