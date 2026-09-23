@@ -1,5 +1,5 @@
-const test = require('tap').test;
-const UserData = require('../../src/io/input/user-data');
+import {test} from 'tap';
+import UserData from '../../src/io/input/user-data.ts';
 
 test('spec', t => {
     const userData = new UserData();

@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        // tap runs tests through ts-node, which must emit CommonJS for the package's CJS test runner
+        "module": "commonjs",
+        "moduleResolution": "node10",
+        // TS tests import sources as `x.ts`, since a bare `x` resolves to a sibling `x.js` under tap
+        "allowImportingTsExtensions": true,
+        "noEmit": true
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*.ts"
+    ]
+}

@@ -143,6 +143,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   implementation methods. New and converted extensions are TypeScript and implement `Extension` from
   `src/extensions/extension.ts`; because they compile to ES modules, `extension-manager.js` must require them
   with `.default`. `npm run typecheck` (part of `npm test`) is what checks them — eslint alone does not.
+- TS unit tests are `test/unit/*.ts`. Tap runs them through ts-node with `tsconfig.test.json` (CommonJS output),
+  which the tap scripts select via `TS_NODE_PROJECT`. While a module has both `x.js` and a TS port `x.ts`, tests
+  import the port as `x.ts`: under tap a bare `x` resolves to the JS file.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
   VM devices.

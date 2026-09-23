@@ -1,7 +1,7 @@
-const test = require('tap').test;
-const Operators = require('../../src/blocks/scratch3_operators');
+import {test} from 'tap';
+import Operators from '../../src/blocks/scratch3_operators.ts';
 
-const blocks = new Operators(null);
+const blocks = new Operators();
 
 test('divide: (1) / (0) = Infinity', t => {
     t.equal(

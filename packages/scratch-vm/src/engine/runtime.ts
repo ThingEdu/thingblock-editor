@@ -8,8 +8,8 @@ import Sequencer from './sequencer';
 import type Target from './target';
 import type Thread from './thread';
 import GlowFeedback from './runtime/glow-feedback';
-import MonitorHandler from './runtime/monitor-handler';
-import PeripheralHandler from './runtime/peripheral-handler';
+import MonitorHandler from './runtime/runtime-monitor';
+import PeripheralHandler from './runtime/runtime-peripheral';
 import RuntimeEventNames from './runtime/event-names';
 import type {RuntimeEvents} from './runtime/runtime-events';
 import type {MenuInfo} from '../extensions/extension';
@@ -20,14 +20,15 @@ import Mouse from '../io/hid/mouse';
 import MouseWheel from '../io/hid/mouse-wheel';
 import UserData from '../io/input/user-data';
 
-import scratch3Control from '../blocks/scratch3_control';
-import scratch3Data from '../blocks/scratch3_data';
-import scratch3Event from '../blocks/scratch3_event';
-import scratch3Operators from '../blocks/scratch3_operators';
-import scratch3Procedures from '../blocks/scratch3_procedures';
-import scratch3Sensing from '../blocks/scratch3_sensing';
+import Scratch3ControlBlocks from '../blocks/scratch3_control';
+import Scratch3DataBlocks from '../blocks/scratch3_data';
+import Scratch3EventBlocks from '../blocks/scratch3_event';
+import Scratch3OperatorsBlocks from '../blocks/scratch3_operators';
+import Scratch3ProcedureBlocks from '../blocks/scratch3_procedures';
+import Scratch3SensingBlocks from '../blocks/scratch3_sensing';
+import type BlockUtility from './block-utility';
 
-export type BlockFunction = (args: Record<string, unknown>, util: unknown) => unknown;
+export type BlockFunction = (args: Record<string, unknown>, util: BlockUtility) => unknown;
 
 export interface HatInfo {
     edgeActivated?: boolean
@@ -45,8 +46,6 @@ export interface BlockPackage {
     getMonitored? (): Record<string, MonitoredInfo>
 }
 
-type BlockPackageClass = new (runtime: Runtime) => BlockPackage;
-
 export interface CategoryInfo {
     id: string
     name: string
@@ -62,19 +61,11 @@ export interface CategoryInfo {
     menuInfo: Record<string, MenuInfo>
 }
 
-const defaultBlockPackages: Record<string, BlockPackageClass> = {
-    scratch3_control: scratch3Control,
-    scratch3_event: scratch3Event,
-    scratch3_operators: scratch3Operators,
-    scratch3_sensing: scratch3Sensing,
-    scratch3_data: scratch3Data,
-    scratch3_procedures: scratch3Procedures
-};
-
-class Runtime extends EventEmitter<RuntimeEvents> {
+class Runtime {
     static readonly THREAD_STEP_INTERVAL = 1000 / 60;
     static readonly THREAD_STEP_INTERVAL_COMPATIBILITY = 1000 / 30;
 
+    events = new EventEmitter<RuntimeEvents>();
     targets: Target[] = [];
     /** Targets in reverse order of execution. */
     executableTargets: Target[] = [];
@@ -124,18 +115,17 @@ class Runtime extends EventEmitter<RuntimeEvents> {
     audioEngine?: unknown;
 
     constructor () {
-        super();
         this.sequencer = new Sequencer(this);
         this.flyoutBlocks = new Blocks(this, true /* force no glow */);
         this.monitorBlocks = new Blocks(this, true /* force no glow */);
         this.glows = new GlowFeedback(this);
-        this.monitors = new MonitorHandler(this);
+        this.monitors = new MonitorHandler(this.events);
         this.updateCurrentMSecs();
         this._registerBlockPackages();
         this.ioDevices = {
             clock: new Clock(this),
-            keyboard: new Keyboard(this),
-            mouse: new Mouse(this),
+            keyboard: new Keyboard(this.events),
+            mouse: new Mouse(),
             mouseWheel: new MouseWheel(this),
             userData: new UserData()
         };
@@ -144,8 +134,15 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 
     /** Collects primitives, hat metadata and monitored opcodes from the built-in block packages. */
     _registerBlockPackages () {
-        for (const PackageClass of Object.values(defaultBlockPackages)) {
-            const blockPackage = new PackageClass(this);
+        const blockPackages: BlockPackage[] = [
+            new Scratch3ControlBlocks(this),
+            new Scratch3EventBlocks(this),
+            new Scratch3OperatorsBlocks(),
+            new Scratch3SensingBlocks(this.events),
+            new Scratch3DataBlocks(this),
+            new Scratch3ProcedureBlocks()
+        ];
+        for (const blockPackage of blockPackages) {
             if (blockPackage.getPrimitives) {
                 for (const [opcode, primitive] of Object.entries(blockPackage.getPrimitives())) {
                     this._primitives[opcode] = primitive.bind(blockPackage);

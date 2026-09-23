@@ -1,10 +1,11 @@
-const test = require('tap').test;
-const Keyboard = require('../../src/io/hid/keyboard');
-const Runtime = require('../../src/engine/runtime');
+import {test} from 'tap';
+import {EventEmitter} from 'events';
+import Keyboard from '../../src/io/hid/keyboard.ts';
+import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
 
 test('spec', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     t.type(k, 'object');
     t.type(k.postData, 'function');
@@ -12,9 +13,22 @@ test('spec', t => {
     t.end();
 });
 
+test('keydown emits KEY_PRESSED', t => {
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
+    const pressed: string[] = [];
+    events.on('KEY_PRESSED', key => pressed.push(key));
+
+    k.postData({key: 'a', isDown: true});
+    k.postData({key: 'a', isDown: false});
+    k.postData({key: 'Shift', isDown: true});
+    t.strictSame(pressed, ['A']);
+    t.end();
+});
+
 test('space key', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: ' ',
@@ -27,8 +41,8 @@ test('space key', t => {
 });
 
 test('letter key', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: 'a',
@@ -43,8 +57,8 @@ test('letter key', t => {
 });
 
 test('number key', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: '1',
@@ -58,8 +72,8 @@ test('number key', t => {
 });
 
 test('non-english key', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: '日',
@@ -72,8 +86,8 @@ test('non-english key', t => {
 });
 
 test('ignore modifier key', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: 'Shift',
@@ -85,8 +99,8 @@ test('ignore modifier key', t => {
 });
 
 test('keyup', t => {
-    const rt = new Runtime();
-    const k = new Keyboard(rt);
+    const events = new EventEmitter<RuntimeEvents>();
+    const k = new Keyboard(events);
 
     k.postData({
         key: 'ArrowLeft',

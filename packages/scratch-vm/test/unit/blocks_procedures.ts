@@ -1,7 +1,8 @@
-const test = require('tap').test;
-const Procedures = require('../../src/blocks/scratch3_procedures');
+import {test} from 'tap';
+import Procedures from '../../src/blocks/scratch3_procedures.ts';
+import type BlockUtility from '../../src/engine/block-utility';
 
-const blocks = new Procedures(null);
+const blocks = new Procedures();
 
 test('getPrimitives', t => {
     t.type(blocks.getPrimitives(), 'object');
@@ -22,7 +23,7 @@ test('calling a custom block with no definition does not throw', t => {
         }
     };
     t.doesNotThrow(() => {
-        blocks.call(args, util);
+        blocks.call(args, util as unknown as BlockUtility);
     });
     t.end();
 });

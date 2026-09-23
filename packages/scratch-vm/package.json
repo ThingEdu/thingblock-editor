@@ -37,16 +37,16 @@
   "scripts": {
     "build": "npm run docs && webpack --progress",
     "clean": "rimraf dist playground",
-    "coverage": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/{unit,integration}/*.js --coverage --coverage-report=lcov",
+    "coverage": "TS_NODE_PROJECT=$PWD/tsconfig.test.json tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/{unit,integration}/*.{js,ts} --coverage --coverage-report=lcov",
     "docs": "typedoc",
     "lint": "eslint",
     "prepublishOnly": "echo \"Please publish through CI only.\" && exit 1",
     "start": "webpack serve",
-    "tap": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/{unit,integration}/*.js",
+    "tap": "TS_NODE_PROJECT=$PWD/tsconfig.test.json tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/{unit,integration}/*.{js,ts}",
     "tap:integration": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/integration/*.js",
-    "tap:unit": "tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/unit/*.js",
+    "tap:unit": "TS_NODE_PROJECT=$PWD/tsconfig.test.json tap --node-arg=--require=$PWD/test/fixtures/register-asset-require.js ./test/unit/*.{js,ts}",
     "test": "npm run typecheck && npm run lint && npm run tap",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "watch": "webpack --progress --watch"
   },
   "browserslist": [

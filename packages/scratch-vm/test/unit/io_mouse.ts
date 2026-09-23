@@ -1,10 +1,8 @@
-const test = require('tap').test;
-const Mouse = require('../../src/io/hid/mouse');
-const Runtime = require('../../src/engine/runtime');
+import {test} from 'tap';
+import Mouse from '../../src/io/hid/mouse.ts';
 
 test('spec', t => {
-    const rt = new Runtime();
-    const m = new Mouse(rt);
+    const m = new Mouse();
 
     t.type(m, 'object');
     t.type(m.postData, 'function');
@@ -17,8 +15,7 @@ test('spec', t => {
 });
 
 test('mouseUp', t => {
-    const rt = new Runtime();
-    const m = new Mouse(rt);
+    const m = new Mouse();
 
     m.postData({
         x: -20,
@@ -36,8 +33,7 @@ test('mouseUp', t => {
 });
 
 test('mouseDown', t => {
-    const rt = new Runtime();
-    const m = new Mouse(rt);
+    const m = new Mouse();
 
     m.postData({
         x: 9.9,
@@ -55,8 +51,7 @@ test('mouseDown', t => {
 });
 
 test('at zoomed scale', t => {
-    const rt = new Runtime();
-    const m = new Mouse(rt);
+    const m = new Mouse();
 
     m.postData({
         x: 240,
