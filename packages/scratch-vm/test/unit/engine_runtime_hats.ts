@@ -1,9 +1,7 @@
+import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import {EventEmitter} from 'events';
-import * as blocksModule from '../../src/engine/blocks.ts';
 import Blocks from '../../src/engine/blocks.ts';
-import * as runtimeCacheModule from '../../src/engine/blocks-runtime-cache.ts';
-import * as threadModule from '../../src/engine/thread.ts';
 import Thread from '../../src/engine/thread.ts';
 import type RuntimeType from '../../src/engine/runtime.ts';
 import type Sequencer from '../../src/engine/sequencer';
@@ -30,25 +28,14 @@ const newTarget = (...blocks: object[]) => {
     return {blocks: container} as unknown as Target;
 };
 
-/** A Runtime with only the state the hat code reads; the JS block packages can't run the constructor yet. */
+/** A Runtime whose `execute` only records the threads it runs. */
 const setup = (t: tap.Test, ...targets: Target[]) => {
     const executed: Thread[] = [];
     const Runtime: typeof RuntimeType = t.mockRequire('../../src/engine/runtime.ts', {
-        '../../src/engine/execute.js': (_sequencer: Sequencer, thread: Thread) => executed.push(thread),
-        // Under tap these resolve to the JS files; the bundle resolves them to the TS ports.
-        '../../src/engine/thread.js': threadModule,
-        '../../src/engine/blocks.js': blocksModule,
-        '../../src/engine/blocks-runtime-cache.js': runtimeCacheModule
+        '../../src/engine/execute.ts': (_sequencer: Sequencer, thread: Thread) => executed.push(thread)
     }).default;
-    const rt = Object.assign(Object.create(Runtime.prototype) as RuntimeType, {
-        _hats: {
-            event_whenkeypressed: {restartExistingThreads: false},
-            event_whenflagclicked: {restartExistingThreads: true}
-        },
-        threads: [],
-        executableTargets: targets,
-        sequencer: {} as Sequencer
-    });
+    const rt = new Runtime();
+    rt.executableTargets = targets;
     return {rt, executed};
 };
 

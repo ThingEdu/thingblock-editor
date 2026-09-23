@@ -113,8 +113,9 @@ class Thread {
 
     /** Replaces the top block, reusing its frame so warp mode carries over. */
     reuseStackForNextBlock (blockId: string | null) {
+        const frame = this._topFrame('reuseStackForNextBlock');
         this.stack[this.stack.length - 1] = blockId;
-        this.stackFrames[this.stackFrames.length - 1].reuse();
+        frame.reuse();
     }
 
     popStack (): string | null | undefined {

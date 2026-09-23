@@ -184,7 +184,7 @@ class Profiler {
      * Start recording a frame of time for an id and optional argument.
      * @param {number} id The id returned by idByName for a name symbol like
      * Runtime._step.
-     * @param {?*} arg An arbitrary argument value to store with the frame.
+     * @param {*} [arg] An arbitrary argument value to store with the frame.
      */
     start (id, arg) {
         this.records.push(START, id, arg, performance.now());

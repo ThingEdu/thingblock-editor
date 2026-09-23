@@ -37,3 +37,9 @@ export interface Block {
     /** The target a sprite-specific monitor reads from; null for global monitors. */
     targetId?: string | null
 }
+
+/** How execute passes VARIABLE, LIST and BROADCAST_OPTION fields to primitives. */
+export interface VariableArg {
+    id: string
+    name: string
+}

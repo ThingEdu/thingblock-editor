@@ -950,19 +950,14 @@ test('getScripts reads input block fields for hats without fields', t => {
 test('getCached builds once, and again after blocks change', t => {
     const b = newBlocks();
     createBlock(b, {id: 'foo', opcode: 'TEST_BLOCK', next: null, fields: {}, inputs: {}, topLevel: true});
-    class Cached {
-        opcode: string;
-        constructor (_blocks: Blocks, data: {opcode: string}) {
-            this.opcode = data.opcode;
-        }
-    }
+    const build = (_blocks: Blocks, data: {opcode: string}) => ({opcode: data.opcode});
 
-    const cached = getCached(b, 'foo', Cached);
+    const cached = getCached(b, 'foo', build);
     t.equal(cached.opcode, 'TEST_BLOCK');
-    t.equal(getCached(b, 'foo', Cached), cached);
-    t.equal(getCached(b, 'missing', Cached), null);
+    t.equal(getCached(b, 'foo', build), cached);
+    t.equal(getCached(b, 'missing', build), null);
 
     b.changeMutation('foo', {tagName: 'mutation', children: []});
-    t.not(getCached(b, 'foo', Cached), cached);
+    t.not(getCached(b, 'foo', build), cached);
     t.end();
 });

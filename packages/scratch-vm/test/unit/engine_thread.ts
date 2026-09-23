@@ -101,10 +101,11 @@ test('PushGetParam', t => {
     t.end();
 });
 
-test('params on an empty stack throw', t => {
+test('frame operations on an empty stack throw', t => {
     const th = newThread();
     t.throws(() => th.initParams(), /initParams: empty stack on thread arbitraryString/);
     t.throws(() => th.pushParam('testParam', 'testValue'), /pushParam: empty stack/);
+    t.throws(() => th.goToNextBlock(), /reuseStackForNextBlock: empty stack/);
     t.end();
 });
 

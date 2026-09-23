@@ -21,6 +21,8 @@ class Variable {
     dataType: DataType;
     /** A list holds an array; a broadcast message holds its name. */
     value: ScratchValue | ScratchValue[];
+    /** A list monitor already shows `value`; list blocks clear it when they change the list. */
+    _monitorUpToDate?: boolean;
 
     constructor (id: string | null, name: string, type: VariableType, dataType?: unknown) {
         this.id = id || uid();

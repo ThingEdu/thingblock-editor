@@ -10,11 +10,11 @@ export interface ExecuteCacheData {
     mutation: Mutation | undefined
 }
 
-/** Execute's per-block data, built with `CacheType` on first use and dropped when the container changes. */
+/** Execute's per-block data, made by `build` on first use and dropped when the container changes. */
 export const getCached = function <T> (
     blocks: Blocks,
     blockId: string,
-    CacheType: new (blocks: Blocks, data: ExecuteCacheData) => T
+    build: (blocks: Blocks, data: ExecuteCacheData) => T
 ): T | null {
     if (Object.hasOwn(blocks._cache._executeCached, blockId)) {
         return blocks._cache._executeCached[blockId] as T;
@@ -23,7 +23,7 @@ export const getCached = function <T> (
     const block = blocks.getBlock(blockId);
     if (!block) return null;
 
-    const cached = new CacheType(blocks, {
+    const cached = build(blocks, {
         id: blockId,
         opcode: blocks.getOpcode(block),
         fields: blocks.getFields(block),

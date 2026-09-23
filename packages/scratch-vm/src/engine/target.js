@@ -122,7 +122,7 @@ class Target extends EventEmitter {
      * Create a new variable if both lookups fail.
      * @param {string} id Id of the variable.
      * @param {string} name Name of the variable.
-     * @returns {!Variable} Variable object.
+     * @returns {!import('./variable').default} Variable object.
      */
     lookupOrCreateVariable (id, name) {
         let variable = this.lookupVariableById(id);
@@ -142,7 +142,7 @@ class Target extends EventEmitter {
      * if it exists.
      * @param {string} id Id of the variable.
      * @param {string} name Name of the variable.
-     * @returns {?Variable} Variable object.
+     * @returns {?import('./variable').default} Variable object.
      */
     lookupBroadcastMsg (id, name) {
         let broadcastMsg;
@@ -171,7 +171,7 @@ class Target extends EventEmitter {
      * if it exists. Does not create a new broadcast message variable if
      * it doesn't exist.
      * @param {string} name Name of the variable.
-     * @returns {?Variable} Variable object.
+     * @returns {?import('./variable').default} Variable object.
      */
     lookupBroadcastByInputValue (name) {
         const vars = this.variables;
@@ -188,7 +188,7 @@ class Target extends EventEmitter {
      * Search begins for local variables; then look for globals.
      * @param {string} id Id of the variable.
      * @param {string} name Name of the variable.
-     * @returns {!Variable} Variable object.
+     * @returns {!import('./variable').default} Variable object.
      */
     lookupVariableById (id) {
         // If we have a local copy, return it.
@@ -211,7 +211,7 @@ class Target extends EventEmitter {
      * @param {string} name Name of the variable.
      * @param {string} type Type of the variable. Defaults to Variable.SCALAR_TYPE.
      * @param {?bool} skipStage Optional flag to skip checking the stage
-     * @returns {?Variable} Variable object if found, or null if not.
+     * @returns {?import('./variable').default} Variable object if found, or null if not.
      */
     lookupVariableByNameAndType (name, type, skipStage) {
         if (typeof name !== 'string') return;
@@ -245,7 +245,7 @@ class Target extends EventEmitter {
      * Search begins for local lists; then look for globals.
      * @param {!string} id Id of the list.
      * @param {!string} name Name of the list.
-     * @returns {!Varible} Variable object representing the found/created list.
+     * @returns {!import('./variable').default} Variable object representing the found/created list.
      */
     lookupOrCreateList (id, name) {
         let list = this.lookupVariableById(id);
@@ -393,7 +393,7 @@ class Target extends EventEmitter {
      * @param {string} id Id of variable to duplicate.
      * @param {boolean=} optKeepOriginalId Optional flag to keep the original variable ID
      * for the duplicate variable. This is necessary when cloning a sprite, for example.
-     * @returns {?Variable} The duplicated variable, or null if
+     * @returns {?import('./variable').default} The duplicated variable, or null if
      * the original variable was not found.
      */
     duplicateVariable (id, optKeepOriginalId) {

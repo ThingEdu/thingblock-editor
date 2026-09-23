@@ -18,7 +18,7 @@ class BlockUtility {
         /**
          * The block primitives thread with the block's target, stackFrame and
          * modifiable status.
-         * @type {?Thread}
+         * @type {?import('./thread').default}
          */
         this.thread = thread;
 
