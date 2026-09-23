@@ -85,7 +85,7 @@ test('clone-cleanup', t => {
             vm.greenFlag();
 
             // Let the project control the pace of the tests
-            vm.runtime.on('SAY', () => testNextStep());
+            vm.runtime.events.on('SAY', () => testNextStep());
         });
     });
 

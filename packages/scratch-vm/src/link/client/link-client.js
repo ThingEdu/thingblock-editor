@@ -1,6 +1,7 @@
 const Client = require('./client');
 const {withDefaults} = require('./callbacks');
 const log = require('../../util/log');
+const {RuntimeEventNames} = require('../../engine/runtime/runtime-events');
 
 /**
  * Default address of the native helper's WebSocket server (thingblock-link). The helper listens on
@@ -189,7 +190,7 @@ class LinkClient extends Client {
         await this._request('connect', {port: target.id});
         this._connectedTarget = target;
         log.info('LinkClient.connect: connected');
-        this.runtime.emit(this.runtime.constructor.DEVICE_CONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_CONNECTED);
     }
 
     /**
@@ -206,7 +207,7 @@ class LinkClient extends Client {
         // The helper closes any open monitor as part of disconnect; drop our routing to match.
         this._monitor = null;
         this._connectedTarget = null;
-        this.runtime.emit(this.runtime.constructor.DEVICE_DISCONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
     }
 
     /**
@@ -474,7 +475,7 @@ class LinkClient extends Client {
             break;
         case 'monitorData':
             if (this._monitor && this._monitor.id === id) {
-                this.runtime.emit(this.runtime.constructor.SERIAL_DATA, payload.data);
+                this.runtime.events.emit(RuntimeEventNames.SERIAL_DATA, payload.data);
             }
             break;
         case 'error': {
@@ -515,7 +516,7 @@ class LinkClient extends Client {
         this._monitor = null;
         if (this._connectedTarget) {
             this._connectedTarget = null;
-            this.runtime.emit(this.runtime.constructor.DEVICE_DISCONNECTED);
+            this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
         }
     }
 

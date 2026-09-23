@@ -11,8 +11,8 @@
  * Wire formats never escape a client. Each backend maps its transport's shapes onto the VM-facing
  * typedefs defined here ({@link ConnectionTarget}, {@link Artifact}), so callers stay transport-agnostic.
  *
- * Implementations emit `Runtime.DEVICE_CONNECTED` / `Runtime.DEVICE_DISCONNECTED` so the GUI and the
- * serial monitor can track the link.
+ * Implementations emit `DEVICE_CONNECTED` / `DEVICE_DISCONNECTED` on `runtime.events` so the GUI and the serial
+ * monitor can track the link.
  */
 class Client {
     /**

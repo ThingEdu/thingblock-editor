@@ -3,7 +3,7 @@ const test = require('tap').test;
 const makeTestStorage = require('../fixtures/make-test-storage');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
 const VirtualMachine = require('../../src/index');
-const Variable = require('../../src/engine/variable');
+const Variable = require('../../src/engine/variable').default;
 const StringUtil = require('../../src/util/string-util');
 const VariableUtil = require('../../src/util/variable-util');
 

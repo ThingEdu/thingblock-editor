@@ -214,37 +214,13 @@ const ProjectSaverHOC = function (WrappedComponent) {
         storeProject (projectId, requestParams, options) {
             requestParams = requestParams || {};
             this.clearAutoSaveTimeout();
-            // Serialize VM state now before embarking on
-            // the asynchronous journey of storing assets to
-            // the server. This ensures that assets don't update
-            // while in the process of saving a project (e.g. the
-            // serialized project refers to a newer asset than what
-            // we just finished saving).
+            // Projects carry no assets (no costumes or sounds), so saving is just the project JSON
             const savedVMState = this.props.vm.toJSON();
-            const scratchStorage = this.props.storage.scratchStorage;
 
             const saveProject = this.props.onUpdateProjectData ||
                 ((id, vmState, params) => this.props.storage.saveProject(id, vmState, params));
 
-            return Promise.all(this.props.vm.assets
-                .filter(asset => !asset.clean)
-                .map(
-                    asset => scratchStorage.store(
-                        asset.assetType,
-                        asset.dataFormat,
-                        asset.data,
-                        asset.assetId
-                    ).then(response => {
-                        // Asset servers respond with {status: ok} for successful POSTs
-                        if (response.status !== 'ok') {
-                            // Errors include a `code` property, e.g. "Forbidden"
-                            return Promise.reject(response.code);
-                        }
-                        asset.clean = true;
-                    })
-                )
-            )
-                .then(() => saveProject(projectId, savedVMState, requestParams))
+            return saveProject(projectId, savedVMState, requestParams)
                 .then(response => {
                     this.props.onSetProjectUnchanged();
                     this.reportTelemetryEvent('projectDidSave');

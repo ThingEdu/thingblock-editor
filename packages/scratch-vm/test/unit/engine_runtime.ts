@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import {Map} from 'immutable';
 import BlockType from '../../src/extension-support/block-type';

@@ -1,6 +1,6 @@
 const tap = require('tap');
-const Target = require('../../src/engine/target');
-const Runtime = require('../../src/engine/runtime');
+const Target = require('../../src/engine/target').default;
+const Runtime = require('../../src/engine/runtime').default;
 const VariableUtil = require('../../src/util/variable-util');
 
 let target1;

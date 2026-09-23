@@ -4,7 +4,7 @@ const makeTestStorage = require('../fixtures/make-test-storage');
 const extractProjectJson = require('../fixtures/readProjectFile').extractProjectJson;
 const VirtualMachine = require('../../src/index');
 
-const uri = path.resolve(__dirname, '../fixtures/default.sb2');
+const uri = path.resolve(__dirname, '../fixtures/default.sb3');
 const project = extractProjectJson(uri);
 
 test('default', t => {

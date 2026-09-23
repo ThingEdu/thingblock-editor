@@ -4,6 +4,7 @@ import formatMessage from 'format-message';
 import ThingBotTelemetrix, {DHT_TYPE, PIN_MODE} from './thingbot-telemetrix';
 import BLETransport from './transport/ble';
 import type {ScannedDevice} from './transport/transport';
+import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
 import type {Extension, ExtensionInfo} from '../extension';
 
 /** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
@@ -55,11 +56,11 @@ class ThingBotTelemetrixExtension implements Extension {
                         rssi: d.rssi || 0
                     };
                 }
-                this.runtime.emit(this.runtime.constructor.PERIPHERAL_LIST_UPDATE, list);
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_LIST_UPDATE, list);
             },
             onError: err => {
                 console.error('[ThingBot] BLE scan error:', err);
-                this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
                     message: err.message
                 });
             }
@@ -73,7 +74,7 @@ class ThingBotTelemetrixExtension implements Extension {
         }
         const device = this._devices[peripheralId];
         if (!device) {
-            this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
+            this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
                 message: 'No device selected'
             });
             return;
@@ -81,10 +82,10 @@ class ThingBotTelemetrixExtension implements Extension {
         this._telemetrix.connect(device, () => this._onDisconnect())
             .then(() => {
                 this._devices = {};
-                this.runtime.emit(this.runtime.constructor.PERIPHERAL_CONNECTED);
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_CONNECTED);
             })
             .catch(err => {
-                this.runtime.emit(this.runtime.constructor.PERIPHERAL_REQUEST_ERROR, {
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
                     message: err.message
                 });
             });
@@ -99,7 +100,7 @@ class ThingBotTelemetrixExtension implements Extension {
     }
 
     _onDisconnect () {
-        this.runtime.emit(this.runtime.constructor.PERIPHERAL_DISCONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_DISCONNECTED);
     }
 
     // ─── Extension metadata ───

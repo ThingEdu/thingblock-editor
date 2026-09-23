@@ -6,7 +6,7 @@ const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer
 const VirtualMachine = require('../../src/virtual-machine');
 const RenderedTarget = require('../../src/sprites/rendered-target');
 
-const projectUri = path.resolve(__dirname, '../fixtures/default.sb2');
+const projectUri = path.resolve(__dirname, '../fixtures/default.sb3');
 const project = readFileToBuffer(projectUri);
 
 const vm = new VirtualMachine();

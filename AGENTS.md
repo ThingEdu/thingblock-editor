@@ -140,22 +140,23 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `src/extensions/extension.ts`; because they compile to ES modules, `extension-manager.js` must require them
   with `.default`. `npm run typecheck` (part of `npm test`) is what checks them — eslint alone does not.
 - TS unit tests are `test/unit/*.ts`. Tap runs them through ts-node with `tsconfig.test.json` (CommonJS output),
-  which the tap scripts select via `TS_NODE_PROJECT`. While a module has both `x.js` and a TS port `x.ts`, tests
-  import the port as `x.ts`: under tap a bare `x` resolves to the JS file. A test that needs the ports all the way
-  down (e.g. a real `new Runtime()`) imports `test/fixtures/prefer-ts` first, which resolves `src/` like webpack.
+  which the tap scripts select via `TS_NODE_PROJECT`. JS code that `require`s a TS module takes its `.default` (or
+  a named export), since TS compiles to ES modules.
+- The engine (`src/engine/`) is TypeScript. Runtime events go through the typed `runtime.events` emitter with
+  names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
+  and the events only the VM emits are named in `virtual-machine/vm-event-names.js`.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
   VM devices.
 - i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
   call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
   through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.
-- The target model is firmware-only: targets host blocks, variables and comments, but no costumes, rendering,
-  or motion (no x/y/direction/size/visible/rotation/effects/drawable). Serialization
-  (`serialization/sb3.js`/`sb2.js`) persists blocks/variables plus the firmware `board` field and drops all
-  costume/render/motion fields, so saved projects no longer round-trip through stock Scratch. The JS VM still
-  builds targets through `Sprite`/`RenderedTarget` and still persists sounds, which nothing consumes; the
-  TypeScript port merges them into one `engine/target.ts` `Target` with no clones or sounds, and the Runtime
-  cutover removes the JS classes and sound handling.
+- The target model is firmware-only: a project is a stage plus one device, each an `engine/target.ts` `Target`
+  hosting blocks, variables and comments — no sprites, clones, costumes, sounds, rendering or motion.
+  Projects are `.tb` files in sb3 format (`serialization/sb3.js`), persisting blocks/variables plus the firmware
+  `board` field; saves carry a placeholder costume and an empty sounds list only because scratch-parser requires
+  them. Scratch 1/2 projects (`.sb`/`.sb2`) are not supported, and saved projects no longer round-trip through
+  stock Scratch.
 - Resource packs are served by the link helper (`LinkClient.resourceOrigin` → its `/resources` route) unless the
   host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.js`
   and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —

@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import Target from '../../src/engine/target.ts';
 import Variable, {type VariableType} from '../../src/engine/variable.ts';

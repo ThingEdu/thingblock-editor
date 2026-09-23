@@ -4,7 +4,7 @@ const makeTestStorage = require('../fixtures/make-test-storage');
 const extractProjectJson = require('../fixtures/readProjectFile').extractProjectJson;
 
 const renderedTarget = require('../../src/sprites/rendered-target');
-const runtime = require('../../src/engine/runtime');
+const runtime = require('../../src/engine/runtime').default;
 const sb2 = require('../../src/serialization/sb2');
 
 test('spec', t => {

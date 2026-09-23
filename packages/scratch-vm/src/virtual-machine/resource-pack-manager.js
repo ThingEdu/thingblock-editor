@@ -1,6 +1,6 @@
 /**
- * Planning 
- * 
+ * Planning
+ *
  * A resource pack is any helper-served bundle of editor capability — a device, a peripheral, or a future
  * feature unrelated to hardware. New features are meant to ship as packs rather than as VM extensions.
  * Today packs are handled by {@link DeviceManager}, which only knows the device and peripheral kinds: it

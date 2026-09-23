@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import ArgumentType from '../../src/extension-support/argument-type';
 import BlockType from '../../src/extension-support/block-type';

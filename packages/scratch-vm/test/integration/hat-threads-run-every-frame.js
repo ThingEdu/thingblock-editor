@@ -3,9 +3,9 @@ const test = require('tap').test;
 const makeTestStorage = require('../fixtures/make-test-storage');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
 const VirtualMachine = require('../../src/index');
-const Thread = require('../../src/engine/thread');
-const Runtime = require('../../src/engine/runtime');
-const execute = require('../../src/engine/execute.js');
+const Thread = require('../../src/engine/thread').default;
+const Runtime = require('../../src/engine/runtime').default;
+const execute = require('../../src/engine/execute.js').default;
 
 const projectUri = path.resolve(__dirname, '../fixtures/timer-greater-than-hat.sb2');
 const project = readFileToBuffer(projectUri);

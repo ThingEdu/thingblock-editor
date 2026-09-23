@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import Runtime from '../../src/engine/runtime.ts';
 import Sequencer from '../../src/engine/sequencer.ts';

@@ -54,7 +54,7 @@ class Scratch3SensingBlocks {
                 getId: () => 'timer'
             },
             sensing_current: {
-                // Differs from the toolbox id so sb2 projects can hold one monitor per menu option
+                // Differs from the toolbox id so a project can hold one monitor per menu option
                 getId: (_: string, fields: Record<string, unknown>) => getMonitorIdForBlockWithArgs('current', fields)
             }
         };

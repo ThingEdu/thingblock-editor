@@ -3,14 +3,14 @@ const EventEmitter = require('events');
 const centralDispatch = require('../dispatch/central-dispatch');
 const ExtensionManager = require('../extension-support/extension-manager');
 const log = require('../util/log');
-const Runtime = require('../engine/runtime');
+const Runtime = require('../engine/runtime').default;
+const VmEventNames = require('./vm-event-names');
 
 const wireRuntimeEvents = require('./runtime-events');
 const LinkController = require('./link-controller');
 const DeviceManager = require('./device-manager');
 const applyMixin = require('./apply-mixin');
 const ProjectIoMixin = require('./mixins/project-io');
-const AssetsMixin = require('./mixins/assets');
 const EngineMixin = require('./mixins/engine');
 const WorkspaceMixin = require('./mixins/workspace');
 const TargetsMixin = require('./mixins/targets');
@@ -111,9 +111,9 @@ class VirtualMachine extends EventEmitter {
     setTurboMode (turboModeOn) {
         this.runtime.turboMode = !!turboModeOn;
         if (this.runtime.turboMode) {
-            this.emit(Runtime.TURBO_MODE_ON);
+            this.emit(VmEventNames.TURBO_MODE_ON);
         } else {
-            this.emit(Runtime.TURBO_MODE_OFF);
+            this.emit(VmEventNames.TURBO_MODE_OFF);
         }
     }
 
@@ -417,7 +417,7 @@ class VirtualMachine extends EventEmitter {
     }
 }
 
-for (const Mixin of [ProjectIoMixin, AssetsMixin, EngineMixin, WorkspaceMixin, TargetsMixin]) {
+for (const Mixin of [ProjectIoMixin, EngineMixin, WorkspaceMixin, TargetsMixin]) {
     applyMixin(VirtualMachine, Mixin);
 }
 

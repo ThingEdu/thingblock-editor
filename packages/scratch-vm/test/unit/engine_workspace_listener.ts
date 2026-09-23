@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import Runtime from '../../src/engine/runtime.ts';
 import Variable from '../../src/engine/variable.ts';
@@ -280,14 +279,6 @@ test('a block comment attaches to its block, and its delete detaches it', t => {
     t.equal(device.blocks.getBlock('a').comment, 'c');
     listener.blockListener({type: 'block_comment_delete', commentId: 'c', blockId: 'a'});
     t.equal(device.blocks.getBlock('a').comment, undefined);
-    t.end();
-});
-
-test('a comment create event places an unpositioned sb2 comment', t => {
-    const {device, listener} = setup();
-    device.createComment('c', null, 'imported', null, null, 200, 200, false);
-    listener.blockListener({type: 'comment_create', commentId: 'c', json: {x: 10, y: 20, width: 200, height: 200}});
-    t.match(device.comments.c, {text: 'imported', x: 10, y: 20});
     t.end();
 });
 

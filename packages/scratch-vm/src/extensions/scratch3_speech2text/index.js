@@ -164,8 +164,8 @@ class Scratch3Speech2TextBlocks {
         this._stopTranscription = this._stopTranscription.bind(this);
 
 
-        this.runtime.on('PROJECT_STOP_ALL', this._resetListening.bind(this));
-        this.runtime.on('PROJECT_START', this._resetEdgeTriggerUtterance.bind(this));
+        this.runtime.events.on('PROJECT_STOP_ALL', this._resetListening.bind(this));
+        this.runtime.events.on('PROJECT_START', this._resetEdgeTriggerUtterance.bind(this));
 
     }
 

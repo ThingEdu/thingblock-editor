@@ -4,7 +4,7 @@ const makeTestStorage = require('../fixtures/make-test-storage');
 const extractProjectJson = require('../fixtures/readProjectFile').extractProjectJson;
 
 const renderedTarget = require('../../src/sprites/rendered-target');
-const runtime = require('../../src/engine/runtime');
+const runtime = require('../../src/engine/runtime').default;
 const sb2 = require('../../src/serialization/sb2');
 
 test('spec', t => {
@@ -14,7 +14,7 @@ test('spec', t => {
 
 test('default', t => {
     // Get SB2 JSON (string)
-    const uri = path.resolve(__dirname, '../fixtures/default.sb2');
+    const uri = path.resolve(__dirname, '../fixtures/default.sb3');
     const json = extractProjectJson(uri);
 
     // Create runtime instance & load SB2 into it

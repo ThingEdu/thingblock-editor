@@ -1,4 +1,3 @@
-import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import {EventEmitter} from 'events';
 import Blocks from '../../src/engine/blocks.ts';

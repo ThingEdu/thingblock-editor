@@ -124,7 +124,7 @@ fs.readdirSync(executeDir)
             });
 
             // Report the text of SAY events as testing instructions.
-            vm.runtime.on('SAY', (target, type, text) => reportVmResult(text));
+            vm.runtime.events.on('SAY', (target, type, text) => reportVmResult(text));
 
             const project = readFileToBuffer(path.resolve(executeDir, uri));
 

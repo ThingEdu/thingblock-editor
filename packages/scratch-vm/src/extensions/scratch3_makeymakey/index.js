@@ -84,10 +84,10 @@ class Scratch3MakeyMakeyBlocks {
         }, this.runtime.currentStepTime);
 
         this.keyPressed = this.keyPressed.bind(this);
-        this.runtime.on('KEY_PRESSED', this.keyPressed);
+        this.runtime.events.on('KEY_PRESSED', this.keyPressed);
 
         this._clearkeyPressBuffer = this._clearkeyPressBuffer.bind(this);
-        this.runtime.on('PROJECT_STOP_ALL', this._clearkeyPressBuffer);
+        this.runtime.events.on('PROJECT_STOP_ALL', this._clearkeyPressBuffer);
 
         /*
          * An object containing a set of sequence objects.

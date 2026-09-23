@@ -15,11 +15,6 @@ test('interface', t => {
     t.type(vm.postIOData, 'function');
 
     t.type(vm.loadProject, 'function');
-    t.type(vm.addSprite, 'function');
-    t.type(vm.addSound, 'function');
-    t.type(vm.deleteSound, 'function');
-    t.type(vm.renameSprite, 'function');
-    t.type(vm.deleteSprite, 'function');
 
     t.type(vm.blockListener, 'function');
     t.type(vm.flyoutBlockListener, 'function');

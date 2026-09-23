@@ -15,7 +15,6 @@ import GlowFeedback from './runtime/glow-feedback';
 import WorkspaceListener from './runtime/workspace-listener';
 import MonitorHandler, {type Monitor} from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
-import JsEventNames from './runtime/event-names';
 import {RuntimeEventNames, type RuntimeEvents} from './runtime/runtime-events';
 import type {ExtensionInfo, MenuInfo} from '../extensions/extension';
 import {
@@ -146,6 +145,8 @@ class Runtime {
     origin: string | null = null;
     storage?: ScratchStorage;
     audioEngine?: unknown;
+    /** The selected device and its peripherals, saved with the project; null without a board. */
+    board: {device: string, peripherals: string[]} | null = null;
 
     constructor () {
         this.sequencer = new Sequencer(this);
@@ -809,8 +810,5 @@ class Runtime {
         return newThread;
     }
 }
-
-// JS callers read event names as statics (`Runtime.PROJECT_START`); TS code imports `RuntimeEventNames`.
-Object.assign(Runtime, JsEventNames);
 
 export default Runtime;

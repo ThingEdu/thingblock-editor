@@ -1,6 +1,6 @@
 const test = require('tap').test;
 const CloudClient = require('../../src/link/client/cloud-client');
-const Runtime = require('../../src/engine/runtime');
+const Runtime = require('../../src/engine/runtime').default;
 
 // A minimal fake of a Web Serial SerialPort that records open/close and serves scripted reads.
 // `readable`/`writable` model Web Serial's stream locking, which the monitor has to release.
@@ -148,7 +148,7 @@ test('connect opens the port, exposes transport, and emits DEVICE_CONNECTED', t 
     const calls = installSerial(port);
 
     let connectedEvents = 0;
-    rt.on(Runtime.DEVICE_CONNECTED, () => connectedEvents++);
+    rt.events.on('DEVICE_CONNECTED', () => connectedEvents++);
 
     t.throws(() => c.transport, 'transport throws before connect');
 
@@ -182,7 +182,7 @@ test('disconnect closes the port and emits DEVICE_DISCONNECTED', t => {
     installSerial(port);
 
     let disconnectedEvents = 0;
-    rt.on(Runtime.DEVICE_DISCONNECTED, () => disconnectedEvents++);
+    rt.events.on('DEVICE_DISCONNECTED', () => disconnectedEvents++);
 
     c.connect()
         .then(() => c.disconnect())
@@ -201,7 +201,7 @@ test('disconnect is a no-op when not connected', t => {
     const c = new CloudClient(rt);
 
     let disconnectedEvents = 0;
-    rt.on(Runtime.DEVICE_DISCONNECTED, () => disconnectedEvents++);
+    rt.events.on('DEVICE_DISCONNECTED', () => disconnectedEvents++);
 
     c.disconnect().then(() => {
         t.equal(disconnectedEvents, 0);
@@ -355,7 +355,7 @@ test('openMonitor emits inbound bytes as SERIAL_DATA and closeMonitor releases t
     installSerial(port);
 
     const seen = [];
-    rt.on(Runtime.SERIAL_DATA, chunk => seen.push(chunk));
+    rt.events.on('SERIAL_DATA', chunk => seen.push(chunk));
 
     await c.connect();
     await c.openMonitor({baudRate: 115200});

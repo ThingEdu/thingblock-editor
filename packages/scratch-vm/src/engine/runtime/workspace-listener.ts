@@ -262,11 +262,6 @@ class WorkspaceListener {
         case 'comment_create':
         case 'block_comment_create':
             target.createComment(e.commentId, e.blockId, '', e.json.x, e.json.y, e.json.width, e.json.height, false);
-            // sb2 block comments load unpositioned for Blockly to place; this event carries the placement
-            if (target.comments[e.commentId].x === null && target.comments[e.commentId].y === null) {
-                target.comments[e.commentId].x = e.json.x;
-                target.comments[e.commentId].y = e.json.y;
-            }
             break;
         case 'comment_change':
         case 'block_comment_change':

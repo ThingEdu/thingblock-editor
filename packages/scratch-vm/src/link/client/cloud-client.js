@@ -1,6 +1,7 @@
 const Client = require('./client');
 const {withDefaults} = require('./callbacks');
 const log = require('../../util/log');
+const {RuntimeEventNames} = require('../../engine/runtime/runtime-events');
 
 /**
  * Default address of the cloud build server (thingblock-link-cloud).
@@ -170,7 +171,7 @@ class CloudClient extends Client {
         this._baudRate = DEFAULT_BAUD_RATE;
         this._connected = true;
         log.info('CloudClient.connect: connected');
-        this.runtime.emit(this.runtime.constructor.DEVICE_CONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_CONNECTED);
     }
 
     /**
@@ -188,7 +189,7 @@ class CloudClient extends Client {
         await this._port.close();
         this._port = null;
         this._connected = false;
-        this.runtime.emit(this.runtime.constructor.DEVICE_DISCONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
     }
 
     /**
@@ -472,7 +473,7 @@ class CloudClient extends Client {
             for (;;) {
                 const {done, value} = await reader.read();
                 if (done) break;
-                this.runtime.emit(this.runtime.constructor.SERIAL_DATA, decoder.decode(value, {stream: true}));
+                this.runtime.events.emit(RuntimeEventNames.SERIAL_DATA, decoder.decode(value, {stream: true}));
             }
         } catch (err) {
             // A yanked USB cable surfaces here; the port is gone, so report it rather than fail silently.

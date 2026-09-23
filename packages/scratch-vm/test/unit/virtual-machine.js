@@ -1,11 +1,9 @@
 const tap = require('tap');
 const VirtualMachine = require('../../src/virtual-machine');
-const Sprite = require('../../src/sprites/sprite');
-const Variable = require('../../src/engine/variable');
-const adapter = require('../../src/engine/adapter');
+const Target = require('../../src/engine/target').default;
+const Variable = require('../../src/engine/variable').default;
+const adapter = require('../../src/engine/adapter').default;
 const events = require('../fixtures/events.json');
-const Runtime = require('../../src/engine/runtime');
-const RenderedTarget = require('../../src/sprites/rendered-target');
 const log = require('../../src/util/log');
 const path = require('path');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
@@ -14,11 +12,11 @@ const test = tap.test;
 
 test('Project loaded emits runtime event', t => {
     const vm = new VirtualMachine();
-    const projectUri = path.resolve(__dirname, '../fixtures/default.sb2');
+    const projectUri = path.resolve(__dirname, '../fixtures/default.sb3');
     const project = readFileToBuffer(projectUri);
     let projectLoaded = false;
 
-    vm.runtime.addListener('PROJECT_LOADED', () => {
+    vm.runtime.events.addListener('PROJECT_LOADED', () => {
         projectLoaded = true;
     });
 
@@ -26,332 +24,6 @@ test('Project loaded emits runtime event', t => {
         t.equal(projectLoaded, true, 'Project load event emitted');
         t.end();
     });
-});
-
-test('deleteSound returns function after deleting or null if nothing was deleted', t => {
-    const vm = new VirtualMachine();
-    const rt = new Runtime();
-    const sprite = new Sprite(null, rt);
-    sprite.sounds = [{id: 1}, {id: 2}, {id: 3}];
-    const target = new RenderedTarget(sprite, rt);
-    vm.editingTarget = target;
-
-    const addFun = vm.deleteSound(1);
-    t.equal(sprite.sounds.length, 2);
-    t.equal(sprite.sounds[0].id, 1);
-    t.equal(sprite.sounds[1].id, 3);
-    t.type(addFun, 'function');
-
-    const noAddFun = vm.deleteSound(2);
-    t.equal(sprite.sounds.length, 2);
-    t.equal(sprite.sounds[0].id, 1);
-    t.equal(sprite.sounds[1].id, 3);
-    t.equal(noAddFun, null);
-
-    t.end();
-});
-
-test('addSprite throws on invalid string', t => {
-    const vm = new VirtualMachine();
-    vm.addSprite('this is not a sprite')
-        .catch(e => {
-            t.equal(e.startsWith('Sprite Upload Error:'), true);
-            t.end();
-        });
-});
-
-test('renameSprite throws when there is no sprite with that id', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.getTargetById = () => null;
-    t.throws(
-        (() => vm.renameSprite('id', 'name')),
-        new Error('No target with the provided id.')
-    );
-    t.end();
-});
-
-test('renameSprite throws when used on a non-sprite target', t => {
-    const vm = new VirtualMachine();
-    const fakeTarget = {
-        isSprite: () => false
-    };
-    vm.runtime.getTargetById = () => (fakeTarget);
-    t.throws(
-        (() => vm.renameSprite('id', 'name')),
-        new Error('Cannot rename non-sprite targets.')
-    );
-    t.end();
-});
-
-test('renameSprite throws when there is no sprite for given target', t => {
-    const vm = new VirtualMachine();
-    const fakeTarget = {
-        sprite: null,
-        isSprite: () => true
-    };
-    vm.runtime.getTargetById = () => (fakeTarget);
-    t.throws(
-        (() => vm.renameSprite('id', 'name')),
-        new Error('No sprite associated with this target.')
-    );
-    t.end();
-});
-
-test('renameSprite sets the sprite name', t => {
-    const vm = new VirtualMachine();
-    const fakeTarget = {
-        sprite: {name: 'original'},
-        isSprite: () => true
-    };
-    vm.runtime.getTargetById = () => (fakeTarget);
-    vm.renameSprite('id', 'not-original');
-    t.equal(fakeTarget.sprite.name, 'not-original');
-    t.end();
-});
-
-test('renameSprite does not set sprite names to an empty string', t => {
-    const vm = new VirtualMachine();
-    const fakeTarget = {
-        sprite: {name: 'original'},
-        isSprite: () => true
-    };
-    vm.runtime.getTargetById = () => (fakeTarget);
-    vm.renameSprite('id', '');
-    t.equal(fakeTarget.sprite.name, 'original');
-    t.end();
-});
-
-test('renameSprite does not set sprite names to reserved names', t => {
-    const vm = new VirtualMachine();
-    const fakeTarget = {
-        sprite: {name: 'original'},
-        isSprite: () => true
-    };
-    vm.runtime.getTargetById = () => (fakeTarget);
-    vm.renameSprite('id', '_mouse_');
-    t.equal(fakeTarget.sprite.name, 'original');
-    t.end();
-});
-
-test('renameSprite increments from existing sprite names', t => {
-    const vm = new VirtualMachine();
-    vm.emitTargetsUpdate = () => {};
-
-    const spr1 = new Sprite(null, vm.runtime);
-    const target1 = spr1.createClone();
-    const spr2 = new Sprite(null, vm.runtime);
-    const target2 = spr2.createClone();
-
-    vm.runtime.targets = [target1, target2];
-    vm.renameSprite(target1.id, 'foo');
-    t.equal(vm.runtime.targets[0].sprite.name, 'foo');
-    vm.renameSprite(target2.id, 'foo');
-    t.equal(vm.runtime.targets[1].sprite.name, 'foo2');
-    t.end();
-});
-
-test('renameSprite does not increment when renaming to the same name', t => {
-    const vm = new VirtualMachine();
-    vm.emitTargetsUpdate = () => {};
-
-    const spr = new Sprite(null, vm.runtime);
-    spr.name = 'foo';
-    const target = spr.createClone();
-
-    vm.runtime.targets = [target];
-
-    t.equal(vm.runtime.targets[0].sprite.name, 'foo');
-    vm.renameSprite(target.id, 'foo');
-    t.equal(vm.runtime.targets[0].sprite.name, 'foo');
-
-    t.end();
-});
-
-test('deleteSprite throws when used on a non-sprite target', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => false
-    }];
-    t.throws(
-        (() => vm.deleteSprite('id')),
-        new Error('Cannot delete non-sprite targets.')
-    );
-    t.end();
-});
-
-test('deleteSprite throws when there is no sprite for the given target', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => true,
-        sprite: null
-    }];
-    t.throws(
-        (() => vm.deleteSprite('id')),
-        new Error('No sprite associated with this target.')
-    );
-    t.end();
-});
-
-test('deleteSprite throws when there is no target with given id', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => true,
-        sprite: {
-            name: 'this name'
-        }
-    }];
-    t.throws(
-        (() => vm.deleteSprite('id1')),
-        new Error('No target with the provided id.')
-    );
-    t.end();
-});
-
-test('deleteSprite deletes a sprite when given id is associated with a known sprite', t => {
-    const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const currTarget = spr.createClone();
-
-    vm.runtime.targets = [currTarget];
-
-    t.equal(currTarget.sprite.clones.length, 1);
-    vm.deleteSprite(currTarget.id);
-    t.equal(currTarget.sprite.clones.length, 0);
-    t.end();
-});
-
-// eslint-disable-next-line @stylistic/max-len
-test('deleteSprite sets editing target as null when given sprite is current editing target, and the only target in the runtime', t => {
-    const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const currTarget = spr.createClone();
-
-    vm.editingTarget = currTarget;
-    vm.runtime.targets = [currTarget];
-
-    vm.deleteSprite(currTarget.id);
-
-    t.equal(vm.runtime.targets.length, 0);
-    t.equal(vm.editingTarget, null);
-    t.end();
-});
-
-// eslint-disable-next-line @stylistic/max-len
-test('deleteSprite updates editingTarget when sprite being deleted is current editing target, and there is another target in the runtime', t => {
-    const vm = new VirtualMachine();
-    const spr1 = new Sprite(null, vm.runtime);
-    const spr2 = new Sprite(null, vm.runtime);
-    const currTarget = spr1.createClone();
-    const otherTarget = spr2.createClone();
-
-    vm.emitWorkspaceUpdate = () => null;
-
-    vm.runtime.targets = [currTarget, otherTarget];
-    vm.editingTarget = currTarget;
-
-    t.equal(vm.runtime.targets.length, 2);
-    vm.deleteSprite(currTarget.id);
-    t.equal(vm.runtime.targets.length, 1);
-    t.equal(vm.editingTarget.id, otherTarget.id);
-
-    // now let's try them in the other order in the runtime.targets list
-
-    // can't reuse deleted targets
-    const currTarget2 = spr1.createClone();
-    const otherTarget2 = spr2.createClone();
-
-    vm.runtime.targets = [otherTarget2, currTarget2];
-    vm.editingTarget = currTarget2;
-
-    t.equal(vm.runtime.targets.length, 2);
-    vm.deleteSprite(currTarget2.id);
-    t.equal(vm.editingTarget.id, otherTarget2.id);
-    t.equal(vm.runtime.targets.length, 1);
-
-    t.end();
-});
-
-test('duplicateSprite throws when there is no target with given id', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => true,
-        sprite: {
-            name: 'this name'
-        }
-    }];
-    t.throws(
-        (() => vm.duplicateSprite('id1')),
-        new Error('No target with the provided id')
-    );
-    t.end();
-});
-
-test('duplicateSprite throws when used on a non-sprite target', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => false
-    }];
-    t.throws(
-        (() => vm.duplicateSprite('id')),
-        new Error('Cannot duplicate non-sprite targets.')
-    );
-    t.end();
-});
-
-test('duplicateSprite throws when there is no sprite for the given target', t => {
-    const vm = new VirtualMachine();
-    vm.runtime.targets = [{
-        id: 'id',
-        isSprite: () => true,
-        sprite: null
-    }];
-    t.throws(
-        (() => vm.duplicateSprite('id')),
-        new Error('No sprite associated with this target.')
-    );
-    t.end();
-});
-
-test('duplicateSprite duplicates a sprite when given id is associated with known sprite', t => {
-    const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const currTarget = spr.createClone();
-    vm.editingTarget = currTarget;
-
-    vm.emitWorkspaceUpdate = () => null;
-
-    vm.runtime.targets = [currTarget];
-    t.equal(vm.runtime.targets.length, 1);
-    vm.duplicateSprite(currTarget.id).then(() => {
-        t.equal(vm.runtime.targets.length, 2);
-        t.end();
-    });
-
-});
-
-test('duplicateSprite assigns duplicated sprite a fresh name', t => {
-    const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    spr.name = 'sprite1';
-    const currTarget = spr.createClone();
-    vm.editingTarget = currTarget;
-
-    vm.emitWorkspaceUpdate = () => null;
-
-    vm.runtime.targets = [currTarget];
-    t.equal(vm.runtime.targets.length, 1);
-    vm.duplicateSprite(currTarget.id).then(() => {
-        t.equal(vm.runtime.targets.length, 2);
-        t.equal(vm.runtime.targets[0].sprite.name, 'sprite1');
-        t.equal(vm.runtime.targets[1].sprite.name, 'sprite2');
-        t.end();
-    });
-
 });
 
 test('emitWorkspaceUpdate', t => {
@@ -438,8 +110,7 @@ test('emitWorkspaceUpdate', t => {
 
 test('setVariableValue', t => {
     const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const target = spr.createClone();
+    const target = new Target(vm.runtime);
     target.createVariable('a-variable', 'a-name', Variable.SCALAR_TYPE);
 
     vm.runtime.targets = [target];
@@ -459,8 +130,7 @@ test('setVariableValue', t => {
 
 test('getVariableValue', t => {
     const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const target = spr.createClone();
+    const target = new Target(vm.runtime);
     target.createVariable('a-variable', 'a-name', Variable.SCALAR_TYPE);
 
     vm.runtime.targets = [target];
@@ -479,246 +149,13 @@ test('getVariableValue', t => {
     t.end();
 });
 
-// Block Listener tests for comment
-test('comment_create event updates comment with null position', t => {
-    const vm = new VirtualMachine();
-    const spr = new Sprite(null, vm.runtime);
-    const target = spr.createClone();
-
-    target.createComment('a comment', null, 'some text',
-        null, null, 200, 300, false);
-    vm.runtime.targets = [target];
-    vm.editingTarget = target;
-    vm.runtime.setEditingTarget(target);
-
-    const comment = target.comments['a comment'];
-    t.equal(comment.x, null);
-    t.equal(comment.y, null);
-
-    vm.blockListener(events.createcommentUpdatePosition);
-
-    t.equal(comment.x, 10);
-    t.equal(comment.y, 20);
-
-    t.end();
-});
-
-test('shareBlocksToTarget shares global variables without any name changes', t => {
-    const vm = new VirtualMachine();
-    const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
-    stage.isStage = true;
-
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
-
-    runtime.targets = [stage, target];
-    vm.editingTarget = target;
-    vm.runtime.setEditingTarget(target);
-
-    stage.createVariable('mock var id', 'a mock variable', Variable.SCALAR_TYPE);
-    t.equal(Object.keys(target.variables).length, 0);
-    t.equal(Object.keys(stage.variables).length, 1);
-    t.equal(stage.variables['mock var id'].name, 'a mock variable');
-
-
-    vm.setVariableValue(stage.id, 'mock var id', 10);
-    t.equal(vm.getVariableValue(stage.id, 'mock var id'), 10);
-
-    target.blocks.createBlock(adapter(events.mockVariableBlock)[0]);
-
-    // Verify the block exists on the target, and that it references the global variable
-    t.type(target.blocks.getBlock('a block'), 'object');
-    t.type(target.blocks.getBlock('a block').fields, 'object');
-    t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-    t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-    // Verify that the block does not exist on the stage
-    t.type(stage.blocks.getBlock('a block'), 'undefined');
-
-    // Share the block to the stage
-    vm.shareBlocksToTarget([target.blocks.getBlock('a block')], stage.id, target.id).then(() => {
-
-        // Verify that the block now exists on the target as well as the stage
-        t.type(target.blocks.getBlock('a block'), 'object');
-        t.type(target.blocks.getBlock('a block').fields, 'object');
-        t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-        t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-        const newBlockId = Object.keys(stage.blocks._blocks)[0];
-        t.type(stage.blocks.getBlock(newBlockId), 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields, 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields.VARIABLE, 'object');
-        t.equal(stage.blocks.getBlock(newBlockId).fields.VARIABLE.id, 'mock var id');
-
-        // Verify the shared block id is different
-        t.not(newBlockId, 'a block');
-
-        // Verify that the variables haven't changed, the variable still exists on the
-        // stage, it should still have the same name and value, and there should be
-        // no variables on the target.
-        t.equal(Object.keys(target.variables).length, 0);
-        t.equal(Object.keys(stage.variables).length, 1);
-        t.equal(stage.variables['mock var id'].name, 'a mock variable');
-        t.equal(vm.getVariableValue(stage.id, 'mock var id'), 10);
-
-        t.end();
-    });
-});
-
-test('shareBlocksToTarget shares a local variable to the stage, creating a global variable with a new name', t => {
-    const vm = new VirtualMachine();
-    const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
-    stage.isStage = true;
-
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
-
-    runtime.targets = [stage, target];
-    vm.editingTarget = target;
-    vm.runtime.setEditingTarget(target);
-
-    target.createVariable('mock var id', 'a mock variable', Variable.SCALAR_TYPE);
-    t.equal(Object.keys(stage.variables).length, 0);
-    t.equal(Object.keys(target.variables).length, 1);
-    t.equal(target.variables['mock var id'].name, 'a mock variable');
-
-
-    vm.setVariableValue(target.id, 'mock var id', 10);
-    t.equal(vm.getVariableValue(target.id, 'mock var id'), 10);
-
-    target.blocks.createBlock(adapter(events.mockVariableBlock)[0]);
-
-    // Verify the block exists on the target, and that it references the global variable
-    t.type(target.blocks.getBlock('a block'), 'object');
-    t.type(target.blocks.getBlock('a block').fields, 'object');
-    t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-    t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-    // Verify that the block does not exist on the stage
-    t.type(stage.blocks.getBlock('a block'), 'undefined');
-
-    // Share the block to the stage
-    vm.shareBlocksToTarget([target.blocks.getBlock('a block')], stage.id, target.id).then(() => {
-        // Verify that the block still exists on the target and remains unchanged
-        t.type(target.blocks.getBlock('a block'), 'object');
-        t.type(target.blocks.getBlock('a block').fields, 'object');
-        t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-        t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-        const newBlockId = Object.keys(stage.blocks._blocks)[0];
-        t.type(stage.blocks.getBlock(newBlockId), 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields, 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields.VARIABLE, 'object');
-        t.equal(stage.blocks.getBlock(newBlockId).fields.VARIABLE.id, 'StageVarFromLocal_mock var id');
-
-        // Verify that a new global variable was created, the old one still exists on
-        // the target and still has the same name and value, and the new one has
-        // a new name and value 0.
-        t.equal(Object.keys(target.variables).length, 1);
-        t.equal(target.variables['mock var id'].name, 'a mock variable');
-        t.equal(vm.getVariableValue(target.id, 'mock var id'), 10);
-
-        // Verify that a new variable was created on the stage, with a new name and new id
-        t.equal(Object.keys(stage.variables).length, 1);
-        t.type(stage.variables['mock var id'], 'undefined');
-        const newGlobalVar = Object.values(stage.variables)[0];
-        t.equal(newGlobalVar.name, 'Stage: a mock variable');
-        const newId = newGlobalVar.id;
-        t.not(newId, 'mock var id');
-        t.equal(vm.getVariableValue(stage.id, newId), 0);
-
-        t.end();
-    });
-});
-
-test('shareBlocksToTarget chooses a fresh name for a new global variable checking for conflicts on all sprites', t => {
-    const vm = new VirtualMachine();
-    const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
-    stage.isStage = true;
-
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
-
-    const spr3 = new Sprite(null, runtime);
-    const otherTarget = spr3.createClone();
-
-    runtime.targets = [stage, target, otherTarget];
-    vm.editingTarget = target;
-    vm.runtime.setEditingTarget(target);
-
-    target.createVariable('mock var id', 'a mock variable', Variable.SCALAR_TYPE);
-    t.equal(Object.keys(stage.variables).length, 0);
-    t.equal(Object.keys(target.variables).length, 1);
-    t.equal(target.variables['mock var id'].name, 'a mock variable');
-
-
-    vm.setVariableValue(target.id, 'mock var id', 10);
-    t.equal(vm.getVariableValue(target.id, 'mock var id'), 10);
-
-    target.blocks.createBlock(adapter(events.mockVariableBlock)[0]);
-
-    // Verify the block exists on the target, and that it references the global variable
-    t.type(target.blocks.getBlock('a block'), 'object');
-    t.type(target.blocks.getBlock('a block').fields, 'object');
-    t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-    t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-    // Verify that the block does not exist on the stage
-    t.type(stage.blocks.getBlock('a block'), 'undefined');
-
-    // Create a variable that conflicts with what will be the new name for the
-    // new global variable to ensure a fresh name is chosen
-    otherTarget.createVariable('a different var', 'Stage: a mock variable', Variable.SCALAR_TYPE);
-
-    // Share the block to the stage
-    vm.shareBlocksToTarget([target.blocks.getBlock('a block')], stage.id, target.id).then(() => {
-        // Verify that the block still exists on the target and remains unchanged
-        t.type(target.blocks.getBlock('a block'), 'object');
-        t.type(target.blocks.getBlock('a block').fields, 'object');
-        t.type(target.blocks.getBlock('a block').fields.VARIABLE, 'object');
-        t.equal(target.blocks.getBlock('a block').fields.VARIABLE.id, 'mock var id');
-
-        const newBlockId = Object.keys(stage.blocks._blocks)[0];
-        t.type(stage.blocks.getBlock(newBlockId), 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields, 'object');
-        t.type(stage.blocks.getBlock(newBlockId).fields.VARIABLE, 'object');
-        t.equal(stage.blocks.getBlock(newBlockId).fields.VARIABLE.id, 'StageVarFromLocal_mock var id');
-
-        // Verify that a new global variable was created, the old one still exists on
-        // the target and still has the same name and value, and the new one has
-        // a new name and value 0.
-        t.equal(Object.keys(target.variables).length, 1);
-        t.equal(target.variables['mock var id'].name, 'a mock variable');
-        t.equal(vm.getVariableValue(target.id, 'mock var id'), 10);
-
-        // Verify that a new variable was created on the stage, with a new name and new id
-        t.equal(Object.keys(stage.variables).length, 1);
-        t.type(stage.variables['mock var id'], 'undefined');
-        const newGlobalVar = Object.values(stage.variables)[0];
-        t.equal(newGlobalVar.name, 'Stage: a mock variable2');
-        const newId = newGlobalVar.id;
-        t.not(newId, 'mock var id');
-        t.equal(vm.getVariableValue(stage.id, newId), 0);
-
-        t.end();
-    });
-});
-
 test('shareBlocksToTarget without a source target creates a missing variable on the stage', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
 
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
+    const target = new Target(runtime);
 
     runtime.targets = [stage, target];
     vm.editingTarget = target;
@@ -747,12 +184,10 @@ test('shareBlocksToTarget without a source target creates a missing variable on 
 test('shareBlocksToTarget without a source target creates a missing broadcast on the stage', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
 
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
+    const target = new Target(runtime);
 
     runtime.targets = [stage, target];
     vm.editingTarget = target;
@@ -781,12 +216,10 @@ test('shareBlocksToTarget without a source target creates a missing broadcast on
 test('shareBlocksToTarget without a source target remaps a variable to an existing same-name global', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
 
-    const spr2 = new Sprite(null, runtime);
-    const target = spr2.createClone();
+    const target = new Target(runtime);
 
     runtime.targets = [stage, target];
     vm.editingTarget = target;
@@ -811,8 +244,7 @@ test('shareBlocksToTarget without a source target remaps a variable to an existi
 test('shareBlocksToTarget without a source target creates broadcasts when pasted onto the stage', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
 
     runtime.targets = [stage];
@@ -835,8 +267,7 @@ test('shareBlocksToTarget without a source target creates broadcasts when pasted
 test('shareBlocksToTarget loads extensions that have not yet been loaded', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     runtime.targets = [stage];
 
     const fakeBlocks = [
@@ -861,48 +292,17 @@ test('shareBlocksToTarget loads extensions that have not yet been loaded', t => 
     });
 });
 
-test('installTargets creates a stage broadcast for a sprite import that references one', t => {
-    const vm = new VirtualMachine();
-    const runtime = vm.runtime;
-
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
-    stage.isStage = true;
-    runtime.targets = [stage];
-
-    const importedSprite = new Sprite(null, runtime);
-    const importedTarget = importedSprite.createClone();
-    importedTarget.isStage = false;
-    importedTarget.getName = () => 'Imported';
-    adapter(events.mockBroadcastBlock).forEach(block => importedTarget.blocks.createBlock(block));
-
-    t.equal(Object.keys(stage.variables).length, 0);
-
-    const extensions = {extensionIDs: new Set(), extensionURLs: new Map()};
-    vm.installTargets([importedTarget], extensions, false).then(() => {
-        t.equal(Object.keys(stage.variables).length, 1, 'broadcast created on stage during sprite import');
-        const newBroadcast = stage.variables['mock broadcast message id'];
-        t.ok(newBroadcast);
-        t.equal(newBroadcast.name, 'my message');
-        t.equal(newBroadcast.type, Variable.BROADCAST_MESSAGE_TYPE);
-
-        t.end();
-    });
-});
-
 test('installTargets repairs dangling variable references on whole-project load', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
 
-    const stageSprite = new Sprite(null, runtime);
-    const stage = stageSprite.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.getName = () => 'Stage';
+    stage.name = 'Stage';
 
-    const spriteSprite = new Sprite(null, runtime);
-    const sprite = spriteSprite.createClone();
+    const sprite = new Target(runtime);
     sprite.isStage = false;
-    sprite.getName = () => 'Sprite';
+    sprite.name = 'Sprite';
     // Block with a variable field referencing an id that's not defined anywhere — the
     // shape produced when a project saved during the missing-definitions bug is loaded.
     sprite.blocks.createBlock(adapter(events.mockVariableBlock)[0]);
@@ -929,16 +329,14 @@ test('installTargets does NOT rename clean local-vs-global name collisions on wh
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
 
-    const stageSprite = new Sprite(null, runtime);
-    const stage = stageSprite.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.getName = () => 'Stage';
+    stage.name = 'Stage';
     stage.createVariable('global score id', 'score', Variable.SCALAR_TYPE);
 
-    const spriteSprite = new Sprite(null, runtime);
-    const sprite = spriteSprite.createClone();
+    const sprite = new Target(runtime);
     sprite.isStage = false;
-    sprite.getName = () => 'Sprite';
+    sprite.name = 'Sprite';
     sprite.createVariable('local score id', 'score', Variable.SCALAR_TYPE);
     // Block referencing the sprite-local variable with the same name as the global.
     sprite.blocks.createBlock({
@@ -981,10 +379,9 @@ test('installTargets loads a project whose blocks come from resource packs inste
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
 
-    const stageSprite = new Sprite(null, runtime);
-    const stage = stageSprite.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.getName = () => 'Stage';
+    stage.name = 'Stage';
 
     const originalWarn = log.warn;
     const warnings = [];
@@ -1015,10 +412,9 @@ test('installTargets still loads a builtin extension id', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
 
-    const stageSprite = new Sprite(null, runtime);
-    const stage = stageSprite.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.getName = () => 'Stage';
+    stage.name = 'Stage';
 
     const extensions = {
         extensionIDs: new Set(['coreExample']),
@@ -1035,10 +431,9 @@ test('installTargets still loads an extension id that has a real URL recorded in
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
 
-    const stageSprite = new Sprite(null, runtime);
-    const stage = stageSprite.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.getName = () => 'Stage';
+    stage.name = 'Stage';
 
     const loadedURLs = [];
     vm.extensionManager = {
@@ -1116,23 +511,18 @@ test('vm.greenFlag() emits a PROJECT_START event', t => {
 test('toJSON encodes Infinity/NaN as 0, not null', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;
-    const spr1 = new Sprite(null, runtime);
-    const stage = spr1.createClone();
+    const stage = new Target(runtime);
     stage.isStage = true;
-    stage.volume = Infinity;
-    stage.tempo = NaN;
     stage.createVariable('id1', 'name1', '');
     stage.variables.id1.value = Infinity;
     stage.createVariable('id2', 'name2', '');
-    stage.variables.id1.value = -Infinity;
+    stage.variables.id2.value = -Infinity;
     stage.createVariable('id3', 'name3', '');
-    stage.variables.id1.value = NaN;
+    stage.variables.id3.value = NaN;
 
     runtime.targets = [stage];
 
     const json = JSON.parse(vm.toJSON());
-    t.equal(json.targets[0].volume, 0);
-    t.equal(json.targets[0].tempo, 0);
     t.equal(json.targets[0].variables.id1[1], 0);
     t.equal(json.targets[0].variables.id2[1], 0);
     t.equal(json.targets[0].variables.id3[1], 0);

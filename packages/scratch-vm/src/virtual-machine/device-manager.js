@@ -1,6 +1,6 @@
 const formatMessage = require('format-message');
 
-const Runtime = require('../engine/runtime');
+const VmEventNames = require('./vm-event-names');
 const log = require('../util/log');
 const {DeviceRegistry, PeripheralRegistry, ManifestDevice} = require('../devices');
 const {boards} = require('../extensions/devices');
@@ -317,7 +317,7 @@ module.exports = class DeviceManager {
         }
 
         this._resourcePacksLoaded = true;
-        this.vm.emit(Runtime.RESOURCE_PACKS_LOADED);
+        this.vm.emit(VmEventNames.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
         // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
@@ -416,7 +416,7 @@ module.exports = class DeviceManager {
         this._projectPeripheralIds.add(id);
         await this._activatePeripheral(id);
         this._syncRuntimeBoard();
-        this.vm.emit(Runtime.PERIPHERALS_CHANGED);
+        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -434,7 +434,7 @@ module.exports = class DeviceManager {
         if (!this._projectPeripheralIds.delete(id)) return;
         this.peripheralRegistry.setInactive(id);
         this._syncRuntimeBoard();
-        this.vm.emit(Runtime.PERIPHERALS_CHANGED);
+        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -520,7 +520,7 @@ module.exports = class DeviceManager {
                 this.vm.emitWorkspaceUpdate();
             }
         }
-        this.vm.emit(Runtime.BOARD_RESTORED, {
+        this.vm.emit(VmEventNames.BOARD_RESTORED, {
             device: this._selectedDeviceId,
             peripherals: this.getProjectPeripheralIds()
         });

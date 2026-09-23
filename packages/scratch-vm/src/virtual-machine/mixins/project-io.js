@@ -1,11 +1,10 @@
 const JSZip = require('jszip');
 const log = require('../../util/log');
 const StringUtil = require('../../util/string-util');
-const {serializeSounds} = require('../../serialization/serialize-assets');
 
 module.exports = class ProjectIoMixin {
     /**
-     * Load a Scratch project from a .sb, .sb2, .sb3 or json string.
+     * Load a project from a .tb (sb3) file or its project.json string.
      * @param {string | object} input A json string, object, or ArrayBuffer representing the project to load.
      * @returns {!Promise} Promise that resolves after targets are installed.
      */
@@ -29,32 +28,10 @@ module.exports = class ProjectIoMixin {
                 if (error) return reject(error);
                 resolve(res);
             });
-        })
-            .catch(error => {
-                const {SB1File, ValidationError} = require('scratch-sb1-converter');
-
-                try {
-                    const sb1 = new SB1File(input);
-                    const json = sb1.json;
-                    json.projectVersion = 2;
-                    return Promise.resolve([json, sb1.zip]);
-                } catch (sb1Error) {
-                    if (sb1Error instanceof ValidationError) {
-                        // The input does not validate as a Scratch 1 file.
-                    } else {
-                        // The project appears to be a Scratch 1 file but it
-                        // could not be successfully translated into a Scratch 2
-                        // project.
-                        return Promise.reject(sb1Error);
-                    }
-                }
-                // Throw original error since the input does not appear to be
-                // an SB1File.
-                return Promise.reject(error);
-            });
+        });
 
         return validationPromise
-            .then(validatedInput => this.deserializeProject(validatedInput[0], validatedInput[1]))
+            .then(validatedInput => this.deserializeProject(validatedInput[0]))
             .then(() => this.runtime.handleProjectLoaded())
             .catch(error => {
                 // Intentionally rejecting here (want errors to be handled by caller)
@@ -90,7 +67,6 @@ module.exports = class ProjectIoMixin {
      * @returns {string} Project in a Scratch 3.0 JSON representation.
      */
     saveProjectSb3 () {
-        const soundDescs = serializeSounds(this.runtime);
         const projectJson = this.toJSON();
 
         // TODO want to eventually move zip creation out of here, and perhaps
@@ -99,7 +75,6 @@ module.exports = class ProjectIoMixin {
 
         // Put everything in a zip file
         zip.file('project.json', projectJson);
-        this._addFileDescsToZip(soundDescs, zip);
 
         return zip.generateAsync({
             type: 'blob',
@@ -111,60 +86,13 @@ module.exports = class ProjectIoMixin {
         });
     }
 
-    /*
-     * @type {Array<object>} Array of all sounds currently in the runtime
-     */
-    get assets () {
-        return this.runtime.targets.reduce((acc, target) => (
-            acc.concat(target.sprite.sounds.map(sound => sound.asset))
-        ), []);
-    }
-
-    _addFileDescsToZip (fileDescs, zip) {
-        for (let i = 0; i < fileDescs.length; i++) {
-            const currFileDesc = fileDescs[i];
-            zip.file(currFileDesc.fileName, currFileDesc.fileContent);
-        }
-    }
-
     /**
-     * Exports a sprite in the sprite3 format.
-     * @param {string} targetId ID of the target to export
-     * @param {string=} optZipType Optional type that the resulting
-     * zip should be outputted in. Options are: base64, binarystring,
-     * array, uint8array, arraybuffer, blob, or nodebuffer. Defaults to
-     * blob if argument not provided.
-     * See https://stuk.github.io/jszip/documentation/api_jszip/generate_async.html#type-option
-     * for more information about these options.
-     * @returns {object} A generated zip of the sprite and its assets in the format
-     * specified by optZipType or blob by default.
-     */
-    exportSprite (targetId, optZipType) {
-        const soundDescs = serializeSounds(this.runtime, targetId);
-        const spriteJson = this.toJSON(targetId);
-
-        const zip = new JSZip();
-        zip.file('sprite.json', spriteJson);
-        this._addFileDescsToZip(soundDescs, zip);
-
-        return zip.generateAsync({
-            type: typeof optZipType === 'string' ? optZipType : 'blob',
-            mimeType: 'application/x.scratch.sprite3',
-            compression: 'DEFLATE',
-            compressionOptions: {
-                level: 6
-            }
-        });
-    }
-
-    /**
-     * Export project or sprite as a Scratch 3.0 JSON representation.
-     * @param {string=} optTargetId - Optional id of a sprite to serialize
+     * Export the project as a Scratch 3.0 JSON representation.
      * @returns {string} Serialized state of the runtime.
      */
-    toJSON (optTargetId) {
+    toJSON () {
         const sb3 = require('../../serialization/sb3');
-        return StringUtil.stringify(sb3.serialize(this.runtime, optTargetId));
+        return StringUtil.stringify(sb3.serialize(this.runtime));
     }
 
     // TODO do we still need this function? Keeping it here so as not to introduce
@@ -182,10 +110,9 @@ module.exports = class ProjectIoMixin {
     /**
      * Load a project from a Scratch JSON representation.
      * @param {string} projectJSON JSON string representing a project.
-     * @param {?JSZip} zip Optional zipped project containing assets to be loaded.
      * @returns {Promise} Promise that resolves after the project has loaded
      */
-    deserializeProject (projectJSON, zip) {
+    deserializeProject (projectJSON) {
         // Clear the current runtime
         this.clear();
 
@@ -194,14 +121,10 @@ module.exports = class ProjectIoMixin {
         }
         const runtime = this.runtime;
         const deserializePromise = function () {
-            const projectVersion = projectJSON.projectVersion;
-            if (projectVersion === 2) {
-                const sb2 = require('../../serialization/sb2');
-                return sb2.deserialize(projectJSON, runtime, false, zip);
-            }
-            if (projectVersion === 3) {
+            // Only sb3 (.tb) projects load; Scratch 1 and 2 projects are not supported
+            if (projectJSON.projectVersion === 3) {
                 const sb3 = require('../../serialization/sb3');
-                return sb3.deserialize(projectJSON, runtime, zip);
+                return sb3.deserialize(projectJSON, runtime);
             }
             // TODO: reject with an Error (possible breaking API change!)
             // eslint-disable-next-line prefer-promise-reject-errors
@@ -215,10 +138,9 @@ module.exports = class ProjectIoMixin {
                         'scratch-vm-deserialize-start', 'scratch-vm-deserialize-end');
                 }
                 // The board's peripherals register their blocks on the shared Blockly, so the board is
-                // restored (sb3 only; sb2 has none) before `installTargets` emits the workspace update
-                // that renders those blocks.
+                // restored before `installTargets` emits the workspace update that renders those blocks.
                 return this._applyBoard(board || null)
-                    .then(() => this.installTargets(targets, extensions, true));
+                    .then(() => this.installTargets(targets, extensions));
             });
     }
 
@@ -226,10 +148,9 @@ module.exports = class ProjectIoMixin {
      * Install `deserialize` results: zero or more targets after the extensions (if any) used by those targets.
      * @param {Array.<Target>} targets - the targets to be installed
      * @param {ImportedExtensionsInfo} extensions - metadata about extensions used by these targets
-     * @param {boolean} wholeProject - set to true if installing a whole project, as opposed to a single sprite.
      * @returns {Promise} resolved once targets have been installed
      */
-    installTargets (targets, extensions, wholeProject) {
+    installTargets (targets, extensions) {
         const extensionPromises = [];
 
         extensions.extensionIDs.forEach(extensionID => {
@@ -254,28 +175,16 @@ module.exports = class ProjectIoMixin {
         targets = targets.filter(target => !!target);
 
         return Promise.all(extensionPromises).then(() => {
-            targets.forEach(target => {
-                this.runtime.addTarget(target);
-                // Ensure unique sprite name
-                if (target.isSprite()) this.renameSprite(target.id, target.getName());
-            });
+            targets.forEach(target => this.runtime.addTarget(target));
 
-            // Select the first target for editing, e.g., the first sprite.
-            if (wholeProject && (targets.length > 1)) {
-                this.editingTarget = targets[1];
-            } else {
-                this.editingTarget = targets[0];
-            }
+            // Edit the device, which follows the stage, or the stage when the project has only that
+            this.editingTarget = targets.length > 1 ? targets[1] : targets[0];
 
-            if (wholeProject) {
-                // A loaded project may carry dangling variable, list, or broadcast
-                // references baked in by historical bugs. Reconcile each target so
-                // those references resolve cleanly without renaming any legitimate
-                // local-vs-global name collisions.
-                targets.forEach(target => target.reconcileVariableReferences());
-            } else {
-                this.editingTarget.fixUpVariableReferences();
-            }
+            // A loaded project may carry dangling variable, list, or broadcast
+            // references baked in by historical bugs. Reconcile each target so
+            // those references resolve cleanly without renaming any legitimate
+            // local-vs-global name collisions.
+            targets.forEach(target => target.reconcileVariableReferences());
 
             // Update the VM user's knowledge of targets and blocks on the workspace.
             this.emitTargetsUpdate(false /* Don't emit project change */);

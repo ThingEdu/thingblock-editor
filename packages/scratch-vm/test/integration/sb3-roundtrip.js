@@ -1,9 +1,9 @@
 const test = require('tap').test;
 
-const Blocks = require('../../src/engine/blocks');
+const Blocks = require('../../src/engine/blocks').default;
 const {loadSound} = require('../../src/import/load-sound');
 const makeTestStorage = require('../fixtures/make-test-storage');
-const Runtime = require('../../src/engine/runtime');
+const Runtime = require('../../src/engine/runtime').default;
 const sb3 = require('../../src/serialization/sb3');
 const Sprite = require('../../src/sprites/sprite');
 
