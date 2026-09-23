@@ -13,8 +13,6 @@ const builtinExtensions = {
     // but serves as a reference for loading core blocks as extensions.
     coreExample: () => require('../blocks/scratch3_core_example'),
     // These are the non-core built-in extensions.
-    music: () => require('../extensions/scratch3_music'),
-    text2speech: () => require('../extensions/scratch3_text2speech'),
     translate: () => require('../extensions/scratch3_translate'),
     makeymakey: () => require('../extensions/scratch3_makeymakey'),
     // `.default` because this extension is TypeScript: it compiles to an ES module, not `module.exports`.

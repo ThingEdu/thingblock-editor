@@ -10,7 +10,6 @@ import './blocks/data'
 import './blocks/event'
 import './blocks/math'
 import './blocks/matrix'
-import './blocks/note'
 import './blocks/operators'
 import './blocks/procedures'
 import './blocks/sensing'
@@ -29,7 +28,6 @@ import './events/events_block_comment_resize'
 import './events/events_scratch_variable_create'
 import { registerFieldColourSlider, FieldColourSlider } from './fields/field_colour_slider'
 import { registerFieldMatrix } from './fields/field_matrix'
-import { registerFieldNote, FieldNote } from './fields/field_note'
 import { registerFieldTextInputRemovable } from './fields/field_textinput_removable'
 import { registerFieldVariableGetter } from './fields/field_variable_getter'
 import { registerFieldVerticalSeparator } from './fields/field_vertical_separator'
@@ -67,7 +65,7 @@ export { scratchBlocksUtils }
 export { CheckableContinuousFlyout }
 export { ScratchVariables }
 export { contextMenuItems }
-export { FieldColourSlider, FieldNote }
+export { FieldColourSlider }
 export { CheckboxBubble } from './checkbox_bubble'
 export { ScratchZoomControls } from './scratch_zoom_controls'
 export { StatusIndicatorLabel, StatusButtonState } from './status_indicator_label'
@@ -95,7 +93,6 @@ export function inject(container: Element, options: ScratchBlocksOptions) {
   registerFieldColourSlider()
   registerScratchFieldDropdown()
   registerFieldMatrix()
-  registerFieldNote()
   registerScratchFieldNumber()
   registerFieldTextInputRemovable()
   registerFieldVariableGetter()

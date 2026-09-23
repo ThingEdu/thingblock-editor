@@ -106,11 +106,6 @@ export class LegacyStorage implements GUIStorage {
             this.getAssetCreateConfig.bind(this),
             this.getAssetCreateConfig.bind(this)
         );
-
-        storage.addWebStore(
-            [storage.AssetType.Sound],
-            asset => `static/extension-assets/scratch3_music/${asset.assetId}.${asset.dataFormat}`
-        );
     }
 
     private getProjectGetConfig (projectAsset) {

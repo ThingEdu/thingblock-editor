@@ -526,14 +526,6 @@ const serializeTarget = function (target, extensions) {
     obj.costumes = [PLACEHOLDER_COSTUME];
     obj.sounds = target.sounds.map(serializeSound);
     if (Object.prototype.hasOwnProperty.call(target, 'volume')) obj.volume = target.volume;
-    if (obj.isStage) { // Only the stage should have these properties
-        if (Object.prototype.hasOwnProperty.call(target, 'tempo')) {
-            obj.tempo = target.tempo;
-        }
-        if (Object.prototype.hasOwnProperty.call(target, 'textToSpeechLanguage')) {
-            obj.textToSpeechLanguage = target.textToSpeechLanguage;
-        }
-    }
 
     // Add found extensions to the extensions object
     targetExtensions.forEach(extensionId => {
@@ -1088,14 +1080,8 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
     // Create the first clone, and load its run-state from JSON.
     const target = sprite.createClone();
     // Load target properties from JSON.
-    if (Object.prototype.hasOwnProperty.call(object, 'tempo')) {
-        target.tempo = object.tempo;
-    }
     if (Object.prototype.hasOwnProperty.call(object, 'volume')) {
         target.volume = object.volume;
-    }
-    if (Object.prototype.hasOwnProperty.call(object, 'textToSpeechLanguage')) {
-        target.textToSpeechLanguage = object.textToSpeechLanguage;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'variables')) {
         for (const varId in object.variables) {

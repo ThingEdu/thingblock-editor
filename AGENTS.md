@@ -124,8 +124,7 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   should not be run unnecessarily. Smoke tests (`test/smoke/`) require a live server.
 - **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is now a firmware device panel
   (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
-  collapsible serial/input panel). The VM's sprite/target execution model is kept intact — one implicit device
-  target — but no sprite UI renders.
+  collapsible serial/input panel). The VM still runs one implicit device target, but no sprite UI renders.
 - `scratch-gui` resolves `@scratch/scratch-vm` to its gitignored `dist/` bundle, not its source. A fresh
   checkout — or any change to `scratch-vm` source — needs `npx webpack --progress` in `packages/scratch-vm`
   before `scratch-gui` tests or the dev server can see the change; otherwise it silently runs against a stale
@@ -153,11 +152,13 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
   call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
   through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.
-- The target model is firmware-only: targets host blocks, variables, comments, and sounds, but no costumes,
-  rendering, or motion (no x/y/direction/size/visible/rotation/effects/drawable). Serialization
-  (`serialization/sb3.js`/`sb2.js`) persists blocks/variables/sounds plus the firmware `board` field and drops
-  all costume/render/motion fields, so saved projects no longer round-trip through stock Scratch. Sounds and
-  `soundBank` are retained because the `scratch3_music` and `scratch3_text2speech` extensions still consume them.
+- The target model is firmware-only: targets host blocks, variables and comments, but no costumes, rendering,
+  or motion (no x/y/direction/size/visible/rotation/effects/drawable). Serialization
+  (`serialization/sb3.js`/`sb2.js`) persists blocks/variables plus the firmware `board` field and drops all
+  costume/render/motion fields, so saved projects no longer round-trip through stock Scratch. The JS VM still
+  builds targets through `Sprite`/`RenderedTarget` and still persists sounds, which nothing consumes; the
+  TypeScript port merges them into one `engine/target.ts` `Target` with no clones or sounds, and the Runtime
+  cutover removes the JS classes and sound handling.
 - Resource packs are served by the link helper (`LinkClient.resourceOrigin` → its `/resources` route) unless the
   host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.js`
   and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —

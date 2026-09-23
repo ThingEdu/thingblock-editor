@@ -36,7 +36,6 @@ const FIXTURES = fs.readdirSync(FIXTURES_DIR, {recursive: true, withFileTypes: t
         'missing_svg.sb2',
         'missing_svg.sb3',
         'sb2-from-sb1-missing-backdrop-image.sb2',
-        'load-extensions/music-visible-monitor-no-blocks.sb2',
         'load-extensions/confirm-load/wedo2-simple-project.sb3'
     ].includes(name))
     .sort();

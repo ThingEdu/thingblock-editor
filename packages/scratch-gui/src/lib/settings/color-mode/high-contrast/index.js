@@ -1,6 +1,3 @@
-import musicIcon from './extensions/musicIcon.svg';
-import penIcon from './extensions/penIcon.svg';
-import text2speechIcon from './extensions/text2speechIcon.svg';
 import translateIcon from './extensions/translateIcon.svg';
 
 // This object is passed directly to Blockly, hence the colour* fields need to
@@ -87,15 +84,6 @@ const blockColors = {
 };
 
 const extensions = {
-    music: {
-        blockIconURI: musicIcon
-    },
-    pen: {
-        blockIconURI: penIcon
-    },
-    text2speech: {
-        blockIconURI: text2speechIcon
-    },
     translate: {
         blockIconURI: translateIcon
     }

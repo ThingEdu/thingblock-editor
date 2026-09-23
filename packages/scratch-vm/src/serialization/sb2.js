@@ -260,9 +260,6 @@ const parseMonitorObject = (object, runtime, targets, extensions) => {
         log.warn(`Could not find monitor block with opcode: ${object.cmd}`);
         return;
     }
-    // In Scratch 2.0, the tempo monitor now corresponds to a Scratch 3.0 extension
-    // block. Import it and load the music extension only when the monitor is visible.
-
     const opcode = specMap[object.cmd].opcode;
     const extIndex = opcode.indexOf('_');
     const extID = opcode.substring(0, extIndex);
@@ -271,8 +268,6 @@ const parseMonitorObject = (object, runtime, targets, extensions) => {
         !extensions.extensionIDs.has(extID) && !object.visible) {
         // Don't import this monitor if it refers to a non-core extension that
         // doesn't exist anywhere else in the project and it isn't visible.
-        // This should only apply to the tempo block at this point since
-        // there are no other sb2 blocks that are now extension monitors.
         return;
     }
 
@@ -610,9 +605,6 @@ const parseScratchObject = function (object, runtime, extensions, topLevel, zip,
             newVariable.value = list.contents;
             target.variables[newVariable.id] = newVariable;
         }
-    }
-    if (Object.prototype.hasOwnProperty.call(object, 'tempoBPM')) {
-        target.tempo = object.tempoBPM;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'indexInLibrary')) {
         // Temporarily store the 'indexInLibrary' property from the sb2 file
@@ -953,18 +945,6 @@ const parseBlock = function (sb2block, addBroadcastMsg, getVariableId, extension
                     fieldValue = '_stage_';
                 } else if (fieldValue === 'Stage') {
                     fieldValue = '_stage_';
-                }
-            } else if (expectedArg.inputOp === 'note') {
-                if (shadowObscured) {
-                    fieldValue = 60;
-                }
-            } else if (expectedArg.inputOp === 'music.menu.DRUM') {
-                if (shadowObscured) {
-                    fieldValue = 1;
-                }
-            } else if (expectedArg.inputOp === 'music.menu.INSTRUMENT') {
-                if (shadowObscured) {
-                    fieldValue = 1;
                 }
             } else if (shadowObscured) {
                 // Filled drop-down menu.

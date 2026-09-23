@@ -18,10 +18,6 @@ export default function (vm) {
         return ScratchBlocks.StatusButtonState.NOT_READY;
     };
 
-    ScratchBlocks.FieldNote.playNote_ = function (noteNum, extensionId) {
-        vm.runtime.emit('PLAY_NOTE', noteNum, extensionId);
-    };
-
     // Use a collator's compare instead of localeCompare which internally
     // creates a collator. Using this is a lot faster in browsers that create a
     // collator for every localeCompare call.

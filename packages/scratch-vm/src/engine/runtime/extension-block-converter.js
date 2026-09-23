@@ -60,12 +60,6 @@ const ArgumentTypeMap = (() => {
             fieldName: 'MATRIX'
         }
     };
-    map[ArgumentType.NOTE] = {
-        shadow: {
-            type: 'note',
-            fieldName: 'NOTE'
-        }
-    };
     map[ArgumentType.IMAGE] = {
         // Inline images are weird because they're not actually "arguments".
         // They are more analagous to the label on a block.
