@@ -6,7 +6,7 @@ runs:
     - shell: bash
       run: |
         echo "Using pkg-config $(pkg-config --version)"
-        # These dependencies are from scratch-paint -> paper.js -> canvas
+        # These dependencies are from scratch-svg-renderer -> canvas
         # See also `util/has_lib.js` in the `canvas` package
         # There must be a better way to detect gif_lib.h than this...
         missing_libraries="$(

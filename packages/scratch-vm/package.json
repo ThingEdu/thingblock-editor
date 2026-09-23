@@ -59,7 +59,6 @@
     "allow-incomplete-coverage": true
   },
   "dependencies": {
-    "@scratch/scratch-render": "14.1.0",
     "@scratch/scratch-storage": "14.1.0",
     "@scratch/scratch-svg-renderer": "14.1.0",
     "@vernier/godirect": "1.8.3",
@@ -99,7 +98,6 @@
     "in-publish": "2.0.1",
     "js-md5": "0.7.3",
     "pngjs": "3.4.0",
-    "scratch-render-fonts": "1.0.252",
     "scratch-webpack-configuration": "3.1.2",
     "script-loader": "0.7.2",
     "stats.js": "0.17.0",

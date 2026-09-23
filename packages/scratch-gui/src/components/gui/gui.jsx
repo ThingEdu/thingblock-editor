@@ -8,7 +8,6 @@ import MediaQuery from 'react-responsive';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from '@scratch/scratch-vm';
-import Renderer from '@scratch/scratch-render';
 
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
@@ -21,7 +20,6 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 import Watermark from '../../containers/watermark.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
-import WebGlModal from '../../containers/webgl-modal.jsx';
 import TipsLibrary from '../../containers/tips-library.jsx';
 import Cards from '../../containers/cards.jsx';
 import Alerts from '../../containers/alerts.jsx';
@@ -79,10 +77,6 @@ const ariaMessages = defineMessages({
         description: 'accessibility label for the stage'
     }
 });
-
-// Cache this value to only retrieve it once the first time.
-// Assume that it doesn't change for a session.
-let isRendererSupported = null;
 
 const GUIComponent = props => {
     const intl = useIntl();
@@ -295,10 +289,6 @@ const GUIComponent = props => {
         onRequestCloseDebugModal();
     }, [onDebugModalClose, onRequestCloseDebugModal]);
 
-    if (isRendererSupported === null) {
-        isRendererSupported = Renderer.isSupported();
-    }
-
     return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
         const stageSize = resolveStageSize(stageSizeMode, isFullSize);
         const boxStyles = classNames(styles.bodyWrapper, {
@@ -329,9 +319,6 @@ const GUIComponent = props => {
                     {isCreating ? (
                         <Loader messageId="gui.loader.creating" />
                     ) : null}
-                    {isRendererSupported ? null : (
-                        <WebGlModal isRtl={isRtl} />
-                    )}
                     {tipsLibraryVisible ? (
                         <TipsLibrary
                             hideTutorialProjects={hideTutorialProjects}
