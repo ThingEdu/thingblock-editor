@@ -4,7 +4,7 @@ import Runtime from '../../src/engine/runtime.ts';
 import Thread from '../../src/engine/thread.ts';
 import execute from '../../src/engine/execute.ts';
 import MonitorRecord from '../../src/engine/monitor-record.ts';
-import {block, fakeTarget} from '../fixtures/fake-target.ts';
+import {block, newTarget} from '../fixtures/target.ts';
 import type {Block} from '../../src/engine/block-types.ts';
 
 const input = (name: string, blockId: string | null, shadow: string | null = null) =>
@@ -14,7 +14,7 @@ const input = (name: string, blockId: string | null, shadow: string | null = nul
 const setup = (...blocks: Block[]) => {
     const rt = new Runtime();
     rt.currentStepTime = Infinity;
-    const target = fakeTarget('target', blocks);
+    const target = newTarget(rt, 'target', blocks);
     rt.targets.push(target);
     rt.executableTargets.push(target);
     const logged: Array<Record<string, unknown>> = [];

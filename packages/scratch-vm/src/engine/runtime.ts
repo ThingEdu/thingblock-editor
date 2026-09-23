@@ -9,8 +9,8 @@ import MonitorRecord from './monitor-record';
 import Profiler from './profiler';
 import Sequencer from './sequencer';
 import type Target from './target';
-import type RenderedTarget from '../sprites/rendered-target';
 import Thread from './thread';
+import Variable, {type VariableType} from './variable';
 import GlowFeedback from './runtime/glow-feedback';
 import MonitorHandler, {type Monitor} from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
@@ -24,6 +24,8 @@ import Mouse from '../io/hid/mouse';
 import MouseWheel from '../io/hid/mouse-wheel';
 import UserData from '../io/input/user-data';
 import getMonitorIdForBlockWithArgs from '../util/get-monitor-id';
+import StringUtil from '../util/string-util';
+import uid from '../util/uid';
 
 import Scratch3ControlBlocks from '../blocks/scratch3_control';
 import Scratch3DataBlocks from '../blocks/scratch3_data';
@@ -147,7 +149,6 @@ class Runtime {
         this.resetRunId();
     }
 
-    
     /** Tags storage requests with a fresh run id; called whenever the project starts, stops or changes. */
     resetRunId () {
         if (!this.storage) return;
@@ -222,12 +223,102 @@ class Runtime {
     }
 
     getTargetForStage (): Target | undefined {
-        // Runtime targets are RenderedTargets; the base Target has no isStage
-        return this.targets.find(target => (target as RenderedTarget).isStage);
+        return this.targets.find(target => target.isStage);
     }
 
     getEditingTarget (): Target | null {
         return this._editingTarget;
+    }
+
+    /** Adds a target last in the target list and first in execution; callers then set its execution position. */
+    addTarget (target: Target) {
+        this.targets.push(target);
+        this.executableTargets.push(target);
+    }
+
+    /**
+     * Moves a target `delta` places in execution order; positive runs it earlier. The stage stays at the end.
+     * Returns the new position.
+     */
+    moveExecutable (executableTarget: Target, delta: number): number {
+        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        this.executableTargets.splice(oldIndex, 1);
+        let newIndex = Math.min(oldIndex + delta, this.executableTargets.length);
+        if (newIndex <= 0) {
+            newIndex = this.executableTargets[0]?.isStage ? 1 : 0;
+        }
+        this.executableTargets.splice(newIndex, 0, executableTarget);
+        return newIndex;
+    }
+
+    /** Sets a target's execution position; Infinity runs it first, 0 last before the stage. */
+    setExecutablePosition (executableTarget: Target, newIndex: number): number {
+        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        return this.moveExecutable(executableTarget, newIndex - oldIndex);
+    }
+
+    removeExecutable (executableTarget: Target) {
+        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        if (oldIndex > -1) {
+            this.executableTargets.splice(oldIndex, 1);
+        }
+    }
+
+    disposeTarget (disposingTarget: Target) {
+        if (!this.targets.includes(disposingTarget)) return;
+        this.targets = this.targets.filter(target => target !== disposingTarget);
+        disposingTarget.dispose();
+    }
+
+    /** Disposes all targets and their monitors, returning to a clean state. */
+    dispose () {
+        this.stopAll();
+        for (const target of this.targets) {
+            target.deleteMonitors();
+        }
+        for (const target of [...this.targets]) {
+            this.disposeTarget(target);
+        }
+        this.monitors.reset();
+        this.events.emit(RuntimeEventNames.RUNTIME_DISPOSED);
+        this.ioDevices.clock.resetProjectTimer();
+    }
+
+    fireTargetWasCreated (newTarget: Target, sourceTarget?: Target) {
+        this.events.emit(RuntimeEventNames.targetWasCreated, newTarget, sourceTarget);
+    }
+
+    fireTargetWasRemoved (target: Target) {
+        this.events.emit(RuntimeEventNames.targetWasRemoved, target);
+    }
+
+    /** Names of every variable of `varType`, on all targets. */
+    getAllVarNamesOfType (varType: VariableType): string[] {
+        return this.targets.flatMap(target => target.getAllVariableNamesInScopeByType(varType, true));
+    }
+
+    /** Creates a global variable, renaming it if the name is taken. */
+    createNewGlobalVariable (
+        variableName: string, optVarId?: string, optVarType: VariableType = Variable.SCALAR_TYPE
+    ): Variable {
+        const newName = StringUtil.unusedName(variableName, this.getAllVarNamesOfType(optVarType));
+        const variable = new Variable(optVarId || uid(), newName, optVarType);
+        const stage = this.getTargetForStage();
+        if (!stage) {
+            throw new Error(`createNewGlobalVariable: no stage to hold global variable ${newName}`);
+        }
+        stage.variables[variable.id] = variable;
+        return variable;
+    }
+
+    handleProjectLoaded () {
+        this.events.emit(RuntimeEventNames.PROJECT_LOADED);
+        this.resetRunId();
+    }
+
+    /** Reports a change that affects the saved project. */
+    emitProjectChanged () {
+        this.events.emit(RuntimeEventNames.PROJECT_CHANGED);
     }
 
     /** Makes the sequencer yield after the current thread, pacing work that should be visible per frame. */
@@ -513,9 +604,8 @@ class Runtime {
         this.events.emit(RuntimeEventNames.VISUAL_REPORT, {id: blockId, value: String(value)});
     }
 
-    /** Emits a targets update at the end of the step, for original targets only. */
-    requestTargetsUpdate (target: RenderedTarget) {
-        if (!target.isOriginal) return;
+    /** Emits a targets update at the end of the step. */
+    requestTargetsUpdate () {
         this._refreshTargets = true;
     }
 

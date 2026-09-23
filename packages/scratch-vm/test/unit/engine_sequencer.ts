@@ -4,14 +4,14 @@ import Runtime from '../../src/engine/runtime.ts';
 import Sequencer from '../../src/engine/sequencer.ts';
 import Thread from '../../src/engine/thread.ts';
 import BlockUtility from '../../src/engine/block-utility.ts';
-import {block, fakeTarget} from '../fixtures/fake-target.ts';
+import {block, newTarget} from '../fixtures/target.ts';
 import type {Block} from '../../src/engine/block-types.ts';
 
 /** A runtime with one target holding `blocks`, and a `test_command` primitive that logs its block's ARG field. */
 const setup = (...blocks: Block[]) => {
     const rt = new Runtime();
     rt.currentStepTime = Infinity;
-    const target = fakeTarget('target', blocks);
+    const target = newTarget(rt, 'target', blocks);
     rt.targets.push(target);
     rt.executableTargets.push(target);
     const ran: unknown[] = [];

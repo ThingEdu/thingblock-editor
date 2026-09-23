@@ -2,9 +2,8 @@ import '../fixtures/prefer-ts';
 import {test} from 'tap';
 import Runtime from '../../src/engine/runtime.ts';
 import Thread from '../../src/engine/thread.ts';
-import {block, fakeTarget} from '../fixtures/fake-target.ts';
+import {block, newTarget} from '../fixtures/target.ts';
 import type {Block} from '../../src/engine/block-types.ts';
-import type RenderedTarget from '../../src/sprites/rendered-target';
 import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
 
 /** A runtime with one editing target holding `blocks`; `test_wait` yields until `release` is called. */
@@ -12,7 +11,7 @@ const setup = (...blocks: Block[]) => {
     const rt = new Runtime();
     // Bounds each step, since test_wait threads yield until released
     rt.currentStepTime = Runtime.THREAD_STEP_INTERVAL;
-    const target = fakeTarget('target', blocks);
+    const target = newTarget(rt, 'target', blocks);
     rt.targets.push(target);
     rt.executableTargets.push(target);
     rt._editingTarget = target;
@@ -161,10 +160,10 @@ test('addMonitorScript does not queue a monitor script twice', t => {
 });
 
 test('_step emits a requested targets update once', t => {
-    const {rt, target} = setup();
+    const {rt} = setup();
     const updates: boolean[] = [];
     rt.events.on('TARGETS_UPDATE', emitProjectChanged => updates.push(emitProjectChanged));
-    rt.requestTargetsUpdate(target as unknown as RenderedTarget);
+    rt.requestTargetsUpdate();
     rt._step();
     rt._step();
     t.strictSame(updates, [false]);
@@ -216,7 +215,7 @@ test('glowBlock and glowScript emit their events', t => {
 
 test('allScriptsDo visits scripts in execution order', t => {
     const {rt} = setup(block('first', 'test_wait'));
-    const last = fakeTarget('last', [block('second', 'test_wait')]);
+    const last = newTarget(rt, 'last', [block('second', 'test_wait')]);
     rt.executableTargets.unshift(last);
     const visited: string[] = [];
     rt.allScriptsDo((topBlockId, target) => visited.push(`${target.id}:${topBlockId}`));
@@ -228,7 +227,7 @@ test('setEditingTarget asks for a toolbox update when the target changes', t => 
     const {rt, target} = setup();
     const emitted = record(rt, 'TOOLBOX_EXTENSIONS_NEED_UPDATE');
     rt.setEditingTarget(target);
-    rt.setEditingTarget(fakeTarget('other'));
+    rt.setEditingTarget(newTarget(rt, 'other'));
     t.strictSame(emitted, ['TOOLBOX_EXTENSIONS_NEED_UPDATE']);
     t.end();
 });
