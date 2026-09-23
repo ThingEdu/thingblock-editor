@@ -395,7 +395,7 @@ const _prepareBlockProfiling = function (profiler, blockCached) {
 /**
  * Execute a block.
  * @param {!Sequencer} sequencer Which sequencer is executing.
- * @param {!Thread} thread Thread which to read and execute.
+ * @param {!import('./thread').default} thread Thread which to read and execute.
  */
 const execute = function (sequencer, thread) {
     const runtime = sequencer.runtime;

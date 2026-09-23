@@ -3,10 +3,12 @@ import uuid from 'uuid';
 import type {ScratchStorage} from '@scratch/scratch-storage';
 
 import Blocks from './blocks';
+import BlocksRuntimeCache from './blocks-runtime-cache';
+import execute from './execute';
 import Profiler from './profiler';
 import Sequencer from './sequencer';
 import type Target from './target';
-import type Thread from './thread';
+import Thread from './thread';
 import GlowFeedback from './runtime/glow-feedback';
 import MonitorHandler from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
@@ -34,6 +36,17 @@ export interface HatInfo {
     edgeActivated?: boolean
     restartExistingThreads?: boolean
 }
+
+/** Hat fields to match, e.g. `{KEY_OPTION: 'space'}`; compared case-insensitively. */
+export type HatMatchFields = Record<string, string>;
+
+/** A script's cached top block, with its field values uppercased for matching. */
+interface HatScript {
+    blockId: string
+    fieldsOfInputs: Record<string, {value: string}>
+}
+
+export type HatStarter = Pick<Runtime, 'startHats'>;
 
 export interface MonitoredInfo {
     isSpriteSpecific?: boolean
@@ -132,11 +145,76 @@ class Runtime {
         this.resetRunId();
     }
 
+    
+    /** Tags storage requests with a fresh run id; called whenever the project starts, stops or changes. */
+    resetRunId () {
+        if (!this.storage) return;
+        this.storage.scratchFetch.setMetadata(this.storage.scratchFetch.RequestMetadata.RunId, uuid.v1());
+    }
+
+    updateCurrentMSecs () {
+        this.currentMSecs = Date.now();
+    }
+
+    getIsHat (opcode: string): boolean {
+        return Object.hasOwn(this._hats, opcode);
+    }
+
+    getIsEdgeActivatedHat (opcode: string): boolean {
+        return this.getIsHat(opcode) && Boolean(this._hats[opcode].edgeActivated);
+    }
+
+    /** Calls `f` for each script topped by `opcode`, in execution order (`executableTargets` is stored reversed). */
+    allScriptsByOpcodeDo (opcode: string, f: (script: HatScript, target: Target) => void, optTarget?: Target) {
+        const targets = optTarget ? [optTarget] : this.executableTargets;
+        // blocks.js replaces the cache's throwing placeholder on load, so TS can't see the real signature.
+        const getScripts = BlocksRuntimeCache.getScripts as (blocks: Blocks, opcode: string) => HatScript[];
+        for (let t = targets.length - 1; t >= 0; t--) {
+            for (const script of getScripts(targets[t].blocks, opcode)) {
+                f(script, targets[t]);
+            }
+        }
+    }
+
+    /** Starts a thread for each `opcode` hat whose fields match; returns the threads started. */
+    startHats (opcode: string, matchFields: HatMatchFields = {}, optTarget?: Target): Thread[] {
+        if (!this.getIsHat(opcode)) return [];
+        const hatMeta = this._hats[opcode];
+        const fields = Object.entries(matchFields).map(([name, value]) => [name, value.toUpperCase()]);
+        const newThreads: Thread[] = [];
+
+        this.allScriptsByOpcodeDo(opcode, ({blockId: topBlockId, fieldsOfInputs}, target) => {
+            // Match before the hat runs, so "broadcast and wait" knows exactly which threads it started.
+            if (fields.some(([name, value]) => fieldsOfInputs[name].value !== value)) return;
+
+            // Stack-click threads coexist with hat threads.
+            const isThisScript = (thread: Thread) =>
+                thread.target === target && thread.topBlock === topBlockId && !thread.stackClick;
+            if (hatMeta.restartExistingThreads) {
+                const index = this.threads.findIndex(isThisScript);
+                if (index > -1) {
+                    newThreads.push(this._restartThread(index));
+                    return;
+                }
+            } else if (this.threads.some(thread => isThisScript(thread) && thread.status !== Thread.STATUS_DONE)) {
+                return;
+            }
+            newThreads.push(this._pushThread(topBlockId, target));
+        }, optTarget);
+
+        // Scratch 2 compatibility: new hats run their first block before any thread steps.
+        for (const thread of newThreads) {
+            execute(this.sequencer, thread);
+            thread.goToNextBlock();
+        }
+        return newThreads;
+    }
+
     /** Collects primitives, hat metadata and monitored opcodes from the built-in block packages. */
-    _registerBlockPackages () {
+    private _registerBlockPackages () {
         const blockPackages: BlockPackage[] = [
             new Scratch3ControlBlocks(this),
-            new Scratch3EventBlocks(this),
+            new Scratch3EventBlocks(this.events, this),
             new Scratch3OperatorsBlocks(),
             new Scratch3SensingBlocks(this.events),
             new Scratch3DataBlocks(this),
@@ -157,14 +235,29 @@ class Runtime {
         }
     }
 
-    /** Tags storage requests with a fresh run id; called whenever the project starts, stops or changes. */
-    resetRunId () {
-        if (!this.storage) return;
-        this.storage.scratchFetch.setMetadata(this.storage.scratchFetch.RequestMetadata.RunId, uuid.v1());
+    private _pushThread (
+        topBlockId: string,
+        target: Target,
+        opts: {stackClick?: boolean, updateMonitor?: boolean} = {}
+    ): Thread {
+        const updateMonitor = Boolean(opts.updateMonitor);
+        const thread = new Thread(topBlockId, target, updateMonitor ? this.monitorBlocks : target.blocks);
+        thread.stackClick = Boolean(opts.stackClick);
+        thread.updateMonitor = updateMonitor;
+        thread.pushStack(topBlockId);
+        this.threads.push(thread);
+        return thread;
     }
 
-    updateCurrentMSecs () {
-        this.currentMSecs = Date.now();
+    /** Replaces the thread at `index` with a fresh one in the same slot, keeping Scratch 2 execution order. */
+    private _restartThread (index: number): Thread {
+        const thread = this.threads[index];
+        const newThread = new Thread(thread.topBlock, thread.target, thread.blockContainer);
+        newThread.stackClick = thread.stackClick;
+        newThread.updateMonitor = thread.updateMonitor;
+        newThread.pushStack(thread.topBlock);
+        this.threads[index] = newThread;
+        return newThread;
     }
 }
 
