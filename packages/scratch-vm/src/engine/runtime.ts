@@ -12,6 +12,7 @@ import type Target from './target';
 import Thread from './thread';
 import Variable, {type VariableType} from './variable';
 import GlowFeedback from './runtime/glow-feedback';
+import WorkspaceListener from './runtime/workspace-listener';
 import MonitorHandler, {type Monitor} from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
 import JsEventNames from './runtime/event-names';
@@ -34,6 +35,7 @@ import Scratch3OperatorsBlocks from '../blocks/scratch3_operators';
 import Scratch3ProcedureBlocks from '../blocks/scratch3_procedures';
 import Scratch3SensingBlocks from '../blocks/scratch3_sensing';
 import type BlockUtility from './block-utility';
+import type {Block} from './block-types';
 
 let stepProfilerId = -1;
 let stepThreadsProfilerId = -1;
@@ -97,6 +99,8 @@ class Runtime {
     monitorBlockInfo: Record<string, MonitoredInfo> = {};
 
     glows: GlowFeedback;
+    /** Applies the editor's Blockly events. */
+    workspaceListener: WorkspaceListener;
     monitors: MonitorHandler;
     peripherals = new PeripheralHandler();
     ioDevices: {
@@ -136,6 +140,7 @@ class Runtime {
         this.flyoutBlocks = new Blocks(this.events, true /* force no glow */);
         this.monitorBlocks = new Blocks(this.events, true /* force no glow */);
         this.glows = new GlowFeedback(this);
+        this.workspaceListener = new WorkspaceListener(this);
         this.monitors = new MonitorHandler(this.events);
         this.updateCurrentMSecs();
         this._registerBlockPackages();
@@ -607,6 +612,21 @@ class Runtime {
     /** Emits a targets update at the end of the step. */
     requestTargetsUpdate () {
         this._refreshTargets = true;
+    }
+
+    /** Asks the GUI to reload the workspace blocks. */
+    requestBlocksUpdate () {
+        this.events.emit(RuntimeEventNames.BLOCKS_NEED_UPDATE);
+    }
+
+    /** Reports whether dragged blocks are over the GUI, outside the blocks workspace. */
+    emitBlockDragUpdate (areBlocksOverGui: boolean) {
+        this.events.emit(RuntimeEventNames.BLOCK_DRAG_UPDATE, areBlocksOverGui);
+    }
+
+    /** Reports blocks dropped on the GUI; `topBlockId` is the dragged stack's original top block. */
+    emitBlockEndDrag (blocks: Block[], topBlockId: string) {
+        this.events.emit(RuntimeEventNames.BLOCK_DRAG_END, blocks, topBlockId);
     }
 
     requestToolboxExtensionsUpdate () {
