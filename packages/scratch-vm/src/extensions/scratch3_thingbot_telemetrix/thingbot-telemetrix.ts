@@ -1,3 +1,5 @@
+import type {Report, ScanCallbacks, ScannedDevice, Transport} from './transport/transport';
+
 // Firmware command IDs (protocol.h + ThingBotExtended.h)
 const CMD = {
     SET_PIN_MODE: 1,
@@ -22,7 +24,7 @@ const REPORT = {
 };
 
 // Pin mode constants (Arduino.h + pin_state.h)
-const PIN_MODE = {
+export const PIN_MODE: Record<string, number> = {
     INPUT: 0,
     OUTPUT: 1,
     INPUT_PULLUP: 2,
@@ -30,27 +32,29 @@ const PIN_MODE = {
     ULTRASONIC: 0x12
 };
 
-const DHT_TYPE = {
+export const DHT_TYPE: Record<string, number> = {
     DHT11: 11,
     DHT22: 22
 };
 
 class ThingBotTelemetrix {
-    constructor (transport) {
+    _transport: Transport;
+    _pinValues: Record<string, number> = {};
+    _dhtValues: Record<number, {humidity: number, temperature: number}> = {};
+    _ultrasonicDistance: number | null = null;
+    _unsubscribe: (() => void) | null = null;
+
+    constructor (transport: Transport) {
         this._transport = transport;
-        this._pinValues = {};
-        this._dhtValues = {};
-        this._ultrasonicDistance = null;
-        this._unsubscribe = null;
     }
 
     // ─── Transport wrappers ───
 
-    scan (callbacks) {
+    scan (callbacks: ScanCallbacks) {
         return this._transport.scan(callbacks);
     }
 
-    connect (device, onDisconnect) {
+    connect (device: ScannedDevice, onDisconnect?: () => void) {
         return this._transport.connect(device, () => {
             this._resetState();
             if (onDisconnect) onDisconnect();
@@ -71,7 +75,7 @@ class ThingBotTelemetrix {
         return this._transport.isConnected();
     }
 
-    sendCommand (commandId, ...args) {
+    sendCommand (commandId: number, ...args: number[]) {
         const packet = new Uint8Array([1 + args.length, commandId, ...args]);
         this._transport.send(packet);
     }
@@ -88,7 +92,7 @@ class ThingBotTelemetrix {
 
     // ─── Incoming report handler ───
 
-    _onReport ({id, data}) {
+    _onReport ({id, data}: Report) {
         if (id === REPORT.DIGITAL && data.length >= 2) {
             // [pin, value]
             this._pinValues[`d${data[0]}`] = data[1];
@@ -110,7 +114,7 @@ class ThingBotTelemetrix {
 
     // ─── GPIO API ───
 
-    setPinMode (pin, mode) {
+    setPinMode (pin: number, mode: number) {
         if (mode === PIN_MODE.OUTPUT) {
             this.sendCommand(CMD.SET_PIN_MODE, pin, mode);
         } else {
@@ -119,46 +123,46 @@ class ThingBotTelemetrix {
         }
     }
 
-    digitalWrite (pin, value) {
+    digitalWrite (pin: number, value: number) {
         this.sendCommand(CMD.DIGITAL_WRITE, pin, value);
     }
 
-    digitalRead (pin) {
+    digitalRead (pin: number) {
         this.sendCommand(CMD.DIGITAL_READ, pin);
         return this._pinValues[`d${pin}`] ?? 0;
     }
 
-    analogRead (pin) {
+    analogRead (pin: number) {
         this.sendCommand(CMD.ANALOG_READ, pin);
         return this._pinValues[`a${pin}`] ?? 0;
     }
 
-    pwmWrite (pin, value) {
+    pwmWrite (pin: number, value: number) {
         // ANALOG_WRITE takes [pin, msb, lsb]; value ≤ 255 so msb is always 0
         this.sendCommand(CMD.ANALOG_WRITE, pin, 0, value);
     }
 
     // ─── ThingBot peripheral API ───
 
-    servoWrite (servoId, angle) {
+    servoWrite (servoId: number, angle: number) {
         this.sendCommand(CMD.SERVO_WRITE, servoId, angle);
     }
 
-    controlDC (motorId, speed) {
+    controlDC (motorId: number, speed: number) {
         this.sendCommand(CMD.DC_WRITE, motorId, speed);
     }
 
-    controlBuzzer (frequency) {
+    controlBuzzer (frequency: number) {
         this.sendCommand(CMD.BUZZER_WRITE, frequency);
     }
 
-    controlLED (ledId, state) {
+    controlLED (ledId: number, state: number) {
         this.sendCommand(CMD.LED_WRITE, ledId, state);
     }
 
     // ─── Ultrasonic API ───
 
-    setupUltrasonic (triggerPin, echoPin) {
+    setupUltrasonic (triggerPin: number, echoPin: number) {
         this.sendCommand(CMD.SET_PIN_MODE, triggerPin, PIN_MODE.ULTRASONIC, echoPin);
     }
 
@@ -169,22 +173,17 @@ class ThingBotTelemetrix {
 
     // ─── DHT API ───
 
-    setupDHT (pin, dhtType) {
+    setupDHT (pin: number, dhtType: number) {
         this.sendCommand(CMD.SET_PIN_MODE, pin, PIN_MODE.DHT, dhtType);
     }
 
-    readTemperature (pin) {
+    readTemperature (pin: number) {
         return this._dhtValues[pin]?.temperature ?? 0;
     }
 
-    readHumidity (pin) {
+    readHumidity (pin: number) {
         return this._dhtValues[pin]?.humidity ?? 0;
     }
 }
 
-ThingBotTelemetrix.CMD = CMD;
-ThingBotTelemetrix.REPORT = REPORT;
-ThingBotTelemetrix.PIN_MODE = PIN_MODE;
-ThingBotTelemetrix.DHT_TYPE = DHT_TYPE;
-
-module.exports = ThingBotTelemetrix;
+export default ThingBotTelemetrix;

@@ -1,8 +1,9 @@
 import ArgumentType from '../../extension-support/argument-type';
 import BlockType from '../../extension-support/block-type';
 import formatMessage from 'format-message';
-import ThingBotTelemetrix from './thingbot-telemetrix';
+import ThingBotTelemetrix, {DHT_TYPE, PIN_MODE} from './thingbot-telemetrix';
 import BLETransport from './transport/ble';
+import type {ScannedDevice} from './transport/transport';
 import type {Extension, ExtensionInfo} from '../extension';
 
 /** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
@@ -13,8 +14,6 @@ const blockIconURI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0i
 
 const EXTENSION_ID = 'thingbotTelemetrix';
 
-const {PIN_MODE, DHT_TYPE} = ThingBotTelemetrix;
-
 const DigitalLevel = {
     HIGH: 'HIGH',
     LOW: 'LOW'
@@ -22,11 +21,11 @@ const DigitalLevel = {
 
 class ThingBotTelemetrixExtension implements Extension {
     runtime;
-    _telemetrix;
-    _devices;
-    _stopScan;
+    _telemetrix: ThingBotTelemetrix;
+    _devices: Record<string, ScannedDevice>;
+    _stopScan: (() => void) | null;
 
-    constructor (runtime) {
+    constructor (runtime: any) { // TODO: type Runtime for extension
         this.runtime = runtime;
         this._telemetrix = new ThingBotTelemetrix(new BLETransport());
         // Devices discovered by the in-progress scan, keyed by peripheralId, so
