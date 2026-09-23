@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import uuid from 'uuid';
+import {v1 as uuidv1} from 'uuid';
 import type {ScratchStorage} from '@scratch/scratch-storage';
 
 import Blocks from './blocks';
@@ -17,7 +17,18 @@ import MonitorHandler, {type Monitor} from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
 import JsEventNames from './runtime/event-names';
 import {RuntimeEventNames, type RuntimeEvents} from './runtime/runtime-events';
-import type {MenuInfo} from '../extensions/extension';
+import type {ExtensionInfo, MenuInfo} from '../extensions/extension';
+import {
+    getBlocksJSON,
+    getBlocksXML,
+    getLabelForOpcode,
+    refreshExtensionPrimitives,
+    registerExtensionPrimitives
+} from './runtime/extension-registry';
+import type {ConvertedBlockInfo, ConvertedMenu, CustomFieldInfo} from './runtime/extension-block-converter';
+import type {PeripheralExtension} from './runtime/runtime-peripheral';
+import TargetType from '../extension-support/target-type';
+import {setFetch} from '../util/fetch-with-timeout';
 
 import Clock from '../io/input/clock';
 import Keyboard from '../io/hid/keyboard';
@@ -63,6 +74,7 @@ export interface BlockPackage {
     getMonitored? (): Record<string, MonitoredInfo>
 }
 
+/** An extension's palette category, as the runtime registers it. */
 export interface CategoryInfo {
     id: string
     name: string
@@ -72,9 +84,9 @@ export interface CategoryInfo {
     color1: string
     color2: string
     color3: string
-    blocks: unknown[]
-    customFieldTypes: Record<string, unknown>
-    menus: unknown[]
+    blocks: ConvertedBlockInfo[]
+    customFieldTypes: Record<string, CustomFieldInfo>
+    menus: ConvertedMenu[]
     menuInfo: Record<string, MenuInfo>
 }
 
@@ -157,7 +169,7 @@ class Runtime {
     /** Tags storage requests with a fresh run id; called whenever the project starts, stops or changes. */
     resetRunId () {
         if (!this.storage) return;
-        this.storage.scratchFetch.setMetadata(this.storage.scratchFetch.RequestMetadata.RunId, uuid.v1());
+        this.storage.scratchFetch.setMetadata(this.storage.scratchFetch.RequestMetadata.RunId, uuidv1());
     }
 
     updateCurrentMSecs () {
@@ -405,6 +417,84 @@ class Runtime {
             }));
         }
         this.monitorBlocks.resetCache();
+    }
+
+    getMonitorState () {
+        return this.monitors.getState();
+    }
+
+    /** Arguments for an extension's target-specific messages: the type of `target`, or of the editing target. */
+    makeMessageContextForTarget (target?: Target | null): {targetType?: string} {
+        const context: {targetType?: string} = {};
+        const contextTarget = target || this.getEditingTarget() || this.getTargetForStage();
+        if (contextTarget) {
+            context.targetType = contextTarget.isStage ? TargetType.STAGE : TargetType.SPRITE;
+        }
+        return context;
+    }
+
+    _registerExtensionPrimitives (extensionInfo: ExtensionInfo) {
+        registerExtensionPrimitives(this, extensionInfo);
+    }
+
+    /** Re-registers an extension from new `getInfo()` results. */
+    _refreshExtensionPrimitives (extensionInfo: ExtensionInfo) {
+        refreshExtensionPrimitives(this, extensionInfo);
+    }
+
+    /** Each extension category's palette XML; `target` filters out blocks not meant for it. */
+    getBlocksXML (target?: Target | null) {
+        return getBlocksXML(this, target);
+    }
+
+    getBlocksJSON () {
+        return getBlocksJSON(this);
+    }
+
+    /** The monitor label for an extension opcode; undefined for unknown ones. */
+    getLabelForOpcode (extendedOpcode: string) {
+        return getLabelForOpcode(this, extendedOpcode);
+    }
+
+    registerPeripheralExtension (extensionId: string, extension: PeripheralExtension) {
+        this.peripherals.register(extensionId, extension);
+    }
+
+    scanForPeripheral (extensionId: string) {
+        this.peripherals.scan(extensionId);
+    }
+
+    connectPeripheral (extensionId: string, peripheralId: string) {
+        this.peripherals.connect(extensionId, peripheralId);
+    }
+
+    disconnectPeripheral (extensionId: string) {
+        this.peripherals.disconnect(extensionId);
+    }
+
+    getPeripheralIsConnected (extensionId: string): boolean {
+        return this.peripherals.isConnected(extensionId);
+    }
+
+    /** Reports whether the microphone is streaming audio. */
+    emitMicListening (listening: boolean) {
+        this.events.emit(RuntimeEventNames.MIC_LISTENING, listening);
+    }
+
+    /** Reports whether an extension is loading data it needs. */
+    emitExtensionLoading (loading: boolean) {
+        this.events.emit(RuntimeEventNames.EXTENSION_DATA_LOADING, loading);
+    }
+
+    attachAudioEngine (audioEngine: unknown) {
+        this.audioEngine = audioEngine;
+    }
+
+    /** Uses `storage` for assets, and its fetch for the network requests extensions make. */
+    attachStorage (storage: ScratchStorage) {
+        this.storage = storage;
+        setFetch(storage.scratchFetch.scratchFetch);
+        this.resetRunId();
     }
 
     getOpcodeFunction (opcode: string): BlockFunction | undefined {

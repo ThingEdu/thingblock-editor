@@ -7,8 +7,26 @@ const events = require('../fixtures/events.json');
 const Runtime = require('../../src/engine/runtime');
 const RenderedTarget = require('../../src/sprites/rendered-target');
 const log = require('../../src/util/log');
+const path = require('path');
+const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
 
 const test = tap.test;
+
+test('Project loaded emits runtime event', t => {
+    const vm = new VirtualMachine();
+    const projectUri = path.resolve(__dirname, '../fixtures/default.sb2');
+    const project = readFileToBuffer(projectUri);
+    let projectLoaded = false;
+
+    vm.runtime.addListener('PROJECT_LOADED', () => {
+        projectLoaded = true;
+    });
+
+    vm.loadProject(project).then(() => {
+        t.equal(projectLoaded, true, 'Project load event emitted');
+        t.end();
+    });
+});
 
 test('deleteSound returns function after deleting or null if nothing was deleted', t => {
     const vm = new VirtualMachine();

@@ -1,14 +1,15 @@
-const test = require('tap').test;
+import '../fixtures/prefer-ts';
+import {test} from 'tap';
+import ArgumentType from '../../src/extension-support/argument-type';
+import BlockType from '../../src/extension-support/block-type';
+import Runtime from '../../src/engine/runtime.ts';
+import ScratchBlocksConstants from '../../src/engine/scratch-blocks-constants.ts';
+import type {ExtensionInfo} from '../../src/extensions/extension.ts';
 
-const ArgumentType = require('../../src/extension-support/argument-type');
-const BlockType = require('../../src/extension-support/block-type');
-const Runtime = require('../../src/engine/runtime');
-const ScratchBlocksConstants = require('../../src/engine/scratch-blocks-constants');
+/** A converted block, read loosely: its JSON shape varies by block type. */
+type Converted = {json?: Record<string, any>, xml?: string, info?: any};
 
-/**
- * @type {ExtensionMetadata}
- */
-const testExtensionInfo = {
+const testExtensionInfo: ExtensionInfo = {
     id: 'test',
     name: 'fake test extension',
     color1: '#111111',
@@ -82,7 +83,7 @@ const testExtensionInfo = {
     ]
 };
 
-const extensionInfoWithCustomFieldTypes = {
+const extensionInfoWithCustomFieldTypes: ExtensionInfo = {
     id: 'test_custom_fieldType',
     name: 'fake test extension with customFieldTypes',
     color1: '#111111',
@@ -123,18 +124,18 @@ const extensionInfoWithCustomFieldTypes = {
     }
 };
 
-const testCategoryInfo = function (t, block) {
+const testCategoryInfo = function (t: tap.Test, block: Converted) {
     t.equal(block.json.category, 'fake test extension');
     t.equal(block.json.style, 'test');
     t.equal(block.json.inputsInline, true);
 };
 
-const testButton = function (t, button) {
+const testButton = function (t: tap.Test, button: Converted) {
     t.same(button.json, null); // should be null or undefined
     t.equal(button.xml, '<button text="this is a button" callbackKey="MAKE_A_VARIABLE"></button>');
 };
 
-const testReporter = function (t, reporter) {
+const testReporter = function (t: tap.Test, reporter: Converted) {
     t.equal(reporter.json.type, 'test_reporter');
     testCategoryInfo(t, reporter);
     t.equal(reporter.json.outputShape, ScratchBlocksConstants.OUTPUT_SHAPE_ROUND);
@@ -161,7 +162,7 @@ const testReporter = function (t, reporter) {
     t.equal(reporter.xml, '<block type="test_reporter"></block>');
 };
 
-const testInlineImage = function (t, inlineImage) {
+const testInlineImage = function (t: tap.Test, inlineImage: Converted) {
     t.equal(inlineImage.json.type, 'test_inlineImage');
     testCategoryInfo(t, inlineImage);
     t.equal(inlineImage.json.outputShape, ScratchBlocksConstants.OUTPUT_SHAPE_ROUND);
@@ -185,12 +186,12 @@ const testInlineImage = function (t, inlineImage) {
     t.equal(inlineImage.xml, '<block type="test_inlineImage"></block>');
 };
 
-const testSeparator = function (t, separator) {
+const testSeparator = function (t: tap.Test, separator: Converted) {
     t.same(separator.json, null); // should be null or undefined
     t.equal(separator.xml, '<sep gap="36"/>');
 };
 
-const testCommand = function (t, command) {
+const testCommand = function (t: tap.Test, command: Converted) {
     t.equal(command.json.type, 'test_command');
     testCategoryInfo(t, command);
     t.equal(command.json.outputShape, ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE);
@@ -210,7 +211,7 @@ const testCommand = function (t, command) {
         'default text</field></shadow></value></block>');
 };
 
-const testConditional = function (t, conditional) {
+const testConditional = function (t: tap.Test, conditional: Converted) {
     t.equal(conditional.json.type, 'test_ifElse');
     testCategoryInfo(t, conditional);
     t.equal(conditional.json.outputShape, ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE);
@@ -240,7 +241,7 @@ const testConditional = function (t, conditional) {
     t.equal(conditional.xml, '<block type="test_ifElse"><value name="THING"></value></block>');
 };
 
-const testLoop = function (t, loop) {
+const testLoop = function (t: tap.Test, loop: Converted) {
     t.equal(loop.json.type, 'test_loop');
     testCategoryInfo(t, loop);
     t.equal(loop.json.outputShape, ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE);
@@ -270,7 +271,7 @@ const testLoop = function (t, loop) {
 test('registerExtensionPrimitives', t => {
     const runtime = new Runtime();
 
-    runtime.on(Runtime.EXTENSION_ADDED, categoryInfo => {
+    runtime.events.on('EXTENSION_ADDED', categoryInfo => {
         const blocksInfo = categoryInfo.blocks;
         t.equal(blocksInfo.length, testExtensionInfo.blocks.length);
 
@@ -280,7 +281,7 @@ test('registerExtensionPrimitives', t => {
         });
 
         // Note that this also implicitly tests that block order is preserved
-        const [button, reporter, inlineImage, separator, command, conditional, loop] = blocksInfo;
+        const [button, reporter, inlineImage, separator, command, conditional, loop] = blocksInfo as Converted[];
 
         testButton(t, button);
         testReporter(t, reporter);
@@ -299,11 +300,11 @@ test('registerExtensionPrimitives', t => {
 test('custom field types should be added to block and EXTENSION_FIELD_ADDED callback triggered', t => {
     const runtime = new Runtime();
 
-    runtime.on(Runtime.EXTENSION_ADDED, categoryInfo => {
-        const blockInfo = categoryInfo.blocks[0];
+    runtime.events.on('EXTENSION_ADDED', categoryInfo => {
+        const blockInfo = categoryInfo.blocks[0] as Converted;
 
         // We expect that for each argument there's a corresponding <field>-tag in the block XML
-        Object.values(blockInfo.info.arguments).forEach(argument => {
+        Object.values(blockInfo.info.arguments).forEach((argument: {type: string}) => {
             const regex = new RegExp(`<field name="field_${categoryInfo.id}_${argument.type}">`);
             t.ok(regex.test(blockInfo.xml));
         });
@@ -311,7 +312,7 @@ test('custom field types should be added to block and EXTENSION_FIELD_ADDED call
     });
 
     let fieldAddedCallbacks = 0;
-    runtime.on(Runtime.EXTENSION_FIELD_ADDED, () => {
+    runtime.events.on('EXTENSION_FIELD_ADDED', () => {
         fieldAddedCallbacks++;
     });
 
