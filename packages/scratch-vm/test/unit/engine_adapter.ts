@@ -1,17 +1,18 @@
-const test = require('tap').test;
-const adapter = require('../../src/engine/adapter');
-const events = require('../fixtures/events.json');
+import {test} from 'tap';
+import adapter, {type BlocklyXmlEvent} from '../../src/engine/adapter.ts';
+import events from '../fixtures/events.json';
 
-test('spec', t => {
-    t.type(adapter, 'function');
+test('invalid inputs', t => {
+    let nothing = adapter('not an object' as unknown as BlocklyXmlEvent);
+    t.type(nothing, 'undefined');
+    nothing = adapter({noxmlproperty: true} as unknown as BlocklyXmlEvent);
+    t.type(nothing, 'undefined');
     t.end();
 });
 
-test('invalid inputs', t => {
-    let nothing = adapter('not an object');
-    t.type(nothing, 'undefined');
-    nothing = adapter({noxmlproperty: true});
-    t.type(nothing, 'undefined');
+test('input without a block or shadow throws', t => {
+    const xml = '<block type="control_if" id="ifBlock"><statement name="SUBSTACK"></statement></block>';
+    t.throws(() => adapter({xml: {outerHTML: xml}}), /input SUBSTACK of block ifBlock has no block or shadow/);
     t.end();
 });
 

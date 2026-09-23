@@ -1,6 +1,19 @@
-const test = require('tap').test;
-const Variable = require('../../src/engine/variable');
-const htmlparser = require('htmlparser2');
+import {test} from 'tap';
+import {Parser} from 'htmlparser2';
+import Variable from '../../src/engine/variable.ts';
+
+test('normalizeDataType keeps known types only', t => {
+    t.equal(Variable.normalizeDataType('int'), 'int');
+    t.equal(new Variable('varId', 'varName', Variable.SCALAR_TYPE, 'float').dataType, 'float');
+    t.equal(Variable.normalizeDataType('double'), '');
+    t.equal(Variable.normalizeDataType(undefined), '');
+    t.end();
+});
+
+test('invalid type throws', t => {
+    t.throws(() => new Variable('varId', 'varName', 'bogus' as never), /Invalid variable type: bogus/);
+    t.end();
+});
 
 test('spec', t => {
     t.type(typeof Variable.SCALAR_TYPE, typeof Variable.LIST_TYPE);
@@ -52,7 +65,7 @@ test('toXML', t => {
         Variable.SCALAR_TYPE
     );
 
-    const parser = new htmlparser.Parser({
+    const parser = new Parser({
         onopentag: function (name, attribs){
             if (name === 'variable'){
                 t.equal(attribs.type, Variable.SCALAR_TYPE);
@@ -80,7 +93,7 @@ test('escape variable name for XML', t => {
         Variable.SCALAR_TYPE
     );
 
-    const parser = new htmlparser.Parser({
+    const parser = new Parser({
         onopentag: function (name, attribs){
             if (name === 'variable'){
                 t.equal(attribs.type, Variable.SCALAR_TYPE);

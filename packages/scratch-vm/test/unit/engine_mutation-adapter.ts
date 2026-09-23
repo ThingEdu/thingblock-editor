@@ -1,11 +1,5 @@
-const test = require('tap').test;
-
-const mutationAdapter = require('../../src/engine/mutation-adapter');
-
-test('spec', t => {
-    t.type(mutationAdapter, 'function');
-    t.end();
-});
+import {test} from 'tap';
+import mutationAdapter from '../../src/engine/mutation-adapter.ts';
 
 test('convert DOM to Scratch object', t => {
     const testStringRaw = '"arbitrary" & \'complicated\' test string';
