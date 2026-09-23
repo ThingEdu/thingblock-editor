@@ -1,35 +1,10 @@
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import translateIconURL from './translate/translate.png';
-import translateInsetIconURL from './translate/translate-small.png';
-
 import thingbotTelemetrixIconURL from './thingbotTelemetrix/thingbot-telemetrix.svg';
 import thingbotTelemetrixInsetIconURL from './thingbotTelemetrix/thingbot-telemetrix-small.svg';
 
 export default [
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Translate"
-                description="Name for the Translate extension"
-                id="gui.extension.translate.name"
-            />
-        ),
-        extensionId: 'translate',
-        collaborator: 'Google',
-        iconURL: translateIconURL,
-        insetIconURL: translateInsetIconURL,
-        description: (
-            <FormattedMessage
-                defaultMessage="Translate text into many languages."
-                description="Description for the Translate extension"
-                id="gui.extension.translate.description"
-            />
-        ),
-        featured: true,
-        internetConnectionRequired: true
-    },
     {
         name: 'ThingBot Telemetrix',
         extensionId: 'thingbotTelemetrix',

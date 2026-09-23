@@ -13,6 +13,3 @@ Each of the `[extensionID]-simple-project` test files have been made as the simp
 ### Adding more example projects
 
 Sometimes we need to test more complex projects to catch cases and contexts where an extension should load and doesn't, even though its `[extensionID]-simple-project` files pass. We can save those project files using the convention [extensionID]-project-name.
-
-### // TO DO
-The translation extension doesn't have test projects added for them yet since they need a little more infrastructure stubbed out in the test.

@@ -1,5 +1,3 @@
-import translateIcon from './extensions/translateIcon.svg';
-
 // This object is passed directly to Blockly, hence the colour* fields need to
 // be named exactly as they are, including the UK spelling of "colour".
 const blockColors = {
@@ -83,11 +81,7 @@ const blockColors = {
     menuHover: 'rgba(255, 255, 255, 0.3)'
 };
 
-const extensions = {
-    translate: {
-        blockIconURI: translateIcon
-    }
-};
+const extensions = {};
 
 export {
     blockColors,
