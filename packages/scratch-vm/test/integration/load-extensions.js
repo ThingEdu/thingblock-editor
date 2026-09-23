@@ -15,7 +15,7 @@ test('Load external extensions', async t => {
         const uri = path.resolve(__dirname, `../fixtures/load-extensions/confirm-load/${file}`);
         const project = readFileToBuffer(uri);
 
-        await t.test('Confirm expected extension is installed in example sb2 and sb3 projects', extTest => {
+        await t.test('Confirm expected extension is installed in example projects', extTest => {
             vm.loadProject(project)
                 .then(() => {
                     extTest.ok(vm.extensionManager.isExtensionLoaded(ext));

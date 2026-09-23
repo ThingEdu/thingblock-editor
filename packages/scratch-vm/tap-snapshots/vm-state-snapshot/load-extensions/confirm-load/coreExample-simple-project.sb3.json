@@ -2,7 +2,9 @@
   "meta": {
     "semver": "3.0.0"
   },
-  "extensions": [],
+  "extensions": [
+    "coreExample"
+  ],
   "targets": [
     {
       "isStage": true,
@@ -41,7 +43,13 @@
         }
       ],
       "sounds": [],
-      "scripts": []
+      "scripts": [
+        [
+          {
+            "opcode": "coreExample_exampleOpcode"
+          }
+        ]
+      ]
     }
   ],
   "monitors": []
