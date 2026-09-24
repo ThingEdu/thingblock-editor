@@ -234,12 +234,6 @@ export const messages = defineMessages({
             'If you need to move your code to another sprite, click and drag it until you are hovering over the correct sprite. Release it once the sprite wiggles.',
         description: 'description for the "check code sequence" section of the debug modal'
     },
-    checkCodeSequenceDescription3: {
-        id: 'gui.debugModal.checkCodeSequence.description3',
-        defaultMessage:
-            'You can also use your Backpack (bottom of screen) to store and move your code or assets.',
-        description: 'description for the "check code sequence" section of the debug modal'
-    },
     commentYourCodeTitle: {
         id: 'gui.debugModal.commentYourCode.title',
         defaultMessage: 'Comment Your Code',

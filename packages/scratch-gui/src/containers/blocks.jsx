@@ -18,8 +18,6 @@ import extensionData from '../lib/libraries/extensions/index.jsx';
 import CustomProcedures from './custom-procedures.jsx';
 import errorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
 import {BLOCKS_DEFAULT_SCALE, STAGE_DISPLAY_SIZES} from '../lib/layout-constants';
-import DropAreaHOC from '../lib/drop-area-hoc.jsx';
-import DragConstants from '../lib/drag-constants';
 import defineDynamicBlock from '../lib/define-dynamic-block';
 import {DEFAULT_MODE, getColorsForMode, colorModeMap} from '../lib/settings/color-mode';
 import {CAT_BLOCKS_THEME} from '../lib/settings/theme';
@@ -49,10 +47,6 @@ const addFunctionListener = (object, property, callback) => {
     };
 };
 
-const DroppableBlocks = DropAreaHOC([
-    DragConstants.BACKPACK_CODE
-])(BlocksComponent);
-
 class Blocks extends React.Component {
     constructor (props) {
         super(props);
@@ -64,7 +58,6 @@ class Blocks extends React.Component {
             'getToolboxXML',
             'handleCategorySelected',
             'handleConnectionModalStart',
-            'handleDrop',
             'handleStatusButtonUpdate',
             'handleOpenSoundRecorder',
             'handlePromptStart',
@@ -716,14 +709,6 @@ class Blocks extends React.Component {
         this.updateToolbox();
         ws.getToolbox().selectCategoryByName('myBlocks');
     }
-    handleDrop (dragInfo) {
-        fetch(dragInfo.payload.bodyUrl)
-            .then(response => response.json())
-            .then(blocks => this.props.vm.shareBlocksToTarget(blocks, this.props.vm.editingTarget.id))
-            .then(() => {
-                this.props.vm.refreshWorkspace();
-            });
-    }
     render () {
          
         const {
@@ -753,9 +738,8 @@ class Blocks extends React.Component {
          
         return (
             <React.Fragment>
-                <DroppableBlocks
-                    componentRef={this.setBlocks}
-                    onDrop={this.handleDrop}
+                <BlocksComponent
+                    containerRef={this.setBlocks}
                     {...props}
                 />
                 {this.state.prompt ? (

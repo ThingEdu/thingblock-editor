@@ -124,6 +124,7 @@
   "dependencies": {
     "@microbit/microbit-universal-hex": "0.2.2",
     "@radix-ui/react-context-menu": "2.3.0",
+    "@scratch/scratch-blocks": "14.1.0",
     "@scratch/scratch-storage": "14.1.0",
     "@scratch/scratch-svg-renderer": "14.1.0",
     "@scratch/scratch-vm": "14.1.0",
@@ -135,7 +136,6 @@
     "base64-loader": "1.0.0",
     "bowser": "1.9.4",
     "classnames": "2.5.1",
-    "computed-style-to-inline-style": "3.0.0",
     "cookie": "0.6.0",
     "copy-webpack-plugin": "13.0.1",
     "core-js": "2.6.12",
@@ -177,7 +177,6 @@
     "react-visibility-sensor": "5.1.1",
     "redux-throttle": "0.1.1",
     "scratch-audio": "2.0.268",
-    "@scratch/scratch-blocks": "14.1.0",
     "scratch-l10n": "6.1.85",
     "startaudiocontext": "1.2.1",
     "style-loader": "4.0.0",
