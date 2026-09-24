@@ -122,10 +122,11 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is now a firmware device panel
   (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
   collapsible serial/input panel). The VM still runs one implicit device target, but no sprite UI renders.
-- `scratch-gui` resolves `@scratch/scratch-vm` to its gitignored `dist/` bundle, not its source. A fresh
-  checkout — or any change to `scratch-vm` source — needs `npx webpack --progress` in `packages/scratch-vm`
-  before `scratch-gui` tests or the dev server can see the change; otherwise it silently runs against a stale
-  bundle.
+- `scratch-gui`'s webpack build (and dev server) compiles `@scratch/scratch-vm` from source through its `webpack`
+  export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
+  resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `scratch-vm` source — needs
+  `npx webpack --progress` in `packages/scratch-vm` before `scratch-gui` tests see it; otherwise they silently
+  run against a stale bundle.
 
 ### scratch-blocks specifics
 

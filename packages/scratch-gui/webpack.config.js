@@ -59,6 +59,16 @@ const baseConfig = new ScratchWebpackConfigBuilder(
         resourceQuery: /^$/, // reject any query string
         type: 'asset' // let webpack decide on the best type of asset
     })
+    // The VM's `webpack` export points at its source, which the shared config's loaders skip as node_modules
+    .addModuleRule({
+        test: /\.ts$/,
+        include: /node_modules[\\/]@scratch[\\/]scratch-vm[\\/]src[\\/]/,
+        loader: 'ts-loader',
+        options: {
+            configFile: path.resolve(__dirname, '../scratch-vm/tsconfig.json'),
+            transpileOnly: true
+        }
+    })
     .addPlugin(new webpack.DefinePlugin({
         'process.env.DEBUG': Boolean(process.env.DEBUG),
         'process.env.GA_ID': `"${process.env.GA_ID || 'UA-000000-01'}"`,
@@ -119,17 +129,7 @@ const distConfig = baseConfig.clone()
             path: path.resolve(__dirname, 'dist')
         }
     })
-    .addExternals(['react', 'react-dom', 'redux', 'react-redux'])
-    .addPlugin(
-        new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: 'src/lib/libraries/*.json',
-                    to: 'libraries/[name][ext]'
-                }
-            ]
-        })
-    );
+    .addExternals(['react', 'react-dom', 'redux', 'react-redux']);
 
 // build the shipping library in `dist/` bundled with react, react-dom, redux, etc.
 const distStandaloneConfig = baseConfig.clone()
