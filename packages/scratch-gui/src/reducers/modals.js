@@ -7,8 +7,6 @@ const MODAL_EXTENSION_LIBRARY = 'extensionLibrary';
 const MODAL_LOADING_PROJECT = 'loadingProject';
 const MODAL_PERIPHERAL_LIBRARY = 'peripheralLibrary';
 const MODAL_TELEMETRY = 'telemetryModal';
-const MODAL_SOUND_LIBRARY = 'soundLibrary';
-const MODAL_SOUND_RECORDER = 'soundRecorder';
 const MODAL_CONNECTION = 'connectionModal';
 const MODAL_SETTINGS = 'settingsModal';
 const MODAL_TIPS_LIBRARY = 'tipsLibrary';
@@ -20,8 +18,6 @@ const initialState = {
     [MODAL_LOADING_PROJECT]: false,
     [MODAL_PERIPHERAL_LIBRARY]: false,
     [MODAL_TELEMETRY]: false,
-    [MODAL_SOUND_LIBRARY]: false,
-    [MODAL_SOUND_RECORDER]: false,
     [MODAL_CONNECTION]: false,
     [MODAL_SETTINGS]: false,
     [MODAL_TIPS_LIBRARY]: false
@@ -72,12 +68,6 @@ const openPeripheralLibrary = function () {
 const openTelemetryModal = function () {
     return openModal(MODAL_TELEMETRY);
 };
-const openSoundLibrary = function () {
-    return openModal(MODAL_SOUND_LIBRARY);
-};
-const openSoundRecorder = function () {
-    return openModal(MODAL_SOUND_RECORDER);
-};
 const openConnectionModal = function () {
     return openModal(MODAL_CONNECTION);
 };
@@ -105,12 +95,6 @@ const closePeripheralLibrary = function () {
 const closeTelemetryModal = function () {
     return closeModal(MODAL_TELEMETRY);
 };
-const closeSoundLibrary = function () {
-    return closeModal(MODAL_SOUND_LIBRARY);
-};
-const closeSoundRecorder = function () {
-    return closeModal(MODAL_SOUND_RECORDER);
-};
 const closeTipsLibrary = function () {
     return closeModal(MODAL_TIPS_LIBRARY);
 };
@@ -128,8 +112,6 @@ export {
     openExtensionLibrary,
     openLoadingProject,
     openPeripheralLibrary,
-    openSoundLibrary,
-    openSoundRecorder,
     openTelemetryModal,
     openTipsLibrary,
     openConnectionModal,
@@ -139,8 +121,6 @@ export {
     closeExtensionLibrary,
     closeLoadingProject,
     closePeripheralLibrary,
-    closeSoundLibrary,
-    closeSoundRecorder,
     closeTelemetryModal,
     closeTipsLibrary,
     closeConnectionModal,

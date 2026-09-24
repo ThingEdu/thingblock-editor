@@ -30,7 +30,7 @@ import {
 import {connect} from 'react-redux';
 import {updateToolbox} from '../reducers/toolbox';
 import {activateColorPicker} from '../reducers/color-picker';
-import {closeExtensionLibrary, openSoundRecorder, openConnectionModal} from '../reducers/modals';
+import {closeExtensionLibrary, openConnectionModal} from '../reducers/modals';
 import {activateCustomProcedures, deactivateCustomProcedures} from '../reducers/custom-procedures';
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 import {updateMetrics} from '../reducers/workspace-metrics';
@@ -59,7 +59,6 @@ class Blocks extends React.Component {
             'handleCategorySelected',
             'handleConnectionModalStart',
             'handleStatusButtonUpdate',
-            'handleOpenSoundRecorder',
             'handlePromptStart',
             'handlePromptCallback',
             'handlePromptClose',
@@ -85,7 +84,6 @@ class Blocks extends React.Component {
             this.handlePromptStart
         );
         this.ScratchBlocks.StatusIndicatorLabel.statusButtonCallback = this.handleConnectionModalStart;
-        this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
         this.state = {
             prompt: null
@@ -108,7 +106,6 @@ class Blocks extends React.Component {
         }
         this.ScratchBlocks.dialog.setPrompt(this.handlePromptStart);
         this.ScratchBlocks.StatusIndicatorLabel.statusButtonCallback = this.handleConnectionModalStart;
-        this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.ScratchProcedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
@@ -684,9 +681,6 @@ class Blocks extends React.Component {
     handleStatusButtonUpdate () {
         this.workspace.getFlyout().refreshStatusButtons();
     }
-    handleOpenSoundRecorder () {
-        this.props.onOpenSoundRecorder();
-    }
 
     /*
      * Pass along information about proposed name and variable options (e.g. scope)
@@ -722,7 +716,6 @@ class Blocks extends React.Component {
             isVisible,
             onActivateColorPicker,
             onOpenConnectionModal,
-            onOpenSoundRecorder,
             updateToolboxState,
             onActivateCustomProcedures,
             onRequestCloseExtensionLibrary,
@@ -784,7 +777,6 @@ Blocks.propTypes = {
     onActivateColorPicker: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
-    onOpenSoundRecorder: PropTypes.func,
     onSetGeneratedCode: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
@@ -861,9 +853,6 @@ const mapDispatchToProps = dispatch => ({
     onOpenConnectionModal: id => {
         dispatch(setConnectionModalExtensionId(id));
         dispatch(openConnectionModal());
-    },
-    onOpenSoundRecorder: () => {
-        dispatch(openSoundRecorder());
     },
     onRequestCloseExtensionLibrary: () => {
         dispatch(closeExtensionLibrary());
