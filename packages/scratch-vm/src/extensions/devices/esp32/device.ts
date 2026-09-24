@@ -1,6 +1,6 @@
-const formatMessage = require('format-message');
-const Device = require('../../../devices/device');
-const ConnectionType = require('../../../devices/connection-type');
+import formatMessage from 'format-message';
+import Device, {type CompileConfig, type DeviceInfo, type UploadConfig} from '../../../devices/device';
+import ConnectionType from '../../../devices/connection-type';
 
 /**
  * ESP32 Dev Module device. ESP32-specific build options (PartitionScheme, FlashMode, and on
@@ -8,11 +8,11 @@ const ConnectionType = require('../../../devices/connection-type');
  * Dev Module builds with core defaults.
  */
 class Esp32 extends Device {
-    get deviceId () {
+    get deviceId (): string {
         return 'esp32';
     }
 
-    getDeviceInfo () {
+    getDeviceInfo (): DeviceInfo {
         return {
             name: formatMessage({
                 id: 'device.esp32.name',
@@ -31,15 +31,15 @@ class Esp32 extends Device {
         };
     }
 
-    get fqbn () {
+    get fqbn (): string {
         return 'esp32:esp32:esp32';
     }
 
-    getCompileConfig () {
+    getCompileConfig (): CompileConfig {
         return {options: {}};
     }
 
-    getUploadConfig () {
+    getUploadConfig (): UploadConfig {
         return {
             pnpid: [
                 'USB\\VID_10C4&PID_EA60',
@@ -50,4 +50,4 @@ class Esp32 extends Device {
     }
 }
 
-module.exports = Esp32;
+export default Esp32;

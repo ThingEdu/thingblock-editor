@@ -1,16 +1,16 @@
-const formatMessage = require('format-message');
-const Device = require('../../../devices/device');
-const ConnectionType = require('../../../devices/connection-type');
+import formatMessage from 'format-message';
+import Device, {type CompileConfig, type DeviceInfo, type UploadConfig} from '../../../devices/device';
+import ConnectionType from '../../../devices/connection-type';
 
 /**
  * Arduino Uno (ATmega328P) device.
  */
 class ArduinoUno extends Device {
-    get deviceId () {
+    get deviceId (): string {
         return 'arduinoUno';
     }
 
-    getDeviceInfo () {
+    getDeviceInfo (): DeviceInfo {
         return {
             name: formatMessage({
                 id: 'device.arduinoUno.name',
@@ -29,15 +29,15 @@ class ArduinoUno extends Device {
         };
     }
 
-    get fqbn () {
+    get fqbn (): string {
         return 'arduino:avr:uno';
     }
 
-    getCompileConfig () {
+    getCompileConfig (): CompileConfig {
         return {options: {}};
     }
 
-    getUploadConfig () {
+    getUploadConfig (): UploadConfig {
         return {
             pnpid: [
                 'USB\\VID_2341&PID_0043',
@@ -48,4 +48,4 @@ class ArduinoUno extends Device {
     }
 }
 
-module.exports = ArduinoUno;
+export default ArduinoUno;

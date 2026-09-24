@@ -1,6 +1,6 @@
-const formatMessage = require('format-message');
-const Device = require('../../../devices/device');
-const ConnectionType = require('../../../devices/connection-type');
+import formatMessage from 'format-message';
+import Device, {type CompileConfig, type DeviceInfo, type UploadConfig} from '../../../devices/device';
+import ConnectionType from '../../../devices/connection-type';
 
 /**
  * ESP32-C3 Dev Module device. The single-core RISC-V SoC connects over its built-in USB
@@ -8,11 +8,11 @@ const ConnectionType = require('../../../devices/connection-type');
  * boards that instead carry a CP2102/CH340 UART bridge are matched by the extra pnpid filters.
  */
 class Esp32C3 extends Device {
-    get deviceId () {
+    get deviceId (): string {
         return 'esp32c3';
     }
 
-    getDeviceInfo () {
+    getDeviceInfo (): DeviceInfo {
         return {
             name: formatMessage({
                 id: 'device.esp32c3.name',
@@ -31,15 +31,15 @@ class Esp32C3 extends Device {
         };
     }
 
-    get fqbn () {
+    get fqbn (): string {
         return 'esp32:esp32:esp32c3';
     }
 
-    getCompileConfig () {
+    getCompileConfig (): CompileConfig {
         return {options: {CDCOnBoot: 'cdc'}};
     }
 
-    getUploadConfig () {
+    getUploadConfig (): UploadConfig {
         return {
             pnpid: [
                 'USB\\VID_303A&PID_1001',
@@ -51,4 +51,4 @@ class Esp32C3 extends Device {
     }
 }
 
-module.exports = Esp32C3;
+export default Esp32C3;

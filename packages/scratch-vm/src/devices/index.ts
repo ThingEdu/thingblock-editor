@@ -1,8 +1,3 @@
-const Device = require('./device');
-const DeviceRegistry = require('./device-registry');
-const PeripheralRegistry = require('./peripheral-registry');
-const ManifestDevice = require('./manifest-device');
-
 /**
  * The device framework: the `Device` base contract, the `DeviceRegistry`, `ManifestDevice` (the
  * data-driven device for helper-served resource packs), and the `PeripheralRegistry` (the peripheral
@@ -10,9 +5,7 @@ const ManifestDevice = require('./manifest-device');
  * live under `extensions/devices/` and are aggregated there; constructing each with the runtime and
  * registering it is left to the wiring step that owns the runtime.
  */
-module.exports = {
-    Device,
-    DeviceRegistry,
-    PeripheralRegistry,
-    ManifestDevice
-};
+export {default as Device} from './device';
+export {default as DeviceRegistry} from './device-registry';
+export {default as PeripheralRegistry} from './peripheral-registry';
+export {default as ManifestDevice} from './manifest-device';

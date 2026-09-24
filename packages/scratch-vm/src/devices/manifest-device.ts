@@ -1,5 +1,22 @@
-const formatMessage = require('format-message');
-const Device = require('./device');
+import formatMessage from 'format-message';
+import Device, {type CompileConfig, type DeviceInfo, type UploadConfig} from './device';
+import type {ConnectionTypeId} from './connection-type';
+import type Runtime from '../engine/runtime';
+
+/** The fields of a resource pack's device manifest (its `manifest.js` default export) a device reads. */
+export interface DeviceManifest {
+    id: string
+    /** The device's brand, shown verbatim. */
+    name: string
+    fqbn: string
+    description: formatMessage.MessageObject
+    manufacturer: string
+    requires: ConnectionTypeId
+    learnMore?: string
+    help?: string
+    compile?: {options?: Record<string, string>}
+    upload?: {pnpid?: string[], uploadSpeed?: number}
+}
 
 /**
  * A data-driven {@link Device} backed by a helper-served resource-pack device manifest. It bridges the
@@ -12,26 +29,22 @@ const Device = require('./device');
  * consumer side; `name` is the device's brand and stays verbatim.
  */
 class ManifestDevice extends Device {
-    /**
-     * @param {Runtime} runtime - the VM runtime.
-     * @param {object} manifest - the pack's device manifest (its `manifest.js` default export).
-     */
-    constructor (runtime, manifest) {
-        super(runtime);
+    _manifest: DeviceManifest;
 
-        /** @type {object} the source device manifest. */
+    constructor (runtime: Runtime, manifest: DeviceManifest) {
+        super(runtime);
         this._manifest = manifest;
     }
 
-    get deviceId () {
+    get deviceId (): string {
         return this._manifest.id;
     }
 
-    get fqbn () {
+    get fqbn (): string {
         return this._manifest.fqbn;
     }
 
-    getDeviceInfo () {
+    getDeviceInfo (): DeviceInfo {
         const manifest = this._manifest;
         return {
             name: manifest.name,
@@ -43,14 +56,14 @@ class ManifestDevice extends Device {
         };
     }
 
-    getCompileConfig () {
+    getCompileConfig (): CompileConfig {
         return {options: this._manifest.compile?.options ?? {}};
     }
 
-    getUploadConfig () {
+    getUploadConfig (): UploadConfig {
         const upload = this._manifest.upload ?? {};
         return {pnpid: upload.pnpid ?? [], uploadSpeed: upload.uploadSpeed};
     }
 }
 
-module.exports = ManifestDevice;
+export default ManifestDevice;

@@ -1,6 +1,6 @@
-const formatMessage = require('format-message');
-const Device = require('../../../devices/device');
-const ConnectionType = require('../../../devices/connection-type');
+import formatMessage from 'format-message';
+import Device, {type CompileConfig, type DeviceInfo, type UploadConfig} from '../../../devices/device';
+import ConnectionType from '../../../devices/connection-type';
 
 /**
  * Arduino Nano (ATmega328P) device. Shares the ATmega328P FQBN family with the Uno but is a
@@ -8,11 +8,11 @@ const ConnectionType = require('../../../devices/connection-type');
  * upload speed, so it keys on its own `deviceId`.
  */
 class ArduinoNano extends Device {
-    get deviceId () {
+    get deviceId (): string {
         return 'arduinoNano';
     }
 
-    getDeviceInfo () {
+    getDeviceInfo (): DeviceInfo {
         return {
             name: formatMessage({
                 id: 'device.arduinoNano.name',
@@ -31,15 +31,15 @@ class ArduinoNano extends Device {
         };
     }
 
-    get fqbn () {
+    get fqbn (): string {
         return 'arduino:avr:nano';
     }
 
-    getCompileConfig () {
+    getCompileConfig (): CompileConfig {
         return {options: {cpu: 'atmega328old'}};
     }
 
-    getUploadConfig () {
+    getUploadConfig (): UploadConfig {
         return {
             pnpid: [
                 'USB\\VID_1A86&PID_7523',
@@ -50,4 +50,4 @@ class ArduinoNano extends Device {
     }
 }
 
-module.exports = ArduinoNano;
+export default ArduinoNano;

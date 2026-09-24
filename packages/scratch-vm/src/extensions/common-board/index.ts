@@ -1,6 +1,8 @@
-const ArgumentType = require('../../extension-support/argument-type');
-const BlockType = require('../../extension-support/block-type');
-const formatMessage = require('format-message');
+import ArgumentType from '../../extension-support/argument-type';
+import BlockType from '../../extension-support/block-type';
+import formatMessage from 'format-message';
+import type Runtime from '../../engine/runtime';
+import type {Extension, ExtensionInfo} from '../extension';
 
 const EXTENSION_ID = 'arduino';
 
@@ -22,12 +24,14 @@ const DigitalLevel = {
  * generation/upload, not host execution. Board-specific extensions layer on top of these. Arduino
  * C++ code generation lives in scratch-blocks (the Blockly `ArduinoGenerator`), not here.
  */
-class CommonBoard {
-    constructor (runtime) {
+class CommonBoard implements Extension {
+    runtime: Runtime;
+
+    constructor (runtime: Runtime) {
         this.runtime = runtime;
     }
 
-    getInfo () {
+    getInfo (): ExtensionInfo {
         return {
             id: EXTENSION_ID,
             name: formatMessage({
@@ -151,4 +155,4 @@ class CommonBoard {
     delay () {}
 }
 
-module.exports = CommonBoard;
+export default CommonBoard;

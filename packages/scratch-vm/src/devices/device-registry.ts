@@ -1,3 +1,5 @@
+import type Device from './device';
+
 /**
  * Holds the set of available devices, keyed by `deviceId`.
  *
@@ -5,15 +7,13 @@
  * Lookups by `deviceId` drive device selection and (later) the upload flow.
  */
 class DeviceRegistry {
+    _byDeviceId: Map<string, Device>;
+
     constructor () {
         this._byDeviceId = new Map();
     }
 
-    /**
-     * @param {Device} device - a constructed device instance.
-     * @returns {Device} the registered device.
-     */
-    register (device) {
+    register (device: Device): Device {
         if (this._byDeviceId.has(device.deviceId)) {
             throw new Error(`DeviceRegistry: duplicate deviceId "${device.deviceId}"`);
         }
@@ -21,20 +21,13 @@ class DeviceRegistry {
         return device;
     }
 
-    /**
-     * @param {string} deviceId - the device id to look up.
-     * @returns {?Device} the device, or null if none is registered.
-     */
-    get (deviceId) {
+    get (deviceId: string): Device | null {
         return this._byDeviceId.get(deviceId) || null;
     }
 
-    /**
-     * @returns {Array.<string>} the registered device ids.
-     */
-    get deviceIds () {
+    get deviceIds (): string[] {
         return [...this._byDeviceId.keys()];
     }
 }
 
-module.exports = DeviceRegistry;
+export default DeviceRegistry;
