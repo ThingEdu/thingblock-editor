@@ -24,6 +24,8 @@ export default [
         // see the connection-modal container's dynamic useExternalPeripheralList.
         useAutoScan: false,
         connectionSmallIconURL: thingbotTelemetrixInsetIconURL,
+        // Live-mode firmware image in the ThingBot device pack, installed from the connection modal.
+        firmware: {deviceId: 'thingbot', firmwareId: 'telemetrix-ble'},
         connectingMessage: (
             <FormattedMessage
                 defaultMessage="Connecting"

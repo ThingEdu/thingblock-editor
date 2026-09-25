@@ -7,6 +7,7 @@ import Box from '../box/box.jsx';
 import Dots from './dots.jsx';
 import helpIcon from './icons/help.svg';
 import backIcon from './icons/back.svg';
+import enterUpdateIcon from './icons/enter-update.svg';
 
 import styles from './connection-modal.css';
 
@@ -50,6 +51,22 @@ const ErrorStep = props => (
                         id="gui.connection.error.tryagainbutton"
                     />
                 </button>
+                {props.onUpdatePeripheral && (
+                    <button
+                        className={styles.connectionButton}
+                        onClick={props.onUpdatePeripheral}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Update my Device"
+                            description="Button to enter the peripheral update mode"
+                            id="gui.connection.scanning.updatePeripheralButton"
+                        />
+                        <img
+                            className={styles.buttonIconRight}
+                            src={enterUpdateIcon}
+                        />
+                    </button>
+                )}
                 <button
                     className={styles.connectionButton}
                     onClick={props.onHelp}
@@ -72,7 +89,8 @@ const ErrorStep = props => (
 ErrorStep.propTypes = {
     connectionIconURL: PropTypes.string.isRequired,
     onHelp: PropTypes.func,
-    onScanning: PropTypes.func
+    onScanning: PropTypes.func,
+    onUpdatePeripheral: PropTypes.func
 };
 
 export default ErrorStep;

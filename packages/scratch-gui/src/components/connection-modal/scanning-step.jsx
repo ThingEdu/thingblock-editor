@@ -26,7 +26,8 @@ const ScanningStep = ({
     showStepDots = true,
     ...props
 }) => {
-    const showUpdate = !!(props.onUpdatePeripheral && !scanning);
+    // Offered during the scan too: a device without the right firmware never shows up in one.
+    const showUpdate = !!props.onUpdatePeripheral;
     return (<Box className={classNames(styles.body, className)}>
         <Box className={classNames(styles.activityArea, activityAreaClassName)}>
             {scanning ? (
@@ -86,11 +87,9 @@ const ScanningStep = ({
                     />
                 )}
                 {showUpdate && (
-                    // Show this message if we're done scanning AND we can update
-                    // Note that it's possible the list includes devices but does not include the desired device,
-                    // so don't limit this message to the (props.peripheralList.length === 0) case
+                    // The list may include devices but not the desired one, so don't limit this to an empty list.
                     <BalancedFormattedMessage
-                        defaultMessage="If you don't see your device, you may need to update it to work with Scratch."
+                        defaultMessage="If you don't see your device, you may need to update it."
                         description="Prompt for updating a peripheral device"
                         id="gui.connection.scanning.updatePeripheralPrompt"
                     />
