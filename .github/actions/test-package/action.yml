@@ -11,13 +11,8 @@ runs:
   using: composite
   steps:
     - name: Install Playwright
-      if: ${{ inputs.package_name == 'scratch-render' || inputs.package_name == 'scratch-gui' }}
+      if: ${{ inputs.package_name == 'scratch-gui' }}
       shell: bash
-      # Install both browsers for any package that needs Playwright,
-      # even if a particular package only uses one of them — keeping
-      # the install step uniform is much simpler than maintaining a
-      # per-package browser list, and Firefox in scratch-render is
-      # cheap unused weight rather than a correctness problem.
       run: npx playwright install --with-deps chromium firefox
     - name: Test
       working-directory: ./packages/${{ inputs.package_name }}

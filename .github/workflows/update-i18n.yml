@@ -34,11 +34,6 @@ jobs:
           EOF
       - name: Setup
         uses: ./.github/actions/install-dependencies
-      - name: Update i18n in scratch-vm
-        uses: ./.github/actions/update-i18n
-        with:
-          package_name: scratch-vm
-          tx_token: ${{ secrets.TX_TOKEN }}
       - name: Update i18n in scratch-gui
         uses: ./.github/actions/update-i18n
         with:

@@ -211,9 +211,6 @@ jobs:
       - name: Publish scratch-svg-renderer
         run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-svg-renderer
 
-      - name: Publish scratch-render
-        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-render
-
       - name: Publish scratch-vm
         run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-vm
 
@@ -244,9 +241,6 @@ jobs:
 
       - name: Publish scratch-storage
         run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-storage
-
-      - name: Publish scratch-paint
-        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-paint
 
     # update-gha-workflows.ts: insert new "Publish <package>" steps before this line.
 

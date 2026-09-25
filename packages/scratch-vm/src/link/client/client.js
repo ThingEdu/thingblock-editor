@@ -11,8 +11,8 @@
  * Wire formats never escape a client. Each backend maps its transport's shapes onto the VM-facing
  * typedefs defined here ({@link ConnectionTarget}, {@link Artifact}), so callers stay transport-agnostic.
  *
- * Implementations emit `Runtime.DEVICE_CONNECTED` / `Runtime.DEVICE_DISCONNECTED` so the GUI and the
- * serial monitor can track the link.
+ * Implementations emit `DEVICE_CONNECTED` / `DEVICE_DISCONNECTED` on `runtime.events` so the GUI and the serial
+ * monitor can track the link.
  */
 class Client {
     /**
@@ -158,6 +158,32 @@ class Client {
      */
     cancel () {
         throw new Error(`${this.constructor.name} must implement cancel()`);
+    }
+
+    /**
+     * Whether this backend can flash a device pack's prebuilt firmware image via `flashFirmware()`.
+     * The GUI checks this before offering a firmware install, so a backend that cannot flash never
+     * offers an action that is doomed to reject. False by default; a backend that implements
+     * `flashFirmware()` overrides it to true.
+     * @returns {boolean} true when `flashFirmware()` can succeed.
+     */
+    get canFlashFirmware () {
+        return false;
+    }
+
+    /**
+     * Flash a prebuilt firmware image the device's pack ships, in place of a compiled artifact. Gated by
+     * `canFlashFirmware`: a backend that reports false must still implement this to reject with a
+     * clear, mode-specific reason, since `canFlashFirmware` is advisory for the GUI, not a hard
+     * precondition callers are guaranteed to check.
+     * @param {Device} device - the selected device (supplies fqbn and upload config).
+     * @param {string} pack - pack directory under the resource root, e.g. `extensions/devices/thingbot`.
+     * @param {string} file - app image within that pack.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @returns {Promise<void>} resolves once the flash completes.
+     */
+    flashFirmware (device, pack, file, callbacks) {
+        throw new Error(`${this.constructor.name} must implement flashFirmware()`);
     }
 
     /**

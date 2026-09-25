@@ -23,34 +23,15 @@
         ]
       },
       "broadcasts": {},
-      "currentCostume": 0,
       "costumes": [
         {
-          "name": "backdrop1",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "797b03bdb8cf6ccfc30c0692d533d998",
-          "md5ext": "797b03bdb8cf6ccfc30c0692d533d998.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 360
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
-      "sounds": [
-        {
-          "name": "pop",
-          "assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 44100,
-          "sampleCount": 1032,
-          "md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
-        }
-      ],
-      "volume": 100,
-      "tempo": 60,
-      "videoTransparency": 50,
-      "videoState": "off",
-      "textToSpeechLanguage": null,
+      "sounds": [],
       "scripts": [
         [
           {
@@ -120,46 +101,15 @@
       "variables": {},
       "lists": {},
       "broadcasts": {},
-      "currentCostume": 0,
       "costumes": [
         {
           "name": "costume1",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "be4269f29458b8a167da107dd32f7fcb",
-          "md5ext": "be4269f29458b8a167da107dd32f7fcb.svg",
-          "rotationCenterX": 47,
-          "rotationCenterY": 55
-        },
-        {
-          "name": "costume2",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "647af087a73872c7019b594b4419b70c",
-          "md5ext": "647af087a73872c7019b594b4419b70c.svg",
-          "rotationCenterX": 47,
-          "rotationCenterY": 55
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
-      "sounds": [
-        {
-          "name": "meow",
-          "assetId": "83c36d806dc92327b9e7049a565c6bff",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 44100,
-          "sampleCount": 37376,
-          "md5ext": "83c36d806dc92327b9e7049a565c6bff.wav"
-        }
-      ],
-      "volume": 100,
-      "visible": true,
-      "x": 0,
-      "y": 0,
-      "size": 100,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around",
+      "sounds": [],
       "scripts": [
         [
           {
@@ -227,27 +177,15 @@
       },
       "lists": {},
       "broadcasts": {},
-      "currentCostume": 0,
       "costumes": [
         {
-          "name": "bananas",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "4631ba8dfd1c2df313a94c44b299c437",
-          "md5ext": "4631ba8dfd1c2df313a94c44b299c437.svg",
-          "rotationCenterX": 36,
-          "rotationCenterY": 37
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
       "sounds": [],
-      "volume": 100,
-      "visible": true,
-      "x": -95,
-      "y": 7,
-      "size": 100,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around",
       "scripts": [
         [
           {

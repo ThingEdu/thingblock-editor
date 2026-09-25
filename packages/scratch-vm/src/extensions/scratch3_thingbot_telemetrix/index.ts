@@ -1,0 +1,472 @@
+import ArgumentType from '../../extension-support/argument-type';
+import BlockType from '../../extension-support/block-type';
+import formatMessage from 'format-message';
+import ThingBotTelemetrix, {DHT_TYPE, PIN_MODE} from './thingbot-telemetrix';
+import BLETransport from './transport/ble';
+import type {ScannedDevice} from './transport/transport';
+import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
+import type {Extension, ExtensionInfo} from '../extension';
+
+/** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
+type ArgValue = string | number;
+
+// eslint-disable-next-line @stylistic/max-len
+const blockIconURI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI4IiBmaWxsPSJoc2woMTYzLCA4NSUsIDQwJSkiLz4KICA8ZyBzdHJva2U9IndoaXRlIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHJ4PSIyIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEyKSIvPgogICAgPHBhdGggZD0iTSAxNSwxMCBhIDUsNSAwIDAsMCAxMCwwIiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGxpbmUgeDE9IjYiIHkxPSIxNSIgeDI9IjEwIiB5Mj0iMTUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iNiIgeTE9IjIwIiB4Mj0iMTAiIHkyPSIyMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxsaW5lIHgxPSI2IiB5MT0iMjUiIHgyPSIxMCIgeTI9IjI1IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjMwIiB5MT0iMTUiIHgyPSIzNCIgeTI9IjE1IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjMwIiB5MT0iMjAiIHgyPSIzNCIgeTI9IjIwIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjMwIiB5MT0iMjUiIHgyPSIzNCIgeTI9IjI1IiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPGxpbmUgeDE9IjE2IiB5MT0iNiIgeDI9IjE2IiB5Mj0iMTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8bGluZSB4MT0iMjQiIHkxPSI2IiB4Mj0iMjQiIHkyPSIxMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjMwIiB4Mj0iMTYiIHkyPSIzNCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjMwIiB4Mj0iMjQiIHkyPSIzNCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8L2c+Cjwvc3ZnPg==';
+
+const EXTENSION_ID = 'thingbotTelemetrix';
+
+const DigitalLevel = {
+    HIGH: 'HIGH',
+    LOW: 'LOW'
+};
+
+class ThingBotTelemetrixExtension implements Extension {
+    runtime;
+    _telemetrix: ThingBotTelemetrix;
+    _devices: Record<string, ScannedDevice>;
+    _stopScan: (() => void) | null;
+
+    constructor (runtime: any) { // TODO: type Runtime for extension
+        this.runtime = runtime;
+        this._telemetrix = new ThingBotTelemetrix(new BLETransport());
+        // Devices discovered by the in-progress scan, keyed by peripheralId, so
+        // connect() can resolve the one the user picked. Scanning streams these:
+        // Web Bluetooth yields one, the helper yields many.
+        this._devices = {};
+        this._stopScan = null;
+
+        this.runtime.registerPeripheralExtension(EXTENSION_ID, this);
+    }
+
+    // ─── Peripheral interface ───
+
+    scan () {
+        this._devices = {};
+
+        this._stopScan = this._telemetrix.scan({
+            onDevice: device => {
+                this._devices[device.id] = device;
+                // The GUI expects the full list each update, not a delta.
+                const list = {};
+                for (const id of Object.keys(this._devices)) {
+                    const d = this._devices[id];
+                    list[id] = {
+                        name: d.name || 'ThingBot',
+                        peripheralId: id,
+                        rssi: d.rssi || 0
+                    };
+                }
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_LIST_UPDATE, list);
+            },
+            onError: err => {
+                console.error('[ThingBot] BLE scan error:', err);
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
+                    message: err.message
+                });
+            }
+        });
+    }
+
+    connect (peripheralId: string) {
+        if (this._stopScan) {
+            this._stopScan();
+            this._stopScan = null;
+        }
+        const device = this._devices[peripheralId];
+        if (!device) {
+            this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
+                message: 'No device selected'
+            });
+            return;
+        }
+        this._telemetrix.connect(device, () => this._onDisconnect())
+            .then(() => {
+                this._devices = {};
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_CONNECTED);
+            })
+            .catch(err => {
+                this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_REQUEST_ERROR, {
+                    message: err.message
+                });
+            });
+    }
+
+    disconnect () {
+        this._telemetrix.disconnect();
+        this._onDisconnect();
+    }
+
+    isConnected () {
+        return this._telemetrix.isConnected();
+    }
+
+    _onDisconnect () {
+        this.runtime.events.emit(RuntimeEventNames.PERIPHERAL_DISCONNECTED);
+    }
+
+    // ─── Extension metadata ───
+
+    getInfo (): ExtensionInfo {
+        return {
+            id: EXTENSION_ID,
+            name: formatMessage({
+                id: 'thingbotTelemetrix.name',
+                default: 'ThingBot Telemetrix',
+                description: 'Name of the ThingBot Telemetrix extension'
+            }),
+            blockIconURI,
+            blocks: [
+                // ── GPIO ──
+                {
+                    opcode: 'setPinMode',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.setPinMode',
+                        default: 'set pin [PIN] mode [MODE]',
+                        description: 'Set the mode of a digital pin'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 13},
+                        MODE: {
+                            type: ArgumentType.STRING,
+                            menu: 'PIN_MODE',
+                            defaultValue: 'OUTPUT'
+                        }
+                    }
+                },
+                {
+                    opcode: 'digitalWrite',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.digitalWrite',
+                        default: 'digital write pin [PIN] [LEVEL]',
+                        description: 'Write a digital HIGH or LOW value to a pin'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 13},
+                        LEVEL: {
+                            type: ArgumentType.STRING,
+                            menu: 'DIGITAL_LEVEL',
+                            defaultValue: DigitalLevel.HIGH
+                        }
+                    }
+                },
+                {
+                    opcode: 'digitalRead',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.digitalRead',
+                        default: 'digital read pin [PIN]',
+                        description: 'Read the digital value (0 or 1) from a pin'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 2}
+                    }
+                },
+                {
+                    opcode: 'analogRead',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.analogRead',
+                        default: 'analog read pin [PIN]',
+                        description: 'Read the analog value (0–1023) from a pin'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 0}
+                    }
+                },
+                {
+                    opcode: 'pwmWrite',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.pwmWrite',
+                        default: 'PWM write pin [PIN] value [VALUE]',
+                        description: 'Write a PWM value (0–255) to a pin'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 9},
+                        VALUE: {type: ArgumentType.NUMBER, defaultValue: 128}
+                    }
+                },
+                // ── Servo ──
+                {
+                    opcode: 'servoWrite',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.servoWrite',
+                        default: 'servo [SERVO_ID] angle [ANGLE]',
+                        description: 'Set a servo to an angle (0–180)'
+                    }),
+                    arguments: {
+                        SERVO_ID: {
+                            type: ArgumentType.STRING,
+                            menu: 'SERVO_ID',
+                            defaultValue: '1'
+                        },
+                        ANGLE: {type: ArgumentType.NUMBER, defaultValue: 90}
+                    }
+                },
+                // ── DC Motor ──
+                {
+                    opcode: 'controlDC',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.controlDC',
+                        default: 'motor [MOTOR_ID] speed [SPEED]',
+                        description: 'Set a DC motor speed (0–100)'
+                    }),
+                    arguments: {
+                        MOTOR_ID: {
+                            type: ArgumentType.STRING,
+                            menu: 'MOTOR_ID',
+                            defaultValue: '1'
+                        },
+                        SPEED: {type: ArgumentType.NUMBER, defaultValue: 50}
+                    }
+                },
+                // ── Buzzer ──
+                {
+                    opcode: 'controlBuzzer',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.controlBuzzer',
+                        default: 'buzzer frequency [FREQ]',
+                        description: 'Set buzzer frequency (0 = off, 1–100)'
+                    }),
+                    arguments: {
+                        FREQ: {type: ArgumentType.NUMBER, defaultValue: 50}
+                    }
+                },
+                // ── LED ──
+                {
+                    opcode: 'controlLED',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.controlLED',
+                        default: 'LED [LED_ID] [LED_STATE]',
+                        description: 'Turn a ThingBot LED on or off'
+                    }),
+                    arguments: {
+                        LED_ID: {
+                            type: ArgumentType.STRING,
+                            menu: 'LED_ID',
+                            defaultValue: '1'
+                        },
+                        LED_STATE: {
+                            type: ArgumentType.STRING,
+                            menu: 'LED_STATE',
+                            defaultValue: 'on'
+                        }
+                    }
+                },
+                // ── Ultrasonic ──
+                {
+                    opcode: 'setupUltrasonic',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.setupUltrasonic',
+                        default: 'setup ultrasonic trigger [TRIG] echo [ECHO]',
+                        description: 'Configure an HC-SR04 ultrasonic sensor'
+                    }),
+                    arguments: {
+                        TRIG: {type: ArgumentType.NUMBER, defaultValue: 7},
+                        ECHO: {type: ArgumentType.NUMBER, defaultValue: 8}
+                    }
+                },
+                {
+                    opcode: 'readDistance',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.readDistance',
+                        default: 'ultrasonic distance (cm)',
+                        description: 'Read the latest ultrasonic distance in centimetres'
+                    }),
+                    arguments: {}
+                },
+                // ── DHT ──
+                {
+                    opcode: 'setupDHT',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.setupDHT',
+                        default: 'setup [DHT_TYPE] sensor on pin [PIN]',
+                        description: 'Configure a DHT temperature/humidity sensor'
+                    }),
+                    arguments: {
+                        DHT_TYPE: {
+                            type: ArgumentType.STRING,
+                            menu: 'DHT_TYPE',
+                            defaultValue: 'DHT11'
+                        },
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 4}
+                    }
+                },
+                {
+                    opcode: 'readTemperature',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.readTemperature',
+                        default: 'temperature (°C) on pin [PIN]',
+                        description: 'Read the latest temperature from a DHT sensor'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 4}
+                    }
+                },
+                {
+                    opcode: 'readHumidity',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingbotTelemetrix.readHumidity',
+                        default: 'humidity (%) on pin [PIN]',
+                        description: 'Read the latest humidity from a DHT sensor'
+                    }),
+                    arguments: {
+                        PIN: {type: ArgumentType.NUMBER, defaultValue: 4}
+                    }
+                }
+            ],
+            menus: {
+                PIN_MODE: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'INPUT', value: 'INPUT'},
+                        {text: 'OUTPUT', value: 'OUTPUT'},
+                        {text: 'INPUT_PULLUP', value: 'INPUT_PULLUP'}
+                    ]
+                },
+                DIGITAL_LEVEL: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'HIGH', value: DigitalLevel.HIGH},
+                        {text: 'LOW', value: DigitalLevel.LOW}
+                    ]
+                },
+                SERVO_ID: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'S1', value: '1'},
+                        {text: 'S2', value: '2'},
+                        {text: 'S3', value: '3'},
+                        {text: 'S4', value: '4'},
+                        {text: 'S5', value: '5'}
+                    ]
+                },
+                MOTOR_ID: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'M1', value: '1'},
+                        {text: 'M2', value: '2'},
+                        {text: 'M3', value: '3'},
+                        {text: 'M4', value: '4'}
+                    ]
+                },
+                LED_ID: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'LED 1', value: '1'},
+                        {text: 'LED 2', value: '2'}
+                    ]
+                },
+                LED_STATE: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'on', value: 'on'},
+                        {text: 'off', value: 'off'}
+                    ]
+                },
+                DHT_TYPE: {
+                    acceptReporters: false,
+                    items: [
+                        {text: 'DHT11', value: 'DHT11'},
+                        {text: 'DHT22', value: 'DHT22'}
+                    ]
+                }
+            }
+        };
+    }
+
+    // ─── Block handlers ───
+
+    setPinMode ({PIN, MODE}: {PIN: ArgValue, MODE: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
+        const mode = PIN_MODE[MODE] ?? PIN_MODE.OUTPUT;
+        this._telemetrix.setPinMode(pin, mode);
+        return Promise.resolve();
+    }
+
+    digitalWrite ({PIN, LEVEL}: {PIN: ArgValue, LEVEL: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
+        const value = LEVEL === DigitalLevel.HIGH ? 1 : 0;
+        this._telemetrix.digitalWrite(pin, value);
+        return Promise.resolve();
+    }
+
+    digitalRead ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.digitalRead(parseInt(String(PIN), 10));
+    }
+
+    analogRead ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.analogRead(parseInt(String(PIN), 10));
+    }
+
+    pwmWrite ({PIN, VALUE}: {PIN: ArgValue, VALUE: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
+        const val = Math.max(0, Math.min(255, Math.round(Number(VALUE))));
+        this._telemetrix.pwmWrite(pin, val);
+        return Promise.resolve();
+    }
+
+    servoWrite ({SERVO_ID, ANGLE}: {SERVO_ID: ArgValue, ANGLE: ArgValue}) {
+        const servoId = parseInt(String(SERVO_ID), 10);
+        const angle = Math.max(0, Math.min(180, Math.round(Number(ANGLE))));
+        this._telemetrix.servoWrite(servoId, angle);
+        return Promise.resolve();
+    }
+
+    controlDC ({MOTOR_ID, SPEED}: {MOTOR_ID: ArgValue, SPEED: ArgValue}) {
+        const motorId = parseInt(String(MOTOR_ID), 10);
+        const speed = Math.max(0, Math.min(100, Math.round(Number(SPEED))));
+        this._telemetrix.controlDC(motorId, speed);
+        return Promise.resolve();
+    }
+
+    controlBuzzer ({FREQ}: {FREQ: ArgValue}) {
+        const freq = Math.max(0, Math.min(100, Math.round(Number(FREQ))));
+        this._telemetrix.controlBuzzer(freq);
+        return Promise.resolve();
+    }
+
+    controlLED ({LED_ID, LED_STATE}: {LED_ID: ArgValue, LED_STATE: ArgValue}) {
+        const ledId = parseInt(String(LED_ID), 10);
+        const state = LED_STATE === 'on' ? 100 : 0;
+        this._telemetrix.controlLED(ledId, state);
+        return Promise.resolve();
+    }
+
+    setupUltrasonic ({TRIG, ECHO}: {TRIG: ArgValue, ECHO: ArgValue}) {
+        this._telemetrix.setupUltrasonic(parseInt(String(TRIG), 10), parseInt(String(ECHO), 10));
+        return Promise.resolve();
+    }
+
+    readDistance () {
+        return this._telemetrix.readDistance();
+    }
+
+    setupDHT ({DHT_TYPE: type, PIN}: {DHT_TYPE: ArgValue, PIN: ArgValue}) {
+        const pin = parseInt(String(PIN), 10);
+        const dhtType = DHT_TYPE[type] ?? DHT_TYPE.DHT11;
+        this._telemetrix.setupDHT(pin, dhtType);
+        return Promise.resolve();
+    }
+
+    readTemperature ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.readTemperature(parseInt(String(PIN), 10));
+    }
+
+    readHumidity ({PIN}: {PIN: ArgValue}) {
+        return this._telemetrix.readHumidity(parseInt(String(PIN), 10));
+    }
+}
+
+export default ThingBotTelemetrixExtension;

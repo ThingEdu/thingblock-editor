@@ -19,6 +19,7 @@ class ConnectionModal extends React.Component {
             'handleConnecting',
             'handleDisconnect',
             'handleError',
+            'handleFirmware',
             'handleHelp'
         ]);
         this.state = {
@@ -97,6 +98,11 @@ class ConnectionModal extends React.Component {
             label: this.props.extensionId
         });
     }
+    handleFirmware () {
+        this.setState({
+            phase: PHASES.firmware
+        });
+    }
     handleHelp () {
         window.open(this.state.extension.helpLink, '_blank');
         analytics.event({
@@ -114,13 +120,20 @@ class ConnectionModal extends React.Component {
         // io/transport/ble/web-bluetooth.js isSupported().
         const webBluetoothAvailable = typeof navigator !== 'undefined' && !!navigator.bluetooth;
         const useExternalPeripheralList = this.props.useExternalPeripheralList || webBluetoothAvailable;
+        // Offer the firmware install only when the pack ships the image and the client can flash it
+        // (the cloud client cannot).
+        const firmware = this.state.extension && this.state.extension.firmware;
+        const canInstallFirmware = Boolean(firmware && this.props.vm.client && this.props.vm.client.canFlashFirmware &&
+            this.props.vm.getDeviceFirmware(firmware.deviceId).some(fw => fw.id === firmware.firmwareId));
         return (
             <ConnectionModalComponent
+                connectedBoard={this.props.connectedBoard}
                 connectingMessage={this.state.extension && this.state.extension.connectingMessage}
                 connectionIconURL={this.state.extension && this.state.extension.connectionIconURL}
                 connectionSmallIconURL={this.state.extension && this.state.extension.connectionSmallIconURL}
                 connectionTipIconURL={this.state.extension && this.state.extension.connectionTipIconURL}
                 extensionId={this.props.extensionId}
+                firmware={firmware}
                 name={this.state.extension && this.state.extension.name}
                 phase={this.state.phase}
                 prescanMessage={this.state.extension && this.state.extension.prescanMessage}
@@ -135,12 +148,17 @@ class ConnectionModal extends React.Component {
                 onDisconnect={this.handleDisconnect}
                 onHelp={this.handleHelp}
                 onScanning={this.handleScanning}
+                onUpdatePeripheral={canInstallFirmware ? this.handleFirmware : null}
             />
         );
     }
 }
 
 ConnectionModal.propTypes = {
+    connectedBoard: PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string
+    }),
     extensionId: PropTypes.string.isRequired,
     onCancel: PropTypes.func.isRequired,
     useExternalPeripheralList: PropTypes.bool,
@@ -148,6 +166,7 @@ ConnectionModal.propTypes = {
 };
 
 const mapStateToProps = state => ({
+    connectedBoard: state.scratchGui.board.connectedBoard,
     extensionId: state.scratchGui.connectionModal.extensionId
 });
 

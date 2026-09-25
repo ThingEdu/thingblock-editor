@@ -18,8 +18,6 @@ import extensionData from '../lib/libraries/extensions/index.jsx';
 import CustomProcedures from './custom-procedures.jsx';
 import errorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
 import {BLOCKS_DEFAULT_SCALE, STAGE_DISPLAY_SIZES} from '../lib/layout-constants';
-import DropAreaHOC from '../lib/drop-area-hoc.jsx';
-import DragConstants from '../lib/drag-constants';
 import defineDynamicBlock from '../lib/define-dynamic-block';
 import {DEFAULT_MODE, getColorsForMode, colorModeMap} from '../lib/settings/color-mode';
 import {CAT_BLOCKS_THEME} from '../lib/settings/theme';
@@ -32,7 +30,7 @@ import {
 import {connect} from 'react-redux';
 import {updateToolbox} from '../reducers/toolbox';
 import {activateColorPicker} from '../reducers/color-picker';
-import {closeExtensionLibrary, openSoundRecorder, openConnectionModal} from '../reducers/modals';
+import {closeExtensionLibrary, openConnectionModal} from '../reducers/modals';
 import {activateCustomProcedures, deactivateCustomProcedures} from '../reducers/custom-procedures';
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 import {updateMetrics} from '../reducers/workspace-metrics';
@@ -49,10 +47,6 @@ const addFunctionListener = (object, property, callback) => {
     };
 };
 
-const DroppableBlocks = DropAreaHOC([
-    DragConstants.BACKPACK_CODE
-])(BlocksComponent);
-
 class Blocks extends React.Component {
     constructor (props) {
         super(props);
@@ -64,9 +58,7 @@ class Blocks extends React.Component {
             'getToolboxXML',
             'handleCategorySelected',
             'handleConnectionModalStart',
-            'handleDrop',
             'handleStatusButtonUpdate',
-            'handleOpenSoundRecorder',
             'handlePromptStart',
             'handlePromptCallback',
             'handlePromptClose',
@@ -92,7 +84,6 @@ class Blocks extends React.Component {
             this.handlePromptStart
         );
         this.ScratchBlocks.StatusIndicatorLabel.statusButtonCallback = this.handleConnectionModalStart;
-        this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
         this.state = {
             prompt: null
@@ -115,7 +106,6 @@ class Blocks extends React.Component {
         }
         this.ScratchBlocks.dialog.setPrompt(this.handlePromptStart);
         this.ScratchBlocks.StatusIndicatorLabel.statusButtonCallback = this.handleConnectionModalStart;
-        this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.ScratchProcedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
@@ -691,9 +681,6 @@ class Blocks extends React.Component {
     handleStatusButtonUpdate () {
         this.workspace.getFlyout().refreshStatusButtons();
     }
-    handleOpenSoundRecorder () {
-        this.props.onOpenSoundRecorder();
-    }
 
     /*
      * Pass along information about proposed name and variable options (e.g. scope)
@@ -716,14 +703,6 @@ class Blocks extends React.Component {
         this.updateToolbox();
         ws.getToolbox().selectCategoryByName('myBlocks');
     }
-    handleDrop (dragInfo) {
-        fetch(dragInfo.payload.bodyUrl)
-            .then(response => response.json())
-            .then(blocks => this.props.vm.shareBlocksToTarget(blocks, this.props.vm.editingTarget.id))
-            .then(() => {
-                this.props.vm.refreshWorkspace();
-            });
-    }
     render () {
          
         const {
@@ -737,7 +716,6 @@ class Blocks extends React.Component {
             isVisible,
             onActivateColorPicker,
             onOpenConnectionModal,
-            onOpenSoundRecorder,
             updateToolboxState,
             onActivateCustomProcedures,
             onRequestCloseExtensionLibrary,
@@ -753,9 +731,8 @@ class Blocks extends React.Component {
          
         return (
             <React.Fragment>
-                <DroppableBlocks
-                    componentRef={this.setBlocks}
-                    onDrop={this.handleDrop}
+                <BlocksComponent
+                    containerRef={this.setBlocks}
                     {...props}
                 />
                 {this.state.prompt ? (
@@ -800,7 +777,6 @@ Blocks.propTypes = {
     onActivateColorPicker: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
-    onOpenSoundRecorder: PropTypes.func,
     onSetGeneratedCode: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
@@ -877,9 +853,6 @@ const mapDispatchToProps = dispatch => ({
     onOpenConnectionModal: id => {
         dispatch(setConnectionModalExtensionId(id));
         dispatch(openConnectionModal());
-    },
-    onOpenSoundRecorder: () => {
-        dispatch(openSoundRecorder());
     },
     onRequestCloseExtensionLibrary: () => {
         dispatch(closeExtensionLibrary());

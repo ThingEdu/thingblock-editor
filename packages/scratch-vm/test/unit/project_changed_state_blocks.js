@@ -9,12 +9,12 @@ let projectChanged;
 let blockContainer;
 
 tap.beforeEach(() => {
-    const projectUri = path.resolve(__dirname, '../fixtures/default.sb2');
+    const projectUri = path.resolve(__dirname, '../fixtures/default.sb3');
     const project = readFileToBuffer(projectUri);
 
     vm = new VirtualMachine();
 
-    vm.runtime.addListener('PROJECT_CHANGED', () => {
+    vm.runtime.events.addListener('PROJECT_CHANGED', () => {
         projectChanged = true;
     });
 
@@ -74,29 +74,22 @@ test('Deleting a block should emit a project changed event', t => {
 });
 
 test('Changing a block should emit a project changed event', t => {
-    blockContainer.changeBlock({
+    vm.blockListener({
+        type: 'change',
         element: 'field',
-        id: 'a new block',
+        blockId: 'a new block',
         name: 'A_FIELD',
-        value: 300
+        newValue: 300
     });
 
     t.equal(projectChanged, true);
     projectChanged = false;
 
-    blockContainer.changeBlock({
-        element: 'checkbox',
-        id: 'a new block',
-        value: true
-    });
-
-    t.equal(projectChanged, true);
-    projectChanged = false;
-
-    blockContainer.changeBlock({
+    vm.blockListener({
+        type: 'change',
         element: 'mutation',
-        id: 'a new block',
-        value: '<mutation></mutation>'
+        blockId: 'a new block',
+        newValue: '<mutation></mutation>'
     });
 
     t.equal(projectChanged, true);
@@ -105,7 +98,7 @@ test('Changing a block should emit a project changed event', t => {
 });
 
 test('Intermediate field change should not emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'block_field_intermediate_change',
         blockId: 'a new block',
         name: 'A_FIELD',
@@ -158,7 +151,7 @@ test('Disconnecting a block from another should emit a project changed event', t
 });
 
 test('Creating a local variable should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -172,7 +165,7 @@ test('Creating a local variable should emit a project changed event', t => {
     projectChanged = false;
 
     // Creating the same variable twice should not emit a project changed event
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -187,7 +180,7 @@ test('Creating a local variable should emit a project changed event', t => {
 });
 
 test('Creating a global variable should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -201,7 +194,7 @@ test('Creating a global variable should emit a project changed event', t => {
     projectChanged = false;
 
     // Creating the same variable twice should not emit a project changed event
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -216,7 +209,7 @@ test('Creating a global variable should emit a project changed event', t => {
 });
 
 test('Renaming a variable should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -227,7 +220,7 @@ test('Renaming a variable should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_rename',
         varId: 'a new variable',
         oldName: 'foo',
@@ -239,7 +232,7 @@ test('Renaming a variable should emit a project changed event', t => {
 });
 
 test('Deleting a variable should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_create',
         varId: 'a new variable',
         varName: 'foo',
@@ -250,7 +243,7 @@ test('Deleting a variable should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'var_delete',
         varId: 'a new variable',
         varName: 'foo',
@@ -264,7 +257,7 @@ test('Deleting a variable should emit a project changed event', t => {
 });
 
 test('Creating a block comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: 'a new block',
         commentId: 'a new comment',
@@ -283,7 +276,7 @@ test('Creating a block comment should emit a project changed event', t => {
 });
 
 test('Creating a workspace comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: null,
         commentId: 'a new comment',
@@ -302,7 +295,7 @@ test('Creating a workspace comment should emit a project changed event', t => {
 });
 
 test('Changing a comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: null,
         commentId: 'a new comment',
@@ -318,7 +311,7 @@ test('Changing a comment should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_change',
         blockId: null,
         commentId: 'a new comment',
@@ -335,7 +328,7 @@ test('Changing a comment should emit a project changed event', t => {
 });
 
 test('Attempting to change a comment that does not exist should not emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_change',
         blockId: null,
         commentId: 'a new comment',
@@ -352,7 +345,7 @@ test('Attempting to change a comment that does not exist should not emit a proje
 });
 
 test('Deleting a block comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: 'a new block',
         commentId: 'a new comment',
@@ -368,7 +361,7 @@ test('Deleting a block comment should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_delete',
         blockId: 'a new block',
         commentId: 'a new comment',
@@ -387,7 +380,7 @@ test('Deleting a block comment should emit a project changed event', t => {
 });
 
 test('Deleting a workspace comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: null,
         commentId: 'a new comment',
@@ -403,7 +396,7 @@ test('Deleting a workspace comment should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_delete',
         blockId: null,
         commentId: 'a new comment',
@@ -422,7 +415,7 @@ test('Deleting a workspace comment should emit a project changed event', t => {
 });
 
 test('Deleting a comment that does not exist should not emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_delete',
         blockId: null,
         commentId: 'a new comment',
@@ -441,7 +434,7 @@ test('Deleting a comment that does not exist should not emit a project changed e
 });
 
 test('Moving a comment should emit a project changed event', t => {
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_create',
         blockId: null,
         commentId: 'a new comment',
@@ -457,7 +450,7 @@ test('Moving a comment should emit a project changed event', t => {
 
     projectChanged = false;
 
-    blockContainer.blocklyListen({
+    vm.blockListener({
         type: 'comment_move',
         blockId: null,
         commentId: 'a new comment',

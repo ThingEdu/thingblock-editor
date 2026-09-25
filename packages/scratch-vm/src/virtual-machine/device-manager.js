@@ -1,21 +1,47 @@
 const formatMessage = require('format-message');
 
-const Runtime = require('../engine/runtime');
+const VmEventNames = require('./vm-event-names');
 const log = require('../util/log');
 const {DeviceRegistry, PeripheralRegistry, ManifestDevice} = require('../devices');
 const {boards} = require('../extensions/devices');
 
 /**
- * How many times the pack index is fetched before giving up, and how long to wait between attempts.
- * The helper is a sidecar the host spawns alongside the editor, so the first attempts can lose the
- * race to its port; without retrying, its packs stay missing for the whole session and the boards
- * they contribute never reach the board list.
+ * How many times the pack index is fetched before giving up. The helper is a sidecar the host spawns
+ * alongside the editor — on real hardware it has taken as long as 47s to open its port before serving
+ * (it starts an arduino-cli daemon and probes a Bluetooth adapter first) — so the retry window has to
+ * clear that measured worst case with margin, not a guess. `loadResourcePacks()` is never awaited by
+ * its GUI callers (`vm-manager-hoc`'s startup call, `settings-modal`'s link-mode retry), so a wide
+ * window costs nothing but log noise: it never blocks the editor, whose built-in devices are already
+ * registered before this runs.
+ *
+ * Paired with {@link RESOURCE_INDEX_RETRY_MS}/{@link RESOURCE_INDEX_RETRY_FACTOR}/
+ * {@link RESOURCE_INDEX_RETRY_MAX_MS}, the capped-exponential backoff below sums to ~79.5s of waiting
+ * across these attempts before giving up — comfortably past the 47s worst case, while still bounded so
+ * a session with no helper at all does not retry forever.
  * @type {number}
  */
-const RESOURCE_INDEX_ATTEMPTS = 5;
+const RESOURCE_INDEX_ATTEMPTS = 14;
 
-/** @type {number} milliseconds between pack-index attempts. */
+/** @type {number} milliseconds before the first retry. */
 const RESOURCE_INDEX_RETRY_MS = 500;
+
+/** @type {number} multiplier applied to the retry delay after each failed attempt. */
+const RESOURCE_INDEX_RETRY_FACTOR = 2;
+
+/** @type {number} milliseconds the backoff delay is capped at, once it grows past this. */
+const RESOURCE_INDEX_RETRY_MAX_MS = 8000;
+
+/**
+ * The delay before the next pack-index attempt: capped exponential backoff, so an unresponsive helper
+ * is polled quickly at first (in case it is seconds from ready) and increasingly gently thereafter (in
+ * case it is tens of seconds from ready), without either starving the fast case or hammering the slow
+ * one.
+ * @param {number} attempt - the 1-based attempt number that just failed.
+ * @returns {number} milliseconds to wait before the next attempt.
+ * @private
+ */
+const _resourceIndexRetryDelayMs = attempt =>
+    Math.min(RESOURCE_INDEX_RETRY_MS * Math.pow(RESOURCE_INDEX_RETRY_FACTOR, attempt - 1), RESOURCE_INDEX_RETRY_MAX_MS);
 
 /**
  * The board-mode device subsystem owned by the VM: the device registry, helper-served resource packs,
@@ -144,6 +170,71 @@ module.exports = class DeviceManager {
     }
 
     /**
+     * Strip a pack's resource origin from its served base, yielding the path relative to the resource
+     * root that the helper's `{pack, lib}` (compile) and `{pack, file}` (flashFirmware) references
+     * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
+     * `extensions/devices/thingbot`.
+     *
+     * Derived from `this.vm.client.resourceOrigin` rather than a literal `/resources/` split: the
+     * latter only holds for the helper's own route and yields `undefined` under a
+     * `__THINGBLOCK_RESOURCE_BASE__`-style host override, whose base need not contain `/resources/`
+     * at all (see `LinkClient#resourceOrigin`).
+     * @param {string} base - a pack's served base URL.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packRelativePath (base) {
+        const origin = this.vm.client.resourceOrigin;
+        return base.slice(origin.length + 1);
+    }
+
+    /**
+     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field.
+     * @param {string} deviceId - the device whose pack path to derive.
+     * @returns {string} the pack directory, relative to the helper's resource root.
+     * @private
+     */
+    _packPath (deviceId) {
+        const {base} = this._resourceDevicePacks.get(deviceId);
+        return this._packRelativePath(base);
+    }
+
+    /**
+     * The firmware images the selected device's pack ships, for the GUI's restore menu. Empty when
+     * the device declares none, which is how a pack opts out of the feature.
+     * @param {string} deviceId - the device to list images for.
+     * @returns {Array.<object>} `{id, name}` entries, names resolved to the active locale.
+     */
+    getDeviceFirmware (deviceId) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        if (!pack) return [];
+        return (pack.manifest.firmware || []).map(fw => ({
+            id: fw.id,
+            name: formatMessage(fw.name)
+        }));
+    }
+
+    /**
+     * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
+     * board. The pack path is expressed relative to the resource root because the browser cannot
+     * name a path on the helper's filesystem. Delegates to `VirtualMachine#flashFirmware` (backed by
+     * `LinkController#flashFirmware`), which gives this the same serial-monitor close/reopen discipline
+     * as `upload()` — the board's one serial port can't be monitored while the upload tool drives it.
+     * @param {string} deviceId - the selected device.
+     * @param {string} firmwareId - the image's manifest id.
+     * @param {object} [callbacks] - log/progress callbacks, as `upload` takes.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    flashDeviceFirmware (deviceId, firmwareId, callbacks) {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        const firmware = pack && (pack.manifest.firmware || []).find(fw => fw.id === firmwareId);
+        if (!firmware) {
+            return Promise.reject(new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`));
+        }
+        return this.vm.flashFirmware(deviceId, this._packPath(deviceId), firmware.path, callbacks);
+    }
+
+    /**
      * Register a helper-served device manifest as a selectable device. Idempotent: a manifest whose id
      * is already registered is skipped, so a repeated load never throws on a duplicate id.
      * @param {object} manifest - the pack's device manifest (its `manifest.js` default export).
@@ -167,16 +258,27 @@ module.exports = class DeviceManager {
      */
     registerPeripheralManifest (manifest, base) {
         this._resourcePeripheralPacks.set(manifest.id, {manifest, base});
-        this.vm.extensionManager.markResourcePack(manifest.id);
+    }
+
+    /**
+     * Whether an extension id names a device extension — a registered peripheral pack, device-owned or
+     * reusable — rather than a VM extension. A pack's id is also the opcode prefix its blocks use, so
+     * this is how project load tells the sb3-derived extension ids it owns from ones the
+     * {@link ExtensionManager} should load.
+     * @param {string} id - the extension id (an opcode prefix).
+     * @returns {boolean} true when a registered peripheral pack owns the id.
+     */
+    isDeviceExtension (id) {
+        return this._resourcePeripheralPacks.has(id);
     }
 
     /**
      * Fetch the helper-served pack index and register each device pack against the device registry, so
      * helper-provided boards join the built-in list. One successful run per VM instance (guarded). The
-     * index fetch is retried a few times because the helper is a sidecar spawned alongside the editor
-     * and may not have its port open yet; once the attempts are spent it logs and returns, leaving
-     * built-in devices working and the next link-mode entry free to retry. Peripheral packs are
-     * recorded here and activated on device selection.
+     * index fetch is retried, backing off between attempts, because the helper is a sidecar spawned
+     * alongside the editor and can take tens of seconds to open its port; once the attempts are spent
+     * it logs and returns, leaving built-in devices working and the next link-mode entry free to retry.
+     * Peripheral packs are recorded here and activated on device selection.
      * @returns {Promise<void>} resolves once packs are loaded (or skipped).
      */
     async loadResourcePacks () {
@@ -196,7 +298,7 @@ module.exports = class DeviceManager {
                         `${attempt} attempts; using built-in devices only`, e);
                     return;
                 }
-                await new Promise(resolve => setTimeout(resolve, RESOURCE_INDEX_RETRY_MS));
+                await new Promise(resolve => setTimeout(resolve, _resourceIndexRetryDelayMs(attempt)));
             }
         }
 
@@ -215,7 +317,7 @@ module.exports = class DeviceManager {
         }
 
         this._resourcePacksLoaded = true;
-        this.vm.emit(Runtime.RESOURCE_PACKS_LOADED);
+        this.vm.emit(VmEventNames.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
         // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
@@ -314,7 +416,7 @@ module.exports = class DeviceManager {
         this._projectPeripheralIds.add(id);
         await this._activatePeripheral(id);
         this._syncRuntimeBoard();
-        this.vm.emit(Runtime.PERIPHERALS_CHANGED);
+        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -332,7 +434,7 @@ module.exports = class DeviceManager {
         if (!this._projectPeripheralIds.delete(id)) return;
         this.peripheralRegistry.setInactive(id);
         this._syncRuntimeBoard();
-        this.vm.emit(Runtime.PERIPHERALS_CHANGED);
+        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -395,6 +497,8 @@ module.exports = class DeviceManager {
      * @private
      */
     async _applyBoard (board) {
+        // A board held pending means the workspace was already rendered without its blocks.
+        const wasPending = Boolean(this._pendingBoard);
         this._selectedDeviceId = null;
         this._projectPeripheralIds = new Set();
         this.peripheralRegistry.clearActive();
@@ -408,8 +512,15 @@ module.exports = class DeviceManager {
         if (board && board.device) {
             this._projectPeripheralIds = new Set(board.peripherals || []);
             await this.selectDevice(board.device);
+            if (wasPending && this.vm.editingTarget) {
+                // The workspace already rendered once, before this board's packs existed,
+                // so every one of the project's board blocks was dropped as an unknown
+                // type. Re-render now that they are defined. No editing target means no
+                // project is loaded and there is nothing to re-render.
+                this.vm.emitWorkspaceUpdate();
+            }
         }
-        this.vm.emit(Runtime.BOARD_RESTORED, {
+        this.vm.emit(VmEventNames.BOARD_RESTORED, {
             device: this._selectedDeviceId,
             peripherals: this.getProjectPeripheralIds()
         });
@@ -462,9 +573,9 @@ module.exports = class DeviceManager {
                 )).default;
             }
             // Compile lib references the helper resolves from its resource root: `pack` is this pack's
-            // directory relative to that root (the path after `/resources/` in its served base), `lib`
-            // the manifest's lib directory within the pack. The helper joins root/pack/lib in place.
-            const packPath = base.split('/resources/')[1];
+            // directory relative to that root, `lib` the manifest's lib directory within the pack. The
+            // helper joins root/pack/lib in place.
+            const packPath = this._packRelativePath(base);
             const libs = (manifest.libs || []).map(lib => ({pack: packPath, lib: lib.path}));
             if (this._scratchBlocks && manifest.blocks) {
                 const {registerBlocks} = await this._importPackModule(

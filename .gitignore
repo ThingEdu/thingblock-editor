@@ -135,7 +135,7 @@ dist
 
 
 # AI assistant stack files
-.agents/docs
+.agents/local/docs
 
 # Depricated thingblock external resources (for migration)
 thingblock-external-resources-main

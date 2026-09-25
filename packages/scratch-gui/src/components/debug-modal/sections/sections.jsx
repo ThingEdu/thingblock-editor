@@ -113,7 +113,6 @@ export const sections = [
         description: <div>
             <p><FormattedMessage {...messages.checkCodeSequenceDescription1} /></p>
             <p><FormattedMessage {...messages.checkCodeSequenceDescription2} /></p>
-            <p><FormattedMessage {...messages.checkCodeSequenceDescription3} /></p>
         </div>,
         image: checkCodeSequence
     }, {

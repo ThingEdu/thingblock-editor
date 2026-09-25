@@ -1,5 +1,6 @@
 const tap = require('tap');
 const VirtualMachine = require('../../src/virtual-machine');
+const LinkClient = require('../../src/link/client/link-client');
 
 const test = tap.test;
 
@@ -348,6 +349,48 @@ test('user-added peripherals re-activate across device re-selection without re-i
         'the user-added peripheral comes back on re-selection'
     );
     t.equal(counts[`${buzzerBase}/blocks.js`], 1, 'buzzer blocks imported once across re-selection');
+
+    t.end();
+});
+
+// `__THINGBLOCK_RESOURCE_BASE__` (the Tauri desktop shell's host override, read once in
+// link-controller.js) points resourceOrigin at a base that does not end in `/resources` at all —
+// unlike the helper's own `ws://.../resources` route every other fixture in this file models. Pack
+// libs must still resolve to a helper-relative {pack, lib} ref under that override.
+const hostedDeviceBase = '/thingblock-resource/extensions/devices/thingbot';
+const hostedCoreBase = '/thingblock-resource/extensions/peripheral/thingbot-core';
+
+// A minimal peripheral manifest with no blocks/generator, so the fixture below needs no served
+// modules for them (only its toolbox, which it does declare).
+const hostedCoreManifest = {
+    id: 'thingbot-core',
+    kind: 'peripheral',
+    name: 'ThingBot',
+    hidden: true,
+    toolbox: './toolbox.js',
+    libs: [{path: 'libs/ThingBot'}]
+};
+
+test('getActivePeripheralLibs resolves pack paths under a __THINGBLOCK_RESOURCE_BASE__-style override', async t => {
+    const vm = new VirtualMachine();
+    vm.client = new LinkClient(vm.runtime, {resourceBase: '/thingblock-resource'});
+    vm._importPackModule = url => {
+        if (url === `${hostedCoreBase}/toolbox.js`) return Promise.resolve({default: coreToolbox});
+        return Promise.reject(new Error(`404 ${url}`));
+    };
+    vm.registerDeviceManifest(
+        Object.assign({}, deviceManifest, {extensions: ['thingbot-core']}),
+        hostedDeviceBase
+    );
+    vm.registerPeripheralManifest(hostedCoreManifest, hostedCoreBase);
+
+    await vm.selectDevice('thingbot');
+
+    t.same(
+        vm.getActivePeripheralLibs(),
+        [{pack: 'extensions/peripheral/thingbot-core', lib: 'libs/ThingBot'}],
+        'the pack path resolves against the override base, not a literal "/resources/" split'
+    );
 
     t.end();
 });

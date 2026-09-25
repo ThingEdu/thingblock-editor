@@ -87,6 +87,7 @@ const MenuBarHOC = function (WrappedComponent) {
                 projectChanged: _projectChanged,
                 onThingbotLoaded: _onThingbotLoaded,
                 onThingbotConnectSuccess: _onThingbotConnectSuccess,
+                onThingbotDisconnect: _onThingbotDisconnect,
                 ...props
             } = this.props;
             return (<WrappedComponent
@@ -125,33 +126,15 @@ const MenuBarHOC = function (WrappedComponent) {
         onThingbotLoaded: () => dispatch(thingbotLoaded()),
         onThingbotConnectSuccess: () => dispatch(thingbotConnectSuccess()),
         onThingbotDisconnect: () => dispatch(thingbotDisconnect()),
-        openThingbotConnectionModal: () => {
+        onThingbotConnect: () => {
             dispatch(setConnectionModalExtensionId(THINGBOT_EXTENSION_ID));
             dispatch(openConnectionModal());
         }
     });
 
-    // Wire connect/disconnect to vm using stateProps.vm
-    const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(
-        {},
-        stateProps,
-        dispatchProps,
-        ownProps,
-        {
-            onThingbotConnect: () => {
-                dispatchProps.openThingbotConnectionModal();
-            },
-            onThingbotDisconnect: () => {
-                stateProps.vm.runtime.disconnectPeripheral(THINGBOT_EXTENSION_ID);
-                dispatchProps.onThingbotDisconnect();
-            }
-        }
-    );
-
     return connect(
         mapStateToProps,
-        mapDispatchToProps,
-        mergeProps
+        mapDispatchToProps
     )(MenuBarContainer);
 };
 

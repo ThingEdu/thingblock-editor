@@ -177,3 +177,101 @@ test('_applyBoard with no board resets to host mode and signals a null board', a
 
     t.end();
 });
+
+test('deserializeProject registers the board\'s blocks before emitting the workspace update', async t => {
+    // Build the VM here rather than via makeVM so the test holds the same Blockly
+    // shim the VM registers pack blocks into.
+    const blocks = {};
+    const vm = new VirtualMachine();
+    const modules = makeModules();
+    vm._importPackModule = url => (
+        url in modules ? Promise.resolve(modules[url]) : Promise.reject(new Error(`404 ${url}`))
+    );
+    vm.setScratchBlocks({Blocks: blocks, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0, NONE: 99}});
+    registerPacks(vm);
+
+    // What the GUI does on `workspaceUpdate`: hand the project XML to Blockly, which
+    // throws on any block type it has no definition for. The board's pack blocks are
+    // only defined once the board is applied, so record what was registered at the
+    // moment the update fired.
+    let definedAtUpdate = null;
+    vm.on('workspaceUpdate', () => {
+        definedAtUpdate = Object.keys(blocks);
+    });
+
+    await vm.deserializeProject({
+        projectVersion: 3,
+        targets: [{isStage: true,
+            name: 'Stage',
+            variables: {},
+            lists: {},
+            broadcasts: {},
+            blocks: {},
+            comments: {},
+            currentCostume: 0,
+            costumes: [],
+            sounds: [],
+            volume: 100}],
+        board: {device: 'thingbot', peripherals: ['buzzer']}
+    }, null);
+
+    t.ok(definedAtUpdate, 'the workspace update fired');
+    t.ok(definedAtUpdate.includes('servo_setangle'),
+        'the device-provided pack block is defined before the workspace renders');
+    t.ok(definedAtUpdate.includes('buzzer_tone'),
+        'the restored user peripheral block is defined before the workspace renders');
+
+    t.end();
+});
+
+test('applying a deferred board re-emits the workspace update', async t => {
+    // A project whose device pack has not arrived yet holds its board pending, so the
+    // workspace renders before any of the board's blocks are defined. When the packs
+    // land and the held board is finally applied, the workspace has to be re-rendered
+    // or the project's blocks stay dropped for the rest of the session.
+    const blocks = {};
+    const vm = new VirtualMachine();
+    const modules = makeModules();
+    vm._importPackModule = url => (
+        url in modules ? Promise.resolve(modules[url]) : Promise.reject(new Error(`404 ${url}`))
+    );
+    vm.setScratchBlocks({
+        Blocks: blocks,
+        arduinoGenerator: {forBlock: {}},
+        ArduinoOrder: {ATOMIC: 0, NONE: 99}
+    });
+
+    await vm.deserializeProject({
+        projectVersion: 3,
+        targets: [{
+            isStage: true,
+            name: 'Stage',
+            variables: {},
+            lists: {},
+            broadcasts: {},
+            blocks: {},
+            comments: {},
+            currentCostume: 0,
+            costumes: [],
+            sounds: [],
+            volume: 100
+        }],
+        board: {device: 'thingbot', peripherals: ['buzzer']}
+    }, null);
+    t.ok(vm._pendingBoard, 'the board is held pending while the packs are unknown');
+
+    let definedAtUpdate = null;
+    vm.on('workspaceUpdate', () => {
+        definedAtUpdate = Object.keys(blocks);
+    });
+
+    // The helper's packs arrive and the held board is applied.
+    registerPacks(vm);
+    await vm._applyBoard(vm._pendingBoard);
+
+    t.ok(definedAtUpdate, 'a workspace update follows the deferred board being applied');
+    t.ok(definedAtUpdate && definedAtUpdate.includes('servo_setangle'),
+        'the board\'s blocks are defined by the time that update fires');
+
+    t.end();
+});

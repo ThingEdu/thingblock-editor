@@ -132,20 +132,53 @@ module.exports = class LinkController {
      *   `{onLog, onProgress}` streaming callbacks.
      * @returns {Promise<void>} resolves once the flash completes.
      */
-    async upload (deviceId, artifact, callbacks) {
+    upload (deviceId, artifact, callbacks) {
         const device = this.vm.deviceRegistry.get(deviceId);
         if (!device) {
-            throw new Error(`upload: no device registered for "${deviceId}"`);
+            return Promise.reject(new Error(`upload: no device registered for "${deviceId}"`));
         }
-        // The board's one serial port can't be monitored while the upload tool drives it, so free it
-        // for the flash and restore the monitor after. `closeMonitor` is a no-op when none is open.
+        return this._flashWithMonitorFreed(() => this.client.flash(device, artifact, callbacks));
+    }
+
+    /**
+     * Flash a pack-shipped firmware image to the connected board for the selected device via the active
+     * link client, streaming the upload tool's output to the optional callbacks. The counterpart to
+     * `upload()` for restoring a device's live-mode firmware rather than uploading a freshly compiled
+     * artifact; it needs the same monitor handling `upload()` has, since it drives the same upload tool
+     * over the board's one serial port. Requires a connected board.
+     * @param {string} deviceId - the selected device's id (from `getDeviceList()`).
+     * @param {string} pack - pack directory relative to the resource root (from `DeviceManager`).
+     * @param {string} file - firmware image path within the pack.
+     * @param {import('../link/client/callbacks').StreamCallbacks} [callbacks] - optional
+     *   `{onLog, onProgress}` streaming callbacks.
+     * @returns {Promise<void>} resolves once the flash completes.
+     */
+    flashFirmware (deviceId, pack, file, callbacks) {
+        const device = this.vm.deviceRegistry.get(deviceId);
+        if (!device) {
+            return Promise.reject(new Error(`flashFirmware: no device registered for "${deviceId}"`));
+        }
+        return this._flashWithMonitorFreed(() => this.client.flashFirmware(device, pack, file, callbacks));
+    }
+
+    /**
+     * Free the serial monitor for a flash and restore it after, regardless of whether the flash
+     * resolves or rejects. Shared by `upload()` and `flashFirmware()`: the board's one serial port
+     * can't be monitored while the upload tool drives it, so the monitor must be closed for the flash
+     * and reopened after. `closeMonitor` is a no-op when none is open. A reopen failure is swallowed to
+     * a warning rather than a rejection — the flash has already settled on its own terms by then.
+     * @param {function(): Promise<void>} runFlash - performs the flash; its outcome passes through.
+     * @returns {Promise<void>} resolves/rejects with `runFlash`'s outcome.
+     * @private
+     */
+    async _flashWithMonitorFreed (runFlash) {
         await this.client.closeMonitor();
         try {
-            await this.client.flash(device, artifact, callbacks);
+            await runFlash();
         } finally {
             if (this.client.isConnected) {
                 this.client.openMonitor({baudRate: this._monitorBaud})
-                    .catch(err => log.warn(`upload: serial monitor did not reopen: ${err.message}`));
+                    .catch(err => log.warn(`_flashWithMonitorFreed: serial monitor did not reopen: ${err.message}`));
             }
         }
     }

@@ -411,15 +411,12 @@ class MenuBar extends React.Component {
                 logged in, and whether a session is available to log in with */}
                 <div className={styles.accountInfoGroup}>
                     {this.props.thingbotLoaded && (
-                        <div className={styles.menuBarItem}>
-                            <ConnectThingbotButton
-                                className={styles.menuBarButton}
-                                connected={this.props.thingbotConnected}
-                                connecting={this.props.thingbotConnecting}
-                                onConnect={this.props.onThingbotConnect}
-                                onDisconnect={this.props.onThingbotDisconnect}
-                            />
-                        </div>
+                        <ConnectThingbotButton
+                            className={classNames(styles.menuBarItem, styles.hoverable)}
+                            connected={this.props.thingbotConnected}
+                            connecting={this.props.thingbotConnecting}
+                            onClick={this.props.onThingbotConnect}
+                        />
                     )}
                     {this.props.canSave && (
                         <SaveStatus className={classNames(styles.hoverable, styles.menuBarItem)} />
@@ -611,8 +608,7 @@ MenuBar.propTypes = {
     thingbotLoaded: PropTypes.bool,
     thingbotConnected: PropTypes.bool,
     thingbotConnecting: PropTypes.bool,
-    onThingbotConnect: PropTypes.func,
-    onThingbotDisconnect: PropTypes.func
+    onThingbotConnect: PropTypes.func
 };
 
 MenuBar.defaultProps = {

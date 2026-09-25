@@ -1,4 +1,4 @@
-const Variable = require('../../engine/variable');
+const Variable = require('../../engine/variable').default;
 const newBlockIds = require('../../util/new-block-ids');
 
 module.exports = class WorkspaceMixin {
@@ -7,9 +7,7 @@ module.exports = class WorkspaceMixin {
      * @param {!Blockly.Event} e Any Blockly event.
      */
     blockListener (e) {
-        if (this.editingTarget) {
-            this.editingTarget.blocks.blocklyListen(e);
-        }
+        this.runtime.workspaceListener.blockListener(e);
     }
 
     /**
@@ -17,7 +15,7 @@ module.exports = class WorkspaceMixin {
      * @param {!Blockly.Event} e Any Blockly event.
      */
     flyoutBlockListener (e) {
-        this.runtime.flyoutBlocks.blocklyListen(e);
+        this.runtime.workspaceListener.flyoutBlockListener(e);
     }
 
     /**
@@ -25,11 +23,7 @@ module.exports = class WorkspaceMixin {
      * @param {!Blockly.Event} e Any Blockly event.
      */
     monitorBlockListener (e) {
-        // Filter events by type, since monitor blocks only need to listen to these events.
-        // Monitor blocks shouldn't be destroyed when flyout blocks are deleted.
-        if (['create', 'change'].indexOf(e.type) !== -1) {
-            this.runtime.monitorBlocks.blocklyListen(e);
-        }
+        this.runtime.workspaceListener.monitorBlockListener(e);
     }
 
     /**
@@ -37,11 +31,7 @@ module.exports = class WorkspaceMixin {
      * @param {!Blockly.Event} e Any Blockly event.
      */
     variableListener (e) {
-        // Filter events by type, since blocks only needs to listen to these
-        // var events.
-        if (['var_create', 'var_rename', 'var_delete'].indexOf(e.type) !== -1) {
-            this.runtime.getTargetForStage().blocks.blocklyListen(e);
-        }
+        this.runtime.workspaceListener.variableListener(e);
     }
 
     /**
@@ -75,33 +65,25 @@ module.exports = class WorkspaceMixin {
     }
 
     /**
-     * Called when blocks are dragged from one sprite to another. Adds the blocks to the
-     * workspace of the given target.
+     * Pastes blocks from outside the project, e.g. the backpack, into the workspace of the given target,
+     * loading the extensions they use.
      * @param {!Array<object>} blocks Blocks to add.
      * @param {!string} targetId Id of target to add blocks to.
-     * @param {?string} optFromTargetId Optional target id indicating that blocks are being
-     * shared from that target. This is needed for resolving any potential variable conflicts.
      * @returns {!Promise} Promise that resolves when the extensions and blocks have been added.
      */
-    shareBlocksToTarget (blocks, targetId, optFromTargetId) {
+    shareBlocksToTarget (blocks, targetId) {
         const sb3 = require('../../serialization/sb3');
 
         const copiedBlocks = JSON.parse(JSON.stringify(blocks));
         newBlockIds(copiedBlocks);
         const target = this.runtime.getTargetById(targetId);
 
-        if (optFromTargetId) {
-            // If the blocks are being shared from another target,
-            // resolve any possible variable conflicts that may arise.
-            const fromTarget = this.runtime.getTargetById(optFromTargetId);
-            fromTarget.resolveVariableSharingConflictsWithTarget(copiedBlocks, target);
-        }
-
         // Create a unique set of extensionIds that are not yet loaded
         const extensionIDs = new Set(copiedBlocks
             .map(b => sb3.getExtensionIdForOpcode(b.opcode))
             .filter(id => !!id) // Remove ids that do not exist
             .filter(id => !this.extensionManager.isExtensionLoaded(id)) // and remove loaded extensions
+            .filter(id => !this._devices.isDeviceExtension(id)) // and device extensions
         );
 
         // Create an array promises for extensions to load
@@ -113,13 +95,9 @@ module.exports = class WorkspaceMixin {
             copiedBlocks.forEach(block => {
                 target.blocks.createBlock(block);
             });
-            target.blocks.updateTargetSpecificBlocks(target.isStage);
-            if (!optFromTargetId) {
-                // No source target means the blocks come from outside the project (e.g. the
-                // backpack). Reconcile any variable, list, or broadcast references against
-                // what's defined in the project, creating missing definitions on the stage.
-                target.fixUpVariableReferences();
-            }
+            // Reconcile the blocks' variable, list, and broadcast references against what's
+            // defined in the project, creating missing definitions on the stage.
+            target.fixUpVariableReferences();
         });
     }
 
@@ -147,13 +125,7 @@ module.exports = class WorkspaceMixin {
         if (typeof triggerProjectChange === 'undefined') triggerProjectChange = true;
         this.emit('targetsUpdate', {
             // [[target id, human readable target name], ...].
-            targetList: this.runtime.targets
-                .filter(
-                    // Don't report clones.
-                    target => !Object.prototype.hasOwnProperty.call(target, 'isOriginal') || target.isOriginal
-                ).map(
-                    target => target.toJSON()
-                ),
+            targetList: this.runtime.targets.map(target => target.toJSON()),
             // Currently editing target id.
             editingTarget: this.editingTarget ? this.editingTarget.id : null
         });

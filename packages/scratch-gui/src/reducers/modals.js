@@ -1,33 +1,23 @@
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
 
-const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
 const MODAL_BOARD_LIBRARY = 'boardLibrary';
-const MODAL_COSTUME_LIBRARY = 'costumeLibrary';
 const MODAL_DEBUG = 'debugModal';
 const MODAL_EXTENSION_LIBRARY = 'extensionLibrary';
 const MODAL_LOADING_PROJECT = 'loadingProject';
 const MODAL_PERIPHERAL_LIBRARY = 'peripheralLibrary';
 const MODAL_TELEMETRY = 'telemetryModal';
-const MODAL_SOUND_LIBRARY = 'soundLibrary';
-const MODAL_SPRITE_LIBRARY = 'spriteLibrary';
-const MODAL_SOUND_RECORDER = 'soundRecorder';
 const MODAL_CONNECTION = 'connectionModal';
 const MODAL_SETTINGS = 'settingsModal';
 const MODAL_TIPS_LIBRARY = 'tipsLibrary';
 
 const initialState = {
-    [MODAL_BACKDROP_LIBRARY]: false,
     [MODAL_BOARD_LIBRARY]: false,
-    [MODAL_COSTUME_LIBRARY]: false,
     [MODAL_DEBUG]: false,
     [MODAL_EXTENSION_LIBRARY]: false,
     [MODAL_LOADING_PROJECT]: false,
     [MODAL_PERIPHERAL_LIBRARY]: false,
     [MODAL_TELEMETRY]: false,
-    [MODAL_SOUND_LIBRARY]: false,
-    [MODAL_SPRITE_LIBRARY]: false,
-    [MODAL_SOUND_RECORDER]: false,
     [MODAL_CONNECTION]: false,
     [MODAL_SETTINGS]: false,
     [MODAL_TIPS_LIBRARY]: false
@@ -60,14 +50,8 @@ const closeModal = function (modal) {
         modal: modal
     };
 };
-const openBackdropLibrary = function () {
-    return openModal(MODAL_BACKDROP_LIBRARY);
-};
 const openBoardLibrary = function () {
     return openModal(MODAL_BOARD_LIBRARY);
-};
-const openCostumeLibrary = function () {
-    return openModal(MODAL_COSTUME_LIBRARY);
 };
 const openDebugModal = function () {
     return openModal(MODAL_DEBUG);
@@ -84,15 +68,6 @@ const openPeripheralLibrary = function () {
 const openTelemetryModal = function () {
     return openModal(MODAL_TELEMETRY);
 };
-const openSoundLibrary = function () {
-    return openModal(MODAL_SOUND_LIBRARY);
-};
-const openSpriteLibrary = function () {
-    return openModal(MODAL_SPRITE_LIBRARY);
-};
-const openSoundRecorder = function () {
-    return openModal(MODAL_SOUND_RECORDER);
-};
 const openConnectionModal = function () {
     return openModal(MODAL_CONNECTION);
 };
@@ -102,14 +77,8 @@ const openSettingsModal = function () {
 const openTipsLibrary = function () {
     return openModal(MODAL_TIPS_LIBRARY);
 };
-const closeBackdropLibrary = function () {
-    return closeModal(MODAL_BACKDROP_LIBRARY);
-};
 const closeBoardLibrary = function () {
     return closeModal(MODAL_BOARD_LIBRARY);
-};
-const closeCostumeLibrary = function () {
-    return closeModal(MODAL_COSTUME_LIBRARY);
 };
 const closeDebugModal = function () {
     return closeModal(MODAL_DEBUG);
@@ -126,15 +95,6 @@ const closePeripheralLibrary = function () {
 const closeTelemetryModal = function () {
     return closeModal(MODAL_TELEMETRY);
 };
-const closeSpriteLibrary = function () {
-    return closeModal(MODAL_SPRITE_LIBRARY);
-};
-const closeSoundLibrary = function () {
-    return closeModal(MODAL_SOUND_LIBRARY);
-};
-const closeSoundRecorder = function () {
-    return closeModal(MODAL_SOUND_RECORDER);
-};
 const closeTipsLibrary = function () {
     return closeModal(MODAL_TIPS_LIBRARY);
 };
@@ -147,30 +107,20 @@ const closeSettingsModal = function () {
 export {
     reducer as default,
     initialState as modalsInitialState,
-    openBackdropLibrary,
     openBoardLibrary,
-    openCostumeLibrary,
     openDebugModal,
     openExtensionLibrary,
     openLoadingProject,
     openPeripheralLibrary,
-    openSoundLibrary,
-    openSpriteLibrary,
-    openSoundRecorder,
     openTelemetryModal,
     openTipsLibrary,
     openConnectionModal,
     openSettingsModal,
-    closeBackdropLibrary,
     closeBoardLibrary,
-    closeCostumeLibrary,
     closeDebugModal,
     closeExtensionLibrary,
     closeLoadingProject,
     closePeripheralLibrary,
-    closeSpriteLibrary,
-    closeSoundLibrary,
-    closeSoundRecorder,
     closeTelemetryModal,
     closeTipsLibrary,
     closeConnectionModal,

@@ -125,6 +125,42 @@ describe('thingbot-core peripheral', () => {
     expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
   })
 
+  it('registers the PWM declarations and setup from a play-note block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_playNote(makeBlock({ BEATS: '1' }, { NOTE: 'C', OCTAVE: '4' }))
+
+    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
+    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
+  it('registers the PWM declarations and setup from a set-tempo block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_setTempo(makeBlock({ TEMPO: '100' }))
+
+    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
+    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
+  it('registers the PWM declarations and setup from a rest block alone, with no init block present', () => {
+    const gen = makeGenerator()
+    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.thingBotC3_rest(makeBlock({ BEATS: '1' }))
+
+    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
+    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
+    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
+    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
+  })
+
   it('registers the PWM declarations and setup from a motor block alone, with no init block present', () => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
@@ -145,12 +181,14 @@ describe('thingbot-core peripheral', () => {
     gen.forBlock.thingBotC3_buzzer(makeBlock())
     gen.forBlock.thingBotC3_setLed(makeBlock({}, { LED: 'LED_1' }))
     gen.forBlock.thingBotC3_switch(makeBlock())
+    gen.forBlock.thingBotC3_playNote(makeBlock({ BEATS: '1' }, { NOTE: 'C', OCTAVE: '4' }))
     gen.forBlock.thingBotC3_init(makeBlock())
 
     // One include line, one PWM setup sequence; globals holds the pin map, the pwm object,
-    // mapToPulse, and the servo-angle helper bucket brought in by thingBotC3_setServoAngle.
+    // mapToPulse, the servo-angle helper bucket brought in by thingBotC3_setServoAngle, and the
+    // music helper bucket brought in by thingBotC3_playNote.
     expect(gen.includes.size).toBe(1)
-    expect(gen.globals.size).toBe(4)
+    expect(gen.globals.size).toBe(5)
     expect(gen.setups.size).toBe(1)
     // The setup sequence itself is not duplicated even though thingBotC3_init ran after five
     // other hardware blocks already registered it.
@@ -467,5 +505,16 @@ describe('manifests', () => {
   it('thingbot toolbox fills the value inputs with math_number shadows', () => {
     const motor = thingbotToolbox.contents.find((item) => item.type === 'thingBotC3_setMotor')
     expect(motor?.inputs).toEqual({ SPEED: { type: 'math_number', fields: { NUM: 0 } } })
+  })
+
+  it('thingbot declares the live-mode firmware image its pack ships', () => {
+    const firmware = thingbotManifest.firmware ?? []
+    expect(firmware).toHaveLength(1)
+    expect(firmware[0].id).toBe('telemetrix-ble')
+    expect(firmware[0].path).toBe('firmware/telemetrix-ble/telemetrix-ble.ino.bin')
+    expect(firmware[0].name.id).toBe('device.thingbot.firmware.telemetrixBle')
+    // The image must be traceable to the firmware commit it was built from; a pack rebuilt without
+    // rebuilding the firmware would otherwise ship a stale binary invisibly.
+    expect(firmware[0].source).toMatch(/^[0-9a-f]{7,40}$/)
   })
 })

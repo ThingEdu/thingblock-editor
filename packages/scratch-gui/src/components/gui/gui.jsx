@@ -8,7 +8,6 @@ import MediaQuery from 'react-responsive';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from '@scratch/scratch-vm';
-import Renderer from '@scratch/scratch-render';
 
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
@@ -21,7 +20,6 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 import Watermark from '../../containers/watermark.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
-import WebGlModal from '../../containers/webgl-modal.jsx';
 import TipsLibrary from '../../containers/tips-library.jsx';
 import Cards from '../../containers/cards.jsx';
 import Alerts from '../../containers/alerts.jsx';
@@ -79,10 +77,6 @@ const ariaMessages = defineMessages({
         description: 'accessibility label for the stage'
     }
 });
-
-// Cache this value to only retrieve it once the first time.
-// Assume that it doesn't change for a session.
-let isRendererSupported = null;
 
 const GUIComponent = props => {
     const intl = useIntl();
@@ -207,9 +201,9 @@ const GUIComponent = props => {
         const handlePrint = message => {
             setSerialLogs(prev => appendLogs(prev, [{message: String(message)}]));
         };
-        vm.runtime.on('PRINT_TO_MONITOR', handlePrint);
+        vm.runtime.events.on('PRINT_TO_MONITOR', handlePrint);
         return () => {
-            vm.runtime.off('PRINT_TO_MONITOR', handlePrint);
+            vm.runtime.events.off('PRINT_TO_MONITOR', handlePrint);
         };
     }, [vm]);
 
@@ -224,17 +218,17 @@ const GUIComponent = props => {
                 setSerialLogs(prev => appendLogs(prev, parts.map(line => ({message: line.replace(/\r$/, '')}))));
             }
         };
-        vm.runtime.on('SERIAL_DATA', handleSerial);
+        vm.runtime.events.on('SERIAL_DATA', handleSerial);
         return () => {
-            vm.runtime.off('SERIAL_DATA', handleSerial);
+            vm.runtime.events.off('SERIAL_DATA', handleSerial);
         };
     }, [vm]);
 
     useEffect(() => {
         const onPrompt = q => setMonitorPrompt(q === null || typeof q === 'undefined' ? null : q);
-        vm.runtime.on('QUESTION', onPrompt);
+        vm.runtime.events.on('QUESTION', onPrompt);
         return () => {
-            vm.runtime.off('QUESTION', onPrompt);
+            vm.runtime.events.off('QUESTION', onPrompt);
         };
     }, [vm]);
 
@@ -253,7 +247,7 @@ const GUIComponent = props => {
             vm.writeMonitor(`${value}\n`);
             return;
         }
-        vm.runtime.emit('ANSWER', value);
+        vm.runtime.events.emit('ANSWER', value);
         setMonitorPrompt(null);
     }, [vm, connectedBoard]);
 
@@ -295,10 +289,6 @@ const GUIComponent = props => {
         onRequestCloseDebugModal();
     }, [onDebugModalClose, onRequestCloseDebugModal]);
 
-    if (isRendererSupported === null) {
-        isRendererSupported = Renderer.isSupported();
-    }
-
     return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
         const stageSize = resolveStageSize(stageSizeMode, isFullSize);
         const boxStyles = classNames(styles.bodyWrapper, {
@@ -329,9 +319,6 @@ const GUIComponent = props => {
                     {isCreating ? (
                         <Loader messageId="gui.loader.creating" />
                     ) : null}
-                    {isRendererSupported ? null : (
-                        <WebGlModal isRtl={isRtl} />
-                    )}
                     {tipsLibraryVisible ? (
                         <TipsLibrary
                             hideTutorialProjects={hideTutorialProjects}

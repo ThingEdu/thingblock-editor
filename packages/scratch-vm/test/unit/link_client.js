@@ -59,27 +59,19 @@ class FakeWebSocket {
 FakeWebSocket.instances = [];
 
 /**
- * A minimal runtime stand-in exposing the connection-event surface LinkClient emits on, and recording
- * each emit so tests can assert lifecycle events. The static getters mirror the real Runtime class so
- * `this.runtime.constructor.DEVICE_CONNECTED` resolves.
+ * A minimal runtime stand-in exposing the `events` emitter LinkClient emits on, and recording each emit so
+ * tests can assert lifecycle events.
  */
 class FakeRuntime {
     constructor () {
         this.emitted = [];
         this.serialData = [];
-    }
-    static get DEVICE_CONNECTED () {
-        return 'DEVICE_CONNECTED';
-    }
-    static get DEVICE_DISCONNECTED () {
-        return 'DEVICE_DISCONNECTED';
-    }
-    static get SERIAL_DATA () {
-        return 'SERIAL_DATA';
-    }
-    emit (event, ...args) {
-        this.emitted.push(event);
-        if (event === FakeRuntime.SERIAL_DATA) this.serialData.push(args[0]);
+        this.events = {
+            emit: (event, ...args) => {
+                this.emitted.push(event);
+                if (event === 'SERIAL_DATA') this.serialData.push(args[0]);
+            }
+        };
     }
 }
 
@@ -708,6 +700,12 @@ test('resourceOrigin derives the helper HTTP resource base from the WebSocket UR
 
     const secure = new LinkClient(new FakeRuntime(), {url: 'wss://helper.local:3030/', WebSocket: FakeWebSocket});
     t.equal(secure.resourceOrigin, 'https://helper.local:3030/resources', 'wss:// maps to https://');
+    t.end();
+});
+
+test('canFlashFirmware is true: LinkClient implements flashFirmware', t => {
+    const {client} = makeClient();
+    t.equal(client.canFlashFirmware, true);
     t.end();
 });
 

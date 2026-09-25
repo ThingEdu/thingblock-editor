@@ -7,41 +7,8 @@ if (window.performance) {
     performance.mark('Scratch.EvalStart');
 }
 
-class LoadingMiddleware {
-    constructor () {
-        this.middleware = [];
-        this.host = null;
-        this.original = null;
-    }
-
-    install (host, original) {
-        this.host = host;
-        this.original = original;
-        const {middleware} = this;
-        return function (...args) {
-            let i = 0;
-            const next = function (_args) {
-                if (i >= middleware.length) {
-                    return original.call(host, ..._args);
-                }
-                return middleware[i++](_args, next);
-            };
-            return next(args);
-        };
-    }
-
-    push (middleware) {
-        this.middleware.push(middleware);
-    }
-}
-
-const importLoadSound = require('../import/load-sound');
-const soundMiddleware = new LoadingMiddleware();
-importLoadSound.loadSound = soundMiddleware.install(importLoadSound, importLoadSound.loadSound);
-
 const ScratchStorage = require('@scratch/scratch-storage').ScratchStorage;
 const VirtualMachine = require('..');
-const Runtime = require('../engine/runtime');
 
 const AudioEngine = require('scratch-audio');
 
@@ -124,26 +91,8 @@ class LoadingProgress {
         }
     }
 
-    attachHydrateMiddleware (middleware) {
-        const _this = this;
-        middleware.push((args, next) => {
-            _this.hydrateTotal += 1;
-            _this.sampleMemory();
-            _this.callback(_this);
-            return Promise.resolve(next(args))
-                .then(value => {
-                    _this.hydrateComplete += 1;
-                    _this.sampleMemory();
-                    _this.callback(_this);
-                    return value;
-                });
-        });
-    }
-
     on (storage, vm) {
         const _this = this;
-
-        this.attachHydrateMiddleware(soundMiddleware);
 
         const _load = storage.webHelper.load;
         storage.webHelper.load = function (...args) {
@@ -196,7 +145,7 @@ class LoadingProgress {
             });
             return result;
         };
-        vm.runtime.on(Runtime.PROJECT_LOADED, () => {
+        vm.runtime.events.on('PROJECT_LOADED', () => {
             // Currently LoadingProgress tracks when the data has been loaded
             // and not when the data has been decoded. It may be difficult to
             // track that but it isn't hard to track when its all been decoded.

@@ -19,42 +19,15 @@
       },
       "lists": {},
       "broadcasts": {},
-      "currentCostume": 1,
       "costumes": [
         {
-          "name": "backdrop1",
-          "dataFormat": "svg",
-          "assetId": "87ec29ad216c0074c731d581c7f40c39",
-          "md5ext": "87ec29ad216c0074c731d581c7f40c39.svg",
-          "rotationCenterX": 240,
-          "rotationCenterY": 180
-        },
-        {
-          "name": "School",
-          "bitmapResolution": 2,
-          "dataFormat": "png",
-          "assetId": "1dea69ac0f62cf538d368a7bde1372ac",
-          "md5ext": "1dea69ac0f62cf538d368a7bde1372ac.png",
-          "rotationCenterX": 480,
-          "rotationCenterY": 360
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
-      "sounds": [
-        {
-          "name": "pop",
-          "assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 44100,
-          "sampleCount": 1032,
-          "md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
-        }
-      ],
-      "volume": 100,
-      "tempo": 120,
-      "videoTransparency": 50,
-      "videoState": "off",
-      "textToSpeechLanguage": null,
+      "sounds": [],
       "scripts": []
     },
     {
@@ -77,37 +50,15 @@
         ]
       },
       "broadcasts": {},
-      "currentCostume": 0,
       "costumes": [
         {
-          "name": "shirt-t",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "b87a27aadb562284f811f5983703cea4",
-          "md5ext": "b87a27aadb562284f811f5983703cea4.svg",
-          "rotationCenterX": 39,
-          "rotationCenterY": 28
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
-      "sounds": [
-        {
-          "name": "pop",
-          "assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 44100,
-          "sampleCount": 1032,
-          "md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
-        }
-      ],
-      "volume": 100,
-      "visible": true,
-      "x": -220.22821868,
-      "y": -161.13259432,
-      "size": 30,
-      "direction": 40,
-      "draggable": false,
-      "rotationStyle": "all around",
+      "sounds": [],
       "scripts": [
         [
           {
@@ -155,46 +106,15 @@
       },
       "lists": {},
       "broadcasts": {},
-      "currentCostume": 1,
       "costumes": [
         {
-          "name": "heart red",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "08b7e67803155c071c968ab8dc8f1885",
-          "md5ext": "08b7e67803155c071c968ab8dc8f1885.svg",
-          "rotationCenterX": 65,
-          "rotationCenterY": 56
-        },
-        {
-          "name": "heart purple",
-          "bitmapResolution": 1,
-          "dataFormat": "svg",
-          "assetId": "1faaf7ac9f66fe7aeea8ed18b9ca9e04",
-          "md5ext": "1faaf7ac9f66fe7aeea8ed18b9ca9e04.svg",
-          "rotationCenterX": 66,
-          "rotationCenterY": 62
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
         }
       ],
-      "sounds": [
-        {
-          "name": "pop",
-          "assetId": "83a9787d4cb6f3b7632b4ddfebf74367",
-          "dataFormat": "wav",
-          "format": "",
-          "rate": 44100,
-          "sampleCount": 1032,
-          "md5ext": "83a9787d4cb6f3b7632b4ddfebf74367.wav"
-        }
-      ],
-      "volume": 100,
-      "visible": true,
-      "x": 165.29045643,
-      "y": -96.45303867,
-      "size": 60,
-      "direction": 90,
-      "draggable": false,
-      "rotationStyle": "all around",
+      "sounds": [],
       "scripts": []
     }
   ],

@@ -1,6 +1,7 @@
 const Client = require('./client');
 const {withDefaults} = require('./callbacks');
 const log = require('../../util/log');
+const {RuntimeEventNames} = require('../../engine/runtime/runtime-events');
 
 /**
  * Default address of the native helper's WebSocket server (thingblock-link). The helper listens on
@@ -189,7 +190,7 @@ class LinkClient extends Client {
         await this._request('connect', {port: target.id});
         this._connectedTarget = target;
         log.info('LinkClient.connect: connected');
-        this.runtime.emit(this.runtime.constructor.DEVICE_CONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_CONNECTED);
     }
 
     /**
@@ -206,7 +207,7 @@ class LinkClient extends Client {
         // The helper closes any open monitor as part of disconnect; drop our routing to match.
         this._monitor = null;
         this._connectedTarget = null;
-        this.runtime.emit(this.runtime.constructor.DEVICE_DISCONNECTED);
+        this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
     }
 
     /**
@@ -266,6 +267,41 @@ class LinkClient extends Client {
             true
         );
         log.info('LinkClient.flash: upload complete');
+    }
+
+    /**
+     * The helper implements `flashFirmware()`, so the GUI may offer a firmware install.
+     * @returns {boolean} always true.
+     */
+    get canFlashFirmware () {
+        return true;
+    }
+
+    /**
+     * Flash a firmware image the device's pack ships, by resource-root-relative reference. The
+     * counterpart to `flash()`, which uploads an artifact the helper just compiled; here nothing is
+     * compiled and the helper resolves the image itself.
+     * @param {Device} device - the selected device (supplies fqbn and upload config).
+     * @param {string} pack - pack directory under the resource root, e.g. `extensions/devices/thingbot`.
+     * @param {string} file - app image within the pack.
+     * @param {import('./callbacks').StreamCallbacks} [callbacks] - optional `{onLog, onProgress}`.
+     * @returns {Promise<void>} resolves when the flash completes.
+     */
+    async flashFirmware (device, pack, file, callbacks) {
+        if (!this.isConnected) {
+            throw new Error('LinkClient.flashFirmware: no connected port; call connect() first');
+        }
+        const fqbn = this._composeFqbn(device);
+        const {uploadSpeed = 0} = device.getUploadConfig();
+        const port = this._connectedTarget.id;
+        log.info(`LinkClient.flashFirmware: flashing ${pack}/${file} to ${port} for ${fqbn}`);
+        await this._request(
+            'flashFirmware',
+            {fqbn, port, uploadSpeed, pack, file},
+            withDefaults(callbacks),
+            true
+        );
+        log.info('LinkClient.flashFirmware: flash complete');
     }
 
     /**
@@ -439,7 +475,7 @@ class LinkClient extends Client {
             break;
         case 'monitorData':
             if (this._monitor && this._monitor.id === id) {
-                this.runtime.emit(this.runtime.constructor.SERIAL_DATA, payload.data);
+                this.runtime.events.emit(RuntimeEventNames.SERIAL_DATA, payload.data);
             }
             break;
         case 'error': {
@@ -480,7 +516,7 @@ class LinkClient extends Client {
         this._monitor = null;
         if (this._connectedTarget) {
             this._connectedTarget = null;
-            this.runtime.emit(this.runtime.constructor.DEVICE_DISCONNECTED);
+            this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
         }
     }
 

@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const ScratchWebpackConfigBuilder = require('scratch-webpack-configuration');
 
 const common = {
+    enableTs: true,
     libraryName: 'scratch-vm',
     rootPath: path.resolve(__dirname)
 };
@@ -105,13 +106,6 @@ const playgroundBuilder = webBuilder
             exposes: 'ScratchStorage ScratchStorage'
         }
     })
-    .addModuleRule({
-        test: require.resolve('@scratch/scratch-render'),
-        loader: 'expose-loader',
-        options: {
-            exposes: 'ScratchRender'
-        }
-    })
     .addPlugin(
         new CopyWebpackPlugin({
             patterns: [
@@ -121,9 +115,6 @@ const playgroundBuilder = webBuilder
                 },
                 {
                     from: '../../node_modules/@scratch/scratch-storage/dist/web'
-                },
-                {
-                    from: '../../node_modules/@scratch/scratch-render/dist/web'
                 },
                 {
                     from: '../../node_modules/@scratch/scratch-svg-renderer/dist/web'

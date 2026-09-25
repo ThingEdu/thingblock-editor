@@ -22,10 +22,8 @@ The `packages` directory contains:
   codegen, toolbox categories, and vendored C++ library sources, built to dynamically-importable ESM. The local
   `thingblock-link` helper serves the built packs as static files; the editor imports them at runtime and
   registers each pack's codegen against the shared `arduinoGenerator`.
-- `scratch-render` draws backdrops, sprites, clones, and stage content.
 - `scratch-storage` loads project assets like images and sounds.
 - `scratch-svg-renderer` processes SVG assets.
-- `scratch-paint` contains the costume/paint editor package.
 - `scratch-media-lib-scripts` builds media library assets.
 - `task-herder` manages queues of tasks with throttling and concurrency limits.
 

@@ -126,8 +126,6 @@ circular dial
 - Boolean - an input for a boolean (hexagonal shaped) reporter block. This field is not type-able.
 - Color - an input which displays a color swatch. This field has additional UI to pick a color by choosing values for the color's hue, saturation and brightness. Optionally, the defaultValue for the color picker can also be chosen if the extension developer wishes to display the same color every time the extension is added. If the defaultValue is left out, the default behavior of picking a random color when the extension is loaded will be used.
 - Matrix - an input which displays a 5 x 5 matrix of cells, where each cell can be filled in or clear.
-- Note - a numeric input which can select a musical note. This field has additional UI to select a note from a
-visual keyboard.
 - Image - an inline image displayed on a block. This is a special argument type in that it does not represent a value and does not accept other blocks to be plugged-in in place of this block field. See the section below about "Adding an Inline Image".
 
 #### Adding an Inline Image

@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "semver": "3.0.0"
+  },
+  "extensions": [
+    "coreExample"
+  ],
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {
+        "var:my variable": [
+          "my variable",
+          0
+        ]
+      },
+      "lists": {},
+      "broadcasts": {},
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "scripts": []
+    },
+    {
+      "isStage": false,
+      "name": "Sprite1",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "scripts": [
+        [
+          {
+            "opcode": "coreExample_exampleOpcode"
+          }
+        ]
+      ]
+    }
+  ],
+  "monitors": []
+}

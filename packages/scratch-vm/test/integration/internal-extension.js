@@ -6,8 +6,7 @@ const BlockType = require('../../src/extension-support/block-type');
 const dispatch = require('../../src/dispatch/central-dispatch');
 const VirtualMachine = require('../../src/virtual-machine');
 
-const Sprite = require('../../src/sprites/sprite');
-const RenderedTarget = require('../../src/sprites/rendered-target');
+const Target = require('../../src/engine/target').default;
 
 // By default Central Dispatch works with the Worker class built into the browser. Tell it to use TinyWorker instead.
 dispatch.workerClass = Worker;
@@ -115,9 +114,8 @@ test('load sync', t => {
     // Test the opcode function
     t.equal(vm.runtime._blockInfo[0].blocks[1].info.func(), 'no stage yet');
 
-    const sprite = new Sprite(null, vm.runtime);
-    sprite.name = 'Stage';
-    const stage = new RenderedTarget(sprite, vm.runtime);
+    const stage = new Target(vm.runtime);
+    stage.name = 'Stage';
     stage.isStage = true;
     vm.runtime.targets = [stage];
 

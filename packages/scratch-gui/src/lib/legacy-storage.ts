@@ -2,7 +2,6 @@ import {ScratchStorage, Asset} from '@scratch/scratch-storage';
 
 import defaultProject from './default-project';
 import {GUIStorage, TranslatorFunction} from '../gui-config';
-import {LegacyBackpackStorage} from './legacy-backpack-storage';
 
 import saveProjectToServer from '../lib/save-project-to-server';
 
@@ -13,19 +12,7 @@ export class LegacyStorage implements GUIStorage {
     private translator?: TranslatorFunction;
 
     readonly scratchStorage = new ScratchStorage();
-    readonly backpackStorage = new LegacyBackpackStorage({
-        readAuth (session) {
-            if (!session) {
-                return Promise.reject(new Error('missing session'));
-            }
 
-            return Promise.resolve({
-                username: session.username,
-                authType: 'x-token',
-                authToken: session.token
-            });
-        }
-    });
     constructor () {
         this.cacheDefaultProject(this.scratchStorage);
         this.addOfficialScratchWebStores(this.scratchStorage);
@@ -59,10 +46,6 @@ export class LegacyStorage implements GUIStorage {
         this.translator = translator;
 
         this.cacheDefaultProject(this.scratchStorage);
-    }
-
-    setBackpackHost (host: string): void {
-        this.backpackStorage.setHostAndRegisterWebStore(host, this.scratchStorage);
     }
 
     saveProject (
@@ -105,11 +88,6 @@ export class LegacyStorage implements GUIStorage {
             // asset store uses the assetId as part of the create URI.
             this.getAssetCreateConfig.bind(this),
             this.getAssetCreateConfig.bind(this)
-        );
-
-        storage.addWebStore(
-            [storage.AssetType.Sound],
-            asset => `static/extension-assets/scratch3_music/${asset.assetId}.${asset.dataFormat}`
         );
     }
 

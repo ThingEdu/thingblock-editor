@@ -16,8 +16,6 @@ export * from './exported-reducers';
 
 export * from '@scratch/scratch-storage';
 
-export * from './lib/legacy-backpack-storage';
-
 export {default as buildDefaultProject} from './lib/default-project';
 
 // TODO: Better typing once ScratchGUI has types

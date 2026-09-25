@@ -28,6 +28,7 @@ const BoardMenu = ({
     onOpenBoardLibrary
 }) => {
     const intl = useIntl();
+
     const selectedDevice = selectedDeviceId ?
         vm.getDeviceList().find(device => device.deviceId === selectedDeviceId) :
         null;
@@ -36,13 +37,15 @@ const BoardMenu = ({
         intl.formatMessage(selectBoardMessage);
 
     return (
-        <button
-            className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
-            aria-label={label}
-            onClick={onOpenBoardLibrary}
-        >
-            <span className={styles.label}>{label}</span>
-        </button>
+        <div className={styles.container}>
+            <button
+                className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
+                aria-label={label}
+                onClick={onOpenBoardLibrary}
+            >
+                <span className={styles.label}>{label}</span>
+            </button>
+        </div>
     );
 };
 

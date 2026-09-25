@@ -5,18 +5,14 @@
  */
 
 const vmPackage = require('../../package.json');
-const Blocks = require('../engine/blocks');
-const Sprite = require('../sprites/sprite');
-const Variable = require('../engine/variable');
-const Comment = require('../engine/comment');
-const MonitorRecord = require('../engine/monitor-record');
+const Target = require('../engine/target').default;
+const Variable = require('../engine/variable').default;
+const Comment = require('../engine/comment').default;
+const MonitorRecord = require('../engine/monitor-record').default;
 const log = require('../util/log');
 const uid = require('../util/uid');
 const StringUtil = require('../util/string-util');
 const VariableUtil = require('../util/variable-util');
-
-const {loadSound} = require('../import/load-sound.js');
-const {deserializeSound} = require('./deserialize-assets.js');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -414,31 +410,6 @@ const serializeBlocks = function (blocks) {
 };
 
 /**
- * Serialize the given sound.
- * @param {object} sound The sound to be serialized.
- * @returns {object} A serialized representation of the sound.
- */
-const serializeSound = function (sound) {
-    const obj = Object.create(null);
-    obj.name = sound.name;
-
-    const soundToSerialize = sound.broken || sound;
-
-    obj.assetId = soundToSerialize.assetId;
-    obj.dataFormat = soundToSerialize.dataFormat.toLowerCase();
-    obj.format = soundToSerialize.format;
-    obj.rate = soundToSerialize.rate;
-    obj.sampleCount = soundToSerialize.sampleCount;
-    // serialize this property with the name 'md5ext' because that's
-    // what it's actually referring to. TODO runtime objects need to be
-    // updated to actually refer to this as 'md5ext' instead of 'md5'
-    // but that change should be made carefully since it is very
-    // pervasive
-    obj.md5ext = soundToSerialize.md5;
-    return obj;
-};
-
-/**
  * Serialize the given variables object.
  * @param {object} variables The variables to be serialized.
  * @returns {object} A serialized representation of the variables. They get
@@ -493,9 +464,10 @@ const serializeComments = function (comments) {
     return obj;
 };
 
-// scratch-parser (run when loading a project) requires every target to carry at least one costume.
-// The firmware target model has no costumes, so saved projects embed this single inert placeholder to
-// stay valid sb3 and re-validate on load. It references no asset data and is ignored during deserialize.
+// scratch-parser (run when loading a project) requires every target to carry at least one costume and a
+// sounds list. The firmware target model has neither, so saved projects embed this single inert costume and
+// no sounds to stay valid sb3 and re-validate on load. The costume references no asset data and is ignored
+// during deserialize.
 const PLACEHOLDER_COSTUME = {
     name: 'costume1',
     assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
@@ -524,16 +496,7 @@ const serializeTarget = function (target, extensions) {
     obj.comments = serializeComments(target.comments);
 
     obj.costumes = [PLACEHOLDER_COSTUME];
-    obj.sounds = target.sounds.map(serializeSound);
-    if (Object.prototype.hasOwnProperty.call(target, 'volume')) obj.volume = target.volume;
-    if (obj.isStage) { // Only the stage should have these properties
-        if (Object.prototype.hasOwnProperty.call(target, 'tempo')) {
-            obj.tempo = target.tempo;
-        }
-        if (Object.prototype.hasOwnProperty.call(target, 'textToSpeechLanguage')) {
-            obj.textToSpeechLanguage = target.textToSpeechLanguage;
-        }
-    }
+    obj.sounds = [];
 
     // Add found extensions to the extensions object
     targetExtensions.forEach(extensionId => {
@@ -569,28 +532,14 @@ const serializeMonitors = function (monitors) {
 /**
  * Serializes the specified VM runtime.
  * @param {!Runtime} runtime VM runtime instance to be serialized.
- * @param {string=} targetId Optional target id if serializing only a single target
  * @returns {object} Serialized runtime instance.
  */
-const serialize = function (runtime, targetId) {
-    // Fetch targets
+const serialize = function (runtime) {
     const obj = Object.create(null);
     // Create extension set to hold extension ids found while serializing targets
     const extensions = new Set();
 
-    const originalTargetsToSerialize = targetId ?
-        [runtime.getTargetById(targetId)] :
-        runtime.targets.filter(target => target.isOriginal);
-
-    const flattenedOriginalTargets = originalTargetsToSerialize.map(t => t.toJSON());
-
-    const serializedTargets = flattenedOriginalTargets.map(t => serializeTarget(t, extensions));
-
-    if (targetId) {
-        return serializedTargets[0];
-    }
-
-    obj.targets = serializedTargets;
+    obj.targets = runtime.targets.map(target => serializeTarget(target.toJSON(), extensions));
 
     obj.monitors = serializeMonitors(runtime.getMonitorState());
 
@@ -990,84 +939,22 @@ const deserializeBlocks = function (blocks) {
 
 
 /**
- * Parse the assets of a single "Scratch object" and load them. This
- * preprocesses objects to support loading the data for those assets over a
- * network while the objects are further processed into Blocks, Sprites, and a
- * list of needed Extensions.
- * @param {!object} object From-JSON "Scratch object:" sprite, stage, watcher.
- * @param {!Runtime} runtime Runtime object to load all structures into.
- * @param {JSZip} zip Sb3 file describing this project (to load assets from)
- * @returns {?{soundPromises:Array.<Promise>,soundBank:SoundBank}}
- * Object of an array of promises for sound asset objects, as well as a
- * SoundBank for the sound assets. null for unsupported objects.
- */
-const parseScratchAssets = function (object, runtime, zip) {
-    if (!Object.prototype.hasOwnProperty.call(object, 'name')) {
-        // Watcher/monitor - skip this object until those are implemented in VM.
-        // @todo
-        return Promise.resolve(null);
-    }
-
-    const assets = {
-        soundPromises: null,
-        soundBank: runtime.audioEngine && runtime.audioEngine.createBank()
-    };
-
-    // Sounds from JSON
-    assets.soundPromises = (object.sounds || []).map(soundSource => {
-        const sound = {
-            assetId: soundSource.assetId,
-            format: soundSource.format,
-            rate: soundSource.rate,
-            sampleCount: soundSource.sampleCount,
-            name: soundSource.name,
-            // TODO we eventually want this property to be called md5ext,
-            // but there are many things relying on this particular name at the
-            // moment, so this translation is very important
-            md5: soundSource.md5ext,
-            dataFormat: soundSource.dataFormat,
-            data: null
-        };
-        // deserializeSound should be called on the sound object we're
-        // creating above instead of the source sound object, because this way
-        // we're always loading the 'sb3' representation of the costume
-        // any translation that needs to happen will happen in the process
-        // of building up the costume object into an sb3 format
-        return deserializeSound(sound, runtime, zip)
-            .then(() => loadSound(sound, runtime, assets.soundBank));
-        // Only attempt to load the sound after the deserialization
-        // process has been completed.
-    });
-
-    return assets;
-};
-
-/**
  * Parse a single "Scratch object" and create all its in-memory VM objects.
  * @param {!object} object From-JSON "Scratch object:" sprite, stage, watcher.
  * @param {!Runtime} runtime Runtime object to load all structures into.
  * @param {ImportedExtensionsInfo} extensions - (in/out) parsed extension information will be stored here.
- * @param {JSZip} zip Sb3 file describing this project (to load assets from)
- * @param {object} assets - Promises for assets of this scratch object grouped
- *   into costumes and sounds
- * @returns {!Promise.<Target>} Promise for the target created (stage or sprite), or null for unsupported objects.
+ * @returns {?Target} The target created (stage or device), or null for unsupported objects. Saved sounds and
+ * volume are ignored: targets have neither.
  */
-const parseScratchObject = function (object, runtime, extensions, zip, assets) {
+const parseScratchObject = function (object, runtime, extensions) {
     if (!Object.prototype.hasOwnProperty.call(object, 'name')) {
         // Watcher/monitor - skip this object until those are implemented in VM.
         // @todo
-        return Promise.resolve(null);
+        return null;
     }
-    // Blocks container for this object.
-    const blocks = new Blocks(runtime);
-
-    // @todo: For now, load all Scratch objects (stage/sprites) as a Sprite.
-    const sprite = new Sprite(blocks, runtime);
-
-    // Sprite/stage name from JSON.
-    if (Object.prototype.hasOwnProperty.call(object, 'name')) {
-        sprite.name = object.name;
-    }
+    const target = new Target(runtime);
+    const blocks = target.blocks;
+    target.name = object.name;
     if (Object.prototype.hasOwnProperty.call(object, 'blocks')) {
         deserializeBlocks(object.blocks);
         // Take a second pass to create objects and add extensions
@@ -1082,20 +969,6 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
                 extensions.extensionIDs.add(extensionID);
             }
         }
-    }
-    // Sounds from JSON
-    const {soundBank, soundPromises} = assets;
-    // Create the first clone, and load its run-state from JSON.
-    const target = sprite.createClone();
-    // Load target properties from JSON.
-    if (Object.prototype.hasOwnProperty.call(object, 'tempo')) {
-        target.tempo = object.tempo;
-    }
-    if (Object.prototype.hasOwnProperty.call(object, 'volume')) {
-        target.volume = object.volume;
-    }
-    if (Object.prototype.hasOwnProperty.call(object, 'textToSpeechLanguage')) {
-        target.textToSpeechLanguage = object.textToSpeechLanguage;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'variables')) {
         for (const varId in object.variables) {
@@ -1164,12 +1037,8 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
         // This will be deleted after we are done parsing and ordering the targets list.
         target.targetPaneOrder = object.targetPaneOrder;
     }
-    Promise.all(soundPromises).then(sounds => {
-        sprite.sounds = sounds;
-        // Make sure if soundBank is undefined, sprite.soundBank is then null.
-        sprite.soundBank = soundBank || null;
-    });
-    return Promise.all(soundPromises).then(() => target);
+    runtime.fireTargetWasCreated(target);
+    return target;
 };
 
 const deserializeMonitor = function (monitorData, runtime, targets, extensions) {
@@ -1177,7 +1046,7 @@ const deserializeMonitor = function (monitorData, runtime, targets, extensions) 
     // by name in the given list of targets and update the monitor's targetId
     // to match the sprite's id.
     if (monitorData.spriteName) {
-        const filteredTargets = targets.filter(t => t.sprite.name === monitorData.spriteName);
+        const filteredTargets = targets.filter(t => t.name === monitorData.spriteName);
         if (filteredTargets && filteredTargets.length > 0) {
             monitorData.targetId = filteredTargets[0].id;
         } else {
@@ -1313,11 +1182,9 @@ const replaceUnsafeCharsInVariableIds = function (targets) {
  * Deserialize the specified representation of a VM runtime and loads it into the provided runtime instance.
  * @param  {object} json - JSON representation of a VM runtime.
  * @param  {Runtime} runtime - Runtime instance
- * @param {JSZip} zip - Sb3 file describing this project (to load assets from)
- * @param {boolean} isSingleSprite - If true treat as single sprite, else treat as whole project
  * @returns {Promise.<ImportedProject>} Promise that resolves to the list of targets after the project is deserialized
  */
-const deserialize = function (json, runtime, zip, isSingleSprite) {
+const deserialize = function (json, runtime) {
     const extensions = {
         extensionIDs: new Set(),
         extensionURLs: new Map()
@@ -1334,22 +1201,13 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
     // then sort by the layer order property before parsing the targets
     // so that their corresponding render drawables can be created in
     // their layer order (e.g. back to front)
-    const targetObjects = ((isSingleSprite ? [json] : json.targets) || [])
+    const targetObjects = (json.targets || [])
         .map((t, i) => Object.assign(t, {targetPaneOrder: i}))
         .sort((a, b) => a.layerOrder - b.layerOrder);
 
     const monitorObjects = json.monitors || [];
 
-    return Promise.resolve(
-        targetObjects.map(target =>
-            parseScratchAssets(target, runtime, zip))
-    )
-        // Force this promise to wait for the next loop in the js tick. Let
-        // storage have some time to send off asset requests.
-        .then(assets => Promise.resolve(assets))
-        .then(assets => Promise.all(targetObjects
-            .map((target, index) =>
-                parseScratchObject(target, runtime, extensions, zip, assets[index]))))
+    return Promise.resolve(targetObjects.map(target => parseScratchObject(target, runtime, extensions)))
         .then(targets => targets // Re-sort targets back into original sprite-pane ordering
             .map((t, i) => {
                 // Add layer order property to deserialized targets.

@@ -37,11 +37,10 @@ const defaultScanBeginMessage = (<FormattedMessage
 />);
 
 const AutoScanningStep = props => {
-    // Offer to update both during scan and after a failed scan, as long there's an update function.
-    // It's possible the scan will find "some" device but not the desired device,
-    // so don't limit the update offer to just the PHASES.notfound case.
-    const showUpdate = !!(props.onUpdatePeripheral &&
-        (props.phase === PHASES.pressbutton || props.phase === PHASES.notfound));
+    // The update button shows from the start: a device without the right firmware never shows up in a scan.
+    // The prompt waits for a scan, since only then can the device be missing from it.
+    const showUpdate = !!props.onUpdatePeripheral;
+    const showUpdatePrompt = showUpdate && props.phase !== PHASES.prescan;
     return (<Box className={styles.body}>
         <Box className={styles.activityArea}>
             <div className={styles.activityAreaInfo}>
@@ -99,10 +98,19 @@ const AutoScanningStep = props => {
                 {props.phase === PHASES.prescan && props.prescanMessage}
                 {props.phase === PHASES.pressbutton && props.scanBeginMessage}
             </Box>
-            {showUpdate && (
+            {showUpdate && props.phase === PHASES.prescan && (
+                <Box className={classNames(styles.bottomAreaItem, styles.instructions, styles.hint)}>
+                    <FormattedMessage
+                        defaultMessage="Use Update my Device to install its firmware over USB."
+                        description="Hint shown before searching, explaining the Update my Device button"
+                        id="gui.connection.auto-scanning.updatePeripheralHint"
+                    />
+                </Box>
+            )}
+            {showUpdatePrompt && (
                 <Box className={classNames(styles.bottomAreaItem, styles.instructions)}>
                     <BalancedFormattedMessage
-                        defaultMessage="If you don't see your device, you may need to update it to work with Scratch."
+                        defaultMessage="If you don't see your device, you may need to update it."
                         description="Prompt for updating a peripheral device"
                         id="gui.connection.auto-scanning.updatePeripheralPrompt"
                     />

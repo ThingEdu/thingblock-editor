@@ -66,11 +66,13 @@ class PeripheralTile extends React.Component {
                     <button
                         onClick={this.handleConnecting}
                     >
-                        <FormattedMessage
-                            defaultMessage="Connect"
-                            description="Button to start connecting to a specific device"
-                            id="gui.connection.connect"
-                        />
+                        {this.props.actionLabel || (
+                            <FormattedMessage
+                                defaultMessage="Connect"
+                                description="Button to start connecting to a specific device"
+                                id="gui.connection.connect"
+                            />
+                        )}
                     </button>
                 </Box>
             </Box>
@@ -79,6 +81,7 @@ class PeripheralTile extends React.Component {
 }
 
 PeripheralTile.propTypes = {
+    actionLabel: PropTypes.node,
     className: PropTypes.string,
     connectionSmallIconURL: PropTypes.string,
     name: PropTypes.string,

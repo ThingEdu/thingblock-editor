@@ -15,6 +15,18 @@ export default eslintConfigScratch.defineConfig(
         }
     },
     {
+        files: ['src/**/*.ts'],
+        extends: [eslintConfigScratch.legacy.typescript],
+        languageOptions: {
+            globals: globals.browser,
+            parserOptions: {
+                projectService: false,
+                tsconfigRootDir: import.meta.dirname,
+                project: ['tsconfig.json']
+            }
+        }
+    },
+    {
         files: ['src/extension-support/extension-worker.js'],
         languageOptions: {
             globals: globals.worker

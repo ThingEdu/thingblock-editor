@@ -1,7 +1,7 @@
 /**
  * VM State Snapshot Test
  *
- * Loads SB3/SB2 fixtures and compares the resulting VM state against stored
+ * Loads SB3 fixtures and compares the resulting VM state against stored
  * snapshots in tap-snapshots/vm-state-snapshot/.  Intended for cross-version
  * compatibility testing:
  *
@@ -24,20 +24,15 @@ const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer
 const VirtualMachine = require('../../src/virtual-machine');
 
 // To test a subset, replace with a literal array of fixture names, e.g.:
-//   const FIXTURES = ['procedure.sb2', 'monitors.sb3'];
+//   const FIXTURES = ['comments.sb3', 'monitors.sb3'];
 const FIXTURES = fs.readdirSync(FIXTURES_DIR, {recursive: true, withFileTypes: true})
-    .filter(f => f.isFile() && (f.name.endsWith('.sb2') || f.name.endsWith('.sb3')))
+    .filter(f => f.isFile() && f.name.endsWith('.sb3'))
     .map(f => path.relative(FIXTURES_DIR, path.join(f.parentPath, f.name)))
     // Filter out projects that cause intentional load errors or hang on vm.quit().
     .filter(name => ![
-        'missing_png.sb2',
         'missing_png.sb3',
         'missing_sound.sb3',
-        'missing_svg.sb2',
-        'missing_svg.sb3',
-        'sb2-from-sb1-missing-backdrop-image.sb2',
-        'load-extensions/music-visible-monitor-no-blocks.sb2',
-        'load-extensions/confirm-load/wedo2-simple-project.sb3'
+        'missing_svg.sb3'
     ].includes(name))
     .sort();
 
@@ -190,11 +185,10 @@ const captureVMState = function (vm) {
     ));
 
     // Stage first, then sprites in runtime order (execution order — do not sort).
-    const targets = vm.runtime.targets
-        .filter(t => t.isOriginal)
+    const targets = [...vm.runtime.targets]
         .sort((a, b) => (a.isStage === b.isStage ? 0 : a.isStage ? -1 : 1))
         .flatMap(runtimeTarget => {
-            const name = runtimeTarget.isStage ? 'Stage' : runtimeTarget.sprite.name;
+            const name = runtimeTarget.isStage ? 'Stage' : runtimeTarget.getName();
             const ser = projectJson.targets.find(/** @type {(t: any) => boolean} */ (t =>
                 runtimeTarget.isStage ? t.isStage : t.name === name
             ));

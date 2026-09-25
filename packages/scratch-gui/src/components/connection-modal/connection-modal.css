@@ -425,6 +425,11 @@
     text-align: center;
 }
 
+/* Sits right under the instructions it follows up on. */
+.bottom-area .bottom-area-item+.hint {
+    margin-top: .25rem;
+}
+
 .dots-row {
     display: flex;
     flex-direction: row;
