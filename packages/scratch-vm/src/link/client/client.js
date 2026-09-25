@@ -162,9 +162,9 @@ class Client {
 
     /**
      * Whether this backend can flash a device pack's prebuilt firmware image via `flashFirmware()`.
-     * The GUI checks this before offering the board menu's firmware-restore item, so a backend that
-     * cannot flash never tempts a learner into confirming an action that is doomed to reject. False by
-     * default; a backend that implements `flashFirmware()` overrides it to true.
+     * The GUI checks this before offering a firmware install, so a backend that cannot flash never
+     * offers an action that is doomed to reject. False by default; a backend that implements
+     * `flashFirmware()` overrides it to true.
      * @returns {boolean} true when `flashFirmware()` can succeed.
      */
     get canFlashFirmware () {
@@ -172,8 +172,7 @@ class Client {
     }
 
     /**
-     * Flash a firmware image the device's pack ships, in place of a compiled artifact — the way back
-     * to (for ThingBot) live mode after a compiled program has overwritten it. Gated by
+     * Flash a prebuilt firmware image the device's pack ships, in place of a compiled artifact. Gated by
      * `canFlashFirmware`: a backend that reports false must still implement this to reject with a
      * clear, mode-specific reason, since `canFlashFirmware` is advisory for the GUI, not a hard
      * precondition callers are guaranteed to check.

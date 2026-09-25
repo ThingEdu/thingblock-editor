@@ -67,7 +67,7 @@ class ThingBotTelemetrixExtension implements Extension {
         });
     }
 
-    connect (peripheralId) {
+    connect (peripheralId: string) {
         if (this._stopScan) {
             this._stopScan();
             this._stopScan = null;
@@ -93,6 +93,7 @@ class ThingBotTelemetrixExtension implements Extension {
 
     disconnect () {
         this._telemetrix.disconnect();
+        this._onDisconnect();
     }
 
     isConnected () {

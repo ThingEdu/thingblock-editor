@@ -270,7 +270,7 @@ class LinkClient extends Client {
     }
 
     /**
-     * The helper implements `flashFirmware()`, so the GUI may offer the board menu's restore item.
+     * The helper implements `flashFirmware()`, so the GUI may offer a firmware install.
      * @returns {boolean} always true.
      */
     get canFlashFirmware () {
