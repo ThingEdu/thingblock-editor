@@ -1,5 +1,5 @@
 <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-  <rect width="40" height="40" fill="hsl(163, 85%, 40%)"/>
+  <rect width="40" height="40" rx="8" fill="hsl(163, 85%, 40%)"/>
   <g stroke="white" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <!-- IC body -->
     <rect x="10" y="10" width="20" height="20" rx="2" stroke-width="1.5" fill="rgba(255,255,255,0.12)"/>
