@@ -78,7 +78,6 @@ packages/
 ├── scratch-vm/             Virtual machine that runs Scratch projects
 ├── scratch-blocks/         Blockly-based block editor (workspace fork)
 ├── scratch-storage/        Asset and project file storage layer
-├── scratch-svg-renderer/   SVG asset processor
 ├── task-herder/            Async task scheduler with rate limiting
 └── scratch-media-lib-scripts/  Build scripts for media library assets
 scripts/                    Monorepo-level utility scripts
@@ -92,7 +91,6 @@ scripts/                    Monorepo-level utility scripts
 | `scratch-vm` | JavaScript (migrating to TypeScript) | webpack | Tap |
 | `scratch-blocks` | TypeScript | webpack | Vitest |
 | `scratch-storage` | JavaScript | webpack | Jest |
-| `scratch-svg-renderer` | JavaScript | webpack | Tap |
 | `task-herder` | TypeScript | Vite | Vitest |
 | `scratch-media-lib-scripts` | JavaScript | — | Jest |
 

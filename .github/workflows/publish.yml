@@ -208,9 +208,6 @@ jobs:
           name: build
           path: packages
 
-      - name: Publish scratch-svg-renderer
-        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-svg-renderer
-
       - name: Publish scratch-vm
         run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-vm
 

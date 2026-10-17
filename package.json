@@ -2,23 +2,22 @@
   "name": "thingblock-editor",
   "version": "14.1.0",
   "private": "true",
-  "description": "Scratch editor mono-repository",
+  "description": "ThingBlock editor mono-repository",
   "keywords": [],
-  "homepage": "https://github.com/lgthevinh/thingblock-editor#readme",
+  "homepage": "https://github.com/ThingEdu/thingblock-editor#readme",
   "bugs": {
-    "url": "https://github.com/lgthevinh/thingblock-editor/issues"
+    "url": "https://github.com/ThingEdu/thingblock-editor/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lgthevinh/thingblock-editor.git"
+    "url": "git+https://github.com/ThingEdu/thingblock-editor.git"
   },
-  "license": "AGPL-3.0-only",
-  "author": "Scratch Foundation",
+  "license": "MIT",
+  "author": "ThingEdu",
   "workspaces": [
     "packages/scratch-blocks",
     "packages/task-herder",
     "packages/scratch-storage",
-    "packages/scratch-svg-renderer",
     "packages/scratch-vm",
     "packages/scratch-gui",
     "packages/scratch-media-lib-scripts",
@@ -26,7 +25,7 @@
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production npm run --workspaces build",
-    "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@scratch/scratch-blocks --workspace=@scratch/scratch-storage --workspace=@scratch/scratch-svg-renderer --workspace=@scratch/scratch-vm",
+    "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@scratch/scratch-blocks --workspace=@scratch/scratch-storage --workspace=@scratch/scratch-vm",
     "clean": "npm run --workspaces clean",
     "prepare": "husky install",
     "refresh-gh-workflow": "ts-node scripts/update-gha-workflows.ts",

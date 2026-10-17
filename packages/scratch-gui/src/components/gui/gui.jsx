@@ -17,7 +17,6 @@ import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
 import Loader from '../loader/loader.jsx';
 import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
-import Watermark from '../../containers/watermark.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
 import TipsLibrary from '../../containers/tips-library.jsx';
@@ -470,9 +469,6 @@ const GUIComponent = props => {
                                             selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
                                         }
                                     />
-                                    <Box className={styles.watermark}>
-                                        <Watermark />
-                                    </Box>
                                 </TabPanel>
                             </Tabs>
                         </Box>

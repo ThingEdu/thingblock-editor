@@ -23,7 +23,6 @@ The `packages` directory contains:
   `thingblock-link` helper serves the built packs as static files; the editor imports them at runtime and
   registers each pack's codegen against the shared `arduinoGenerator`.
 - `scratch-storage` loads project assets like images and sounds.
-- `scratch-svg-renderer` processes SVG assets.
 - `scratch-media-lib-scripts` builds media library assets.
 - `task-herder` manages queues of tasks with throttling and concurrency limits.
 
