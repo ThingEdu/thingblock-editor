@@ -28,11 +28,11 @@ type PackageJson = {
 };
 
 type Workspace = {
-    /** Full npm name, e.g. "@scratch/scratch-vm" */
+    /** Full npm name, e.g. "@thingblock/thingblock-vm" */
     name: string;
     /** Bare name, e.g. "scratch-vm" */
     bareName: string;
-    /** Relative dir, e.g. "packages/scratch-vm" */
+    /** Relative dir, e.g. "packages/thingblock-vm" */
     location: string;
     /** Direct workspace dependencies (production only) */
     directDeps: string[];

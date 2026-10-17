@@ -25,7 +25,7 @@
     "vite": "npm:rolldown-vite@7.3.1"
   },
   "devDependencies": {
-    "@scratch/scratch-blocks": "14.1.0",
+    "@thingblock/thingblock-blocks": "14.1.0",
     "eslint": "9.39.4",
     "eslint-config-scratch": "14.1.30",
     "jszip": "3.10.1",

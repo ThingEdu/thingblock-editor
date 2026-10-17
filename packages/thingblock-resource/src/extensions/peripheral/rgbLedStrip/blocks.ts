@@ -3,7 +3,7 @@
  * brightness/clear/show controls. Pixel indices are 1-based in the palette; the generator subtracts
  * one for the library's 0-based API.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#7700FF'

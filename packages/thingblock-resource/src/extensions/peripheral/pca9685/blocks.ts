@@ -6,7 +6,7 @@
  * pack fills the same inputs with the built-in `math_whole_number` / `math_angle` shadows, which
  * already carry Arduino codegen.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#9F4D95'

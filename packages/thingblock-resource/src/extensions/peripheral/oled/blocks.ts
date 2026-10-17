@@ -6,7 +6,7 @@
  * code. Scroll row bounds are the driver's page indices (`0x00`-`0x07`), which is why they are
  * dropdowns of preset rows rather than free numbers.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#C0C0C0'

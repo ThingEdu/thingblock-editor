@@ -15,24 +15,28 @@ any-workspace:
   - *global
   - "packages/**"
 
+thingblock-blocks:
+  - *global
+  - "packages/thingblock-blocks/**"
 task-herder:
   - *global
   - "packages/task-herder/**"
-scratch-storage:
+thingblock-storage:
   - *global
-  - "packages/scratch-storage/**"
   - "packages/task-herder/**"
-scratch-vm:
+  - "packages/thingblock-storage/**"
+thingblock-vm:
   - *global
-  - "packages/scratch-storage/**"
-  - "packages/scratch-vm/**"
   - "packages/task-herder/**"
-scratch-gui:
+  - "packages/thingblock-storage/**"
+  - "packages/thingblock-vm/**"
+thingblock-gui:
   - *global
-  - "packages/scratch-gui/**"
-  - "packages/scratch-storage/**"
-  - "packages/scratch-vm/**"
   - "packages/task-herder/**"
-scratch-media-lib-scripts:
+  - "packages/thingblock-blocks/**"
+  - "packages/thingblock-gui/**"
+  - "packages/thingblock-storage/**"
+  - "packages/thingblock-vm/**"
+thingblock-resource:
   - *global
-  - "packages/scratch-media-lib-scripts/**"
+  - "packages/thingblock-resource/**"

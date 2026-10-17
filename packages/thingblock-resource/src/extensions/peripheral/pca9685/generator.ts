@@ -5,7 +5,7 @@
  * The servo-eval global is pushed by `setToServoMode` rather than by the angle setters, mirroring the
  * board's own requirement that servo mode is entered before any angle is written.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

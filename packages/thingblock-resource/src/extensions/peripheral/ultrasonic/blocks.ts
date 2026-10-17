@@ -1,5 +1,5 @@
 /** Ultrasonic distance sensor block: TRIG/ECHO pins plus a unit dropdown, reporting a number. */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#D39DDB'

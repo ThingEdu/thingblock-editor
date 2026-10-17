@@ -3,7 +3,7 @@
  * globals; the reporters read fields off that latched sample rather than polling the sensor again,
  * so acceleration/rotation/temperature within a pass are all from the same instant.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

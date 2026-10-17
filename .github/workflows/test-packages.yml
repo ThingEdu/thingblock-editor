@@ -47,7 +47,7 @@ jobs:
       - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           # Download every per-package test-output artifact. Each lands
-          # in its own subdirectory (e.g. scratch-gui-test-output/),
+          # in its own subdirectory (e.g. thingblock-gui-test-output/),
           # which avoids filename collisions between packages that both
           # produce junit.xml.
           pattern: '*-test-output'

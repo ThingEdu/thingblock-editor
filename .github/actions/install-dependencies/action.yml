@@ -12,7 +12,7 @@ runs:
           node_modules
           packages/*/node_modules
           packages/*/src/generated
-          packages/scratch-gui/static/microbit
+          packages/thingblock-gui/static/microbit
         key: ${{ runner.os }}-npm-${{ hashFiles('.nvmrc', 'package-lock.json') }}
     - if: steps.restore-node-modules-cache.outputs.cache-hit != 'true'
       name: Install NPM dependencies
@@ -25,5 +25,5 @@ runs:
           node_modules
           packages/*/node_modules
           packages/*/src/generated
-          packages/scratch-gui/static/microbit
+          packages/thingblock-gui/static/microbit
         key: ${{ runner.os }}-npm-${{ hashFiles('.nvmrc', 'package-lock.json') }}

@@ -43,8 +43,8 @@ The longer-term directions include educational hardware programming (making phys
 beginners through Scratch's block metaphor) and a general-purpose hardware extension platform reusable for
 future device integrations.
 
-All packages are published to npm under the `@scratch/` scope. They are consumed both internally (e.g.,
-`scratch-www` loads `scratch-gui`) and by third parties.
+Packages use the `@thingblock/` npm scope, except `task-herder`, which keeps its upstream `@scratch/` name. The
+desktop shell (`thingblock-desktop`) builds `thingblock-gui` from a sibling checkout of this repo.
 
 ## Build and lint
 
@@ -59,9 +59,9 @@ npm run clean    # Clean all packages
 Run per-package commands from the package directory, or from the root with `--workspace`:
 
 ```sh
-cd packages/scratch-vm && npm test
+cd packages/thingblock-vm && npm test
 # or equivalently:
-npm test --workspace=packages/scratch-vm
+npm test --workspace=packages/thingblock-vm
 ```
 
 Each package defines its own `test` and `build` scripts; see "Packages at a glance" for specifics.
@@ -74,12 +74,11 @@ rejected by the pre-commit hook.
 
 ```text
 packages/
-├── scratch-gui/            React-based editor UI
-├── scratch-vm/             Virtual machine that runs Scratch projects
-├── scratch-blocks/         Blockly-based block editor (workspace fork)
-├── scratch-storage/        Asset and project file storage layer
-├── task-herder/            Async task scheduler with rate limiting
-└── scratch-media-lib-scripts/  Build scripts for media library assets
+├── thingblock-gui/         React-based editor UI
+├── thingblock-vm/          Virtual machine that runs Scratch projects
+├── thingblock-blocks/      Blockly-based block editor (workspace fork)
+├── thingblock-storage/     Asset and project file storage layer
+└── task-herder/            Async task scheduler with rate limiting
 scripts/                    Monorepo-level utility scripts
 ```
 
@@ -87,14 +86,13 @@ scripts/                    Monorepo-level utility scripts
 
 | Package | Language | Bundler | Tests |
 | - | - | - | - |
-| `scratch-gui` | JavaScript / JSX (some TypeScript) | webpack | Jest |
-| `scratch-vm` | JavaScript (migrating to TypeScript) | webpack | Tap |
-| `scratch-blocks` | TypeScript | webpack | Vitest |
-| `scratch-storage` | JavaScript | webpack | Jest |
+| `thingblock-gui` | JavaScript / JSX (some TypeScript) | webpack | Jest |
+| `thingblock-vm` | JavaScript (migrating to TypeScript) | webpack | Tap |
+| `thingblock-blocks` | TypeScript | webpack | Vitest |
+| `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
-| `scratch-media-lib-scripts` | JavaScript | — | Jest |
 
-`task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `scratch-blocks` uses
+`task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
 the same test framework (Vitest) but retains webpack as its bundler. The remaining packages reflect the legacy
 stack and are being migrated incrementally.
 
@@ -109,7 +107,7 @@ unless that migration is the explicit goal of the task.
 All packages use ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-scratch`. If a package also uses
 Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 
-### scratch-gui specifics
+### thingblock-gui specifics
 
 - React functional components with hooks for new code; class components exist in older code.
 - Keep components presentational where possible; connect to Redux only in container files.
@@ -120,19 +118,19 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is now a firmware device panel
   (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
   collapsible serial/input panel). The VM still runs one implicit device target, but no sprite UI renders.
-- `scratch-gui`'s webpack build (and dev server) compiles `@scratch/scratch-vm` from source through its `webpack`
-  export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
-  resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `scratch-vm` source — needs
-  `npx webpack --progress` in `packages/scratch-vm` before `scratch-gui` tests see it; otherwise they silently
+- `thingblock-gui`'s webpack build (and dev server) compiles `@thingblock/thingblock-vm` from source through its
+  `webpack` export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
+  resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `thingblock-vm` source — needs
+  `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
   run against a stale bundle.
 
-### scratch-blocks specifics
+### thingblock-blocks specifics
 
 - Block definitions live in `src/blocks/`. Each file registers blocks via `Blockly.Blocks.<block_id> = { init() }`.
 - `src/index.ts` imports all block files and exports the configured Blockly instance.
 - Uses TypeScript throughout; follow the existing patterns when adding or removing block definitions.
 
-### scratch-vm specifics
+### thingblock-vm specifics
 
 - Extension entry points live in `src/extensions/`. Each extension exports a class with `getInfo()` and block
   implementation methods. New and converted extensions are TypeScript and implement `Extension` from
@@ -175,7 +173,7 @@ Use `npm ci` from the repo root to install all workspace dependencies from `pack
 When adding or updating a dependency in a specific package:
 
 ```sh
-npm install some-package@version --workspace=packages/scratch-vm
+npm install some-package@version --workspace=packages/thingblock-vm
 ```
 
 This updates both `package.json` in the target package and the root `package-lock.json`.

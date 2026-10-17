@@ -1,9 +1,9 @@
 /**
- * The contract a resource pack implements. These types are authored against `@scratch/scratch-blocks`
+ * The contract a resource pack implements. These types are authored against `@thingblock/thingblock-blocks`
  * for build-time checking only; at runtime the editor injects its live Blockly and `arduinoGenerator`
  * instances, and the pack registers against them. Nothing here is bundled into the served output.
  */
-import type * as ScratchBlocks from '@scratch/scratch-blocks'
+import type * as ScratchBlocks from '@thingblock/thingblock-blocks'
 
 /** The injected Blockly/scratch-blocks module (the editor's live instance). */
 export type Blockly = typeof ScratchBlocks

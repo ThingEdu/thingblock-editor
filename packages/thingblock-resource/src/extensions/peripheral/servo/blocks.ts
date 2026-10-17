@@ -2,7 +2,7 @@
  * Servo peripheral block definitions. Registered against the editor's injected Blockly so the palette
  * shapes live in the same instance the workspace uses.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 export const registerBlocks: RegisterBlocks = (Blockly) => {

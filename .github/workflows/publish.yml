@@ -159,13 +159,6 @@ jobs:
     with:
       packages: ${{ needs.build.outputs.packages }}
 
-  preview:
-    needs: [release-prep, build]
-    if: needs.release-prep.outputs.do_release == 'true'
-    uses: ./.github/workflows/deploy-playground-preview.yml
-    with:
-      destination_dir: ${{ needs.release-prep.outputs.branch }}
-      full_commit_message: "Build for release ${{ needs.release-prep.outputs.tag }}"
 
   cd:
     name: Publish to npm
@@ -208,36 +201,32 @@ jobs:
           name: build
           path: packages
 
-      - name: Publish scratch-vm
-        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-vm
+      - name: Publish thingblock-vm
+        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@thingblock/thingblock-vm
 
-      - name: Publish scratch-gui
+      - name: Publish thingblock-gui
         run: |
-          cp ./packages/scratch-gui/package.json ./packages/scratch-gui/package-copy.json
+          cp ./packages/thingblock-gui/package.json ./packages/thingblock-gui/package-copy.json
 
-          jq 'del(.exports["./standalone"])' ./packages/scratch-gui/package.json | npx sponge ./packages/scratch-gui/package.json
+          jq 'del(.exports["./standalone"])' ./packages/thingblock-gui/package.json | npx sponge ./packages/thingblock-gui/package.json
 
-          npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-gui
+          npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@thingblock/thingblock-gui
 
-          mv ./packages/scratch-gui/package-copy.json ./packages/scratch-gui/package.json
+          mv ./packages/thingblock-gui/package-copy.json ./packages/thingblock-gui/package.json
 
-      - name: Publish scratch-gui-standalone
+      - name: Publish thingblock-gui-standalone
         run: |
           bash ./scripts/prepare-standalone-gui.sh
-          npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-gui-standalone
+          npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@thingblock/thingblock-gui-standalone
 
       - name: Publish task-herder
         run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/task-herder
 
-      - name: Publish scratch-media-lib-scripts
-        run: |
-          npm run build --workspace @scratch/scratch-media-lib-scripts
-          npm publish --access=public --tag="$NPM_TAG" --workspace=@scratch/scratch-media-lib-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish thingblock-storage
+        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@thingblock/thingblock-storage
 
-      - name: Publish scratch-storage
-        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@scratch/scratch-storage
+      - name: Publish thingblock-blocks
+        run: npm publish --access=public --tag="$NPM_TAG" --ignore-scripts --workspace=@thingblock/thingblock-blocks
 
     # update-gha-workflows.ts: insert new "Publish <package>" steps before this line.
 

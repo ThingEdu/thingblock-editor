@@ -3,7 +3,7 @@
  * drawing block writes into that object's buffer, which only reaches the panel on `oled_refresh`
  * (`display()`) — the driver is buffered, so drawing without a refresh shows nothing.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 /** Scroll direction field value → the driver's scroll entry point. */

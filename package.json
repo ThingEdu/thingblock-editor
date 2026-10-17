@@ -15,21 +15,20 @@
   "license": "MIT",
   "author": "ThingEdu",
   "workspaces": [
-    "packages/scratch-blocks",
+    "packages/thingblock-blocks",
     "packages/task-herder",
-    "packages/scratch-storage",
-    "packages/scratch-vm",
-    "packages/scratch-gui",
-    "packages/scratch-media-lib-scripts",
+    "packages/thingblock-storage",
+    "packages/thingblock-vm",
+    "packages/thingblock-gui",
     "packages/thingblock-resource"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production npm run --workspaces build",
-    "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@scratch/scratch-blocks --workspace=@scratch/scratch-storage --workspace=@scratch/scratch-vm",
+    "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@thingblock/thingblock-blocks --workspace=@thingblock/thingblock-storage --workspace=@thingblock/thingblock-vm",
     "clean": "npm run --workspaces clean",
     "prepare": "husky install",
     "refresh-gh-workflow": "ts-node scripts/update-gha-workflows.ts",
-    "start": "npm --workspace @scratch/scratch-gui start",
+    "start": "npm --workspace @thingblock/thingblock-gui start",
     "test": "npm test --workspaces",
     "update-legal": "scripts/update-legal.sh",
     "version": "cross-env-shell ./scripts/npm-version.sh"

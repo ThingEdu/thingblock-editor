@@ -1,7 +1,7 @@
 /**
  * ThingBot-exclusive block definitions for motors, servos, LEDs, the buzzer, the switch, and PS2 setup.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const CORE_COLOUR = '#009933'

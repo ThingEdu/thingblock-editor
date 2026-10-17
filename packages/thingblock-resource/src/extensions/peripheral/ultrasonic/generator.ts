@@ -2,7 +2,7 @@
  * Ultrasonic sensor Arduino codegen. One `Ultrasonic` instance per TRIG/ECHO pin pair, so two blocks
  * reading the same pins collapse to one global object.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

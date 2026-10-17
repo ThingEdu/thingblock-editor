@@ -2,7 +2,7 @@
  * DHT sensor Arduino codegen. One `DHT` instance per `NO` index, declared by `dht_init`; the humidity
  * and temperature readers reference the same instance by that index.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
