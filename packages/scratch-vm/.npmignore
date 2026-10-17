@@ -9,7 +9,7 @@
 /test
 
 # Build created files
-/playground
+/docs/api
 
 # Coverage created files
 /.nyc_output

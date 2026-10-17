@@ -17,23 +17,6 @@ cd scratch-vm
 npm install
 ```
 
-## Development Server
-This requires Node.js to be installed.
-
-For convenience, we've included a development server with the VM. This is sometimes useful when running in an environment that's loading remote resources (e.g., SVGs from the Scratch server). If you would like to use your modified VM with the full Scratch 3.0 GUI, [follow the instructions to link the VM to the GUI](https://github.com/scratchfoundation/scratch-gui/wiki/Getting-Started).
-
-## Running the Development Server
-Open a Command Prompt or Terminal in the repository and run:
-```bash
-npm start
-```
-
-## Playground
-To view the Playground, make sure the dev server's running and go to [http://localhost:8073/playground/](http://localhost:8073/playground/) - you will be directed to the playground, which demonstrates various tools and internal state.
-
-![VM Playground Screenshot](https://i.imgur.com/nOCNqEc.gif)
-
-
 ## Standalone Build
 ```bash
 npm run build
@@ -48,7 +31,6 @@ npm run build
 ```
 
 ## How to include in a Node.js App
-For an extended setup example, check out the /src/playground directory, which includes a fully running VM instance.
 ```js
 var VirtualMachine = require('@scratch/scratch-vm');
 var vm = new VirtualMachine();

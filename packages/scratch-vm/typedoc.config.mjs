@@ -1,7 +1,7 @@
 /** @type {Partial<import('typedoc').TypeDocOptions>} */
 const config = {
     entryPoints: ['src/index.js'],
-    out: 'playground/docs',
+    out: 'docs/api',
     excludePrivate: false,
     readme: 'README.md',
     validation: {

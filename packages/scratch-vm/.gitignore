@@ -17,7 +17,7 @@ npm-*
 
 # Build
 /dist
-/playground
+/docs/api
 /benchmark
 
 # Localization
