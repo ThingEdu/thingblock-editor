@@ -6,8 +6,8 @@ selection, generated Arduino code, native board-link discovery, upload flow foun
 device input and output.
 
 ThingBlock is a fork of the open-source `scratch-editor` project. The Scratch-derived package names, workspace
-layout, and architecture are intentionally preserved in many places so the fork remains understandable, compatible with
-upstream Scratch packages, and easier to compare against the original project.
+layout, and architecture are intentionally preserved in many places so the fork remains understandable and easier to
+compare against the original project.
 
 ## What's in this repository?
 
