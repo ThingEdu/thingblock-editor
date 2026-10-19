@@ -10,17 +10,19 @@
 import type { Block } from '@scratch/scratch-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
-const ENCODER_GLOBALS = `#if defined(ESP32) || defined(ESP8266)
-#define ENCODER_ISR_ATTR IRAM_ATTR
-#else
-#define ENCODER_ISR_ATTR
-#endif
-uint8_t encoder_pinA, encoder_pinB, encoder_pinBtn;
+// ESP32/ESP8266 cores define IRAM_ATTR (the handler must live in IRAM); elsewhere it expands to
+// nothing. It goes in the includes bucket because the .ino preprocessor puts the handler's
+// prototype ahead of the first function body, which can come before the globals bucket.
+const ENCODER_INCLUDES = `#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif`
+
+const ENCODER_GLOBALS = `uint8_t encoder_pinA, encoder_pinB, encoder_pinBtn;
 volatile uint8_t encoder_state = 0;
 volatile int8_t encoder_steps = 0;
 volatile long encoder_count = 0;
 
-void ENCODER_ISR_ATTR encoder_isr() {
+void IRAM_ATTR encoder_isr() {
   static const int8_t table[16] = {0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0};
   uint8_t ab = (digitalRead(encoder_pinA) << 1) | digitalRead(encoder_pinB);
   encoder_steps += table[(encoder_state << 2) | ab];
@@ -54,7 +56,10 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     return typeof value === 'string' || typeof value === 'number' ? String(value) : fallback
   }
 
-  const useEncoder = () => generator.globals.set('encoder', ENCODER_GLOBALS)
+  const useEncoder = () => {
+    generator.includes.set('encoder', ENCODER_INCLUDES)
+    generator.globals.set('encoder', ENCODER_GLOBALS)
+  }
 
   generator.forBlock.encoder_init = (block) => {
     const a = fieldValue(block, 'PIN_A', '2')

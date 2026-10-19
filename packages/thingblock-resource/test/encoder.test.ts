@@ -54,7 +54,20 @@ describe('encoder generator', () => {
     gen.forBlock.encoder_isPressed(makeBlock())
 
     expect([...gen.globals.keys()]).toEqual(['encoder'])
-    expect(gen.globals.get('encoder')).toContain('void ENCODER_ISR_ATTR encoder_isr()')
+    expect(gen.globals.get('encoder')).toContain('void IRAM_ATTR encoder_isr()')
+  })
+
+  // The `.ino` preprocessor inserts a prototype for every function ahead of the first function body in
+  // the sketch, which can precede the globals bucket. Any macro in the handler's signature must
+  // therefore come from the includes bucket, which is emitted before all code.
+  it('defines the ISR attribute in the includes bucket, not beside the handler', () => {
+    const gen = makeGenerator()
+    registerGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.encoder_init(makeBlock())
+
+    expect(gen.includes.get('encoder')).toBe('#ifndef IRAM_ATTR\n#define IRAM_ATTR\n#endif')
+    expect(gen.globals.get('encoder')).not.toContain('#define')
   })
 
   it('counts whole detents: four quarter steps make one click in either direction', () => {
