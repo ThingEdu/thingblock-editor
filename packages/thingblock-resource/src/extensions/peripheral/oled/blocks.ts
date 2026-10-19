@@ -1,5 +1,5 @@
 /**
- * SSD1306 OLED blocks: init, the GFX drawing primitives (line, rect, circle, round rect, triangle,
+ * SSD1306 / SH1106 OLED blocks: init, the GFX drawing primitives (line, rect, circle, round rect, triangle,
  * each in outline and filled form), text size/cursor/print, and the clear/refresh/scroll controls.
  *
  * Drawing colours are the driver's own `SSD1306_*` constants, emitted verbatim into the generated
@@ -39,7 +39,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.oled_init = {
     init(this: Block) {
       this.jsonInit({
-        message0: 'init oled width %1 height %2 I2C address %3',
+        message0: 'init oled width %1 height %2 I2C address %3 chip %4',
         args0: [
           numberInput('W'),
           numberInput('H'),
@@ -49,6 +49,16 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
             options: [
               ['0x78 (0x3c)', '0x3c'],
               ['0x7a (0x3d)', '0x3d'],
+            ],
+          },
+          // Appended last so projects saved before the field existed still load: a missing field
+          // keeps its first option, which is the SSD1306 every older project was built for.
+          {
+            type: 'field_dropdown',
+            name: 'CHIP',
+            options: [
+              ['SSD1306', 'SSD1306'],
+              ['SH1106 (1.3")', 'SH1106'],
             ],
           },
         ],
