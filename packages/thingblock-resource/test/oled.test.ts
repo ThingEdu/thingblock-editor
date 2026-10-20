@@ -60,6 +60,36 @@ describe('OLED generator', () => {
     expect(code).toBe('oled.begin(SSD1306_SWITCHCAPVCC, 0x3d);\noled.setTextColor(SSD1306_WHITE);\n')
   })
 
+  it('declares an SH1106 display through the SH110X driver when that chip is picked', () => {
+    // An SH1106 acknowledges SSD1306 writes on the same address and stays dark, so the chip
+    // field must swap the driver, not just the object name.
+    const gen = makeGenerator()
+    registerGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    const code = gen.forBlock.oled_init(makeBlock({ W: '128', H: '64' }, { ADDR: '0x3c', CHIP: 'SH1106' }))
+
+    const includes = gen.includes.get('oled') ?? ''
+    expect(includes).toContain('#include <Adafruit_SH110X.h>')
+    expect(includes).not.toContain('Adafruit_SSD1306.h')
+    expect(includes).toContain('#define SSD1306_WHITE SH110X_WHITE')
+    expect(gen.globals.get('oled')).toContain('class ThingBlockSH1106 : public Adafruit_SH1106G')
+    expect(gen.globals.get('oled')).toContain('ThingBlockSH1106 oled(128, 64, &Wire);')
+    expect(code).toBe('oled.begin(0x3c, true);\noled.setTextColor(SSD1306_WHITE);\n')
+  })
+
+  it('keeps the scroll blocks compiling on an SH1106, which has no hardware scroll', () => {
+    const gen = makeGenerator()
+    registerGenerators(gen as unknown as ArduinoGenerator, Order)
+
+    gen.forBlock.oled_init(makeBlock({}, { CHIP: 'SH1106' }))
+
+    const shim = gen.globals.get('oled') ?? ''
+    for (const call of ['startscrollright', 'startscrollleft', 'startscrolldiagright', 'startscrolldiagleft']) {
+      expect(shim).toContain(`void ${call}(uint8_t, uint8_t) {}`)
+    }
+    expect(shim).toContain('void stopscroll() {}')
+  })
+
   it('gives the display a drawable text colour, so printing without `set text` still shows', () => {
     // Adafruit_GFX starts with textcolor 0xFFFF, and Adafruit_SSD1306::drawPixel only
     // handles WHITE/BLACK/INVERSE — any other value silently draws nothing. Without a
@@ -154,6 +184,7 @@ describe('OLED resource pack', () => {
       toolbox: './toolbox.js',
       libs: [
         { path: 'libs/Adafruit_SSD1306' },
+        { path: 'libs/Adafruit_SH110X' },
         { path: 'libs/Adafruit_GFX_Library' },
         { path: 'libs/Adafruit_BusIO' },
       ],

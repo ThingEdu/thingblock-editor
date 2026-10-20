@@ -1,7 +1,11 @@
 /**
- * SSD1306 OLED Arduino codegen. One display object declared from the init block's dimensions; every
- * drawing block writes into that object's buffer, which only reaches the panel on `oled_refresh`
+ * SSD1306 / SH1106 OLED Arduino codegen. One display object declared from the init block's dimensions;
+ * every drawing block writes into that object's buffer, which only reaches the panel on `oled_refresh`
  * (`display()`) — the driver is buffered, so drawing without a refresh shows nothing.
+ *
+ * The SH1106 (the common 1.3" 128x64 panel) answers on the same I2C address as an SSD1306 but needs its
+ * own driver: driven as an SSD1306 it acknowledges every write and stays dark. Both Adafruit drivers
+ * share the GFX drawing API, so every other block's codegen is chip-independent.
  */
 import type { Block } from '@scratch/scratch-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
@@ -13,6 +17,29 @@ const SCROLL_CALLS: Record<string, string> = {
   '2': 'startscrolldiagright',
   '3': 'startscrolldiagleft',
 }
+
+/**
+ * SH1106 driver shim. The drawing blocks emit the SSD1306 colour names, so they are aliased to the
+ * SH110X values (identical numbers). The SH1106 has no hardware scroll, so the scroll entry points the
+ * scroll blocks call are no-ops here rather than compile errors.
+ */
+const SH1106_INCLUDES = `#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
+#define SSD1306_BLACK SH110X_BLACK
+#define SSD1306_WHITE SH110X_WHITE
+#define SSD1306_INVERSE SH110X_INVERSE`
+
+const sh1106Global = (w: string, h: string): string => `class ThingBlockSH1106 : public Adafruit_SH1106G {
+ public:
+  using Adafruit_SH1106G::Adafruit_SH1106G;
+  void startscrollright(uint8_t, uint8_t) {}
+  void startscrollleft(uint8_t, uint8_t) {}
+  void startscrolldiagright(uint8_t, uint8_t) {}
+  void startscrolldiagleft(uint8_t, uint8_t) {}
+  void stopscroll() {}
+};
+ThingBlockSH1106 oled(${w}, ${h}, &Wire);`
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
   const fieldValue = (block: Block, name: string, fallback: string): string => {
@@ -42,6 +69,12 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     const w = input(block, 'W', '128')
     const h = input(block, 'H', '64')
     const addr = fieldValue(block, 'ADDR', '0x3c')
+
+    if (fieldValue(block, 'CHIP', 'SSD1306') === 'SH1106') {
+      generator.includes.set('oled', SH1106_INCLUDES)
+      generator.globals.set('oled', sh1106Global(w, h))
+      return `oled.begin(${addr}, true);\noled.setTextColor(SSD1306_WHITE);\n`
+    }
 
     generator.includes.set('oled', '#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>')
     generator.globals.set('oled', `Adafruit_SSD1306 oled(${w}, ${h}, &Wire);`)
