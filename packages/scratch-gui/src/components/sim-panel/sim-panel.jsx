@@ -36,6 +36,11 @@ const messages = defineMessages({
         defaultMessage: 'SW (hold)',
         description: 'Label of the virtual push button; it stays pressed while held'
     },
+    stale: {
+        id: 'gui.simPanel.stale',
+        defaultMessage: 'The blocks changed. Press Run to start the new program.',
+        description: 'Shown when the program on the virtual board no longer matches the blocks'
+    },
     halted: {
         id: 'gui.simPanel.halted',
         defaultMessage: 'The board stopped: {reason}',
@@ -95,6 +100,7 @@ Led.propTypes = {
 
 const SimPanel = ({
     snapshot,
+    stale,
     problems,
     serial,
     speed,
@@ -206,6 +212,7 @@ const SimPanel = ({
             {serial && <pre className={styles.serial}>{serial}</pre>}
             <div className={styles.status}>
                 <span>{snapshot ? formatTime(snapshot.t) : formatTime(0)}</span>
+                {stale && <span>{intl.formatMessage(messages.stale)}</span>}
                 {snapshot && snapshot.error && (
                     <span>{intl.formatMessage(messages.halted, {reason: snapshot.error})}</span>
                 )}
@@ -235,7 +242,8 @@ SimPanel.propTypes = {
     onStep: PropTypes.func.isRequired,
     onReset: PropTypes.func.isRequired,
     onSpeedChange: PropTypes.func.isRequired,
-    onSwitchChange: PropTypes.func.isRequired
+    onSwitchChange: PropTypes.func.isRequired,
+    stale: PropTypes.bool.isRequired
 };
 
 export default SimPanel;

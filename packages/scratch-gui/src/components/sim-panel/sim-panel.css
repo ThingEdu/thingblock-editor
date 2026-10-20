@@ -2,6 +2,9 @@
 @import "../../css/colors.css";
 
 .sim-panel {
+    /* The panel redraws up to 60 times a second; containing it keeps those updates from
+       relaying out the rest of the editor (the Blockly workspace is thousands of nodes). */
+    contain: layout paint style;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -101,6 +104,9 @@
 }
 
 .status {
+    contain: strict;
+    height: 1.5rem;
+    font-variant-numeric: tabular-nums;
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;
     color: $text-primary;

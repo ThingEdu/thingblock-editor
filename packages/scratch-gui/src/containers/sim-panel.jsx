@@ -56,6 +56,16 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
 
     const post = useCallback(message => workerRef.current && workerRef.current.postMessage(message), []);
 
+    // The blocks changed under a loaded program (an edit, or a project whose peripherals finished
+    // loading after it appeared): stop running the old program rather than show it as the new one.
+    // The next Run or Step loads the current code.
+    const [stale, setStale] = useState(false);
+    useEffect(() => {
+        if (loadedRef.current === null || loadedRef.current === simCode) return;
+        post({type: 'pause'});
+        setStale(true);
+    }, [post, simCode]);
+
     const load = useCallback(() => {
         setWorkerError(null);
         setSerial('');
@@ -63,6 +73,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
         post({type: 'speed', speed});
         post({type: 'input', key: 'gpio3', value: switchPressed ? 0 : 1});
         loadedRef.current = simCode;
+        setStale(false);
     }, [post, simCode, speed, switchPressed]);
 
     const handleRun = useCallback(() => {
@@ -101,6 +112,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
             problems={problems}
             serial={serial}
             snapshot={snapshot}
+            stale={stale}
             speed={speed}
             switchPressed={switchPressed}
             onPause={handlePause}
