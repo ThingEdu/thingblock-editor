@@ -1,0 +1,6 @@
+{
+  "$comment": "Bus timings of the ThingBot. I2C transfers cost nine clocks a byte (eight bits and the acknowledge), address byte included, at the bus clock the driver selects; the C++ parity build charges the same per transmission, so both logs move together. Serial runs over the C3's USB CDC, which is close to free.",
+  "i2cDefaultHz": 100000,
+  "ssd1306ClockHz": 400000,
+  "serialByteUs": 1
+}

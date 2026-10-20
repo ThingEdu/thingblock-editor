@@ -1,0 +1,29 @@
+{
+  "name": "@thingblock/thingblock-sim",
+  "version": "0.1.0",
+  "description": "Browser simulator for ThingBlock firmware programs: a virtual clock, a cooperative scheduler, and virtual hardware that mirrors the Arduino libraries the generated C++ calls.",
+  "keywords": [
+    "arduino",
+    "simulator",
+    "thingblock"
+  ],
+  "license": "AGPL-3.0-only",
+  "author": "ThingEdu",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "format": "prettier --write . && eslint --fix",
+    "lint": "eslint && prettier --check .",
+    "test": "npm run lint && tsc --noEmit && vitest run"
+  },
+  "devDependencies": {
+    "eslint": "9.39.4",
+    "eslint-config-scratch": "14.1.30",
+    "prettier": "3.8.4",
+    "typescript": "5.9.3",
+    "vitest": "4.1.8"
+  }
+}

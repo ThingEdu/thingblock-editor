@@ -5,6 +5,7 @@
 import * as Blockly from 'blockly/core'
 import type { Block, Workspace } from 'blockly/core'
 import { registerArduinoApi } from './arduino/arduino-api'
+import { variableCppType } from './cpp-types'
 import { registerControl } from './arduino/control'
 import { registerData } from './arduino/data'
 import { registerOperators } from './arduino/operators'
@@ -31,11 +32,6 @@ const RESERVED_WORDS = [
   // Identifiers this generator emits itself.
   '__scratchCounter',
 ].join('')
-
-/** A variable model carrying Scratch's optional explicit value type. */
-interface ScratchVariable {
-  dataType?: string
-}
 
 /**
  * Arduino (C++) code generator for Scratch firmware blocks. It is the standard
@@ -112,11 +108,7 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
    * @returns 'int' | 'float' | 'String'.
    */
   variableCppType(block: Block, variableId: string): string {
-    // dataType is a Scratch extension on the variable model; default to int.
-    const model = block.workspace.getVariableMap().getVariableById(variableId) as ScratchVariable | null
-    if (model?.dataType === 'string') return 'String'
-    if (model?.dataType === 'float') return 'float'
-    return 'int'
+    return variableCppType(block, variableId)
   }
 
   /**
