@@ -11,6 +11,7 @@ import VM from '@scratch/scratch-vm';
 
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
+import SimPanel from '../../containers/sim-panel.jsx';
 import SerialLog from '../serial-log/serial-log.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
 import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
@@ -486,6 +487,7 @@ const GUIComponent = props => {
                         >
                             <DeviceControls />
                             <PlatformInstallModal />
+                            {selectedDeviceId && <SimPanel />}
                             {selectedDeviceId && (
                                 <CodeView
                                     code={generatedCode}

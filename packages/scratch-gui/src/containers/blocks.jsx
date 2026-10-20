@@ -35,7 +35,7 @@ import {activateCustomProcedures, deactivateCustomProcedures} from '../reducers/
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 import {updateMetrics} from '../reducers/workspace-metrics';
 import {isTimeTravel2020} from '../reducers/time-travel';
-import {setGeneratedCode} from '../reducers/code';
+import {setGeneratedCode, setSimCode} from '../reducers/code';
 
 
 const addFunctionListener = (object, property, callback) => {
@@ -200,10 +200,13 @@ class Blocks extends React.Component {
             this.props.customProceduresVisible !== nextProps.customProceduresVisible ||
             this.props.locale !== nextProps.locale ||
             this.props.anyModalVisible !== nextProps.anyModalVisible ||
-            this.props.stageSize !== nextProps.stageSize
+            this.props.stageSize !== nextProps.stageSize ||
+            this.props.simHighlight !== nextProps.simHighlight
         );
     }
     componentDidUpdate (prevProps) {
+        this.updateSimHighlight(prevProps);
+
         // If any modals are open, call hideChaff to close z-indexed field editors
         if (this.props.anyModalVisible && !prevProps.anyModalVisible) {
             this.ScratchBlocks.hideChaff();
@@ -413,6 +416,7 @@ class Blocks extends React.Component {
         // Code generation only applies in board mode; host mode has no code view.
         if (!this.props.selectedDeviceId) {
             this.props.onSetGeneratedCode('');
+            this.props.onSetSimCode('', []);
             return;
         }
         // A block left mid-edit (e.g. an unsupported host block) makes the
@@ -422,6 +426,28 @@ class Blocks extends React.Component {
         } catch (e) {
             log.warn('Arduino code generation failed', e);
         }
+        this.updateSimCode();
+    }
+    updateSimCode () {
+        const generator = this.ScratchBlocks.simGenerator;
+        if (!generator) return;
+        try {
+            const code = generator.workspaceToCode(this.workspace);
+            this.props.onSetSimCode(code, [...generator.diagnostics]);
+        } catch (e) {
+            // Blockly throws for a block type with no generator: a peripheral block
+            // that has no simulation yet. Name it rather than running a partial program.
+            const unsupported = /block type: (\S+)/.exec(e.message);
+            this.props.onSetSimCode('', [{
+                blockId: '',
+                message: unsupported ? `No simulation yet for block "${unsupported[1]}"` : e.message
+            }]);
+        }
+    }
+    updateSimHighlight (prevProps) {
+        if (prevProps.simHighlight === this.props.simHighlight || !this.workspace) return;
+        if (prevProps.simHighlight) this.workspace.highlightBlock(prevProps.simHighlight, false);
+        if (this.props.simHighlight) this.workspace.highlightBlock(this.props.simHighlight, true);
     }
     onScriptGlowOn (data) {
         this.ScratchBlocks.glowStack(data.id, true);
@@ -778,6 +804,7 @@ Blocks.propTypes = {
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
     onSetGeneratedCode: PropTypes.func,
+    onSetSimCode: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
     options: PropTypes.shape({
@@ -793,6 +820,7 @@ Blocks.propTypes = {
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
     colorMode: PropTypes.oneOf(Object.keys(colorModeMap)),
     selectedDeviceId: PropTypes.string,
+    simHighlight: PropTypes.string,
     toolboxXML: PropTypes.string,
     updateMetrics: PropTypes.func,
     updateToolboxState: PropTypes.func,
@@ -841,6 +869,7 @@ const mapStateToProps = state => ({
     locale: state.locales.locale,
     messages: state.locales.messages,
     selectedDeviceId: state.scratchGui.board.selectedDeviceId,
+    simHighlight: state.scratchGui.code.simHighlight,
     toolboxXML: state.scratchGui.toolbox.toolboxXML,
     customProceduresVisible: state.scratchGui.customProcedures.active,
     workspaceMetrics: state.scratchGui.workspaceMetrics,
@@ -868,6 +897,9 @@ const mapDispatchToProps = dispatch => ({
     },
     onSetGeneratedCode: code => {
         dispatch(setGeneratedCode(code));
+    },
+    onSetSimCode: (code, diagnostics) => {
+        dispatch(setSimCode(code, diagnostics));
     }
 });
 

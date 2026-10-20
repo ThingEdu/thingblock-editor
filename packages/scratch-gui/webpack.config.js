@@ -69,6 +69,17 @@ const baseConfig = new ScratchWebpackConfigBuilder(
             transpileOnly: true
         }
     })
+    // The simulator package is consumed from its TypeScript source, like the VM.
+    .addModuleRule({
+        test: /\.ts$/,
+        include: /node_modules[\\/]@thingblock[\\/]thingblock-sim[\\/]src[\\/]/,
+        loader: 'ts-loader',
+        options: {
+            configFile: path.resolve(__dirname, '../thingblock-sim/tsconfig.json'),
+            transpileOnly: true,
+            compilerOptions: {noEmit: false, allowImportingTsExtensions: false}
+        }
+    })
     .addPlugin(new webpack.DefinePlugin({
         'process.env.DEBUG': Boolean(process.env.DEBUG),
         'process.env.GA_ID': `"${process.env.GA_ID || 'UA-000000-01'}"`,
