@@ -5,6 +5,9 @@ import {connect} from 'react-redux';
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
 import {setSimHighlight} from '../reducers/code';
 
+/** The worker's chunk name; webpack.config.js keeps that chunk whole. */
+const SIM_WORKER = 'sim-worker';
+
 /** Serial text kept in the panel; older output scrolls away. */
 const SERIAL_LIMIT = 4000;
 
@@ -12,6 +15,11 @@ const SERIAL_LIMIT = 4000;
  * Runs the generated simulator program in a Web Worker and shows the virtual ThingBot. The program is
  * (re)loaded from the latest generated code whenever the learner presses Run or Step after changing
  * blocks, so the simulator always runs what the workspace shows.
+ * @param {object} props Component props.
+ * @param {string} props.simCode The workspace compiled for the simulator.
+ * @param {Array<{message: string}>} props.simDiagnostics Problems that keep the program from running.
+ * @param {Function} props.onHighlight Called with the block id to highlight, or null to clear it.
+ * @returns {React.ReactElement} The simulator panel.
  */
 const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
     const workerRef = useRef(null);
@@ -23,7 +31,10 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
     const [workerError, setWorkerError] = useState(null);
 
     useEffect(() => {
-        const worker = new Worker(new URL('../lib/sim/sim.worker.js', import.meta.url));
+        const worker = new Worker(
+            /* webpackChunkName: "sim-worker" */ new URL('../lib/sim/sim.worker.js', import.meta.url),
+            {name: SIM_WORKER}
+        );
         worker.onmessage = ({data}) => {
             if (data.type === 'error') {
                 setWorkerError(data.message);

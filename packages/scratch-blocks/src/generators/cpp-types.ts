@@ -34,6 +34,6 @@ export function variableCppType(block: Block, variableId: string): VariableCppTy
  * @returns The trimmed numeric text, or null when it is not a finite number.
  */
 export function numericText(raw: unknown): string | null {
-  const text = String(raw ?? '').trim()
+  const text = typeof raw === 'string' || typeof raw === 'number' ? String(raw).trim() : ''
   return text !== '' && Number.isFinite(Number(text)) ? text : null
 }

@@ -46,6 +46,14 @@ const baseConfig = new ScratchWebpackConfigBuilder(
             // dist directory (the regular and the standalone version)
             clean: false
         },
+        optimization: {
+            splitChunks: {
+                // The simulator's worker loads its chunks relative to its own URL, which sits in the
+                // chunk directory itself; split out, its vendor chunk would resolve one directory too
+                // deep. Keep it whole, and split other async chunks as before.
+                chunks: chunk => !chunk.canBeInitial() && chunk.name !== 'sim-worker'
+            }
+        },
         resolve: {
             fallback: {
                 Buffer: require.resolve('buffer/'),

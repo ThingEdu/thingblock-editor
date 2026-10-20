@@ -45,7 +45,9 @@ describe('Session', () => {
   })
 
   it('reports serial text once, in the snapshot after it was printed', () => {
-    const session = new Session('function* setup() { $.Serial.println("hi"); } function* loop() { yield $.delay(1000); } return { setup, loop };')
+    const session = new Session(
+      'function* setup() { $.Serial.println("hi"); } function* loop() { yield $.delay(1000); } return { setup, loop };',
+    )
     session.running = true
     expect(session.tick(10).serial).toBe('hi\r\n')
     expect(session.tick(10).serial).toBe('')
@@ -84,4 +86,3 @@ describe('Session', () => {
     expect(session.tick(16).behind).toBe(false)
   })
 })
-

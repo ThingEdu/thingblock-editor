@@ -63,10 +63,12 @@ export function preprocessSketch(sketch: string): string {
     if (/^\s*#include/.test(line)) lastInclude = i
   })
   const prototypes: string[] = []
-  const definition = /^(?!if\b|for\b|while\b|switch\b|class\b|struct\b|else\b)([A-Za-z_][\w<>:*&\s]*?[\s*&])([A-Za-z_]\w*)\s*\(([^;{}]*)\)\s*\{\s*$/
+  const definition =
+    /^(?!if\b|for\b|while\b|switch\b|class\b|struct\b|else\b)([A-Za-z_][\w<>:*&\s]*?[\s*&])([A-Za-z_]\w*)\s*\(([^;{}]*)\)\s*\{\s*$/
   for (const line of lines) {
     const match = definition.exec(line)
-    if (match && match[2] !== 'setup' && match[2] !== 'loop') prototypes.push(`${match[1].trim()} ${match[2]}(${match[3]});`)
+    if (match && match[2] !== 'setup' && match[2] !== 'loop')
+      prototypes.push(`${match[1].trim()} ${match[2]}(${match[3]});`)
   }
   const head = lines.slice(0, lastInclude + 1)
   const rest = lines.slice(lastInclude + 1)
@@ -80,7 +82,11 @@ export function preprocessSketch(sketch: string): string {
  * @param inputs Inputs to apply at given virtual times (µs), e.g. a button press.
  * @returns The event log the run printed.
  */
-export function runSketch(sketch: string, ms: number, inputs: { t: number; key: string; value: number }[] = []): LogEntry[] {
+export function runSketch(
+  sketch: string,
+  ms: number,
+  inputs: { t: number; key: string; value: number }[] = [],
+): LogEntry[] {
   const core = coreDir()
   if (!core) throw new Error('runSketch: no ESP32 core found; set THINGBLOCK_ESP32_CORE')
   const source = preprocessSketch(sketch)
@@ -110,7 +116,13 @@ export function runSketch(sketch: string, ms: number, inputs: { t: number; key: 
     .map((line) => JSON.parse(line) as LogEntry)
 }
 
-/** Compile the core, library and host sources once per content, reusing objects across runs. */
+/**
+ * Compile the core, library and host sources once per content, reusing objects across runs.
+ * @param work The scratch directory that holds the copies and object files.
+ * @param core The ESP32 core directory to compile sources from.
+ * @param flags The compiler flags for every source.
+ * @returns The paths of the object files to link.
+ */
 function buildObjects(work: string, core: string, flags: string[]): string[] {
   // The core sources include "Arduino.h" in quotes, which would find the real core header beside
   // them; copied out of the core directory they find the host stand-in on the include path instead.
@@ -122,7 +134,13 @@ function buildObjects(work: string, core: string, flags: string[]): string[] {
   const sources = [
     join(HOST, 'sim_host.cpp'),
     ...coreCopies,
-    ...LIBRARY_SOURCES.map((file) => join(PACKS, file.startsWith('Adafruit_BusIO') || file.startsWith('Adafruit_PWM') ? 'thingbot-core/libs' : 'oled/libs', file)),
+    ...LIBRARY_SOURCES.map((file) =>
+      join(
+        PACKS,
+        file.startsWith('Adafruit_BusIO') || file.startsWith('Adafruit_PWM') ? 'thingbot-core/libs' : 'oled/libs',
+        file,
+      ),
+    ),
   ]
   const stamp = createHash('sha256')
     .update(JSON.stringify(flags))

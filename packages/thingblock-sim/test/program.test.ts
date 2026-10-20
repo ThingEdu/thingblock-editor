@@ -4,10 +4,10 @@
  */
 import * as Blockly from 'blockly/core'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { Order } from '../../scratch-blocks/src/generators/arduino/order'
 import { SimGenerator } from '../../scratch-blocks/src/generators/sim'
 import { registerSimGenerators as registerOled } from '../../thingblock-resource/src/extensions/peripheral/oled/sim'
 import { registerSimGenerators as registerThingBot } from '../../thingblock-resource/src/extensions/peripheral/thingbot-core/sim'
-import { Order } from '../../scratch-blocks/src/generators/arduino/order'
 import { createBoard } from '../src/board'
 import { compileProgram, loadProject } from '../src/headless'
 import { Runner } from '../src/runtime'
@@ -17,8 +17,8 @@ let generator: SimGenerator
 
 beforeEach(() => {
   generator = new SimGenerator()
-  registerThingBot(generator as never, Order as never)
-  registerOled(generator as never, Order as never)
+  registerThingBot(generator as never, Order)
+  registerOled(generator as never, Order)
 })
 
 const run = (builder: ProjectBuilder, untilMs: number) => {
@@ -32,7 +32,12 @@ const run = (builder: ProjectBuilder, untilMs: number) => {
   return { board, runner, code }
 }
 
-/** A loop that shows one value on the OLED, so a test can read back what the board printed. */
+/**
+ * A loop that shows one value on the OLED, so a test can read back what the board printed.
+ * @param p The project to add the loop to.
+ * @param setup Blocks to run after the display starts.
+ * @param value The reporter to print.
+ */
 const showOnOled = (p: ProjectBuilder, setup: ReturnType<typeof block>[], value: unknown) => {
   p.hat(
     'event_whenarduinobegin',

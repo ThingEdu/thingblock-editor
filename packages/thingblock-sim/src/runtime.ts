@@ -46,12 +46,18 @@ export class Clock {
     this.now += us
   }
 
-  /** `millis()`: whole milliseconds since boot, as the 32-bit counter the core returns. */
+  /**
+   * `millis()`: whole milliseconds since boot, as the 32-bit counter the core returns.
+   * @returns The millisecond counter.
+   */
   millis(): number {
     return Math.floor(this.now / 1000) >>> 0
   }
 
-  /** `micros()`: whole microseconds since boot, as a 32-bit counter. */
+  /**
+   * `micros()`: whole microseconds since boot, as a 32-bit counter.
+   * @returns The microsecond counter.
+   */
   micros(): number {
     return Math.floor(this.now) >>> 0
   }
@@ -88,7 +94,12 @@ export class EventLog {
     this.entries.push({ t: this.clock.now, dev, key, value })
   }
 
-  /** Append an entry even when it repeats, for events rather than states (a byte sent on Serial). */
+  /**
+   * Append an entry even when it repeats, for events rather than states (a byte sent on Serial).
+   * @param dev The device the event happened on.
+   * @param key What happened on it.
+   * @param value The byte or reading it carried.
+   */
   emit(dev: string, key: string, value: number | string): void {
     this.entries.push({ t: this.clock.now, dev, key, value })
   }

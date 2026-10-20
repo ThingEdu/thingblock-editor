@@ -24,7 +24,11 @@ export class Stack {
 export const num = (value: number | string): unknown[] => [4, String(value)]
 export const txt = (value: string): unknown[] => [10, value]
 export const stack = (...blocks: BlockSpec[]) => new Stack(blocks)
-export const block = (opcode: string, inputs: BlockSpec['inputs'] = {}, fields: BlockSpec['fields'] = {}): BlockSpec => ({
+export const block = (
+  opcode: string,
+  inputs: BlockSpec['inputs'] = {},
+  fields: BlockSpec['fields'] = {},
+): BlockSpec => ({
   opcode,
   inputs,
   fields,
@@ -36,7 +40,12 @@ export class ProjectBuilder {
   private readonly variableTypes: Record<string, string> = {}
   private next = 0
 
-  /** Declare a variable and return a reporter for it. */
+  /**
+   * Declare a variable and return a reporter for it.
+   * @param name The name the blocks show.
+   * @param type The C++ type the variable is declared with.
+   * @returns The variable reporter primitive.
+   */
   variable(name: string, type: 'int' | 'float' | 'string' = 'int'): unknown[] {
     const id = `var-${name}`
     this.variables[id] = [name, 0]
@@ -44,12 +53,20 @@ export class ProjectBuilder {
     return [12, name, id]
   }
 
-  /** The VARIABLE field of a set/change block for a declared variable. */
+  /**
+   * The VARIABLE field of a set/change block for a declared variable.
+   * @param variable The reporter `variable()` returned.
+   * @returns The field's name and id.
+   */
   field(variable: unknown[]): [unknown, string] {
     return [variable[1], variable[2] as string]
   }
 
-  /** A reporter block, returned as a reference to plug into an input. */
+  /**
+   * A reporter block, returned as a reference to plug into an input.
+   * @param spec The block to add.
+   * @returns The new block's id.
+   */
   reporter(spec: BlockSpec): string {
     return this.add(spec, null)
   }

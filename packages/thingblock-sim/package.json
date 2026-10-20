@@ -18,7 +18,7 @@
   "scripts": {
     "format": "prettier --write . && eslint --fix",
     "lint": "eslint && prettier --check .",
-    "test": "npm run lint && tsc --noEmit && vitest run"
+    "test": "npm run lint && tsc --noEmit --project tsconfig.build.json && vitest run"
   },
   "devDependencies": {
     "eslint": "9.39.4",

@@ -37,7 +37,15 @@ export const createBoard = () => {
     millis: (): number => clock.millis(),
     micros: (): number => clock.micros(),
 
-    /** `map()` from the ESP32 core (WMath.cpp): 32-bit long arithmetic, -1 for an empty input range. */
+    /**
+     * `map()` from the ESP32 core (WMath.cpp): 32-bit long arithmetic, -1 for an empty input range.
+     * @param x The value to map.
+     * @param inMin The low end of the input range.
+     * @param inMax The high end of the input range.
+     * @param outMin The low end of the output range.
+     * @param outMax The high end of the output range.
+     * @returns The mapped value.
+     */
     map: (x: number, inMin: number, inMax: number, outMin: number, outMax: number): number => {
       const run = cpp.i32(inMax - inMin)
       if (run === 0) return -1
@@ -51,7 +59,11 @@ export const createBoard = () => {
     digitalWrite: (pin: number, level: number): void => {
       log.record('gpio', `gpio${pin}`, level ? 1 : 0)
     },
-    /** Unconnected and pulled-up inputs read HIGH; the rig drives the rest. */
+    /**
+     * Unconnected and pulled-up inputs read HIGH; the rig drives the rest.
+     * @param pin The GPIO number.
+     * @returns The pin level, 0 or 1.
+     */
     digitalRead: (pin: number): number => inputs.get(`gpio${pin}`) ?? 1,
     analogRead: (pin: number): number => inputs.get(`adc${pin}`) ?? 0,
 

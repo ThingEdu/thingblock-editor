@@ -13,7 +13,13 @@ export const registerSimGenerators: RegisterSimGenerators = (generator) => {
     const value: unknown = block.getFieldValue(name)
     return typeof value === 'string' || typeof value === 'number' ? String(value) : fallback
   }
-  /** A colour menu value, kept to the three names the driver defines. */
+  /**
+   * A colour menu value, kept to the three names the driver defines.
+   * @param block The block holding the menu.
+   * @param name The menu field to read.
+   * @param fallback The colour to use when the field holds anything else.
+   * @returns One of the driver's colour names.
+   */
   const colour = (block: Block, name: string, fallback: string): string => {
     const value = fieldValue(block, name, fallback)
     return ['SSD1306_BLACK', 'SSD1306_WHITE', 'SSD1306_INVERSE'].includes(value) ? value : fallback

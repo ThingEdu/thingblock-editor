@@ -88,7 +88,7 @@ export function loadProject(Blockly: Blockly, project: Sb3Project): Workspace {
 
   const created = new Map<string, Block>()
   const primitive = (value: unknown[]): Block | null => {
-    const kind = PRIMITIVES[value[0] as number]
+    const kind = PRIMITIVES[value[0] as number] as (typeof PRIMITIVES)[number] | undefined
     if (!kind) return null
     const block = workspace.newBlock(kind.opcode)
     // A variable or list primitive carries the name then the id; the generators look variables up by id.
@@ -111,7 +111,8 @@ export function loadProject(Blockly: Blockly, project: Sb3Project): Workspace {
   }
 
   for (const [id, block] of Object.entries(blocks)) {
-    const parent = created.get(id) as Block
+    const parent = created.get(id)
+    if (!parent) throw new Error(`loadProject: block ${id} (${block.opcode}) was not created`)
     for (const [name, input] of Object.entries(block.inputs)) {
       const child = resolve(input[1]) ?? resolve(input[2])
       const connection = parent.getInput(name)?.connection
@@ -155,7 +156,7 @@ function defineShapes(Blockly: Blockly, blocks: Record<string, Sb3Block>): void 
       s.inputs.set(name, statement ? 'statement' : 'value')
       if (statement) continue
       for (const ref of [input[1], input[2]]) {
-        if (typeof ref === 'string' && blocks[ref]) shape(blocks[ref].opcode).output = true
+        if (typeof ref === 'string' && ref in blocks) shape(blocks[ref].opcode).output = true
       }
     }
   }
@@ -163,7 +164,10 @@ function defineShapes(Blockly: Blockly, blocks: Record<string, Sb3Block>): void 
   for (const [opcode, s] of shapes) {
     const args: object[] = [
       ...[...s.fields].map((name) => ({ type: 'field_input', name, text: '' })),
-      ...[...s.inputs].map(([name, kind]) => ({ type: kind === 'statement' ? 'input_statement' : 'input_value', name })),
+      ...[...s.inputs].map(([name, kind]) => ({
+        type: kind === 'statement' ? 'input_statement' : 'input_value',
+        name,
+      })),
     ]
     const json: Record<string, unknown> = {
       message0: args.map((_, i) => `%${i + 1}`).join(' ') || opcode,
@@ -178,7 +182,10 @@ function defineShapes(Blockly: Blockly, blocks: Record<string, Sb3Block>): void 
       init(this: Block) {
         this.jsonInit(json)
       },
-      /** The custom block's signature, which the procedure blocks carry in their mutation. */
+      /**
+       * The custom block's signature, which the procedure blocks carry in their mutation.
+       * @returns The procedure code, or empty when the block has none.
+       */
       getProcCode(this: Block) {
         return this.data ?? ''
       },

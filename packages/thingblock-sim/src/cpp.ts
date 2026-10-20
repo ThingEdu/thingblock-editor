@@ -47,19 +47,38 @@ const printFloat = (value: number, digits = 2): string => {
 }
 
 export const cpp = {
-  /** Wrap to a 32-bit signed `int`. */
+  /**
+   * Wrap to a 32-bit signed `int`.
+   * @param x The value to wrap.
+   * @returns The wrapped value.
+   */
   i32: (x: number): number => x | 0,
 
-  /** `int * int`, wrapping at 32 bits (a plain JS multiply loses the low bits past 2^53). */
+  /**
+   * `int * int`, wrapping at 32 bits (a plain JS multiply loses the low bits past 2^53).
+   * @param a The left operand.
+   * @param b The right operand.
+   * @returns The wrapped product.
+   */
   imul: (a: number, b: number): number => Math.imul(a, b),
 
-  /** `int / int`: truncates toward zero; dividing by zero resets the board. */
+  /**
+   * `int / int`: truncates toward zero; dividing by zero resets the board.
+   * @param a The dividend.
+   * @param b The divisor.
+   * @returns The quotient.
+   */
   idiv: (a: number, b: number): number => {
     if (b === 0) throw new BoardTrap('IntegerDivideByZero')
     return (a / b) | 0
   },
 
-  /** `int % int`: takes the dividend's sign; by zero resets the board. */
+  /**
+   * `int % int`: takes the dividend's sign; by zero resets the board.
+   * @param a The dividend.
+   * @param b The divisor.
+   * @returns The remainder.
+   */
   imod: (a: number, b: number): number => {
     if (b === 0) throw new BoardTrap('IntegerDivideByZero')
     return (a % b) | 0
@@ -68,6 +87,8 @@ export const cpp = {
   /**
    * `(int)double`: truncation. Out-of-range values are undefined behaviour in C++; the RISC-V
    * `fcvt.w.d` the compiler emits saturates them, and NaN becomes INT_MAX.
+   * @param x The value to convert.
+   * @returns The converted `int`.
    */
   toInt: (x: number): number => {
     if (Number.isNaN(x)) return INT_MAX
@@ -76,15 +97,27 @@ export const cpp = {
     return Math.trunc(x)
   },
 
-  /** Conversion to `unsigned long` (32-bit on the ESP32), as `delay()` receives its argument. */
+  /**
+   * Conversion to `unsigned long` (32-bit on the ESP32), as `delay()` receives its argument.
+   * @param x The value to convert.
+   * @returns The converted `unsigned long`.
+   */
   toUlong: (x: number): number => Math.trunc(x) >>> 0,
 
   printFloat,
 
-  /** `print(bool)` resolves to `print(int)`. */
+  /**
+   * `print(bool)` resolves to `print(int)`.
+   * @param b The value to print.
+   * @returns The printed text.
+   */
   printBool: (b: boolean): string => (b ? '1' : '0'),
 
-  /** `print(int)` / `print(long)`. */
+  /**
+   * `print(int)` / `print(long)`.
+   * @param n The value to print.
+   * @returns The printed text.
+   */
   printInt: (n: number): string => String(n | 0),
 }
 

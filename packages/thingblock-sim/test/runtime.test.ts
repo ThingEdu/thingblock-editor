@@ -56,7 +56,7 @@ describe('Runner', () => {
       *setup() {
         // Nothing to set up.
       },
-      // eslint-disable-next-line require-yield
+      // eslint-disable-next-line require-yield -- the test needs a loop that never yields
       *loop() {
         passes++
       },
@@ -90,7 +90,7 @@ describe('Runner', () => {
 
   it('rethrows anything that is not a board trap, because that is a simulator bug', () => {
     const { runner } = make({
-      // eslint-disable-next-line require-yield
+      // eslint-disable-next-line require-yield -- the routine throws before it would yield
       *setup() {
         throw new TypeError('bad generated code')
       },
@@ -141,7 +141,10 @@ describe('EventLog', () => {
   })
 })
 
-/** Type-only check that a hand-written routine satisfies the generated-code contract. */
+/**
+ * Type-only check that a hand-written routine satisfies the generated-code contract.
+ * @yields {string | { wait: number }} A block id, then a one-microsecond wait.
+ */
 export const routineShape: () => Routine = function* () {
   yield 'id'
   yield { wait: 1 }

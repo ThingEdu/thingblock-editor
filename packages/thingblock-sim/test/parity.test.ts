@@ -24,13 +24,17 @@ const cpp = new ArduinoGenerator()
 const sim = new SimGenerator()
 
 beforeAll(() => {
-  thingbotCpp(cpp as never, Order as never)
-  oledCpp(cpp as never, Order as never)
-  thingbotSim(sim as never, Order as never)
-  oledSim(sim as never, Order as never)
+  thingbotCpp(cpp as never, Order)
+  oledCpp(cpp as never, Order)
+  thingbotSim(sim as never, Order)
+  oledSim(sim as never, Order)
 })
 
-/** The entries both builds produce: device state and serial text, not the simulator-only text record. */
+/**
+ * The entries both builds produce: device state and serial text, not the simulator-only text record.
+ * @param log The log to filter.
+ * @returns The entries to compare.
+ */
 const comparable = (log: LogEntry[]) => log.filter((e) => e.dev !== 'serial' && e.key !== 'text')
 const serialText = (log: LogEntry[]) =>
   log

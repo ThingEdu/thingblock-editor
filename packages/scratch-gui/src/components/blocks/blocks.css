@@ -87,3 +87,9 @@
     min-width: auto;
     min-height: auto;
 }
+
+/* The block the simulator stopped on while stepping. */
+.blocks :global(.blocklyHighlighted > .blocklyPath) {
+    stroke: #ffbf00;
+    stroke-width: 4px;
+}

@@ -5,13 +5,13 @@
 import * as Blockly from 'blockly/core'
 import type { Block, Workspace } from 'blockly/core'
 import { registerArduinoApi } from './arduino/arduino-api'
-import { variableCppType } from './cpp-types'
 import { registerControl } from './arduino/control'
 import { registerData } from './arduino/data'
 import { registerOperators } from './arduino/operators'
 import { registerProcedures } from './arduino/procedures'
 import { registerSensing } from './arduino/sensing'
 import { registerValues } from './arduino/values'
+import { variableCppType } from './cpp-types'
 
 /** Name-database category for custom-block argument reporters. */
 const ARGUMENT_NAME_TYPE = 'ARGUMENT'

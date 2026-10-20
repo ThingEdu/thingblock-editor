@@ -49,7 +49,10 @@ export class Session {
   private board: Board
   private runner: Runner
   private logCursor = 0
-  /** The log, for the checker and for tests. */
+  /**
+   * The log, for the checker and for tests.
+   * @returns Every entry the board has recorded.
+   */
   get log(): readonly LogEntry[] {
     return this.board.log.entries
   }
@@ -79,14 +82,21 @@ export class Session {
     return this.snapshot()
   }
 
-  /** Run one block and stop. */
+  /**
+   * Run one block and stop.
+   * @returns What the rig shows now.
+   */
   step(): Snapshot {
     this.running = false
     this.runner.stepBlock()
     return this.snapshot()
   }
 
-  /** Drive an input: `gpio3` 0 presses the ThingBot switch, 1 releases it. */
+  /**
+   * Drive an input: `gpio3` 0 presses the ThingBot switch, 1 releases it.
+   * @param key The input, e.g. `gpio3` or `adc4`.
+   * @param value The level or reading to apply.
+   */
   setInput(key: string, value: number): void {
     this.board.setInput(key, value)
   }

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
 import styles from './sim-panel.css';
@@ -116,8 +116,9 @@ const SimPanel = ({
     }, [snapshot]);
 
     const pwm = snapshot ? snapshot.pwm : [];
-    const press = () => onSwitchChange(true);
-    const release = () => onSwitchChange(false);
+    const press = useCallback(() => onSwitchChange(true), [onSwitchChange]);
+    const release = useCallback(() => onSwitchChange(false), [onSwitchChange]);
+    const handleSpeedChange = useCallback(e => onSpeedChange(Number(e.target.value)), [onSpeedChange]);
 
     return (
         <div className={styles.simPanel}>
@@ -148,12 +149,14 @@ const SimPanel = ({
                 <select
                     className={styles.speed}
                     value={speed}
-                    onChange={e => onSpeedChange(Number(e.target.value))}
+                    onChange={handleSpeedChange}
                 >
-                    {SPEEDS.map(s => <option
-                        key={s}
-                        value={s}
-                    >{`${s}×`}</option>)}
+                    {SPEEDS.map(s => (
+                        <option
+                            key={s}
+                            value={s}
+                        >{`${s}×`}</option>
+                    ))}
                 </select>
             </div>
             {problems.map((problem, i) => (

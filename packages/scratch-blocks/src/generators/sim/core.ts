@@ -174,6 +174,11 @@ export function registerSimCore(gen: SimGenerator): void {
   /**
    * One side of a comparison, as the Arduino generator writes it: a numeric text literal is a bare
    * number unless the other side is a String variable.
+   * @param generator The generator emitting the comparison.
+   * @param block The comparison whose operand this is.
+   * @param name The operand input to generate.
+   * @param sibling The other operand input, which decides whether a numeric text stays a string.
+   * @returns The operand's code and C++ type.
    */
   const comparisonOperand = (generator: SimGenerator, block: Block, name: string, sibling: string) => {
     const target = block.getInputTargetBlock(name)
@@ -200,7 +205,14 @@ export function registerSimCore(gen: SimGenerator): void {
   gen.forBlock.operator_lt = comparison('<')
   gen.forBlock.operator_gt = comparison('>')
   gen.forBlock.operator_equals = comparison('==')
-  for (const opcode of ['operator_lt', 'operator_gt', 'operator_equals', 'operator_and', 'operator_or', 'operator_not']) {
+  for (const opcode of [
+    'operator_lt',
+    'operator_gt',
+    'operator_equals',
+    'operator_and',
+    'operator_or',
+    'operator_not',
+  ]) {
     t[opcode] = () => 'bool'
   }
 
@@ -211,11 +223,14 @@ export function registerSimCore(gen: SimGenerator): void {
     atomic(`(${truth(generator, block, 'OPERAND1')} && ${truth(generator, block, 'OPERAND2')})`)
   gen.forBlock.operator_or = (block, generator) =>
     atomic(`(${truth(generator, block, 'OPERAND1')} || ${truth(generator, block, 'OPERAND2')})`)
-  gen.forBlock.operator_not = (block, generator) => atomic(`!${generator.typedInput(block, 'OPERAND', 'false', 'bool').code}`)
+  gen.forBlock.operator_not = (block, generator) =>
+    atomic(`!${generator.typedInput(block, 'OPERAND', 'false', 'bool').code}`)
 
   // `random(from, to + 1)` on the core's 32-bit long.
   gen.forBlock.operator_random = (block, generator) =>
-    atomic(`$.random(${generator.inputAs(block, 'FROM', 'int')}, $.i32(${generator.inputAs(block, 'TO', 'int', '1')} + 1))`)
+    atomic(
+      `$.random(${generator.inputAs(block, 'FROM', 'int')}, $.i32(${generator.inputAs(block, 'TO', 'int', '1')} + 1))`,
+    )
   t.operator_random = () => 'int'
 
   // `round()` is std::round: a double, so `print` shows two decimals.

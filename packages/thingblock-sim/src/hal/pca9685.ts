@@ -27,7 +27,10 @@ export class Pca9685 {
     this.bus = bus
   }
 
-  /** `begin()`: probe the address, reset, restore the default oscillator, set 1 kHz. */
+  /**
+   * `begin()`: probe the address, reset, restore the default oscillator, set 1 kHz.
+   * @returns Always true, as the library does once the probe is sent.
+   */
   begin(): boolean {
     this.bus.transfer(0)
     this.reset()

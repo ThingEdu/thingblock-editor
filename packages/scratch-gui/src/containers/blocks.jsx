@@ -752,6 +752,8 @@ class Blocks extends React.Component {
             workspaceMetrics,
             colorMode,
             selectedDeviceId,
+            simHighlight,
+            onSetSimCode,
             ...props
         } = this.props;
          

@@ -28,7 +28,11 @@ const WIRE_MAX = 128
  */
 const BEGIN_TRANSMISSIONS = [5, 2, 5, 2, 5, 2, 2, 2, 2, 2, 2, 7]
 
-/** FNV-1a over the frame buffer: a short, stable name for a frame in the event log. */
+/**
+ * FNV-1a over the frame buffer: a short, stable name for a frame in the event log.
+ * @param buffer The frame buffer to hash.
+ * @returns The hash as hex text.
+ */
 const hashFrame = (buffer: Uint8Array): string => {
   let h = 0x811c9dc5
   for (const byte of buffer) {
@@ -82,8 +86,22 @@ export class Ssd1306 {
     return true
   }
 
-  /** `Adafruit_GFX::drawBitmap` for a PROGMEM bitmap: set pixels draw `colour`, clear ones are left alone. */
-  drawBitmap(x: number, y: number, bitmap: { width: number; height: number; data: Uint8Array }, colour: number): void {
+  /**
+   * `Adafruit_GFX::drawBitmap` for a PROGMEM bitmap: set pixels draw `colour`, clear ones are left alone.
+   * @param x The left edge.
+   * @param y The top edge.
+   * @param bitmap The bitmap to draw.
+   * @param bitmap.width Its width in pixels.
+   * @param bitmap.height Its height in pixels.
+   * @param bitmap.data Its rows, each padded to whole bytes, most significant bit first.
+   * @param colour The colour of set pixels.
+   */
+  drawBitmap(
+    x: number,
+    y: number,
+    bitmap: { width: number; height: number; data: Uint8Array },
+    colour: number,
+  ): void {
     const byteWidth = (bitmap.width + 7) >> 3
     let byte = 0
     for (let j = 0; j < bitmap.height; j++) {
@@ -95,7 +113,10 @@ export class Ssd1306 {
     }
   }
 
-  /** The driver speeds the bus up for its own transfers and restores the default afterwards. */
+  /**
+   * The driver speeds the bus up for its own transfers and restores the default afterwards.
+   * @param body The transfers to run at the driver's clock.
+   */
   private transaction(body: () => void): void {
     this.bus.clockHz = COSTS.ssd1306ClockHz
     body()
@@ -106,7 +127,10 @@ export class Ssd1306 {
     return this.buffer
   }
 
-  /** The frame the panel shows, for the rig to draw. */
+  /**
+   * The frame the panel shows, for the rig to draw.
+   * @returns The last frame `display()` sent.
+   */
   getShownFrame(): Uint8Array {
     return this.shown
   }
@@ -173,7 +197,11 @@ export class Ssd1306 {
     this.textSizeY = sy > 0 ? sy : 1
   }
 
-  /** `setTextColor(c)` draws transparent text (background = foreground); `(c, bg)` paints the background. */
+  /**
+   * `setTextColor(c)` draws transparent text (background = foreground); `(c, bg)` paints the background.
+   * @param colour The colour glyph pixels draw in.
+   * @param bg The colour behind the glyphs; the default makes text transparent.
+   */
   setTextColor(colour: number, bg = colour): void {
     this.textColour = colour
     this.textBg = bg
@@ -183,7 +211,16 @@ export class Ssd1306 {
     this.wrap = wrap
   }
 
-  /** `Adafruit_GFX::drawChar`, classic font branch. */
+  /**
+   * `Adafruit_GFX::drawChar`, classic font branch.
+   * @param x The left edge.
+   * @param y The top edge.
+   * @param code The character code.
+   * @param colour The glyph colour.
+   * @param bg The background colour; equal to `colour` for transparent text.
+   * @param sx The horizontal scale.
+   * @param sy The vertical scale.
+   */
   drawChar(x: number, y: number, code: number, colour: number, bg: number, sx: number, sy: number): void {
     if (x >= this.width || y >= this.height || x + 6 * sx - 1 < 0 || y + 8 * sy - 1 < 0) return
     // The classic font skips glyph 176 unless cp437 mode is on, which the blocks never enable.
@@ -203,7 +240,10 @@ export class Ssd1306 {
     if (bg !== colour) this.fillRect(x + 5 * sx, y, sx, 8 * sy, bg)
   }
 
-  /** `Adafruit_GFX::write`, classic font branch: one byte of text at the cursor. */
+  /**
+   * `Adafruit_GFX::write`, classic font branch: one byte of text at the cursor.
+   * @param code The byte to write.
+   */
   write(code: number): void {
     if (code === 0x0a) {
       this.cursorX = 0
@@ -221,6 +261,7 @@ export class Ssd1306 {
   /**
    * `Print::print` with text the generator has already formatted the way the core formats its argument
    * type. Characters outside one byte are sent as `?`, since the board's font has one glyph per byte.
+   * @param text The formatted text.
    */
   print(text: string): void {
     for (const ch of text) {

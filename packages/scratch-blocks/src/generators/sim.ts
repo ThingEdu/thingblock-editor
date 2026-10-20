@@ -37,7 +37,8 @@ const RESERVED_WORDS = [
  * @param literal The literal's source text.
  * @returns 'double' or 'int'.
  */
-export const literalType = (literal: string): CType => (/[.eE]/.test(literal) && !/^0x/i.test(literal) ? 'double' : 'int')
+export const literalType = (literal: string): CType =>
+  /[.eE]/.test(literal) && !/^0x/i.test(literal) ? 'double' : 'int'
 
 /**
  * Simulator code generator: the same blocks as the Arduino generator, emitted as JavaScript generator
@@ -83,7 +84,7 @@ export class SimGenerator extends Blockly.CodeGenerator {
    */
   typeOf(block: Block | null): CType {
     if (!block) return 'int'
-    const typeFor = this.typeFor[block.type]
+    const typeFor = this.typeFor[block.type] as (typeof this.typeFor)[string] | undefined
     if (!typeFor) {
       console.warn(`SimGenerator.typeOf: no type for reporter "${block.type}" (block ${block.id}); assuming double`)
       return 'double'
@@ -94,7 +95,7 @@ export class SimGenerator extends Blockly.CodeGenerator {
   /**
    * The C++ type a variable is declared with.
    * @param block A block referencing the variable.
-   * @param variableId The variable's id.
+   * @param variableId Which variable, as the block's VARIABLE field stores it.
    * @returns 'int' | 'float' | 'String'.
    */
   variableType(block: Block, variableId: string): CType {
@@ -113,7 +114,7 @@ export class SimGenerator extends Blockly.CodeGenerator {
   /**
    * The code and C++ type of a value input.
    * @param block The block owning the input.
-   * @param name The input's name.
+   * @param name The value input to read.
    * @param fallback Code for an empty input.
    * @param fallbackType The C++ type of `fallback`.
    * @returns The input's code and type.
@@ -128,7 +129,7 @@ export class SimGenerator extends Blockly.CodeGenerator {
   /**
    * A value input converted the way C++ converts it into a parameter or variable of type `to`.
    * @param block The block owning the input.
-   * @param name The input's name.
+   * @param name The value input to read.
    * @param to The C++ type the value lands in.
    * @param fallback Code for an empty input.
    * @returns The converted code.
@@ -161,7 +162,8 @@ export class SimGenerator extends Blockly.CodeGenerator {
       this.fail(block, 'Cần một số ở đây, không dùng được chuỗi chữ.')
       return '0'
     }
-    if (to === 'int' || to === 'char') return from === 'float' || from === 'double' ? `$.toInt(${code})` : `(+${code})`
+    if (to === 'int' || to === 'char')
+      return from === 'float' || from === 'double' ? `$.toInt(${code})` : `(+${code})`
     if (to === 'float') return `Math.fround(${code})`
     if (to === 'bool') return `(${code} != 0)`
     return `(+${code})`
