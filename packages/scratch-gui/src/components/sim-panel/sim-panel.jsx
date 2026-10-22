@@ -1,9 +1,9 @@
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
 import styles from './sim-panel.css';
+import ThingBotBoard from './thingbot-board.jsx';
 
 const messages = defineMessages({
     title: {
@@ -48,10 +48,6 @@ const messages = defineMessages({
     }
 });
 
-/** PCA9685 channels of the ThingBot's two LEDs and buzzer. */
-const LED_1 = 15;
-const LED_2 = 13;
-const BUZZER = 14;
 const SPEEDS = [1, 10, 100];
 
 /**
@@ -80,22 +76,6 @@ const formatTime = us => {
     const minutes = Math.floor(ms / 60000);
     const seconds = ((ms % 60000) / 1000).toFixed(3);
     return `${minutes}:${seconds.padStart(6, '0')}`;
-};
-
-const Led = ({color, duty, label}) => (
-    <div className={styles.part}>
-        <span
-            className={styles.led}
-            style={{background: color, opacity: 0.15 + (0.85 * duty / 4096)}}
-        />
-        {label}
-    </div>
-);
-
-Led.propTypes = {
-    color: PropTypes.string.isRequired,
-    duty: PropTypes.number.isRequired,
-    label: PropTypes.string.isRequired
 };
 
 const SimPanel = ({
@@ -178,36 +158,13 @@ const SimPanel = ({
                     width={128}
                     height={64}
                 />
-                <div className={styles.parts}>
-                    <Led
-                        color="#ef4444"
-                        duty={pwm[LED_1] || 0}
-                        label="LED 1"
-                    />
-                    <Led
-                        color="#22c55e"
-                        duty={pwm[LED_2] || 0}
-                        label="LED 2"
-                    />
-                    <Led
-                        color="#f59e0b"
-                        duty={pwm[BUZZER] || 0}
-                        label="Buzzer"
-                    />
-                    <div className={styles.part}>
-                        <button
-                            aria-label={intl.formatMessage(messages.switchLabel)}
-                            aria-pressed={switchPressed}
-                            className={classNames(styles.switch, {[styles.switchPressed]: switchPressed})}
-                            onMouseDown={press}
-                            onMouseLeave={release}
-                            onMouseUp={release}
-                            onTouchEnd={release}
-                            onTouchStart={press}
-                        />
-                        {intl.formatMessage(messages.switchLabel)}
-                    </div>
-                </div>
+                <ThingBotBoard
+                    pwm={pwm}
+                    switchLabel={intl.formatMessage(messages.switchLabel)}
+                    switchPressed={switchPressed}
+                    onPress={press}
+                    onRelease={release}
+                />
             </div>
             {serial && <pre className={styles.serial}>{serial}</pre>}
             <div className={styles.status}>
