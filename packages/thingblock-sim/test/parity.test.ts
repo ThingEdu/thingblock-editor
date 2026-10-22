@@ -12,8 +12,14 @@ import { Order } from '../../scratch-blocks/src/generators/arduino/order'
 import { SimGenerator } from '../../scratch-blocks/src/generators/sim'
 import { registerGenerators as oledCpp } from '../../thingblock-resource/src/extensions/peripheral/oled/generator'
 import { registerSimGenerators as oledSim } from '../../thingblock-resource/src/extensions/peripheral/oled/sim'
-import { registerGenerators as thingbotCpp } from '../../thingblock-resource/src/extensions/peripheral/thingbot-core/generator'
-import { registerSimGenerators as thingbotSim } from '../../thingblock-resource/src/extensions/peripheral/thingbot-core/sim'
+import {
+  noteFrequency as cppNoteFrequency,
+  registerGenerators as thingbotCpp,
+} from '../../thingblock-resource/src/extensions/peripheral/thingbot-core/generator'
+import {
+  noteFrequency as simNoteFrequency,
+  registerSimGenerators as thingbotSim,
+} from '../../thingblock-resource/src/extensions/peripheral/thingbot-core/sim'
 import { coreDir, runSketch } from '../parity/parity'
 import { createBoard } from '../src/board'
 import { compileProgram, loadProject } from '../src/headless'
@@ -154,4 +160,41 @@ describe.skipIf(!coreDir())('simulator and C++ build agree', () => {
 
     expectSameBehaviour(simLog, cppLog, 2000)
   })
+
+  it('BlueSilk feed: motor, buzzer note, servos start/wait/move and release give the same PWM', () => {
+    const p = new ProjectBuilder()
+    p.hat('event_whenarduinobegin', stack(block('thingBotC3_init')))
+    p.hat(
+      'event_whenarduinoloop',
+      stack(
+        block('thingBotC3_setMotor', { SPEED: num(100) }, { MOTOR: ['4'], DIRECTION: ['forward'] }),
+        block('thingBotC3_setMotor', { SPEED: num(40) }, { MOTOR: ['1'], DIRECTION: ['backward'] }),
+        block('thingBotC3_playNote', { BEATS: num(0.5) }, { NOTE: ['A'], OCTAVE: ['5'] }),
+        block('thingBotC3_buzzer', { SOUND: num(1) }),
+        block('thingBotC3_buzzer', { SOUND: num(0) }),
+        block('thingBotC3_startServoAngle', { ANGLE: num(180), SECONDS: num(1) }, { SERVO: ['1'] }),
+        block('thingBotC3_startServoAngle', { ANGLE: num(180), SECONDS: num(1) }, { SERVO: ['2'] }),
+        block('thingBotC3_waitServos'),
+        block('control_wait', { DURATION: num(0.3) }),
+        block('thingBotC3_moveServoAngle', { ANGLE: num(90), SECONDS: num(0.5) }, { SERVO: ['1'] }),
+        block('thingBotC3_setServoAngle', { ANGLE: num(90) }, { SERVO: ['2'] }),
+        block('thingBotC3_setServo', { PULSE: num(300) }, { SERVO: ['3'] }),
+        block('thingBotC3_releaseServo', {}, { SERVO: ['3'] }),
+        block('control_wait', { DURATION: num(0.2) }),
+      ),
+    )
+
+    const { simLog, cppLog } = runBoth(p, 3000)
+
+    expectSameBehaviour(simLog, cppLog, 2000)
+    expect(comparable(cppLog).filter((e) => e.key === 'ch12').length).toBeGreaterThan(40)
+  })
+})
+
+it('the simulator plays every menu note at the pitch the C++ build uses', () => {
+  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+  for (const octave of ['3', '4', '5', '6']) {
+    for (const note of notes)
+      expect([note, octave, simNoteFrequency(note, octave)]).toEqual([note, octave, cppNoteFrequency(note, octave)])
+  }
 })
