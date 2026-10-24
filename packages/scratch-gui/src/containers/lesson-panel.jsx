@@ -44,12 +44,16 @@ const LessonPanel = ({
 
     // An edit makes the verdict box ask for a new run, or name the blocks the simulator cannot run (Run
     // stays disabled while there are any); steps already passed stay passed.
+    // Workspace events that change nothing (selecting, scrolling) still regenerate the code with a fresh
+    // diagnostics array, so the effect keys on the messages rather than the array.
+    const diagnosticsKey = JSON.stringify(simDiagnostics.map(d => d.message));
     useEffect(() => {
         reportRef.current = null;
         if (!graded) return;
-        if (simDiagnostics.length) onCheck('blocked', simDiagnostics.map(d => d.message));
+        const messages = JSON.parse(diagnosticsKey);
+        if (messages.length) onCheck('blocked', messages);
         else onCheck('idle');
-    }, [simCode, simDiagnostics, step, graded, onCheck]);
+    }, [simCode, diagnosticsKey, step, graded, onCheck]);
 
     useEffect(() => getSimClient().subscribe(message => {
         if (!graded) return;

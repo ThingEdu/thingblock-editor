@@ -148,6 +148,17 @@ test('a block the simulator cannot run shows the blocked verdict without a run',
     expect(box).toHaveTextContent('Sim generator does not know foo');
 });
 
+test('a workspace event that leaves the program unchanged keeps the verdict', () => {
+    const {store, lessonState, send} = setup({stepIndex: 1, passedSteps: []});
+    report(send, true);
+    expect(lessonState().check.status).toBe('passed');
+    // Selecting or scrolling regenerates the same code with a fresh diagnostics array.
+    act(() => store.dispatch(setSimCode('code-1', [])));
+    expect(lessonState().check.status).toBe('passed');
+    act(() => store.dispatch(setSimCode('code-1', [{blockId: 'b1', message: 'm'}])));
+    expect(lessonState().check).toEqual({status: 'blocked', messages: ['m']});
+});
+
 test('Next and Back move between steps and save the step', () => {
     const {getByRole, lessonState} = setup({stepIndex: 0, passedSteps: []});
     fireEvent.click(getByRole('button', {name: /Next/}));
