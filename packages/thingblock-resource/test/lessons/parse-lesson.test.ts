@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LessonError, parseLesson } from '../../scripts/lessons/parse-lesson.mjs'
+import { LessonError, parseLesson, parseRuns } from '../../scripts/lessons/parse-lesson.mjs'
 
 const FRONT = `---
 ma: den-nhap-nhay
@@ -187,5 +187,27 @@ kiểm: L1 sáng
       const mixed = parseLesson(`${FRONT}\n## B\n> gợi ý: một\n> hai\n> gợi ý: ba\n`, ctx)
       expect(mixed.lesson.steps[0].hints).toEqual([[{ text: 'một hai' }], [{ text: 'ba' }]])
     })
+  })
+})
+
+describe('parseRuns', () => {
+  it('reads _italic_ like *italic*', () => {
+    expect(parseRuns('Kéo khối _bên trong_ hộp')).toEqual([
+      { text: 'Kéo khối ' },
+      { text: 'bên trong', italic: true },
+      { text: ' hộp' },
+    ])
+  })
+
+  it('reads __bold__ like **bold**', () => {
+    expect(parseRuns('__đậm__ và _nghiêng_')).toEqual([
+      { text: 'đậm', bold: true },
+      { text: ' và ' },
+      { text: 'nghiêng', italic: true },
+    ])
+  })
+
+  it('leaves underscores inside words alone', () => {
+    expect(parseRuns('biến a_b_c giữ nguyên')).toEqual([{ text: 'biến a_b_c giữ nguyên' }])
   })
 })

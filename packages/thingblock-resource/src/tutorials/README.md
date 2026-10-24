@@ -26,7 +26,7 @@ thoi-luong: 10
 ## Các bước
 
 Mỗi dòng `## Tên bước` mở một bước. Bước đầu là lời chào (không chấm điểm) và bước cuối là lời kết. Chỉ dùng
-`##`; tiêu đề `###` bị báo lỗi. Nội dung bước là Markdown thường: đoạn văn, danh sách, chữ **đậm**, ảnh (tệp ảnh
+`##`; tiêu đề `###` bị báo lỗi. Nội dung bước là Markdown thường: đoạn văn, danh sách, chữ đậm (`**đậm**` hoặc `__đậm__`, như nhau), chữ nghiêng (`*nghiêng*` hoặc `_nghiêng_`, như nhau), ảnh (tệp ảnh
 phải nằm trong thư mục của bài).
 
 Hiện khối chỉ có nhãn tiếng Anh, nên bài gọi khối bằng nhãn đang hiện trên màn hình, in **đậm**.

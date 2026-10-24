@@ -18,18 +18,22 @@ export class LessonError extends Error {
 }
 
 /**
- * Split inline Markdown into runs: `**bold**` and `*italic*` only.
+ * Split inline Markdown into runs: bold (`**x**`, `__x__`) and italic (`*x*`, `_x_`) only. Underscore
+ * markers must sit at a word edge so `snake_case_names` stay plain.
  * @param {string} text One line of Markdown.
  * @returns {{text: string, bold?: true, italic?: true}[]} The runs, in order.
  */
 export function parseRuns(text) {
   const runs = []
-  const re = /\*\*(.+?)\*\*|\*(.+?)\*/g
+  const edge = String.raw`(?<![\p{L}\p{N}_])`
+  const after = String.raw`(?![\p{L}\p{N}_])`
+  const re = new RegExp(String.raw`\*\*(.+?)\*\*|${edge}__(.+?)__${after}|\*(.+?)\*|${edge}_(.+?)_${after}`, 'gu')
   let last = 0
   for (const m of text.matchAll(re)) {
     if (m.index > last) runs.push({ text: text.slice(last, m.index) })
-    if (m[1] !== undefined) runs.push({ text: m[1], bold: true })
-    else runs.push({ text: m[2], italic: true })
+    const bold = m[1] ?? m[2]
+    if (bold !== undefined) runs.push({ text: bold, bold: true })
+    else runs.push({ text: m[3] ?? m[4], italic: true })
     last = m.index + m[0].length
   }
   if (last < text.length) runs.push({ text: text.slice(last) })
