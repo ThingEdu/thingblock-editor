@@ -89,14 +89,7 @@
           "tsconfig": "<rootDir>/tsconfig.test.json"
         }
       ],
-      "^.+\\.jsx?$": [
-        "babel-jest",
-        {
-          "plugins": [
-            "./test/helpers/babel-import-meta.js"
-          ]
-        }
-      ],
+      "^.+\\.jsx?$": "babel-jest",
       "^.+\\.mjs$": [
         "babel-jest",
         {

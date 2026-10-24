@@ -27,15 +27,24 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
     const [switchPressed, setSwitchPressed] = useState(false);
     const [workerError, setWorkerError] = useState(null);
 
-    useEffect(() => getSimClient().subscribe(data => {
-        if (data.type === 'error') {
-            setWorkerError(data.message);
-            return;
-        }
-        if (data.type !== 'snapshot') return;
-        setSnapshot(data.snapshot);
-        if (data.snapshot.serial) setSerial(s => (s + data.snapshot.serial).slice(-SERIAL_LIMIT));
-    }), []);
+    // The simulator worker is shared with other panels and outlives this one, so on unmount the panel
+    // stops its session instead of terminating the worker.
+    useEffect(() => {
+        const client = getSimClient();
+        const unsubscribe = client.subscribe(data => {
+            if (data.type === 'error') {
+                setWorkerError(data.message);
+                return;
+            }
+            if (data.type !== 'snapshot') return;
+            setSnapshot(data.snapshot);
+            if (data.snapshot.serial) setSerial(s => (s + data.snapshot.serial).slice(-SERIAL_LIMIT));
+        });
+        return () => {
+            unsubscribe();
+            client.post({type: 'stop'});
+        };
+    }, []);
 
     // Highlight where the program stopped; clear it while running freely.
     const stoppedOn = snapshot && !snapshot.running ? snapshot.block || null : null;

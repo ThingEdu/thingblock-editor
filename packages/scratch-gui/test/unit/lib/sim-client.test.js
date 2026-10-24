@@ -1,4 +1,10 @@
 /* eslint-env jest */
+jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
+    createSimWorker: () => {
+        throw new Error('not used in tests');
+    }
+}));
+
 import {getSimClient, setWorkerFactory} from '../../../src/lib/sim/sim-client';
 
 class FakeWorker {
@@ -40,5 +46,29 @@ describe('sim client', () => {
     test('posts commands to the shared worker', () => {
         getSimClient().post({type: 'run'});
         expect(FakeWorker.instances[0].posted).toEqual([{type: 'run'}]);
+    });
+
+    test('a worker failure reaches subscribers and the next post starts a fresh worker', () => {
+        const factory = jest.fn(() => new FakeWorker());
+        setWorkerFactory(factory);
+        const seen = [];
+        getSimClient().subscribe(m => seen.push(m));
+        FakeWorker.instances[0].onerror({message: 'boom'});
+        expect(seen).toEqual([{type: 'error', message: 'boom'}]);
+
+        getSimClient().post({type: 'run'});
+        expect(factory).toHaveBeenCalledTimes(2);
+        expect(FakeWorker.instances[1].posted).toEqual([{type: 'run'}]);
+    });
+
+    test('a throwing listener does not starve later listeners', () => {
+        const failure = new Error('listener failed');
+        const seen = [];
+        getSimClient().subscribe(() => {
+            throw failure;
+        });
+        getSimClient().subscribe(m => seen.push(m));
+        expect(() => FakeWorker.instances[0].onmessage({data: {type: 'snapshot'}})).toThrow(failure);
+        expect(seen).toEqual([{type: 'snapshot'}]);
     });
 });
