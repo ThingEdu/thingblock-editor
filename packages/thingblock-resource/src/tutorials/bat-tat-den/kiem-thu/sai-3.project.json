@@ -44,7 +44,7 @@
           "topLevel": false,
           "shadow": false,
           "inputs": {
-            "BRIGHTNESS": [1, [4, "100"]]
+            "BRIGHTNESS": [1, [4, "0"]]
           },
           "fields": {
             "LED": ["LED_2", null]

@@ -77,8 +77,8 @@ Cạnh mỗi `.tb` giữ tệp `*.project.json` cùng tên để người xem đ
 
 ```sh
 cd packages/thingblock-resource
-node scripts/lessons/make-tb.mjs src/tutorials/bat-tat-den/kiem-thu/dung.project.json \
-  src/tutorials/bat-tat-den/kiem-thu/dung.tb
+node scripts/lessons/make-tb.mjs src/tutorials/bat-tat-den/kiem-thu/dung-2.project.json \
+  src/tutorials/bat-tat-den/kiem-thu/dung-2.tb
 ```
 
 ## Dựng và kiểm tra

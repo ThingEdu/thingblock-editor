@@ -9,9 +9,9 @@ thoi-luong: 10
 
 ## Chào em!
 
-Trên mạch ThingBot ảo bên phải có hai đèn nhỏ **L1** và **L2**. Bài này em sẽ bật đèn L1 bằng khối lệnh.
+Trên mạch ThingBot ảo bên phải có hai đèn nhỏ **L1** và **L2**. Bài này em sẽ bật rồi tắt đèn L1 bằng khối lệnh.
 
-Bấm **Tiếp** để bắt đầu.
+Bấm **Next** để bắt đầu.
 
 ## Bật đèn L1
 
@@ -24,13 +24,12 @@ Bấm **Run** ở bảng mô phỏng. Đèn L1 trên mạch ảo sẽ sáng.
 
 kiểm: L1 sáng
 
-## Giữ L2 tắt
+## Tắt đèn L1
 
-Đèn L2 vẫn phải tắt. Thử kéo thêm khối **set led L2 0** vào dưới khối vừa rồi, rồi bấm **Run** lại.
+Giờ hãy tắt đèn. Trong khối **set led L1 100**, đổi **100** thành **0**, rồi bấm **Run** lại. Đèn L1 sẽ tắt.
 
-kiểm: L1 sáng
-kiểm: L2 tắt
+kiểm: L1 tắt
 
 ## Xong rồi!
 
-Em đã điều khiển được đèn bằng khối lệnh. Bài tiếp theo: làm đèn nhấp nháy.
+Em đã bật và tắt được đèn bằng khối lệnh. Bài tiếp theo: làm đèn nhấp nháy.

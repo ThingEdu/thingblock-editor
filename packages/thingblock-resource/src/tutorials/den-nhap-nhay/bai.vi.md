@@ -9,9 +9,9 @@ thoi-luong: 10
 
 ## Đèn biết chớp
 
-Lần này đèn L1 sẽ sáng nửa giây, tắt nửa giây, rồi cứ thế lặp mãi. Em cần bốn việc nối nhau: bật, chờ, tắt, chờ, và một khối làm cho chúng lặp lại.
+Lần này đèn L1 sẽ sáng nửa giây, tắt nửa giây, rồi cứ thế lặp mãi. Em cần bốn việc nối nhau: bật, chờ, tắt, chờ, đặt trong khối **when Arduino loops** để chúng lặp lại.
 
-Bấm **Tiếp**.
+Bấm **Next**.
 
 ## Bật rồi tắt
 
