@@ -3,10 +3,8 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
 
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
+import {getSimClient} from '../lib/sim/sim-client';
 import {setSimHighlight} from '../reducers/code';
-
-/** The worker's chunk name; webpack.config.js keeps that chunk whole. */
-const SIM_WORKER = 'sim-worker';
 
 /** Serial text kept in the panel; older output scrolls away. */
 const SERIAL_LIMIT = 4000;
@@ -22,7 +20,6 @@ const SERIAL_LIMIT = 4000;
  * @returns {React.ReactElement} The simulator panel.
  */
 const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
-    const workerRef = useRef(null);
     const loadedRef = useRef(null);
     const [snapshot, setSnapshot] = useState(null);
     const [serial, setSerial] = useState('');
@@ -30,22 +27,15 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
     const [switchPressed, setSwitchPressed] = useState(false);
     const [workerError, setWorkerError] = useState(null);
 
-    useEffect(() => {
-        const worker = new Worker(
-            /* webpackChunkName: "sim-worker" */ new URL('../lib/sim/sim.worker.js', import.meta.url),
-            {name: SIM_WORKER}
-        );
-        worker.onmessage = ({data}) => {
-            if (data.type === 'error') {
-                setWorkerError(data.message);
-                return;
-            }
-            setSnapshot(data.snapshot);
-            if (data.snapshot.serial) setSerial(s => (s + data.snapshot.serial).slice(-SERIAL_LIMIT));
-        };
-        workerRef.current = worker;
-        return () => worker.terminate();
-    }, []);
+    useEffect(() => getSimClient().subscribe(data => {
+        if (data.type === 'error') {
+            setWorkerError(data.message);
+            return;
+        }
+        if (data.type !== 'snapshot') return;
+        setSnapshot(data.snapshot);
+        if (data.snapshot.serial) setSerial(s => (s + data.snapshot.serial).slice(-SERIAL_LIMIT));
+    }), []);
 
     // Highlight where the program stopped; clear it while running freely.
     const stoppedOn = snapshot && !snapshot.running ? snapshot.block || null : null;
@@ -54,7 +44,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
     }, [stoppedOn, onHighlight]);
     useEffect(() => () => onHighlight(null), [onHighlight]);
 
-    const post = useCallback(message => workerRef.current && workerRef.current.postMessage(message), []);
+    const post = useCallback(message => getSimClient().post(message), []);
 
     // The blocks changed under a loaded program (an edit, or a project whose peripherals finished
     // loading after it appeared): stop running the old program rather than show it as the new one.
