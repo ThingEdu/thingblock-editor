@@ -37,19 +37,22 @@ export function parseRuns(text) {
 
 const parseFrontMatter = (lines, problems) => {
   const meta = {}
+  const metaLine = {}
   if (lines[0] !== '---') {
     problems.push({ line: 1, message: 'tệp phải bắt đầu bằng "---" (front matter)' })
-    return { meta, end: 0 }
+    return { meta, metaLine, end: 0 }
   }
   let i = 1
   for (; i < lines.length && lines[i] !== '---'; i++) {
-    const m = lines[i].match(/^([a-z-]+):\s*(.*?)\s*(?:#.*)?$/)
-    if (m) meta[m[1]] = m[2]
-    else if (lines[i].trim()) {
+    const m = lines[i].match(/^([a-z-]+):\s*(.*?)\s*(?:\s#(?:\s.*)?)?$/)
+    if (m) {
+      meta[m[1]] = m[2]
+      metaLine[m[1]] = i + 1
+    } else if (lines[i].trim()) {
       problems.push({ line: i + 1, message: `không hiểu dòng front matter "${lines[i]}"` })
     }
   }
-  return { meta, end: i + 1 }
+  return { meta, metaLine, end: i + 1 }
 }
 
 /**
@@ -62,23 +65,33 @@ const parseFrontMatter = (lines, problems) => {
 export function parseLesson(markdown, ctx) {
   const problems = []
   const warnings = []
-  const lines = markdown.split('\n')
-  const { meta, end } = parseFrontMatter(lines, problems)
+  const lines = markdown
+    .normalize('NFC')
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+  const { meta, metaLine, end } = parseFrontMatter(lines, problems)
 
   for (const key of REQUIRED) {
     if (!meta[key]) problems.push({ line: 1, message: `thiếu "${key}" trong front matter` })
   }
   if (meta.ma && meta.ma !== ctx.dirName) {
-    problems.push({ line: 1, message: `ma "${meta.ma}" khác tên thư mục "${ctx.dirName}"` })
+    problems.push({ line: metaLine.ma, message: `ma "${meta.ma}" khác tên thư mục "${ctx.dirName}"` })
   }
   if (meta.nhom && !GROUPS.includes(meta.nhom)) {
-    problems.push({ line: 1, message: `nhom "${meta.nhom}" không thuộc ${GROUPS.join('|')}` })
+    problems.push({ line: metaLine.nhom, message: `nhom "${meta.nhom}" không thuộc ${GROUPS.join('|')}` })
   }
   if (meta['bat-dau'] && !ctx.files.includes(meta['bat-dau'])) {
-    problems.push({ line: 1, message: `không thấy tệp bat-dau "${meta['bat-dau']}"` })
+    problems.push({ line: metaLine['bat-dau'], message: `không thấy tệp bat-dau "${meta['bat-dau']}"` })
+  }
+
+  for (const key of ['thu-tu', 'thoi-luong']) {
+    if (meta[key] && !/^\d+$/.test(meta[key])) {
+      problems.push({ line: metaLine[key], message: `${key} phải là số` })
+    }
   }
 
   const steps = []
+  let hintText = null
   let step = null
   let paragraph = []
   let list = null
@@ -95,6 +108,16 @@ export function parseLesson(markdown, ctx) {
     const line = lines[i]
     const lineNo = i + 1
     let m
+    if (hintText !== null && (m = line.match(/^>\s?(.*)$/)) && m[1].trim()) {
+      hintText += ` ${m[1].trim()}`
+      step.hints[step.hints.length - 1] = parseRuns(hintText)
+      continue
+    }
+    hintText = null
+    if ((m = line.match(/^(#{3,})\s/))) {
+      problems.push({ line: lineNo, message: 'chỉ dùng ## cho bước, không dùng ###' })
+      continue
+    }
     if ((m = line.match(/^##\s+(.+?)\s*$/))) {
       if (step) {
         flushParagraph()
@@ -110,7 +133,7 @@ export function parseLesson(markdown, ctx) {
       }
       continue
     }
-    if ((m = line.match(/^kiểm:\s*(.+)$/))) {
+    if ((m = line.match(/^kiểm:\s*(.+)$/i))) {
       flushParagraph()
       flushList()
       try {
@@ -123,7 +146,7 @@ export function parseLesson(markdown, ctx) {
       }
       continue
     }
-    if ((m = line.match(/^chỉ vào:\s*(\S+)\s*$/))) {
+    if ((m = line.match(/^chỉ vào:\s*(\S+)\s*$/i))) {
       flushParagraph()
       flushList()
       if (TOUR_MARKERS.includes(m[1])) step.pointAt = m[1]
@@ -135,13 +158,14 @@ export function parseLesson(markdown, ctx) {
       }
       continue
     }
-    if ((m = line.match(/^>\s*gợi ý:\s*(.+)$/))) {
+    if ((m = line.match(/^>\s*gợi ý:\s*(.+)$/i))) {
       flushParagraph()
       flushList()
-      step.hints.push(parseRuns(m[1]))
+      hintText = m[1].trim()
+      step.hints.push(parseRuns(hintText))
       continue
     }
-    if ((m = line.match(/^!\[(.*?)\]\((\S+)\)\s*$/))) {
+    if ((m = line.match(/^!\[(.*?)\]\((.+?)\)\s*$/))) {
       flushParagraph()
       flushList()
       if (!ctx.files.includes(m[2])) {
@@ -150,7 +174,7 @@ export function parseLesson(markdown, ctx) {
       step.body.push({ type: 'img', src: m[2], alt: m[1] })
       continue
     }
-    if ((m = line.match(/^[-*]\s+(.+)$/))) {
+    if ((m = line.match(/^(?:[-*]|\d+\.)\s+(.+)$/))) {
       flushParagraph()
       ;(list ??= []).push(parseRuns(m[1]))
       continue
