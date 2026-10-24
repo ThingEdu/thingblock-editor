@@ -21,6 +21,7 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
 import LessonLibrary from '../../containers/lesson-library.jsx';
+import LessonPanel from '../../containers/lesson-panel.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -113,6 +114,7 @@ const GUIComponent = props => {
         isShared,
         isTelemetryEnabled,
         isTotallyNormal,
+        lessonOpen,
         loading,
         logo,
         menuBarHidden,
@@ -287,6 +289,7 @@ const GUIComponent = props => {
 
     return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
         const stageSize = resolveStageSize(stageSizeMode, isFullSize);
+        const blocksMedia = `${basePath}static/${colorModeMap[colorMode].blocksMediaFolder}/`;
         const boxStyles = classNames(styles.bodyWrapper, {
             [styles.bodyWrapperWithoutMenuBar]: menuBarHidden
         });
@@ -438,18 +441,19 @@ const GUIComponent = props => {
                                         aria-label={intl.formatMessage(ariaMessages.codePanel)}
                                         element="section"
                                     >
-                                        <Blocks
-                                            key={`${blocksId}/${colorMode}/${theme}`}
-                                            grow={1}
-                                            isVisible={blocksTabVisible}
-                                            options={{
-                                                media: `${basePath}static/${colorModeMap[colorMode].blocksMediaFolder}/`
-                                            }}
-                                            stageSize={stageSize}
-                                            theme={theme}
-                                            vm={vm}
-                                            colorMode={colorMode}
-                                        />
+                                        {lessonOpen && <LessonPanel />}
+                                        <div className={styles.blocksArea}>
+                                            <Blocks
+                                                key={`${blocksId}/${colorMode}/${theme}`}
+                                                grow={1}
+                                                isVisible={blocksTabVisible}
+                                                options={{media: blocksMedia}}
+                                                stageSize={stageSize}
+                                                theme={theme}
+                                                vm={vm}
+                                                colorMode={colorMode}
+                                            />
+                                        </div>
                                     </Box>
                                     <ExtensionsButton
                                         boardMode={Boolean(selectedDeviceId)}
@@ -536,6 +540,7 @@ GUIComponent.propTypes = {
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
     isTotallyNormal: PropTypes.bool,
+    lessonOpen: PropTypes.bool,
     loading: PropTypes.bool,
     logo: PropTypes.string,
     menuBarHidden: PropTypes.bool,

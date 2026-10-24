@@ -190,6 +190,7 @@ const mapStateToProps = (state, ownProps) => {
         isFullScreen: state.scratchGui.mode.isFullScreen,
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
         isRtl: state.locales.isRtl,
+        lessonOpen: Boolean(state.scratchGui.lesson.lesson),
         isShowingProject: getIsShowingProject(loadingState),
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         platform: ownProps.platform,
