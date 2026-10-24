@@ -57,6 +57,14 @@ export class Session {
     return this.board.log.entries
   }
 
+  /**
+   * Whether the program is in a wait that has not ended yet.
+   * @returns True while the program sleeps.
+   */
+  get sleeping(): boolean {
+    return this.runner.sleeping
+  }
+
   constructor(code: string, options: SessionOptions = {}) {
     this.now = options.now ?? (() => performance.now())
     this.board = createBoard()

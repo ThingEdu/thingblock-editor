@@ -63,11 +63,12 @@ const setup = (progress, loaded = 'code-1') => {
     return {store, actions, lessonState, send, ...view};
 };
 
-// As the worker does: one `check` when the verdict is first known (t=0), then only snapshots while it
-// stays the same; a passing program posts a second `check` the tick the rules first hold.
+// As the worker does: one `check` on the first tick past setup, then only snapshots while the verdict stays
+// the same; a passing program posts a second `check` the tick the rules first hold.
 const report = (send, ok) => {
-    send({type: 'snapshot', snapshot: {t: 0, phase: 'setup', running: true}});
-    send({type: 'check', results: [{ok: false, message: 'Đèn L1 chưa sáng.'}], t: 0, phase: 'setup'});
+    send({type: 'snapshot', snapshot: {t: 0, phase: 'setup', running: false}});
+    send({type: 'snapshot', snapshot: {t: 16000, phase: 'loop', running: true}});
+    send({type: 'check', results: [{ok: false, message: 'Đèn L1 chưa sáng.'}], t: 16000, phase: 'loop'});
     if (ok) {
         send({type: 'snapshot', snapshot: {t: 20000, phase: 'loop', running: true}});
         send({type: 'check', results: [{ok: true, message: ''}], t: 20000, phase: 'loop'});
@@ -105,10 +106,10 @@ test('a passing report on the loaded program marks the step passed once and save
         .toEqual({stepIndex: 1, passedSteps: [1]});
 });
 
-test('a failing report at t=0 fails the step once snapshots pass the window', () => {
+test('a single failing report fails the step once snapshots pass the window', () => {
     const {lessonState, send, container} = setup({stepIndex: 1, passedSteps: []});
-    send({type: 'snapshot', snapshot: {t: 0, phase: 'setup', running: true}});
-    send({type: 'check', results: [{ok: false, message: 'Đèn L1 chưa sáng.'}], t: 0, phase: 'setup'});
+    send({type: 'snapshot', snapshot: {t: 16000, phase: 'loop', running: true}});
+    send({type: 'check', results: [{ok: false, message: 'Đèn L1 chưa sáng.'}], t: 16000, phase: 'loop'});
     send({type: 'snapshot', snapshot: {t: 4900000, phase: 'loop', running: true}});
     expect(lessonState().check.status).toBe('waiting');
     report(send, false);

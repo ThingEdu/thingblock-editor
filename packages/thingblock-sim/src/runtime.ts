@@ -135,6 +135,14 @@ export class Runner {
   /** Virtual time the program is sleeping until; at or before `clock.now` when it is runnable. */
   private resumeAt = 0
 
+  /**
+   * Whether the program is in a wait (a `delay` or `wait` block) that has not ended yet.
+   * @returns True while the program sleeps.
+   */
+  get sleeping(): boolean {
+    return this.resumeAt > this.clock.now
+  }
+
   constructor(program: Program, clock: Clock, log: EventLog) {
     this.program = program
     this.clock = clock
