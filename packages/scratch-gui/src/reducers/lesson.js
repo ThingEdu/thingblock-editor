@@ -20,13 +20,18 @@ const initialState = {
 
 const reducer = function (state = initialState, action) {
     switch (action.type) {
-    case OPEN:
+    case OPEN: {
+        const count = action.lesson.steps.length;
+        const saved = action.progress;
+        const savedSteps = saved && Array.isArray(saved.passedSteps) ? saved.passedSteps : [];
         return {
             ...initialState,
             lesson: action.lesson,
-            stepIndex: action.progress ? action.progress.stepIndex : 0,
-            passedSteps: action.progress ? action.progress.passedSteps : []
+            // Saved progress may predate an edit of the lesson, so it is clamped to the steps that exist.
+            stepIndex: saved ? Math.min(Math.max(Math.trunc(Number(saved.stepIndex)) || 0, 0), count - 1) : 0,
+            passedSteps: [...new Set(savedSteps.filter(n => Number.isInteger(n) && n >= 0 && n < count))]
         };
+    }
     case CLOSE:
         return initialState;
     case GO_TO_STEP:

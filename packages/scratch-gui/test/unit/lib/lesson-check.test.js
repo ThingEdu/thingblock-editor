@@ -42,3 +42,8 @@ test('unsimulated blocks take precedence over a runtime error', () => {
         report: null
     })).toEqual({status: 'blocked', messages: ['Sim generator does not know rgb_strip']});
 });
+
+test('a step with no rules is never graded', () => {
+    expect(decideCheck({...base, report: {results: [], t: 0, phase: 'loop'}}))
+        .toEqual({status: 'idle', messages: []});
+});

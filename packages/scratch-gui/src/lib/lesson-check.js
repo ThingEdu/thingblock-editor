@@ -2,6 +2,8 @@
 export const CHECK_WINDOW_US = 5000000;
 
 /**
+ * A step without rules is never graded (`idle`). Precedence: diagnostics (`blocked`), snapshot error (`error`),
+ * not yet run (`waiting`), no rules (`idle`), all rules hold (`passed`), window closed or halted (`failed`).
  * Turn the worker's latest verdict and snapshot into what the lesson panel shows.
  * @param {object} args
  * @param {?{results: {ok: boolean, message: string}[], t: number}} args.report Latest `check` message.
@@ -14,6 +16,7 @@ export const decideCheck = ({report, snapshot, diagnostics, ranSinceEdit}) => {
     if (diagnostics.length) return {status: 'blocked', messages: diagnostics.map(d => d.message)};
     if (snapshot && snapshot.error) return {status: 'error', messages: [snapshot.error]};
     if (!ranSinceEdit || !report) return {status: 'waiting', messages: []};
+    if (report.results.length === 0) return {status: 'idle', messages: []};
     if (report.results.every(r => r.ok)) return {status: 'passed', messages: []};
     const windowClosed = report.t >= CHECK_WINDOW_US || (snapshot && snapshot.phase === 'halted');
     if (!windowClosed) return {status: 'waiting', messages: []};

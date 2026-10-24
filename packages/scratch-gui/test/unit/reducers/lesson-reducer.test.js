@@ -31,3 +31,12 @@ test('close returns to the initial state', () => {
     expect(state).toEqual(lessonInitialState);
     expect(state.lesson).toBeNull();
 });
+
+test('saved progress is clamped to the lesson', () => {
+    expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: 9, passedSteps: []})).stepIndex).toBe(2);
+    expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: -1, passedSteps: []})).stepIndex).toBe(0);
+    expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: 1.7, passedSteps: []})).stepIndex).toBe(1);
+    expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: 'x', passedSteps: []})).stepIndex).toBe(0);
+    expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: 0, passedSteps: [0, 7, 1.5, 'x', 1, 1]}))
+        .passedSteps).toEqual([0, 1]);
+});
