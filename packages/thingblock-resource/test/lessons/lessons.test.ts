@@ -1,3 +1,4 @@
+// Imports scratch-blocks source, whose `Order` enum is not erasable syntax, so the package's tsc skips this file and vitest (esbuild) is its only type pass.
 /**
  * Every shipped lesson proves itself: its `kiem-thu/dung*.tb` passes each graded step and each
  * `sai-<n>.tb` fails step n, graded exactly as the editor grades a learner (5 s of virtual time).
