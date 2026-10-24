@@ -58,4 +58,13 @@ describe('GUI with a lesson open', () => {
         expect(workspaceArea).toContainElement(screen.getByRole('button', {name: 'Add Peripheral'}));
     });
 
+    test('the device panel narrows while the lesson is open and returns to its width after', () => {
+        const devicePanel = () => screen.getByRole('complementary');
+        const {rerender} = render(ui(false));
+        expect(devicePanel()).toHaveStyle({flex: '0 0 540px'});
+        rerender(ui(true));
+        expect(devicePanel()).toHaveStyle({flex: '0 0 380px'});
+        rerender(ui(false));
+        expect(devicePanel()).toHaveStyle({flex: '0 0 540px'});
+    });
 });

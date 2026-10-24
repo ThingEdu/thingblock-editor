@@ -45,6 +45,9 @@ import {PLATFORM} from '../../lib/platform.js';
 import {MenuRefProvider} from '../../contexts/menu-ref-context.jsx';
 import {ModalFocusProvider} from '../../contexts/modal-focus-context.jsx';
 
+/** Widest the device panel starts while a lesson is open, so the workspace keeps room beside the lesson. */
+const LESSON_DEVICE_PANEL_WIDTH = 380;
+
 const ariaMessages = defineMessages({
     menuBar: {
         id: 'gui.aria.menuBar',
@@ -233,6 +236,19 @@ const GUIComponent = props => {
     useEffect(() => {
         window.dispatchEvent(new Event('resize'));
     }, [devicePanelWidth]);
+
+    // The lesson column takes room from the workspace, so the device panel narrows while a lesson is open
+    // and goes back to the width it had when the lesson closes.
+    const widthBeforeLesson = useRef(null);
+    useEffect(() => {
+        if (lessonOpen) {
+            widthBeforeLesson.current = devicePanelWidth;
+            setDevicePanelWidth(Math.min(devicePanelWidth, LESSON_DEVICE_PANEL_WIDTH));
+        } else if (widthBeforeLesson.current !== null) {
+            setDevicePanelWidth(widthBeforeLesson.current);
+            widthBeforeLesson.current = null;
+        }
+    }, [lessonOpen]);
 
     const handleClearMonitor = useCallback(() => {
         setSerialLogs([]);
