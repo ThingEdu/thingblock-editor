@@ -106,7 +106,8 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeTipsLibrary()),
     onOpen: (lesson, progress) => {
-        dispatch(setDevice(lesson.bo));
+        // `bo: khong` lessons teach choosing the board, so they open without selecting one.
+        if (lesson.bo && lesson.bo !== 'khong') dispatch(setDevice(lesson.bo));
         dispatch(openLesson(lesson, progress));
         dispatch(closeTipsLibrary());
     }

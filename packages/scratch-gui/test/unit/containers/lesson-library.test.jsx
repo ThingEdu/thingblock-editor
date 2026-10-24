@@ -79,3 +79,17 @@ test('an unreachable index shows the same explanation', async () => {
         getByText('Lessons need the ThingBlock Link helper. Start it and try again.')
     ).toBeInTheDocument());
 });
+
+test('a boardless lesson opens without selecting a device', async () => {
+    const boardless = {...LESSON, bo: 'khong'};
+    global.fetch = jest.fn(url => respond(url.endsWith('index.json') ? INDEX : boardless));
+    const {container, getByText, store} = renderLibrary(ROOT);
+    await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(store.getActions()).toHaveLength(2));
+    const [open, close] = store.getActions();
+    expect(open.lesson.bo).toBe('khong');
+    expect(store.getActions().map(action => action.type)).not.toContain('scratch-gui/board/SET_DEVICE');
+    expect(open.type).toBe('scratch-gui/lesson/OPEN');
+    expect(close.type).toMatch(/CLOSE_MODAL/);
+});
