@@ -78,6 +78,15 @@ describe('blink rule', () => {
     )
     expect(check('L1 nhấp nháy, chu kỳ 1 giây', log).ok).toBe(true)
   })
+  it('grades the median period so one long pause does not fail an otherwise steady blink', () => {
+    const log = pwmLog(
+      ...[0, 700, 2000, 3000, 4000, 7000].flatMap((on): [number, number, number][] => [
+        [on, 15, 4096],
+        [on + 200, 15, 0],
+      ]),
+    )
+    expect(check('L1 nhấp nháy, chu kỳ 1 giây ± 20%', log).ok).toBe(true)
+  })
 })
 
 describe('motor rules', () => {
