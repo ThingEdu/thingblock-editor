@@ -82,7 +82,8 @@ export function parseRule(text: string): Rule {
     }
   }
   // The quoted text keeps the author's casing: it is what the learner should see on the screen.
-  if ((m = /^oled hiện (đúng )?"(.+)"$/i.exec(text.trim()))) return { kind: 'oled', text: m[2], exact: Boolean(m[1]) }
+  if ((m = /^oled\s+hiện\s+(đúng\s+)?"(.+)"$/i.exec(text.normalize('NFC').trim())))
+    return { kind: 'oled', text: m[2], exact: Boolean(m[1]) }
 
   throw new RuleSyntaxError(
     text,

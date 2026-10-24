@@ -38,6 +38,16 @@ describe('parseRule', () => {
     expect(() => parseRule('L1 nhấp nháy, chu kỳ 2 giây')).toThrow(/1\.5/)
   })
 
+  it('accepts surplus whitespace, any case and NFD input in OLED rules, keeping the quoted text as written', () => {
+    expect(parseRule('  oled   HIỆN   Đúng "Xin  Chào" ')).toEqual({
+      kind: 'oled',
+      text: 'Xin  Chào',
+      exact: true,
+    })
+    expect(parseRule('OLED  hiện "x"')).toEqual({ kind: 'oled', text: 'x', exact: false })
+    expect(parseRule('OLED hiện "e\u0301"')).toEqual({ kind: 'oled', text: '\u00e9', exact: false })
+  })
+
   it('names the unparsed text in the error', () => {
     let error: unknown
     try {
