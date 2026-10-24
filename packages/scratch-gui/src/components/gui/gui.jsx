@@ -453,15 +453,15 @@ const GUIComponent = props => {
                                                 vm={vm}
                                                 colorMode={colorMode}
                                             />
+                                            <ExtensionsButton
+                                                boardMode={Boolean(selectedDeviceId)}
+                                                intl={intl}
+                                                onExtensionButtonClick={
+                                                    selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
+                                                }
+                                            />
                                         </div>
                                     </Box>
-                                    <ExtensionsButton
-                                        boardMode={Boolean(selectedDeviceId)}
-                                        intl={intl}
-                                        onExtensionButtonClick={
-                                            selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
-                                        }
-                                    />
                                 </TabPanel>
                             </Tabs>
                         </Box>
