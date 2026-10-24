@@ -75,7 +75,7 @@ import AccountMenu from './account-menu.jsx';
 
 const ariaMessages = defineMessages({
     tutorials: {
-        id: 'gui.menuBar.tutorialsLibrary',
+        id: 'gui.menuBar.lessonsLibrary',
         defaultMessage: 'Lessons',
         description: 'accessibility text for the lessons button'
     },
