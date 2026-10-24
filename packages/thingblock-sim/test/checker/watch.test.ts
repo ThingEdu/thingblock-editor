@@ -46,3 +46,30 @@ describe('Watcher', () => {
     expect(watcher.after(session)).not.toBeNull()
   })
 })
+
+const L2_ONLY = `
+const LED_2 = 13;
+const pwm = $.hw.Adafruit_PWMServoDriver();
+function* setup() { pwm.begin(); pwm.setPin(LED_2, 4095); }
+function* loop() { yield $.delay(500); }
+return { setup, loop };
+`
+
+describe('worker protocol', () => {
+  // Mirrors worker.ts: `load` posts a snapshot then `after`; every tick posts a snapshot then `after`.
+  it('posts one check for a program that never satisfies the rules while snapshots keep advancing', () => {
+    const session = new Session(L2_ONLY)
+    const watcher = new Watcher()
+    watcher.set([parseRule('L1 sáng')])
+    const checks = [watcher.after(session)]
+    session.running = true
+    let t = 0
+    for (let i = 0; i < 600; i++) {
+      t = session.tick(16).t
+      checks.push(watcher.after(session))
+    }
+    const posted = checks.filter((c) => c !== null)
+    expect(posted).toEqual([{ results: [{ ok: false, message: 'Đèn L1 chưa sáng.' }], t: 0, phase: 'setup' }])
+    expect(t).toBeGreaterThan(5_000_000)
+  })
+})
