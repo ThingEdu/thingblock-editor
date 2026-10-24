@@ -66,6 +66,29 @@ describe('buildLessons', () => {
     expect(() => buildLessons(src, out)).toThrow(/hong\/bai\.vi\.md.*dòng 11.*L7 sáng/s)
   })
 
+  it('fails on two lessons with the same order in one group, naming the second and its thu-tu line', () => {
+    const src = mkdtempSync(join(tmpdir(), 'lessons-src-'))
+    const out = mkdtempSync(join(tmpdir(), 'lessons-out-'))
+    for (const [ma, nhom] of [
+      ['a-den', 'dau-ra'],
+      ['b-quen', 'lam-quen'],
+      ['c-bat', 'dau-ra'],
+    ] as const) {
+      mkdirSync(join(src, ma))
+      writeFileSync(join(src, ma, 'bai.vi.md'), lesson(ma, nhom, 1))
+      writeFileSync(join(src, ma, 'anh.png'), 'png')
+    }
+    let error: (Error & { file?: string; problems?: { line: number; message: string }[] }) | undefined
+    try {
+      buildLessons(src, out)
+    } catch (e) {
+      error = e as typeof error
+    }
+    expect(error?.file).toBe('c-bat/bai.vi.md')
+    expect(error?.problems).toEqual([{ line: 5, message: 'trùng thứ tự 1 trong nhóm dau-ra với bài a-den' }])
+    expect(error?.message).toMatch(/c-bat\/bai\.vi\.md.*dòng 5: trùng thứ tự 1 trong nhóm dau-ra với bài a-den/s)
+  })
+
   it('as a script prints file:line: message and exits 1 on a bad lesson', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'lessons-cwd-'))
     const dir = join(cwd, 'src', 'tutorials', 'hong')

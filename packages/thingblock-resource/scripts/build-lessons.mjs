@@ -16,17 +16,22 @@ const IMAGE_FILE = /\.(png|gif)$/
  * @param {string} outDir Folder receiving `<ma>/bai.<lang>.json`, the lesson images and `index.json`.
  * @returns {{lessons: {ma: string, ten: string, nhom: string, thuTu: number, thoiLuong: number | null,
  *   langs: string[], stepCount: number, gradedCount: number}[]}} The written index.
- * @throws {Error} A lesson failed to parse; the message names the file, `file` and `problems` carry the detail.
+ * @throws {Error} A lesson failed to parse, or two lessons share `thu-tu` within a `nhom`; the message names
+ *   the file, `file` and `problems` carry the detail.
  */
 export function buildLessons(srcDir, outDir) {
   const lessons = []
   const dirs = existsSync(srcDir) ? readdirSync(srcDir, { withFileTypes: true }).filter((d) => d.isDirectory()) : []
+  dirs.sort((a, b) => a.name.localeCompare(b.name))
+  /** First lesson seen at each `<nhom>/<thu-tu>`. */
+  const byOrder = new Map()
 
   for (const dir of dirs) {
     const lessonDir = join(srcDir, dir.name)
     const files = readdirSync(lessonDir)
     const langs = []
     let summary = null
+    let firstFile = null
     for (const file of files) {
       const lang = file.match(LESSON_FILE)?.[1]
       if (!lang) continue
@@ -34,6 +39,7 @@ export function buildLessons(srcDir, outDir) {
       mkdirSync(join(outDir, dir.name), { recursive: true })
       writeFileSync(join(outDir, dir.name, `bai.${lang}.json`), `${JSON.stringify(parsed.lesson, null, 2)}\n`)
       langs.push(lang)
+      firstFile ??= file
       const { ma, ten, nhom, thuTu, thoiLuong, steps } = parsed.lesson
       summary ??= {
         ma,
@@ -46,6 +52,16 @@ export function buildLessons(srcDir, outDir) {
       }
     }
     if (!summary) continue
+    const orderKey = `${summary.nhom}/${summary.thuTu}`
+    const sameOrder = byOrder.get(orderKey)
+    if (sameOrder) {
+      const lines = readFileSync(join(lessonDir, firstFile), 'utf8').split('\n')
+      const line = lines.findIndex((l) => l.startsWith('thu-tu:')) + 1
+      throw fileError(`${dir.name}/${firstFile}`, [
+        { line, message: `trùng thứ tự ${summary.thuTu} trong nhóm ${summary.nhom} với bài ${sameOrder}` },
+      ])
+    }
+    byOrder.set(orderKey, summary.ma)
     for (const file of files.filter((f) => IMAGE_FILE.test(f))) {
       cpSync(join(lessonDir, file), join(outDir, dir.name, file))
     }
@@ -80,11 +96,21 @@ function parseFile(path, label, ctx) {
     return parseLesson(readFileSync(path, 'utf8'), ctx)
   } catch (e) {
     if (!(e instanceof LessonError)) throw e
-    const error = new Error(`${label}:\n${e.message}`)
-    error.file = label
-    error.problems = e.problems
-    throw error
+    throw fileError(label, e.problems)
   }
+}
+
+/**
+ * The build's error for authoring problems in one file.
+ * @param {string} label File name shown in errors (`<ma>/<file>`).
+ * @param {{line: number, message: string}[]} problems The problems, with their lines.
+ * @returns {Error & {file: string, problems: {line: number, message: string}[]}} The error to throw.
+ */
+function fileError(label, problems) {
+  const error = new Error(`${label}:\n${new LessonError(problems).message}`)
+  error.file = label
+  error.problems = problems
+  return error
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

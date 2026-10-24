@@ -19,7 +19,7 @@ thoi-luong: 10
 - `ma`: định danh, trùng tên thư mục.
 - `ten`: tên bài hiện cho em học sinh.
 - `nhom`: nhóm bài (ví dụ `dau-ra`).
-- `thu-tu`: số thứ tự trong danh sách, phải là số.
+- `thu-tu`: số thứ tự trong nhóm, phải là số. Hai bài cùng `nhom` không được trùng `thu-tu`.
 - `bo`: bo mạch của bài (ví dụ `thingbot`).
 - `thoi-luong`: số phút ước tính, phải là số.
 
