@@ -1,6 +1,7 @@
 const SET_GENERATED_CODE = 'scratch-gui/code/SET_GENERATED_CODE';
 const SET_SIM_CODE = 'scratch-gui/code/SET_SIM_CODE';
 const SET_SIM_HIGHLIGHT = 'scratch-gui/code/SET_SIM_HIGHLIGHT';
+const SET_SIM_LOADED_CODE = 'scratch-gui/code/SET_SIM_LOADED_CODE';
 
 const initialState = {
     // The Arduino C++ source generated from the current workspace, shown in the
@@ -11,6 +12,9 @@ const initialState = {
     // would reject). Empty in host mode.
     simCode: '',
     simDiagnostics: [],
+    // The simulator program the worker holds, as last loaded by the Simulator panel; null when the
+    // panel holds no program. Equal to `simCode` exactly when the worker runs what the workspace shows.
+    simLoadedCode: null,
     // The block the simulator stopped on while stepping, highlighted in the
     // workspace; null while running freely or stopped.
     simHighlight: null
@@ -24,6 +28,8 @@ const reducer = function (state = initialState, action) {
         return {...state, simCode: action.code, simDiagnostics: action.diagnostics};
     case SET_SIM_HIGHLIGHT:
         return {...state, simHighlight: action.blockId};
+    case SET_SIM_LOADED_CODE:
+        return {...state, simLoadedCode: action.code};
     default:
         return state;
     }
@@ -45,10 +51,16 @@ const setSimHighlight = blockId => ({
     blockId
 });
 
+const setSimLoadedCode = code => ({
+    type: SET_SIM_LOADED_CODE,
+    code
+});
+
 export {
     reducer as default,
     initialState as codeInitialState,
     setGeneratedCode,
     setSimCode,
-    setSimHighlight
+    setSimHighlight,
+    setSimLoadedCode
 };

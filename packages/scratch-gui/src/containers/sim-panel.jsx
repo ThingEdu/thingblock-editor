@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
 import {getSimClient} from '../lib/sim/sim-client';
-import {setSimHighlight} from '../reducers/code';
+import {setSimHighlight, setSimLoadedCode} from '../reducers/code';
 
 /** Serial text kept in the panel; older output scrolls away. */
 const SERIAL_LIMIT = 4000;
@@ -17,9 +17,10 @@ const SERIAL_LIMIT = 4000;
  * @param {string} props.simCode The workspace compiled for the simulator.
  * @param {Array<{message: string}>} props.simDiagnostics Problems that keep the program from running.
  * @param {Function} props.onHighlight Called with the block id to highlight, or null to clear it.
+ * @param {Function} props.onLoaded Called with the code loaded into the worker, or null once it is stopped.
  * @returns {React.ReactElement} The simulator panel.
  */
-const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
+const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
     const loadedRef = useRef(null);
     const [snapshot, setSnapshot] = useState(null);
     const [serial, setSerial] = useState('');
@@ -43,8 +44,9 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
         return () => {
             unsubscribe();
             client.post({type: 'stop'});
+            onLoaded(null);
         };
-    }, []);
+    }, [onLoaded]);
 
     // Highlight where the program stopped; clear it while running freely.
     const stoppedOn = snapshot && !snapshot.running ? snapshot.block || null : null;
@@ -69,11 +71,12 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
         setWorkerError(null);
         setSerial('');
         post({type: 'load', code: simCode});
+        onLoaded(simCode);
         post({type: 'speed', speed});
         post({type: 'input', key: 'gpio3', value: switchPressed ? 0 : 1});
         loadedRef.current = simCode;
         setStale(false);
-    }, [post, simCode, speed, switchPressed]);
+    }, [post, simCode, speed, switchPressed, onLoaded]);
 
     const handleRun = useCallback(() => {
         if (loadedRef.current !== simCode || (snapshot && snapshot.phase === 'halted')) load();
@@ -127,7 +130,8 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight}) => {
 SimPanel.propTypes = {
     simCode: PropTypes.string.isRequired,
     simDiagnostics: PropTypes.arrayOf(PropTypes.shape({message: PropTypes.string})).isRequired,
-    onHighlight: PropTypes.func.isRequired
+    onHighlight: PropTypes.func.isRequired,
+    onLoaded: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -136,7 +140,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onHighlight: blockId => dispatch(setSimHighlight(blockId))
+    onHighlight: blockId => dispatch(setSimHighlight(blockId)),
+    onLoaded: code => dispatch(setSimLoadedCode(code))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(SimPanel);

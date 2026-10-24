@@ -12,7 +12,7 @@ import {applyMiddleware, combineReducers, createStore} from 'redux';
 import {renderWithIntl} from '../../helpers/intl-helpers.jsx';
 import LessonPanel from '../../../src/containers/lesson-panel.jsx';
 import {setWorkerFactory} from '../../../src/lib/sim/sim-client';
-import codeReducer, {setSimCode} from '../../../src/reducers/code';
+import codeReducer, {setSimCode, setSimLoadedCode} from '../../../src/reducers/code';
 import lessonReducer, {openLesson} from '../../../src/reducers/lesson';
 
 class FakeWorker {
@@ -38,7 +38,8 @@ const lesson = {ma: 'den',
 // Mirrors gui.jsx: the panel is mounted only while a lesson is open.
 const Host = () => (useSelector(state => state.scratchGui.lesson.lesson) ? <LessonPanel /> : null);
 
-const setup = progress => {
+// `loaded` is the program the Simulator panel last loaded into the worker (null: none).
+const setup = (progress, loaded = 'code-1') => {
     const actions = [];
     const record = () => next => action => {
         actions.push(action);
@@ -49,6 +50,7 @@ const setup = progress => {
         applyMiddleware(record)
     );
     store.dispatch(setSimCode('code-1', []));
+    store.dispatch(setSimLoadedCode(loaded));
     store.dispatch(openLesson(lesson, progress));
     actions.length = 0;
     const view = renderWithIntl(
@@ -61,9 +63,8 @@ const setup = progress => {
     return {store, actions, lessonState, send, ...view};
 };
 
-// After `load` the worker's first snapshot has t=0; ticks keep posting snapshots while paused.
-const run = (send, ok) => {
-    send({type: 'snapshot', snapshot: {t: 0, phase: 'setup', running: true}});
+const report = (send, ok) => {
+    send({type: 'snapshot', snapshot: {t: 6000000, phase: 'loop', running: true}});
     send({type: 'check', results: [{ok, message: ok ? '' : 'Đèn L1 chưa sáng.'}], t: 6000000, phase: 'loop'});
 };
 
@@ -83,9 +84,9 @@ test('watches the current step rules, nothing on an ungraded step, and unwatches
     expect(FakeWorker.last.posted).toEqual([{type: 'watch', rules: null}]);
 });
 
-test('a passing report after a run marks the step passed once and saves progress', () => {
+test('a passing report on the loaded program marks the step passed once and saves progress', () => {
     const {actions, lessonState, send, container} = setup({stepIndex: 1, passedSteps: []});
-    run(send, true);
+    report(send, true);
     expect(lessonState().check.status).toBe('passed');
     expect(lessonState().passedSteps).toEqual([1]);
     send({type: 'snapshot', snapshot: {t: 7000000, phase: 'loop', running: true}});
@@ -97,23 +98,31 @@ test('a passing report after a run marks the step passed once and saves progress
 
 test('a failing report after the window shows its messages', () => {
     const {lessonState, send, container} = setup({stepIndex: 1, passedSteps: []});
-    run(send, false);
+    report(send, false);
     expect(lessonState().check).toEqual({status: 'failed', messages: ['Đèn L1 chưa sáng.']});
     expect(container.querySelector('[data-check-status]')).toHaveTextContent('Đèn L1 chưa sáng.');
 });
 
-test('messages before any run leave the verdict at "Press Run to check"', () => {
-    const {lessonState, send} = setup({stepIndex: 1, passedSteps: []});
-    send({type: 'snapshot', snapshot: {t: 3000000, phase: 'loop', running: false}});
-    send({type: 'check', results: [{ok: true, message: ''}], t: 3000000, phase: 'loop'});
+test('with no program loaded, worker messages do not grade the step', () => {
+    const {lessonState, send} = setup({stepIndex: 1, passedSteps: []}, null);
+    report(send, true);
     expect(lessonState().check.status).toBe('idle');
     expect(lessonState().passedSteps).toEqual([]);
+});
+
+test('Back then Next with the program still loaded grades the step from the fresh report', () => {
+    const {getByRole, lessonState, send} = setup({stepIndex: 1, passedSteps: []});
+    fireEvent.click(getByRole('button', {name: /Back/}));
+    fireEvent.click(getByRole('button', {name: /Next/}));
+    expect(FakeWorker.last.posted[FakeWorker.last.posted.length - 1]).toEqual({type: 'watch', rules: RULES});
+    send({type: 'check', results: [{ok: true, message: ''}], t: 6000000, phase: 'loop'});
+    expect(lessonState().check.status).toBe('passed');
 });
 
 // Review Focus 5: an edit after a pass resets the verdict box but keeps the recorded pass.
 test('editing blocks after a pass returns the verdict to idle and keeps the step passed', () => {
     const {store, actions, lessonState, send, container} = setup({stepIndex: 1, passedSteps: []});
-    run(send, true);
+    report(send, true);
     expect(lessonState().check.status).toBe('passed');
     actions.length = 0;
     act(() => store.dispatch(setSimCode('code-2', [])));
@@ -124,6 +133,19 @@ test('editing blocks after a pass returns the verdict to idle and keeps the step
     expect(lessonState().passedSteps).toEqual([1]);
     expect(actions.map(a => a.type)).not.toContain('scratch-gui/lesson/MARK_PASSED');
     expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.den')).passedSteps).toEqual([1]);
+
+    act(() => store.dispatch(setSimLoadedCode('code-2')));
+    report(send, false);
+    expect(lessonState().check.status).toBe('failed');
+});
+
+test('a block the simulator cannot run shows the blocked verdict without a run', () => {
+    const {store, lessonState, container} = setup({stepIndex: 1, passedSteps: []});
+    act(() => store.dispatch(setSimCode('x', [{blockId: 'b1', message: 'Sim generator does not know foo'}])));
+    expect(lessonState().check).toEqual({status: 'blocked', messages: ['Sim generator does not know foo']});
+    const box = container.querySelector('[data-check-status]');
+    expect(box).toHaveAttribute('data-check-status', 'blocked');
+    expect(box).toHaveTextContent('Sim generator does not know foo');
 });
 
 test('Next and Back move between steps and save the step', () => {

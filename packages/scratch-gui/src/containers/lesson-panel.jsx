@@ -12,17 +12,16 @@ import {closeLesson, goToStep, markStepPassed, setCheck, showNextHint} from '../
  * them into the verdict box; saves progress on every step change and pass.
  */
 const LessonPanel = ({
-    lesson, stepIndex, passedSteps, hintsShown, check, simCode, simDiagnostics,
+    lesson, stepIndex, passedSteps, hintsShown, check, simCode, simDiagnostics, simLoadedCode,
     onCheck, onPassed, onStep, onHint, onClose
 }) => {
     const [collapsed, setCollapsed] = useState(false);
     const reportRef = useRef(null);
     const snapshotRef = useRef(null);
-    // Whether the worker holds a program loaded after the last block edit (or step change). The worker
-    // keeps posting snapshots of a paused program, so messages count only once this is set.
-    const ranSinceEditRef = useRef(false);
     const step = lesson.steps[stepIndex];
     const graded = step.rules.length > 0;
+    // The worker holds exactly the workspace's program: the Simulator panel loaded it after the last edit.
+    const ranSinceEdit = simLoadedCode !== null && simLoadedCode === simCode;
 
     // Blockly sizes itself to its container only on window resize.
     useEffect(() => {
@@ -34,7 +33,8 @@ const LessonPanel = ({
         saveProgress(lesson.ma, {stepIndex, passedSteps});
     }, [lesson.ma, stepIndex, passedSteps]);
 
-    // Watch this step's rules; a step without rules watches nothing.
+    // Watch this step's rules; a step without rules watches nothing. The worker answers with a `check`
+    // on the program it holds.
     useEffect(() => {
         reportRef.current = null;
         getSimClient().post({type: 'watch', rules: graded ? step.rules : null});
@@ -42,36 +42,34 @@ const LessonPanel = ({
 
     useEffect(() => () => getSimClient().post({type: 'watch', rules: null}), []);
 
-    // An edit makes the verdict box ask for a new run; steps already passed stay passed.
+    // An edit makes the verdict box ask for a new run, or name the blocks the simulator cannot run (Run
+    // stays disabled while there are any); steps already passed stay passed.
     useEffect(() => {
-        ranSinceEditRef.current = false;
         reportRef.current = null;
-        if (graded) onCheck('idle');
-    }, [simCode, step, graded, onCheck]);
+        if (!graded) return;
+        if (simDiagnostics.length) onCheck('blocked', simDiagnostics.map(d => d.message));
+        else onCheck('idle');
+    }, [simCode, simDiagnostics, step, graded, onCheck]);
 
     useEffect(() => getSimClient().subscribe(message => {
         if (!graded) return;
-        if (message.type === 'snapshot') {
-            snapshotRef.current = message.snapshot;
-            // `load` (a Run or Step after an edit) starts a fresh session whose first snapshot has t=0.
-            if (message.snapshot.t === 0) ranSinceEditRef.current = true;
-        } else if (message.type === 'check') {
-            reportRef.current = message;
-        } else {
-            return;
-        }
-        if (!ranSinceEditRef.current) return;
+        if (message.type === 'snapshot') snapshotRef.current = message.snapshot;
+        else if (message.type === 'check') reportRef.current = message;
+        else return;
+        // A paused program from before the last edit keeps posting snapshots; it says nothing about
+        // the workspace, so the verdict box keeps what the edit set.
+        if (!ranSinceEdit) return;
         const verdict = decideCheck({
             report: reportRef.current,
             snapshot: snapshotRef.current,
             diagnostics: simDiagnostics,
-            ranSinceEdit: ranSinceEditRef.current
+            ranSinceEdit
         });
         if (verdict.status !== check.status || verdict.messages.join('\n') !== check.messages.join('\n')) {
             onCheck(verdict.status, verdict.messages);
         }
         if (verdict.status === 'passed' && !passedSteps.includes(stepIndex)) onPassed(stepIndex);
-    }), [graded, stepIndex, passedSteps, simDiagnostics, check, onCheck, onPassed]);
+    }), [graded, ranSinceEdit, stepIndex, passedSteps, simDiagnostics, check, onCheck, onPassed]);
 
     const handleNext = useCallback(() => onStep(stepIndex + 1), [onStep, stepIndex]);
     const handlePrev = useCallback(() => onStep(stepIndex - 1), [onStep, stepIndex]);
@@ -110,6 +108,7 @@ LessonPanel.propTypes = {
     }).isRequired,
     simCode: PropTypes.string.isRequired,
     simDiagnostics: PropTypes.arrayOf(PropTypes.shape({message: PropTypes.string})).isRequired,
+    simLoadedCode: PropTypes.string,
     onCheck: PropTypes.func.isRequired,
     onPassed: PropTypes.func.isRequired,
     onStep: PropTypes.func.isRequired,
@@ -124,7 +123,8 @@ const mapStateToProps = state => ({
     hintsShown: state.scratchGui.lesson.hintsShown,
     check: state.scratchGui.lesson.check,
     simCode: state.scratchGui.code.simCode,
-    simDiagnostics: state.scratchGui.code.simDiagnostics
+    simDiagnostics: state.scratchGui.code.simDiagnostics,
+    simLoadedCode: state.scratchGui.code.simLoadedCode
 });
 
 const mapDispatchToProps = dispatch => ({
