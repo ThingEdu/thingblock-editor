@@ -20,8 +20,7 @@ import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
-import TipsLibrary from '../../containers/tips-library.jsx';
-import Cards from '../../containers/cards.jsx';
+import LessonLibrary from '../../containers/lesson-library.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -91,7 +90,6 @@ const GUIComponent = props => {
         basePath,
         blocksId,
         blocksTabVisible,
-        cardsVisible,
         canChangeLanguage,
         canChangeColorMode,
         canChangeTheme,
@@ -106,7 +104,6 @@ const GUIComponent = props => {
         connectionModalVisible,
         debugModalVisible,
         onDebugModalClose,
-        onTutorialSelect,
         enableCommunity,
         hasActiveMembership,
         isCreating,
@@ -153,7 +150,6 @@ const GUIComponent = props => {
         useExternalPeripheralList,
         username,
         userOwnsProject,
-        hideTutorialProjects,
         vm,
         ...componentProps
     } = omit(props, 'dispatch', 'setPlatform');
@@ -319,17 +315,9 @@ const GUIComponent = props => {
                     {isCreating ? (
                         <Loader messageId="gui.loader.creating" />
                     ) : null}
-                    {tipsLibraryVisible ? (
-                        <TipsLibrary
-                            hideTutorialProjects={hideTutorialProjects}
-                            onTutorialSelect={onTutorialSelect}
-                        />
-                    ) : null}
+                    {tipsLibraryVisible ? <LessonLibrary /> : null}
                     <BoardLibrary />
                     <PeripheralLibrary />
-                    {cardsVisible ? (
-                        <Cards />
-                    ) : null}
                     {alertsVisible ? (
                         <Alerts className={styles.alertsContainer} />
                     ) : null}
@@ -537,12 +525,10 @@ GUIComponent.propTypes = {
     canRemix: PropTypes.bool,
     canSave: PropTypes.bool,
     canShare: PropTypes.bool,
-    cardsVisible: PropTypes.bool,
     children: PropTypes.node,
     debugModalVisible: PropTypes.bool,
     hasActiveMembership: PropTypes.bool,
     onDebugModalClose: PropTypes.func,
-    onTutorialSelect: PropTypes.func,
     enableCommunity: PropTypes.bool,
     isCreating: PropTypes.bool,
     isFetchingUserData: PropTypes.bool,
@@ -588,7 +574,6 @@ GUIComponent.propTypes = {
     useExternalPeripheralList: PropTypes.bool, // true for CDM, false for normal Scratch Link
     username: PropTypes.string,
     userOwnsProject: PropTypes.bool,
-    hideTutorialProjects: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
