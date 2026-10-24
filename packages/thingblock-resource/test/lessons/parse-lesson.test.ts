@@ -180,5 +180,12 @@ kiểm: L1 sáng
       const err = catchError(() => parseLesson(`${FRONT.replace('nhom: dau-ra', 'nhom: xyz')}\n## B\n`, ctx))
       expect(err.problems[0].line).toBe(4)
     })
+
+    it('keeps consecutive hints separate', () => {
+      const two = parseLesson(`${FRONT}\n## B\n> gợi ý: một\n> gợi ý: hai\n`, ctx)
+      expect(two.lesson.steps[0].hints).toEqual([[{ text: 'một' }], [{ text: 'hai' }]])
+      const mixed = parseLesson(`${FRONT}\n## B\n> gợi ý: một\n> hai\n> gợi ý: ba\n`, ctx)
+      expect(mixed.lesson.steps[0].hints).toEqual([[{ text: 'một hai' }], [{ text: 'ba' }]])
+    })
   })
 })

@@ -5,6 +5,7 @@ import { parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
 const GROUPS = ['lam-quen', 'dau-ra', 'dong-co', 'dau-vao']
+const HINT_START = /^>\s*gợi ý:\s*(.+)$/i
 const REQUIRED = ['ma', 'ten', 'nhom', 'thu-tu', 'bo']
 
 export class LessonError extends Error {
@@ -108,7 +109,7 @@ export function parseLesson(markdown, ctx) {
     const line = lines[i]
     const lineNo = i + 1
     let m
-    if (hintText !== null && (m = line.match(/^>\s?(.*)$/)) && m[1].trim()) {
+    if (hintText !== null && !HINT_START.test(line) && (m = line.match(/^>\s?(.*)$/)) && m[1].trim()) {
       hintText += ` ${m[1].trim()}`
       step.hints[step.hints.length - 1] = parseRuns(hintText)
       continue
@@ -158,7 +159,7 @@ export function parseLesson(markdown, ctx) {
       }
       continue
     }
-    if ((m = line.match(/^>\s*gợi ý:\s*(.+)$/i))) {
+    if ((m = line.match(HINT_START))) {
       flushParagraph()
       flushList()
       hintText = m[1].trim()
