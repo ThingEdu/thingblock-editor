@@ -32,7 +32,7 @@ kiểm: OLED hiện "Xin chao"
 
 ## Dòng thứ hai
 
-Mỗi dòng chữ cao 8 điểm. Trước khi in dòng hai, đặt con trỏ xuống: thêm khối **set oled cursor x: 0 y: 16** rồi **oled print ThingBot**, đặt cả hai _trước_ khối **refresh oled display**.
+Khối con trỏ đặt chữ tiếp theo vào đúng vị trí em chọn. Trước khi in chữ thứ hai, thêm khối **set oled cursor x: 0 y: 16** rồi **oled print ThingBot**, đặt cả hai _trước_ khối **refresh oled display**.
 
 > gợi ý: Thứ tự đúng là: init → print "Xin chao" → set cursor → print "ThingBot" → refresh.
 
@@ -41,7 +41,7 @@ kiểm: OLED hiện "ThingBot"
 
 ## Chữ to hơn
 
-Thêm khối **set oled text size 2 color white background color black** ngay sau khối init: chữ sẽ to gấp đôi. Chạy lại và so sánh.
+Thêm khối **set oled text size** ngay sau khối init, chọn cỡ **12x16** (chữ to gấp đôi cỡ 6x8), màu chữ **white**, màu nền **black**. Chạy lại và so sánh.
 
 kiểm: OLED hiện "Xin chao"
 
