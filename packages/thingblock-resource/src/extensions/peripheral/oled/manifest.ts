@@ -1,7 +1,7 @@
 /**
- * SSD1306 OLED display manifest. The Adafruit driver stack is vendored under `libs/` (the SSD1306
- * driver plus the GFX graphics core and BusIO it depend on), so all three are declared as vendored
- * libs the helper resolves from its resource root at compile time.
+ * SSD1306 / SH1106 OLED display manifest. The Adafruit driver stack is vendored under `libs/` (the
+ * SSD1306 and SH110X drivers plus the GFX graphics core and BusIO they depend on), so all are declared
+ * as vendored libs the helper resolves from its resource root at compile time.
  */
 import type { PeripheralManifest } from '../../../shared/types'
 
@@ -12,13 +12,18 @@ const manifest: PeripheralManifest = {
   icon: './icon.png',
   description: {
     id: 'peripheral.oled.description',
-    default: 'SSD1306 monochrome OLED display driven over I2C.',
+    default: 'SSD1306 or SH1106 monochrome OLED display driven over I2C.',
     description: 'Description of the OLED peripheral',
   },
   blocks: './blocks.js',
   generator: './generator.js',
   toolbox: './toolbox.js',
-  libs: [{ path: 'libs/Adafruit_SSD1306' }, { path: 'libs/Adafruit_GFX_Library' }, { path: 'libs/Adafruit_BusIO' }],
+  libs: [
+    { path: 'libs/Adafruit_SSD1306' },
+    { path: 'libs/Adafruit_SH110X' },
+    { path: 'libs/Adafruit_GFX_Library' },
+    { path: 'libs/Adafruit_BusIO' },
+  ],
 }
 
 export default manifest
