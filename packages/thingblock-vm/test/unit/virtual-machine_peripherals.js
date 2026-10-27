@@ -1,6 +1,6 @@
 const tap = require('tap');
 const VirtualMachine = require('../../src/virtual-machine');
-const LinkClient = require('../../src/link/client/link-client');
+const {createLocalBackend} = require('../../src/link/local');
 
 const test = tap.test;
 
@@ -373,7 +373,7 @@ const hostedCoreManifest = {
 
 test('getActivePeripheralLibs resolves pack paths under a __THINGBLOCK_RESOURCE_BASE__-style override', async t => {
     const vm = new VirtualMachine();
-    vm.client = new LinkClient(vm.runtime, {resourceBase: '/thingblock-resource'});
+    vm.backend = createLocalBackend(vm.runtime, {resourceBase: '/thingblock-resource'});
     vm._importPackModule = url => {
         if (url === `${hostedCoreBase}/toolbox.js`) return Promise.resolve({default: coreToolbox});
         return Promise.reject(new Error(`404 ${url}`));

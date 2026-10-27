@@ -165,7 +165,7 @@ module.exports = class DeviceManager {
      * @returns {?string} the resource base, e.g. `http://localhost:3030/resources/extensions`.
      */
     getResourceOrigin () {
-        const origin = this.vm.client.resourceOrigin;
+        const origin = this.vm.backend.resourceOrigin;
         return origin && `${origin}/extensions`;
     }
 
@@ -175,16 +175,16 @@ module.exports = class DeviceManager {
      * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
      * `extensions/devices/thingbot`.
      *
-     * Derived from `this.vm.client.resourceOrigin` rather than a literal `/resources/` split: the
+     * Derived from `this.vm.backend.resourceOrigin` rather than a literal `/resources/` split: the
      * latter only holds for the helper's own route and yields `undefined` under a
      * `__THINGBLOCK_RESOURCE_BASE__`-style host override, whose base need not contain `/resources/`
-     * at all (see `LinkClient#resourceOrigin`).
+     * at all (see `Backend#resourceOrigin`).
      * @param {string} base - a pack's served base URL.
      * @returns {string} the pack directory, relative to the helper's resource root.
      * @private
      */
     _packRelativePath (base) {
-        const origin = this.vm.client.resourceOrigin;
+        const origin = this.vm.backend.resourceOrigin;
         return base.slice(origin.length + 1);
     }
 

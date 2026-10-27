@@ -123,7 +123,7 @@ class ConnectionModal extends React.Component {
         // Offer the firmware install only when the pack ships the image and the client can flash it
         // (the cloud client cannot).
         const firmware = this.state.extension && this.state.extension.firmware;
-        const canInstallFirmware = Boolean(firmware && this.props.vm.client && this.props.vm.client.canFlashFirmware &&
+        const canInstallFirmware = Boolean(firmware && this.props.vm.backend && this.props.vm.backend.flasher.canFlashFirmware &&
             this.props.vm.getDeviceFirmware(firmware.deviceId).some(fw => fw.id === firmware.firmwareId));
         return (
             <ConnectionModalComponent

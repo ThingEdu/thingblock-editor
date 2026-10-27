@@ -1,5 +1,6 @@
 const tap = require('tap');
 const VirtualMachine = require('../../src/virtual-machine');
+const flatBackend = require('../fixtures/flat-backend');
 
 const test = tap.test;
 
@@ -9,7 +10,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 test('connectBoard auto-opens the monitor at the default baud after connecting', async t => {
     const vm = new VirtualMachine();
     const order = [];
-    vm.client = {
+    vm.backend = flatBackend({
         connect: () => {
             order.push('connect');
             return Promise.resolve();
@@ -18,7 +19,7 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
             order.push(`open:${opts.baudRate}`);
             return Promise.resolve();
         }
-    };
+    });
 
     await vm.connectBoard({id: '/dev/ttyACM0', name: 'Uno'});
     await flush();
@@ -28,10 +29,10 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
 
 test('connectBoard still resolves when the monitor fails to open', async t => {
     const vm = new VirtualMachine();
-    vm.client = {
+    vm.backend = flatBackend({
         connect: () => Promise.resolve(),
         openMonitor: () => Promise.reject(new Error('port busy'))
-    };
+    });
 
     await t.resolves(vm.connectBoard({id: '/dev/ttyACM0', name: 'Uno'}),
         'a monitor that fails to open does not fail the connection');
@@ -43,7 +44,7 @@ test('upload closes the monitor before the flash and reopens it after', async t 
     const fakeDevice = {getUploadConfig: () => ({pnpid: []})};
     vm.deviceRegistry.get = () => fakeDevice;
     const order = [];
-    vm.client = {
+    vm.backend = flatBackend({
         closeMonitor: () => {
             order.push('close');
             return Promise.resolve();
@@ -57,7 +58,7 @@ test('upload closes the monitor before the flash and reopens it after', async t 
             return Promise.resolve();
         },
         isConnected: true
-    };
+    });
 
     await vm.upload('uno', {format: 'hex', path: '/p'});
     await flush();
@@ -70,7 +71,7 @@ test('upload does not reopen the monitor when the board is no longer connected',
     const vm = new VirtualMachine();
     vm.deviceRegistry.get = () => ({getUploadConfig: () => ({pnpid: []})});
     let reopened = false;
-    vm.client = {
+    vm.backend = flatBackend({
         closeMonitor: () => Promise.resolve(),
         flash: () => Promise.resolve(),
         openMonitor: () => {
@@ -78,7 +79,7 @@ test('upload does not reopen the monitor when the board is no longer connected',
             return Promise.resolve();
         },
         isConnected: false
-    };
+    });
 
     await vm.upload('uno', {format: 'hex', path: '/p'});
     await flush();
@@ -89,7 +90,7 @@ test('upload does not reopen the monitor when the board is no longer connected',
 test('setMonitorBaud reopens the monitor at the new rate when connected', async t => {
     const vm = new VirtualMachine();
     const order = [];
-    vm.client = {
+    vm.backend = flatBackend({
         closeMonitor: () => {
             order.push('close');
             return Promise.resolve();
@@ -99,7 +100,7 @@ test('setMonitorBaud reopens the monitor at the new rate when connected', async 
             return Promise.resolve();
         },
         isConnected: true
-    };
+    });
 
     vm.setMonitorBaud(9600);
     await flush();
@@ -110,7 +111,7 @@ test('setMonitorBaud reopens the monitor at the new rate when connected', async 
 test('setMonitorBaud just remembers the rate when not connected', async t => {
     const vm = new VirtualMachine();
     let touched = false;
-    vm.client = {
+    vm.backend = flatBackend({
         closeMonitor: () => {
             touched = true;
             return Promise.resolve();
@@ -120,7 +121,7 @@ test('setMonitorBaud just remembers the rate when not connected', async t => {
             return Promise.resolve();
         },
         isConnected: false
-    };
+    });
 
     vm.setMonitorBaud(9600);
     await flush();

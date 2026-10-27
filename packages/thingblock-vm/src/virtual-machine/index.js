@@ -7,13 +7,14 @@ const Runtime = require('../engine/runtime').default;
 const VmEventNames = require('./vm-event-names');
 
 const wireRuntimeEvents = require('./runtime-events');
-const LinkController = require('./link-controller');
+const LinkController = require('./link-controller').default;
 const DeviceManager = require('./device-manager');
 const applyMixin = require('./apply-mixin');
 const ProjectIoMixin = require('./mixins/project-io');
 const EngineMixin = require('./mixins/engine');
 const WorkspaceMixin = require('./mixins/workspace');
 const TargetsMixin = require('./mixins/targets');
+const LinkMixin = require('./mixins/link');
 
 const CORE_EXTENSIONS = [
     // 'motion',
@@ -62,11 +63,11 @@ class VirtualMachine extends EventEmitter {
         }
 
         /**
-         * The device-link subsystem: helper/cloud link clients, the active client, and
-         * compile/upload/monitor operations. See {@link LinkController}.
+         * The device-link subsystem: helper and cloud backends and the active one. The
+         * board operations live in {@link LinkMixin}. See {@link LinkController}.
          * @type {LinkController}
          */
-        this._link = new LinkController(this);
+        this._link = new LinkController(this.runtime);
 
         /**
          * The board-mode device subsystem: device registry, helper-served resource packs, and the
@@ -206,36 +207,15 @@ class VirtualMachine extends EventEmitter {
     }
 
     /**
-     * The active device-link client (helper or cloud). Backed by {@link LinkController}.
-     * @type {Client}
+     * The active device-link backend's capability objects (connection, builder, flasher, monitor),
+     * helper or cloud. Backed by {@link LinkController}; tests assign a fake here.
+     * @type {Backend}
      */
-    get client () {
-        return this._link.client;
+    get backend () {
+        return this._link.getBackend();
     }
-    set client (value) {
-        this._link.client = value;
-    }
-
-    /**
-     * The native-helper link client. Backed by {@link LinkController}.
-     * @type {LinkClient}
-     */
-    get linkClient () {
-        return this._link.linkClient;
-    }
-    set linkClient (value) {
-        this._link.linkClient = value;
-    }
-
-    /**
-     * The cloud / Web Serial link client. Backed by {@link LinkController}.
-     * @type {CloudClient}
-     */
-    get cloudClient () {
-        return this._link.cloudClient;
-    }
-    set cloudClient (value) {
-        this._link.cloudClient = value;
+    set backend (value) {
+        this._link.backend = value;
     }
 
     /**
@@ -272,7 +252,7 @@ class VirtualMachine extends EventEmitter {
     }
 
     get _monitorBaud () {
-        return this._link._monitorBaud;
+        return this._link.monitorBaud;
     }
 
     // The pack-module import seam tests override to supply in-memory modules; the setter writes
@@ -353,71 +333,9 @@ class VirtualMachine extends EventEmitter {
     _applyBoard (board) {
         return this._devices._applyBoard(board);
     }
-
-    // Device-link surface (board discovery, compile/upload, serial monitor). See {@link LinkController}.
-
-    setLinkMode (mode) {
-        return this._link.setLinkMode(mode);
-    }
-
-    listBoards (deviceId) {
-        return this._link.listBoards(deviceId);
-    }
-
-    connectBoard (target) {
-        return this._link.connectBoard(target);
-    }
-
-    compile (deviceId, source, callbacks) {
-        return this._link.compile(deviceId, source, callbacks);
-    }
-
-    upload (deviceId, artifact, callbacks) {
-        return this._link.upload(deviceId, artifact, callbacks);
-    }
-
-    flashFirmware (deviceId, pack, file, callbacks) {
-        return this._link.flashFirmware(deviceId, pack, file, callbacks);
-    }
-
-    cancelUpload () {
-        return this._link.cancelUpload();
-    }
-
-    getPlatformStatus (deviceId) {
-        return this._link.getPlatformStatus(deviceId);
-    }
-
-    installPlatform (deviceId, callbacks) {
-        return this._link.installPlatform(deviceId, callbacks);
-    }
-
-    cancelPlatformInstall () {
-        return this._link.cancelPlatformInstall();
-    }
-
-    openMonitor (options) {
-        return this._link.openMonitor(options);
-    }
-
-    writeMonitor (data) {
-        return this._link.writeMonitor(data);
-    }
-
-    closeMonitor () {
-        return this._link.closeMonitor();
-    }
-
-    setMonitorBaud (rate) {
-        return this._link.setMonitorBaud(rate);
-    }
-
-    disconnectBoard () {
-        return this._link.disconnectBoard();
-    }
 }
 
-for (const Mixin of [ProjectIoMixin, EngineMixin, WorkspaceMixin, TargetsMixin]) {
+for (const Mixin of [ProjectIoMixin, EngineMixin, WorkspaceMixin, TargetsMixin, LinkMixin]) {
     applyMixin(VirtualMachine, Mixin);
 }
 

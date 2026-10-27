@@ -154,9 +154,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `board` field; saves carry a placeholder costume and an empty sounds list only because scratch-parser requires
   them. Scratch 1/2 projects (`.sb`/`.sb2`) are not supported, and saved projects no longer round-trip through
   stock Scratch.
-- Resource packs are served by the link helper (`LinkClient.resourceOrigin` → its `/resources` route) unless the
-  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.js`
-  and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —
+- Resource packs are served by the link helper (`LinkController.resourceOrigin` → the helper backend's `/resources` route) unless the
+  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.ts`
+  and passed to the helper backend as `resourceBase`. That global is the seam for a host that ships the packs itself —
   the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
   loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
 - A peripheral pack's manifest `id` must equal the opcode prefix its `blocks.ts` registers (pack `serial` owns
