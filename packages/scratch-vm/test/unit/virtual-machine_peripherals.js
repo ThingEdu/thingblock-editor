@@ -29,6 +29,7 @@ const coreManifest = {
     hidden: true,
     blocks: './blocks.js',
     generator: './generator.js',
+    sim: './sim.js',
     toolbox: './toolbox.js',
     libs: [{path: 'libs/ThingBot'}]
 };
@@ -82,6 +83,9 @@ const makeVM = () => {
         }},
         [`${coreBase}/generator.js`]: {registerGenerators: (generator, Order) => {
             generator.forBlock.thingbot_digitalwrite = () => `digitalWrite(2, HIGH);${Order.ATOMIC}`;
+        }},
+        [`${coreBase}/sim.js`]: {registerSimGenerators: (generator, Order) => {
+            generator.forBlock.thingbot_digitalwrite = () => `$.digitalWrite(2, 1);${Order.ATOMIC}`;
         }},
         [`${servoBase}/toolbox.js`]: {default: servoToolbox},
         [`${servoBase}/blocks.js`]: {registerBlocks: Blockly => {
@@ -151,6 +155,28 @@ test('selectDevice registers each referenced peripheral\'s blocks and codegen on
         'libs aggregate across active peripherals in order, as helper-resolvable {pack, lib} refs'
     );
 
+    t.end();
+});
+
+test('selectDevice registers a pack\'s simulator codegen on the injected simGenerator', async t => {
+    const {vm} = makeVM();
+    const scratchBlocks = {...makeScratchBlocks(), simGenerator: {forBlock: {}}};
+    vm.setScratchBlocks(scratchBlocks);
+
+    await vm.selectDevice('thingbot');
+
+    t.type(scratchBlocks.simGenerator.forBlock.thingbot_digitalwrite, 'function', 'core sim codegen registered');
+    t.notOk(scratchBlocks.simGenerator.forBlock.servo_setangle, 'a pack without sim.js registers nothing');
+    t.end();
+});
+
+test('an editor without a simGenerator skips importing sim modules', async t => {
+    const {vm, counts} = makeVM();
+    vm.setScratchBlocks(makeScratchBlocks());
+
+    await vm.selectDevice('thingbot');
+
+    t.notOk(counts[`${coreBase}/sim.js`], 'sim.js not imported');
     t.end();
 });
 

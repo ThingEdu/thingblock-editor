@@ -294,6 +294,15 @@ class VirtualMachine extends EventEmitter {
         return this._devices.getResourceOrigin();
     }
 
+    /**
+     * The helper's resource root (the `thingblock-resource` directory as served), under which the
+     * lesson index lives at `tutorials/index.json`. Null without a helper.
+     * @returns {?string} the resource root URL.
+     */
+    getResourceRoot () {
+        return this.client.resourceOrigin || null;
+    }
+
     registerDeviceManifest (manifest, base) {
         return this._devices.registerDeviceManifest(manifest, base);
     }

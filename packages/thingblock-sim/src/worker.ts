@@ -1,0 +1,106 @@
+/**
+ * Web Worker entry: hosts a Session off the page's main thread, so a busy program can never freeze the
+ * editor. The page sends commands; the worker answers every tick (~60 per second) with a snapshot.
+ */
+import type { RuleResult } from './checker/evaluate'
+import type { Rule } from './checker/rules'
+import { Watcher } from './checker/watch'
+import type { Phase } from './runtime'
+import { Session, type Snapshot } from './session'
+
+export type Command =
+  | { type: 'load'; code: string }
+  | { type: 'run' }
+  | { type: 'pause' }
+  | { type: 'step' }
+  | { type: 'speed'; speed: number }
+  | { type: 'input'; key: string; value: number }
+  | { type: 'stop' }
+  | { type: 'watch'; rules: Rule[] | null }
+
+export type Message =
+  | { type: 'snapshot'; snapshot: Snapshot }
+  | { type: 'error'; message: string }
+  | { type: 'check'; results: RuleResult[]; t: number; phase: Phase }
+
+interface WorkerScope {
+  postMessage(message: Message): void
+  onmessage: ((event: { data: Command }) => void) | null
+}
+
+const scope = globalThis as unknown as WorkerScope
+const TICK_MS = 16
+
+let session: Session | null = null
+let timer: ReturnType<typeof setInterval> | null = null
+let last = 0
+const watcher = new Watcher()
+
+const post = (snapshot: Snapshot) => scope.postMessage({ type: 'snapshot', snapshot })
+
+const report = () => {
+  if (!session) return
+  const r = watcher.after(session)
+  if (r) scope.postMessage({ type: 'check', ...r })
+}
+
+const tick = () => {
+  if (!session) return
+  const now = performance.now()
+  // A tab in the background gets throttled ticks; never try to catch up more than a quarter second.
+  const elapsed = Math.min(now - last, 250)
+  last = now
+  try {
+    post(session.tick(elapsed))
+    report()
+  } catch (e) {
+    scope.postMessage({ type: 'error', message: e instanceof Error ? e.message : String(e) })
+    session.running = false
+  }
+}
+
+scope.onmessage = ({ data }) => {
+  switch (data.type) {
+    case 'load':
+      try {
+        session = new Session(data.code)
+        post(session.snapshot())
+        watcher.reset()
+        report()
+      } catch (e) {
+        session = null
+        scope.postMessage({ type: 'error', message: e instanceof Error ? e.message : String(e) })
+      }
+      break
+    case 'run':
+      if (!session) return
+      session.running = true
+      last = performance.now()
+      timer ??= setInterval(tick, TICK_MS)
+      break
+    case 'pause':
+      if (session) session.running = false
+      break
+    case 'step':
+      if (session) {
+        post(session.step())
+        report()
+      }
+      break
+    case 'speed':
+      if (session) session.speed = data.speed
+      break
+    case 'input':
+      session?.setInput(data.key, data.value)
+      break
+    case 'watch':
+      watcher.set(data.rules)
+      report()
+      break
+    case 'stop':
+      if (timer) clearInterval(timer)
+      timer = null
+      session = null
+      break
+  }
+}

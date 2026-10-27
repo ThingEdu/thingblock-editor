@@ -374,3 +374,12 @@ test('flashDeviceFirmware rejects an unknown image id', async t => {
     );
     t.end();
 });
+
+test('getResourceRoot returns the helper resource root the tutorial index lives under', t => {
+    const vm = new VirtualMachine();
+    vm.client = {resourceOrigin: 'http://localhost:3030/resources'};
+    t.equal(vm.getResourceRoot(), 'http://localhost:3030/resources');
+    vm.client = {resourceOrigin: null};
+    t.equal(vm.getResourceRoot(), null);
+    t.end();
+});

@@ -588,6 +588,14 @@ module.exports = class DeviceManager {
                     );
                     registerGenerators(this._scratchBlocks.arduinoGenerator, this._scratchBlocks.ArduinoOrder);
                 }
+                // The simulator's codegen mirrors the Arduino codegen; a pack without it still
+                // uploads, and the simulator names its blocks as not simulated yet.
+                if (manifest.sim && this._scratchBlocks.simGenerator) {
+                    const {registerSimGenerators} = await this._importPackModule(
+                        `${base}/${manifest.sim.replace(/^\.\//, '')}`
+                    );
+                    registerSimGenerators(this._scratchBlocks.simGenerator, this._scratchBlocks.ArduinoOrder);
+                }
             }
             this.peripheralRegistry.register({id: manifest.id, toolbox, libs, base});
             this.peripheralRegistry.setActive(manifest.id);

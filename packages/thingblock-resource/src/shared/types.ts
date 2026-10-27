@@ -20,6 +20,12 @@ export type RegisterBlocks = (blockly: Blockly) => void
 /** A pack's `generator.js` export: register `forBlock` codegen and cross-cutting fragments. */
 export type RegisterGenerators = (generator: ArduinoGenerator, order: ArduinoOrder) => void
 
+/** The injected simulator code generator (the editor's shared `simGenerator` singleton). */
+export type SimGenerator = ScratchBlocks.SimGenerator
+
+/** A pack's `sim.js` export: register simulator codegen mirroring its `generator.js` call for call. */
+export type RegisterSimGenerators = (generator: SimGenerator, order: ArduinoOrder) => void
+
 /**
  * A localizable string carried as data: the editor's `format-message` singleton resolves it to the
  * active locale (falling back to `default`). The pack ships descriptors, not resolved strings, because
@@ -73,6 +79,8 @@ export interface PeripheralManifest extends BaseManifest {
   blocks?: string
   /** Relative path to the `registerGenerators` module, when the peripheral exposes block codegen. */
   generator?: string
+  /** Relative path to the `registerSimGenerators` module, when the peripheral's blocks run in the simulator. */
+  sim?: string
   /** Relative path to the toolbox-category module, when the peripheral exposes palette blocks. */
   toolbox?: string
   /** Published libraries the helper installs via arduino-cli. */

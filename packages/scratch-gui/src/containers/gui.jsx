@@ -34,7 +34,6 @@ import SBFileUploaderHOC from '../lib/sb-file-uploader-hoc.jsx';
 import ProjectFetcherHOC from '../lib/project-fetcher-hoc.jsx';
 import TitledHOC from '../lib/titled-hoc.jsx';
 import ProjectSaverHOC from '../lib/project-saver-hoc.jsx';
-import QueryParserHOC from '../lib/query-parser-hoc.jsx';
 import vmListenerHOC from '../lib/vm-listener-hoc.jsx';
 import vmManagerHOC from '../lib/vm-manager-hoc.jsx';
 import systemPreferencesHOC from '../lib/system-preferences-hoc.jsx';
@@ -165,8 +164,6 @@ GUI.propTypes = {
     telemetryModalVisible: PropTypes.bool,
     username: PropTypes.string,
     userOwnsProject: PropTypes.bool,
-    // TODO: Is this unused?
-    hideTutorialProjects: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
@@ -185,7 +182,6 @@ const mapStateToProps = (state, ownProps) => {
         activeTabIndex: state.scratchGui.editorTab.activeTabIndex,
         alertsVisible: state.scratchGui.alerts.visible,
         blocksTabVisible: state.scratchGui.editorTab.activeTabIndex === BLOCKS_TAB_INDEX,
-        cardsVisible: state.scratchGui.cards.visible,
         connectedBoard: state.scratchGui.board.connectedBoard,
         connectionModalVisible: state.scratchGui.modals.connectionModal,
         debugModalVisible: state.scratchGui.modals.debugModal,
@@ -194,6 +190,7 @@ const mapStateToProps = (state, ownProps) => {
         isFullScreen: state.scratchGui.mode.isFullScreen,
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
         isRtl: state.locales.isRtl,
+        lessonOpen: Boolean(state.scratchGui.lesson.lesson),
         isShowingProject: getIsShowingProject(loadingState),
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         platform: ownProps.platform,
@@ -230,7 +227,6 @@ const WrappedGui = compose(
     LocalizationHOC,
     ErrorBoundaryHOC('Top Level App'),
     FontLoaderHOC,
-    QueryParserHOC,
     ProjectFetcherHOC,
     TitledHOC,
     ProjectSaverHOC,

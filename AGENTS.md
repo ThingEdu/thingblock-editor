@@ -125,6 +125,10 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `scratch-vm` source — needs
   `npx webpack --progress` in `packages/scratch-vm` before `scratch-gui` tests see it; otherwise they silently
   run against a stale bundle.
+- The simulator worker is shared through `src/lib/sim/sim-client.js` (worker built by `sim-worker-factory.js`). The
+  lesson panel (`containers/lesson-panel.jsx`, reducer `lesson`) sends it `watch` rules and renders its `check`
+  verdicts. The Scratch tutorial decks and cards are gone; the Lessons menu opens `containers/lesson-library.jsx`,
+  fed by the pack's `tutorials/index.json`.
 
 ### scratch-blocks specifics
 
@@ -165,6 +169,13 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
   skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
   cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
+- Lessons live in `packages/thingblock-resource/src/tutorials/<ma>/bai.<lang>.md` (see that folder's README).
+  `scripts/build-lessons.mjs` compiles them to `dist/thingblock-resource/tutorials/` with an index; a bad rule,
+  missing image or unknown tour anchor fails the pack build. `test/lessons/lessons.test.ts` grades each lesson's
+  `kiem-thu/*.tb` the way the editor grades a learner, so every shipped lesson is proven solvable. Rule grammar and
+  grading are in `packages/thingblock-sim/src/checker/` (package export `./checker`); `rules.ts` must stay
+  import-free because the Node build script loads it through type stripping. `vm.getResourceRoot()` gives the GUI
+  the pack base for fetching lessons.
 - `virtual-machine/resource-pack-manager.js` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 

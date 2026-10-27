@@ -1,0 +1,76 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "blocks": {},
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    },
+    {
+      "isStage": false,
+      "name": "Device",
+      "variables": {},
+      "lists": {},
+      "blocks": {
+        "h1": {
+          "topLevel": true,
+          "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "event_whenarduinobegin",
+          "next": "b1",
+          "parent": null,
+          "x": 0,
+          "y": 0
+        },
+        "b1": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "W": [1, [4, "128"]],
+            "H": [1, [4, "64"]]
+          },
+          "fields": {
+            "ADDR": ["0x3c", null],
+            "CHIP": ["SSD1306", null]
+          },
+          "opcode": "oled_init",
+          "next": "b2",
+          "parent": "h1"
+        },
+        "b2": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "DATA": [1, [10, "Xin chao"]]
+          },
+          "fields": {
+            "EOL": ["warp", null]
+          },
+          "opcode": "oled_print",
+          "next": "b3",
+          "parent": "b1"
+        },
+        "b3": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "oled_refresh",
+          "next": null,
+          "parent": "b2"
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    }
+  ],
+  "meta": {
+    "semver": "3.0.0"
+  }
+}

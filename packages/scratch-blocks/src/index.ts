@@ -71,6 +71,7 @@ export { ScratchZoomControls } from './scratch_zoom_controls'
 export { StatusIndicatorLabel, StatusButtonState } from './status_indicator_label'
 export { ArduinoGenerator, arduinoGenerator } from './generators/arduino'
 export { Order as ArduinoOrder } from './generators/arduino/order'
+export { SimGenerator, simGenerator, type CType, type SimDiagnostic } from './generators/sim'
 export * from './xml'
 
 interface ScratchBlocksOptions extends Blockly.BlocklyOptions {

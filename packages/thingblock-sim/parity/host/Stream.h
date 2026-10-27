@@ -1,0 +1,9 @@
+// Host stand-in for the core's Stream: enough for Serial to be a Print that can also be read.
+#pragma once
+#include "Print.h"
+class Stream : public Print {
+ public:
+  virtual int available() { return 0; }
+  virtual int read() { return -1; }
+  virtual int peek() { return -1; }
+};

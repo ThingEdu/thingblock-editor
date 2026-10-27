@@ -1,0 +1,76 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "blocks": {},
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    },
+    {
+      "isStage": false,
+      "name": "Device",
+      "variables": {},
+      "lists": {},
+      "blocks": {
+        "h1": {
+          "topLevel": true,
+          "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "event_whenarduinobegin",
+          "next": "b1",
+          "parent": null,
+          "x": 0,
+          "y": 0
+        },
+        "b1": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "ANGLE": [1, [4, "0"]],
+            "SECONDS": [1, [4, "1"]]
+          },
+          "fields": {
+            "SERVO": ["1", null]
+          },
+          "opcode": "thingBotC3_startServoAngle",
+          "next": "b2",
+          "parent": "h1"
+        },
+        "b2": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "ANGLE": [1, [4, "90"]],
+            "SECONDS": [1, [4, "1"]]
+          },
+          "fields": {
+            "SERVO": ["2", null]
+          },
+          "opcode": "thingBotC3_startServoAngle",
+          "next": "b3",
+          "parent": "b1"
+        },
+        "b3": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "thingBotC3_waitServos",
+          "next": null,
+          "parent": "b2"
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    }
+  ],
+  "meta": {
+    "semver": "3.0.0"
+  }
+}
