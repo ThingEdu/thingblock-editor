@@ -27,7 +27,6 @@
     "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@thingblock/thingblock-blocks --workspace=@thingblock/thingblock-storage --workspace=@thingblock/thingblock-vm",
     "clean": "npm run --workspaces clean",
     "prepare": "husky install",
-    "refresh-gh-workflow": "ts-node scripts/update-gha-workflows.ts",
     "start": "npm --workspace @thingblock/thingblock-gui start",
     "test": "npm test --workspaces",
     "update-legal": "scripts/update-legal.sh",
