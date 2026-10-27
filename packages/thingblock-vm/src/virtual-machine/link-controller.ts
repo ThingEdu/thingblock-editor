@@ -1,76 +1,153 @@
 import {createCloudBackend} from '../link/cloud';
-import {createLocalBackend, type LocalBackend} from '../link/local';
+import {createLocalBackend} from '../link/local';
 import type Runtime from '../engine/runtime';
-import type {Backend} from '../link/types';
+import log from '../util/log';
+import type DeviceManager from './device-manager';
+import type {
+    Artifact,
+    Backend,
+    ConnectionTarget,
+    Flasher,
+    LinkDevice,
+    PlatformStatus,
+    StreamCallbacks
+} from '../link/types';
 
-/**
- * Default serial-monitor baud rate, used until the GUI changes it via {@link VirtualMachine#setMonitorBaud}.
- */
 const DEFAULT_MONITOR_BAUD = 115200;
 
-/** The host-supplied resource base global; see {@link LinkController#local}. */
 type ResourceBaseGlobal = {__THINGBLOCK_RESOURCE_BASE__?: string};
 
-/**
- * The device-link state owned by the VM: the helper and cloud backends, which one is active, and the
- * serial-monitor baud rate. `getBackend()` hands out the active backend as its capability interfaces
- * (connection, builder, flasher, monitor), and the VM's link mixin drives the board operations through
- * them.
- */
+export type LinkMode = 'link' | 'cloud';
+
 export default class LinkController {
-    /**
-     * The native-helper backend. Constructing it is free — its socket opens lazily on first use.
-     *
-     * `__THINGBLOCK_RESOURCE_BASE__` is the seam for a host that serves the resource packs itself (the
-     * desktop shell, which bundles them alongside the editor); unset everywhere else, leaving the
-     * helper's own `/resources` route in play.
-     */
-    readonly local: LocalBackend;
-
-    /** The server-build (full-web) backend, over Web Serial; its port opens lazily on first use. */
-    readonly cloud: Backend;
-
-    /**
-     * Baud rate the serial monitor is (re)opened at. The active backend auto-opens a monitor on
-     * connect and reopens around upload, so it needs a remembered rate; the GUI changes it via
-     * `setMonitorBaud`.
-     */
     monitorBaud = DEFAULT_MONITOR_BAUD;
 
-    /**
-     * The backend board operations route through. `setLinkMode` swaps it between `local` and `cloud`;
-     * both persist so a mode switch keeps each transport's state. Public so a test can substitute a
-     * fake.
-     */
     backend: Backend;
 
-    /**
-     * @param runtime - the VM runtime, used by the backends to emit connection and serial events.
-     */
-    constructor (runtime: Runtime) {
-        this.local = createLocalBackend(runtime, {
-            resourceBase: (globalThis as ResourceBaseGlobal).__THINGBLOCK_RESOURCE_BASE__ || null
-        });
-        this.cloud = createCloudBackend(runtime);
-        this.backend = this.local;
+    private mode = 'link';
+
+    private readonly runtime: Runtime;
+
+    private readonly devices: DeviceManager;
+
+    constructor (runtime: Runtime, devices: DeviceManager) {
+        this.runtime = runtime;
+        this.devices = devices;
+        this.backend = this.createBackend(this.mode);
     }
 
-    /** The active backend, as its connection, builder, flasher and monitor interfaces. */
-    getBackend (): Backend {
-        return this.backend;
-    }
-
-    /**
-     * Select the device-link backend: `'cloud'` for the web/Web Serial one, anything else for the
-     * native helper. Disconnects the current backend first so switching never leaves a dangling link.
-     * @param mode - the link mode, `'link'` or `'cloud'`.
-     */
-    setLinkMode (mode: string): void {
-        const next = mode === 'cloud' ? this.cloud : this.local;
-        if (next === this.backend) return;
+    setLinkMode (mode: LinkMode): void {
+        if (mode === this.mode) return;
         if (this.backend.connection.isConnected) {
             this.backend.connection.disconnect();
         }
-        this.backend = next;
+        this.mode = mode;
+        this.backend = this.createBackend(mode);
+    }
+
+    async listBoards (deviceId: string): Promise<ConnectionTarget[]> {
+        const device = this.getDevice(deviceId);
+        return this.backend.connection.listBoards(device);
+    }
+
+    async connectBoard (target: ConnectionTarget): Promise<void> {
+        const {connection, monitor} = this.backend;
+        await connection.connect(target);
+        monitor.openMonitor({baudRate: this.monitorBaud})
+            .catch((err: Error) => log.warn(`connectBoard: serial monitor did not open: ${err.message}`));
+    }
+
+    disconnectBoard (): Promise<void> {
+        return this.backend.connection.disconnect();
+    }
+
+    async compile (deviceId: string, source: string, callbacks?: StreamCallbacks): Promise<Artifact> {
+        const device = this.getDevice(deviceId);
+        return this.backend.builder.compile(device, source, this.devices.getActivePeripheralLibs(), callbacks);
+    }
+
+    async upload (deviceId: string, artifact: Artifact, callbacks?: StreamCallbacks): Promise<void> {
+        const device = this.getDevice(deviceId);
+        return this.flashWithMonitorFreed(flasher => flasher.flash(device, artifact, callbacks));
+    }
+
+    async flashFirmware (deviceId: string, pack: string, file: string, callbacks?: StreamCallbacks): Promise<void> {
+        const device = this.getDevice(deviceId);
+        return this.flashWithMonitorFreed(flasher => flasher.flashFirmware(device, pack, file, callbacks));
+    }
+
+    cancelUpload (): void {
+        this.cancelInFlight();
+    }
+
+    cancelPlatformInstall (): void {
+        this.cancelInFlight();
+    }
+
+    async getPlatformStatus (deviceId: string): Promise<PlatformStatus | null> {
+        const device = this.getDevice(deviceId);
+        return this.backend.builder.getPlatformStatus(device);
+    }
+
+    async installPlatform (deviceId: string, callbacks?: StreamCallbacks): Promise<void> {
+        const device = this.getDevice(deviceId);
+        return this.backend.builder.installPlatform(device, callbacks);
+    }
+
+    openMonitor (options: {baudRate: number}): Promise<void> {
+        return this.backend.monitor.openMonitor(options);
+    }
+
+    writeMonitor (data: string): void {
+        this.backend.monitor.writeMonitor(data);
+    }
+
+    closeMonitor (): Promise<void> {
+        return this.backend.monitor.closeMonitor();
+    }
+
+    setMonitorBaud (rate: number): void {
+        this.monitorBaud = rate;
+        const {connection, monitor} = this.backend;
+        if (connection.isConnected) {
+            monitor.closeMonitor()
+                .then(() => monitor.openMonitor({baudRate: rate}))
+                .catch((err: Error) => log.warn(`setMonitorBaud: serial monitor did not reopen: ${err.message}`));
+        }
+    }
+
+    private createBackend (mode: string): Backend {
+        if (mode === 'cloud') return createCloudBackend(this.runtime);
+        return createLocalBackend(this.runtime, {
+            resourceBase: (globalThis as ResourceBaseGlobal).__THINGBLOCK_RESOURCE_BASE__ || null
+        });
+    }
+
+    private getDevice (deviceId: string): LinkDevice {
+        const device = this.devices.deviceRegistry.get(deviceId);
+        if (!device) {
+            throw new Error(`no device registered for "${deviceId}"`);
+        }
+        return device;
+    }
+
+    private async flashWithMonitorFreed (runFlash: (flasher: Flasher) => Promise<void>): Promise<void> {
+        const {connection, flasher, monitor} = this.backend;
+        await monitor.closeMonitor();
+        try {
+            await runFlash(flasher);
+        } finally {
+            if (connection.isConnected) {
+                monitor.openMonitor({baudRate: this.monitorBaud})
+                    .catch((err: Error) =>
+                        log.warn(`flashWithMonitorFreed: serial monitor did not reopen: ${err.message}`));
+            }
+        }
+    }
+
+    private cancelInFlight (): void {
+        const {builder, flasher} = this.backend;
+        builder.cancel();
+        flasher.cancel();
     }
 }

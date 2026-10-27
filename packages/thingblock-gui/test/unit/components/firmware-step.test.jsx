@@ -13,9 +13,9 @@ describe('FirmwareStep', () => {
 
     beforeEach(() => {
         vm = new VM();
-        jest.spyOn(vm, 'listBoards').mockResolvedValue([port]);
-        jest.spyOn(vm, 'connectBoard').mockResolvedValue();
-        jest.spyOn(vm, 'disconnectBoard').mockResolvedValue();
+        jest.spyOn(vm.link, 'listBoards').mockResolvedValue([port]);
+        jest.spyOn(vm.link, 'connectBoard').mockResolvedValue();
+        jest.spyOn(vm.link, 'disconnectBoard').mockResolvedValue();
         jest.spyOn(vm, 'flashDeviceFirmware').mockResolvedValue();
     });
 
@@ -45,10 +45,10 @@ describe('FirmwareStep', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Install'}));
 
         await screen.findByText('Firmware installed');
-        expect(vm.listBoards).toHaveBeenCalledWith('thingbot');
-        expect(vm.connectBoard).toHaveBeenCalledWith(port);
+        expect(vm.link.listBoards).toHaveBeenCalledWith('thingbot');
+        expect(vm.link.connectBoard).toHaveBeenCalledWith(port);
         expect(vm.flashDeviceFirmware).toHaveBeenCalledWith('thingbot', 'telemetrix-ble');
-        await waitFor(() => expect(vm.disconnectBoard).toHaveBeenCalled());
+        await waitFor(() => expect(vm.link.disconnectBoard).toHaveBeenCalled());
 
         // The user starts the Bluetooth scan themselves.
         expect(onScanning).not.toHaveBeenCalled();
@@ -62,9 +62,9 @@ describe('FirmwareStep', () => {
         fireEvent.click(await screen.findByRole('button', {name: 'Install'}));
 
         await screen.findByText('Firmware installed');
-        expect(vm.listBoards).not.toHaveBeenCalled();
-        expect(vm.connectBoard).not.toHaveBeenCalled();
-        expect(vm.disconnectBoard).not.toHaveBeenCalled();
+        expect(vm.link.listBoards).not.toHaveBeenCalled();
+        expect(vm.link.connectBoard).not.toHaveBeenCalled();
+        expect(vm.link.disconnectBoard).not.toHaveBeenCalled();
     });
 
     test('shows the error when the flash fails', async () => {
@@ -82,7 +82,7 @@ describe('FirmwareStep', () => {
 
         fireEvent.click(await screen.findByRole('button', {name: 'Install'}));
 
-        await waitFor(() => expect(vm.listBoards).toHaveBeenCalledTimes(2));
+        await waitFor(() => expect(vm.link.listBoards).toHaveBeenCalledTimes(2));
         expect(await screen.findByRole('button', {name: 'Install'})).toBeInTheDocument();
     });
 });

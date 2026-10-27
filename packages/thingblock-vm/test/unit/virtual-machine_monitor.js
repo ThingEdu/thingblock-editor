@@ -21,7 +21,7 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
         }
     });
 
-    await vm.connectBoard({id: '/dev/ttyACM0', name: 'Uno'});
+    await vm.link.connectBoard({id: '/dev/ttyACM0', name: 'Uno'});
     await flush();
     t.same(order, ['connect', 'open:115200'], 'connects first, then opens the monitor at 115200');
     t.end();
@@ -34,7 +34,7 @@ test('connectBoard still resolves when the monitor fails to open', async t => {
         openMonitor: () => Promise.reject(new Error('port busy'))
     });
 
-    await t.resolves(vm.connectBoard({id: '/dev/ttyACM0', name: 'Uno'}),
+    await t.resolves(vm.link.connectBoard({id: '/dev/ttyACM0', name: 'Uno'}),
         'a monitor that fails to open does not fail the connection');
     t.end();
 });
@@ -60,7 +60,7 @@ test('upload closes the monitor before the flash and reopens it after', async t 
         isConnected: true
     });
 
-    await vm.upload('uno', {format: 'hex', path: '/p'});
+    await vm.link.upload('uno', {format: 'hex', path: '/p'});
     await flush();
     t.same(order, ['close', 'flash', 'reopen:115200'],
         'frees the port for the flash, then restores the monitor at the stored baud');
@@ -81,7 +81,7 @@ test('upload does not reopen the monitor when the board is no longer connected',
         isConnected: false
     });
 
-    await vm.upload('uno', {format: 'hex', path: '/p'});
+    await vm.link.upload('uno', {format: 'hex', path: '/p'});
     await flush();
     t.equal(reopened, false, 'a disconnected board leaves the monitor closed');
     t.end();
@@ -102,7 +102,7 @@ test('setMonitorBaud reopens the monitor at the new rate when connected', async 
         isConnected: true
     });
 
-    vm.setMonitorBaud(9600);
+    vm.link.setMonitorBaud(9600);
     await flush();
     t.same(order, ['close', 'open:9600'], 'reopens at the chosen rate');
     t.end();
@@ -123,7 +123,7 @@ test('setMonitorBaud just remembers the rate when not connected', async t => {
         isConnected: false
     });
 
-    vm.setMonitorBaud(9600);
+    vm.link.setMonitorBaud(9600);
     await flush();
     t.equal(touched, false, 'no reopen attempted while disconnected');
     t.equal(vm._monitorBaud, 9600, 'the rate is remembered for the next auto-open');

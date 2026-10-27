@@ -188,7 +188,7 @@ const GUIComponent = props => {
         return next.length > MAX_MONITOR_LOGS ? next.slice(next.length - MAX_MONITOR_LOGS) : next;
     };
     const [monitorPrompt, setMonitorPrompt] = useState(null);
-    // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.setMonitorBaud.
+    // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.link.setMonitorBaud.
     const [baudRate, setBaudRate] = useState(115200);
     // Holds the partial trailing line between serial chunks; serial frames are not line-aligned.
     const serialBuffer = useRef('');
@@ -243,7 +243,7 @@ const GUIComponent = props => {
         if (connectedBoard) {
             // Real board: write to its serial port, line-terminated as Arduino sketches expect. The
             // device's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
-            vm.writeMonitor(`${value}\n`);
+            vm.link.writeMonitor(`${value}\n`);
             return;
         }
         vm.runtime.events.emit('ANSWER', value);
@@ -252,7 +252,7 @@ const GUIComponent = props => {
 
     const handleBaudChange = useCallback(rate => {
         setBaudRate(rate);
-        vm.setMonitorBaud(rate);
+        vm.link.setMonitorBaud(rate);
     }, [vm]);
 
     const handleResizeMouseDown = useCallback(e => {

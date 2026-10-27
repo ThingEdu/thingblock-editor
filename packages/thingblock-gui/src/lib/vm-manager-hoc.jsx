@@ -35,7 +35,7 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.setCompatibilityMode(true);
                 this.props.vm.initialized = true;
                 this.props.vm.setLocale(this.props.locale, this.props.messages);
-                this.props.vm.setLinkMode(this.props.linkMode);
+                this.props.vm.link.setLinkMode(this.props.linkMode);
                 // Supply the dynamic importer from the GUI build so the remote import() stays out of the
                 // VM bundle (where webpack would rewrite it and strip the bundle's default export). Then
                 // pull helper-served device packs — a no-op in cloud mode or when the helper is down.

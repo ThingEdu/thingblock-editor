@@ -80,7 +80,7 @@ class DeviceControls extends React.Component {
             this.setState(state => ({uploadLogs: [...state.uploadLogs, chunk]}));
         };
 
-        this.props.vm.compile(selectedDeviceId, generatedCode, {
+        this.props.vm.link.compile(selectedDeviceId, generatedCode, {
             onLog: appendLog,
             onProgress: progress => {
                 if (this._unmounted) return;
@@ -90,7 +90,7 @@ class DeviceControls extends React.Component {
             .then(artifact => {
                 if (this._unmounted) return;
                 this.setState({uploadStatus: 'uploading', uploadProgress: null});
-                return this.props.vm.upload(selectedDeviceId, artifact, {onLog: appendLog});
+                return this.props.vm.link.upload(selectedDeviceId, artifact, {onLog: appendLog});
             })
             .then(() => {
                 if (this._unmounted) return;
@@ -111,7 +111,7 @@ class DeviceControls extends React.Component {
     handleCancelUpload () {
         // Aborts the in-flight compile or upload; the rejected promise lands in handleUpload's catch
         // and flips the modal to 'cancelled'. Leaves the modal open showing that outcome.
-        this.props.vm.cancelUpload();
+        this.props.vm.link.cancelUpload();
     }
 
     handleCloseUpload () {
@@ -126,7 +126,7 @@ class DeviceControls extends React.Component {
 
     handleScan () {
         this.setState({scanning: true});
-        this.props.vm.listBoards(this.props.selectedDeviceId)
+        this.props.vm.link.listBoards(this.props.selectedDeviceId)
             .then(boards => {
                 if (this._unmounted) return;
                 this.setState({scanning: false, boards});
@@ -143,7 +143,7 @@ class DeviceControls extends React.Component {
     handleConnectBoard (boardId) {
         const board = (this.state.boards || []).find(candidate => candidate.id === boardId);
         if (!board) return;
-        this.props.vm.connectBoard(board)
+        this.props.vm.link.connectBoard(board)
             .then(() => {
                 if (this._unmounted) return;
                 this.props.setConnected(board);
@@ -158,7 +158,7 @@ class DeviceControls extends React.Component {
 
     handleDisconnect () {
         // State clears via the DEVICE_DISCONNECTED listener, which also covers a helper crash.
-        this.props.vm.disconnectBoard();
+        this.props.vm.link.disconnectBoard();
     }
 
     handleDeviceDisconnected () {

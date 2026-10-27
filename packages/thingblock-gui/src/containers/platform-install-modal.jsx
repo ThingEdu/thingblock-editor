@@ -54,7 +54,7 @@ class PlatformInstallModal extends React.Component {
         // Never replace an install in progress; its outcome matters more than a new prompt.
         if (this.state.status === 'installing') return;
 
-        vm.getPlatformStatus(selectedDeviceId)
+        vm.link.getPlatformStatus(selectedDeviceId)
             .then(platformStatus => {
                 // Null means the active backend has no platform manager; a stale reply means the
                 // user already moved on to another board.
@@ -86,7 +86,7 @@ class PlatformInstallModal extends React.Component {
     handleInstall () {
         const {vm, selectedDeviceId} = this.props;
         this.setState({status: 'installing', progress: null, logs: [], error: null});
-        vm.installPlatform(selectedDeviceId, {
+        vm.link.installPlatform(selectedDeviceId, {
             onLog: chunk => {
                 if (this._unmounted) return;
                 this.setState(state => ({logs: [...state.logs, chunk]}));
@@ -115,7 +115,7 @@ class PlatformInstallModal extends React.Component {
     handleCancel () {
         // Aborts the in-flight install; the rejected promise lands in handleInstall's catch and
         // flips the modal to 'cancelled'. Leaves the modal open showing that outcome.
-        this.props.vm.cancelPlatformInstall();
+        this.props.vm.link.cancelPlatformInstall();
     }
 
     handleClose () {

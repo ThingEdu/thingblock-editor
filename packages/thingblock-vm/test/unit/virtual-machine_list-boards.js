@@ -6,7 +6,7 @@ const test = tap.test;
 
 test('listBoards rejects when no device is registered for the id', t => {
     const vm = new VirtualMachine();
-    vm.listBoards('does-not-exist').then(
+    vm.link.listBoards('does-not-exist').then(
         () => t.fail('should reject for an unknown deviceId'),
         err => {
             t.match(err.message, /no device registered/);
@@ -29,7 +29,7 @@ test('listBoards resolves the device and delegates to the link client', t => {
         }
     });
 
-    vm.listBoards('arduinoUno').then(result => {
+    vm.link.listBoards('arduinoUno').then(result => {
         t.equal(receivedDevice, fakeDevice, 'passes the resolved device to the link client');
         t.same(result, targets, 'returns the link client targets unchanged');
         t.end();
@@ -49,7 +49,7 @@ test('connectBoard delegates the target to the link client', t => {
         openMonitor: () => Promise.resolve()
     });
 
-    vm.connectBoard(target).then(() => {
+    vm.link.connectBoard(target).then(() => {
         t.equal(received, target, 'passes the target through to the link client');
         t.end();
     });
@@ -63,7 +63,7 @@ test('disconnectBoard delegates to the link client', t => {
         return Promise.resolve();
     }});
 
-    vm.disconnectBoard().then(() => {
+    vm.link.disconnectBoard().then(() => {
         t.equal(called, true, 'calls disconnect on the link client');
         t.end();
     });
@@ -71,7 +71,7 @@ test('disconnectBoard delegates to the link client', t => {
 
 test('upload rejects when no device is registered for the id', t => {
     const vm = new VirtualMachine();
-    vm.upload('does-not-exist', {format: 'hex', path: '/p'}).then(
+    vm.link.upload('does-not-exist', {format: 'hex', path: '/p'}).then(
         () => t.fail('should reject for an unknown deviceId'),
         err => {
             t.match(err.message, /no device registered/);
@@ -98,7 +98,7 @@ test('upload resolves the device and delegates the artifact to the link client',
         isConnected: false
     });
 
-    vm.upload('arduinoUno', artifact, callbacks).then(() => {
+    vm.link.upload('arduinoUno', artifact, callbacks).then(() => {
         t.equal(received.device, fakeDevice, 'passes the resolved device to the link client');
         t.equal(received.art, artifact, 'passes the artifact through unchanged');
         t.equal(received.cbs, callbacks, 'passes the callbacks through');
@@ -113,20 +113,24 @@ test('cancelUpload delegates to the link client', t => {
         called = true;
     }});
 
-    vm.cancelUpload();
+    vm.link.cancelUpload();
     t.equal(called, true, 'calls cancel on the active client');
     t.end();
 });
 
 test('setLinkMode swaps the active client between the helper and cloud backends', t => {
     const vm = new VirtualMachine();
-    t.equal(vm.backend === vm._link.cloud, false, 'defaults to the native helper backend');
+    const helper = vm.backend;
 
-    vm.setLinkMode('cloud');
-    t.equal(vm.backend === vm._link.cloud, true, 'cloud mode activates the cloud backend');
+    vm.link.setLinkMode('cloud');
+    const cloud = vm.backend;
+    t.not(cloud, helper, 'cloud mode activates a different backend');
 
-    vm.setLinkMode('link');
-    t.equal(vm.backend === vm._link.cloud, false, 'link mode activates the helper backend');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.backend, cloud, 'selecting the active mode again keeps the backend');
+
+    vm.link.setLinkMode('link');
+    t.not(vm.backend, cloud, 'link mode leaves the cloud backend');
     t.end();
 });
 
@@ -140,8 +144,7 @@ test('setLinkMode disconnects the current client before switching', t => {
         return Promise.resolve();
     };
 
-    vm.setLinkMode('cloud');
+    vm.link.setLinkMode('cloud');
     t.equal(disconnected, true, 'disconnects the previously active client');
-    t.equal(vm.backend === vm._link.cloud, true, 'switches to the cloud backend');
     t.end();
 });

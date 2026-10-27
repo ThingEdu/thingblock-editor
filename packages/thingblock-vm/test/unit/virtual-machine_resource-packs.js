@@ -28,7 +28,7 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
     );
 
     // The build server serves the same pack root it compiles against, so cloud mode has an origin too.
-    vm.setLinkMode('cloud');
+    vm.link.setLinkMode('cloud');
     t.equal(vm.getResourceOrigin(), 'http://localhost:8080/resources/extensions', 'the build server origin');
 
     t.end();

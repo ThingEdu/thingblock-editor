@@ -8,13 +8,12 @@ const VmEventNames = require('./vm-event-names');
 
 const wireRuntimeEvents = require('./runtime-events');
 const LinkController = require('./link-controller').default;
-const DeviceManager = require('./device-manager');
+const DeviceManager = require('./device-manager').default;
 const applyMixin = require('./apply-mixin');
 const ProjectIoMixin = require('./mixins/project-io');
 const EngineMixin = require('./mixins/engine');
 const WorkspaceMixin = require('./mixins/workspace');
 const TargetsMixin = require('./mixins/targets');
-const LinkMixin = require('./mixins/link');
 
 const CORE_EXTENSIONS = [
     // 'motion',
@@ -63,18 +62,18 @@ class VirtualMachine extends EventEmitter {
         }
 
         /**
-         * The device-link subsystem: helper and cloud backends and the active one. The
-         * board operations live in {@link LinkMixin}. See {@link LinkController}.
-         * @type {LinkController}
-         */
-        this._link = new LinkController(this.runtime);
-
-        /**
          * The board-mode device subsystem: device registry, helper-served resource packs, and the
          * selected board's active peripherals. See {@link DeviceManager}.
          * @type {DeviceManager}
          */
         this._devices = new DeviceManager(this);
+
+        /**
+         * The device link: backends, the active one, and the board operations (discovery, connect,
+         * compile, upload, platform install, serial monitor). See {@link LinkController}.
+         * @type {LinkController}
+         */
+        this.link = new LinkController(this.runtime, this._devices);
 
         this.blockListener = this.blockListener.bind(this);
         this.flyoutBlockListener = this.flyoutBlockListener.bind(this);
@@ -212,10 +211,10 @@ class VirtualMachine extends EventEmitter {
      * @type {Backend}
      */
     get backend () {
-        return this._link.getBackend();
+        return this.link.backend;
     }
     set backend (value) {
-        this._link.backend = value;
+        this.link.backend = value;
     }
 
     /**
@@ -252,7 +251,7 @@ class VirtualMachine extends EventEmitter {
     }
 
     get _monitorBaud () {
-        return this._link.monitorBaud;
+        return this.link.monitorBaud;
     }
 
     // The pack-module import seam tests override to supply in-memory modules; the setter writes
@@ -335,7 +334,7 @@ class VirtualMachine extends EventEmitter {
     }
 }
 
-for (const Mixin of [ProjectIoMixin, EngineMixin, WorkspaceMixin, TargetsMixin, LinkMixin]) {
+for (const Mixin of [ProjectIoMixin, EngineMixin, WorkspaceMixin, TargetsMixin]) {
     applyMixin(VirtualMachine, Mixin);
 }
 
