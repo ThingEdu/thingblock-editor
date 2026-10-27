@@ -3,7 +3,7 @@
  * an Adafruit PWM driver; the IMU blocks read an MPU6050 over I2C. Servo angle is mapped to a PWM pulse
  * (150–600) at codegen time.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 const mapValue = (value: number, inMin: number, inMax: number, outMin: number, outMax: number): number =>

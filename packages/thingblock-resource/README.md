@@ -13,7 +13,7 @@ helper serves packs, editor imports them).
 ## The one rule: inject, never bundle
 
 Pack modules bind to the editor's **live** Blockly and `arduinoGenerator` by injection, so the build
-externalizes `blockly` and `@scratch/scratch-blocks` (they are build/type-time only). A pack that
+externalizes `blockly` and `@thingblock/thingblock-blocks` (they are build/type-time only). A pack that
 bundled its own copy would get a different singleton and its registrations would be invisible.
 
 ```text

@@ -1,5 +1,5 @@
 /** PS2 receiver blocks for setup, polling, button state, and joystick values. */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#FF3399'

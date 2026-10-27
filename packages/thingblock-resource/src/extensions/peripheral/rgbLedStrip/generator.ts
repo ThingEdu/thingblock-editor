@@ -5,7 +5,7 @@
  * Pixel indices are 1-based in the palette (a Scratch convention) and 0-based in the library, so the
  * setters emit an explicit `- 1`.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

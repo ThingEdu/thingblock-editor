@@ -44,7 +44,7 @@ function discoverEntries() {
 
 // The pack binds to the editor's live Blockly and arduinoGenerator by injection, so these must never
 // be bundled — they are externalized and resolved from the editor at import time.
-const external = [/^blockly(\/.*)?$/, /^@scratch\/scratch-blocks(\/.*)?$/]
+const external = [/^blockly(\/.*)?$/, /^@thingblock\/thingblock-blocks(\/.*)?$/]
 
 export default defineConfig({
   build: {

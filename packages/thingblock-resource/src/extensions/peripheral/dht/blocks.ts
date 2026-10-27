@@ -2,7 +2,7 @@
  * DHT sensor blocks: init (pin + model) plus humidity/temperature readers, all keyed by an instance
  * number so multiple DHT sensors on different pins stay independent.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#42CCFF'

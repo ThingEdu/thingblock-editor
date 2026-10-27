@@ -1,0 +1,43 @@
+/**
+ * Connect scratch blocks with the vm
+ * @param {VirtualMachine} vm - The scratch vm
+ * @returns {ScratchBlocks} ScratchBlocks connected with the vm
+ */
+export default function (vm) {
+    const ScratchBlocks = require('@thingblock/thingblock-blocks');
+
+    ScratchBlocks.CheckboxBubble.prototype.isChecked = function (blockId) {
+        const monitoredBlock = vm.runtime.monitorBlocks._blocks[blockId];
+        return monitoredBlock ? monitoredBlock.isMonitored : false;
+    };
+
+    ScratchBlocks.StatusIndicatorLabel.prototype.getExtensionState = function (extensionId) {
+        if (vm.getPeripheralIsConnected(extensionId)) {
+            return ScratchBlocks.StatusButtonState.READY;
+        }
+        return ScratchBlocks.StatusButtonState.NOT_READY;
+    };
+
+    // Use a collator's compare instead of localeCompare which internally
+    // creates a collator. Using this is a lot faster in browsers that create a
+    // collator for every localeCompare call.
+    // const collator = new Intl.Collator([], {
+    //     sensitivity: 'base',
+    //     numeric: true
+    // });
+    // ScratchBlocks.scratchBlocksUtils.compareStrings = function (str1, str2) {
+    //     return collator.compare(str1, str2);
+    // };
+
+    // Blocks wants to know if 3D CSS transforms are supported. The cross
+    // section of browsers Scratch supports and browsers that support 3D CSS
+    // transforms will make the return always true.
+    //
+    // Shortcutting to true lets us skip an expensive style recalculation when
+    // first loading the Scratch editor.
+    ScratchBlocks.utils.is3dSupported = function () {
+        return true;
+    };
+
+    return ScratchBlocks;
+}

@@ -2,7 +2,7 @@
  * MPU6050 blocks: init (accelerometer/gyro range and filter bandwidth), a data read that latches one
  * sample, and reporters for the latched acceleration, rotation, and temperature.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#0066CC'

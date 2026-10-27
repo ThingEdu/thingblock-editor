@@ -1,5 +1,5 @@
 /** PS2 receiver Arduino codegen using one shared library include and controller instance. */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

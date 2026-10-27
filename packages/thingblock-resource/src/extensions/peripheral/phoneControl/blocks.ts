@@ -1,5 +1,5 @@
 /** Phone-control block: starts the BLE service, taking the name the phone will see. */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#4C97FF'

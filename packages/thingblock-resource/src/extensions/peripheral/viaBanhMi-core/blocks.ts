@@ -2,7 +2,7 @@
  * VIA Banh Mi block definitions: PWM init, motor/servo drive, and the MPU6050 IMU (init, read, and the
  * acceleration/gyro/temperature reporters). Registered against the editor's injected Blockly.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const PWM_COLOUR = '#FF0000'

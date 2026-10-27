@@ -2,7 +2,7 @@
  * Serial peripheral codegen. Serial lives in the Arduino core, so each block maps directly to a
  * `Serial.*` call with no include/global/setup fragments to push.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {

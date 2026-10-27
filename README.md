@@ -5,25 +5,24 @@ beginner-friendly Scratch programming model while adding the hardware workflow n
 selection, generated Arduino code, native board-link discovery, upload flow foundations, and a serial monitor for
 device input and output.
 
-ThingBlock is a fork of the open-source `scratch-editor` project. The Scratch-derived package names, workspace
-layout, and architecture are intentionally preserved in many places so the fork remains understandable and easier to
+ThingBlock is a fork of the open-source `scratch-editor` project. The Scratch-derived workspace layout and
+architecture are intentionally preserved in many places so the fork remains understandable and easier to
 compare against the original project.
 
 ## What's in this repository?
 
 The `packages` directory contains:
 
-- `scratch-gui` provides the editor UI, including the ThingBlock menu bar, board picker, generated-code panel, and
+- `thingblock-gui` provides the editor UI, including the ThingBlock menu bar, board picker, generated-code panel, and
   serial monitor.
-- `scratch-vm` is the virtual machine that runs Scratch projects and owns device registration, code generation, and
+- `thingblock-vm` is the virtual machine that runs Scratch projects and owns device registration, code generation, and
   native board-link discovery.
-- `scratch-blocks` is the Blockly-based block editor fork used by the GUI.
+- `thingblock-blocks` is the Blockly-based block editor fork used by the GUI.
 - `thingblock-resource` is the Scratch-plane resource pack: device manifests, peripheral packs, Arduino
   codegen, toolbox categories, and vendored C++ library sources, built to dynamically-importable ESM. The local
   `thingblock-link` helper serves the built packs as static files; the editor imports them at runtime and
   registers each pack's codegen against the shared `arduinoGenerator`.
-- `scratch-storage` loads project assets like images and sounds.
-- `scratch-media-lib-scripts` builds media library assets.
+- `thingblock-storage` loads project assets like images and sounds.
 - `task-herder` manages queues of tasks with throttling and concurrency limits.
 
 ## Project direction

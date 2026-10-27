@@ -1,0 +1,19 @@
+# Development files
+.eslintrc.js
+/.editorconfig
+/.eslintignore
+/.gitattributes
+/.github
+/.travis.yml
+/.tx
+/test
+
+# Build created files
+/docs/api
+
+# Coverage created files
+/.nyc_output
+/coverage
+
+# Exclude already built packages from testing with npm pack
+/thingblock-vm-*.{tar,tgz}

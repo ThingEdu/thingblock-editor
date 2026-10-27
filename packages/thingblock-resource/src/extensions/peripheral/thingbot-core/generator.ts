@@ -2,7 +2,7 @@
  * ThingBot C3 Arduino codegen using the editor's shared generator buckets. The PS2 block relies on the
  * separate PS2 peripheral for `PS2X_lib.h`.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 /** Semitone offset of each note name within its octave, for the equal-tempered frequency. */

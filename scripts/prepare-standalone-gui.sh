@@ -1,10 +1,10 @@
 jq '
-    if .name != "@scratch/scratch-gui-standalone" then
-        .name = "@scratch/scratch-gui-standalone" |
+    if .name != "@thingblock/thingblock-gui-standalone" then
+        .name = "@thingblock/thingblock-gui-standalone" |
         del(.peerDependencies) |
         .exports."." = .exports."./standalone" |
         del(.exports."./standalone")
     else
         .
     end
-' ./packages/scratch-gui/package.json | npx sponge ./packages/scratch-gui/package.json
+' ./packages/thingblock-gui/package.json | npx sponge ./packages/thingblock-gui/package.json

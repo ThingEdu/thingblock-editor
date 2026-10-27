@@ -7,7 +7,7 @@
  * own driver: driven as an SSD1306 it acknowledges every write and stays dark. Both Adafruit drivers
  * share the GFX drawing API, so every other block's codegen is chip-independent.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 /** Scroll direction field value → the driver's scroll entry point. */

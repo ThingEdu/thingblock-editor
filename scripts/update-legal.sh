@@ -7,10 +7,10 @@
 #   scripts/update-legal.sh                                # every workspace
 #   scripts/update-legal.sh <package-name> [<name>...]     # named workspaces
 #
-# Package names can be bare ("scratch-vm") or scoped ("@scratch/scratch-vm").
+# Package names can be bare ("thingblock-vm") or scoped ("@thingblock/thingblock-vm").
 # Driven through npm:
 #   npm run update-legal                                   # every workspace
-#   npm run update-legal -- @scratch/scratch-storage       # one workspace
+#   npm run update-legal -- @thingblock/thingblock-storage       # one workspace
 
 set -e
 
@@ -45,9 +45,9 @@ if [ "$#" -eq 0 ]; then
     done <<<"$locations"
 else
     for name in "$@"; do
-        # Accept bare ("scratch-vm") or scoped ("@scratch/scratch-vm").
+        # Accept bare ("thingblock-vm") or scoped ("@thingblock/thingblock-vm").
         dir=$(jq -r --arg n "$name" '
-            (map(select(.name == $n or .name == "@scratch/\($n)"))
+            (map(select(.name == $n or .name == "@thingblock/\($n)"))
              | first
              | .location) // empty
         ' <<<"$WORKSPACE_JSON")
