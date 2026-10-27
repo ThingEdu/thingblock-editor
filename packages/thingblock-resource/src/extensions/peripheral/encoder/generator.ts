@@ -7,7 +7,7 @@
  * Interrupts on both pins work on any pin of ESP32-class boards; on an Uno only pins 2 and 3 can
  * interrupt, which is why those are the encoder's natural pins there.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 // ESP32/ESP8266 cores define IRAM_ATTR (the handler must live in IRAM); elsewhere it expands to

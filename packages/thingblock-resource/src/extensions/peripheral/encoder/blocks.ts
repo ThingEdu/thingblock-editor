@@ -2,7 +2,7 @@
  * Rotary encoder blocks: init with the A/B phase pins and the button pin, the turn count (one step per
  * detent click), resetting that count, and whether the knob's button is held down.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
 const COLOUR = '#4C97FF'
