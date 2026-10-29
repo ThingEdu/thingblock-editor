@@ -5,7 +5,6 @@ import MonitorRecord from '../../src/engine/monitor-record.ts';
 import log from '../../src/util/log';
 import {block, newTarget} from '../fixtures/target.ts';
 import type {WorkspaceEvent} from '../../src/engine/runtime/workspace-listener.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
 
 /** A runtime with a stage and a device, which is the editing target. */
 const setup = () => {
@@ -20,7 +19,7 @@ const setup = () => {
     return {rt, stage, device, listener};
 };
 
-const record = (rt: Runtime, ...names: Array<keyof RuntimeEvents>) => {
+const record = (rt: Runtime, ...names: string[]) => {
     const emitted: string[] = [];
     for (const name of names) {
         rt.events.on(name, () => emitted.push(name));

@@ -9,7 +9,7 @@ import TargetType from '../../extension-support/target-type';
 import log from '../../util/log';
 import maybeFormatMessage from '../../util/maybe-format-message';
 import StringUtil from '../../util/string-util';
-import {RuntimeEventNames} from './runtime-events';
+import {RuntimeEvent} from '../../event/event-name';
 import {
     buildCustomFieldInfo,
     buildMenuForScratchBlocks,
@@ -89,12 +89,12 @@ export const registerExtensionPrimitives = (runtime: Runtime, extensionInfo: Ext
     fillExtensionCategory(runtime, categoryInfo, extensionInfo);
 
     for (const fieldTypeInfo of Object.values(categoryInfo.customFieldTypes)) {
-        runtime.events.emit(RuntimeEventNames.EXTENSION_FIELD_ADDED, {
+        runtime.events.emit(RuntimeEvent.EXTENSION_FIELD_ADDED, {
             name: `field_${fieldTypeInfo.extendedName}`,
             implementation: fieldTypeInfo.fieldImplementation
         });
     }
-    runtime.events.emit(RuntimeEventNames.EXTENSION_ADDED, categoryInfo);
+    runtime.events.emit(RuntimeEvent.EXTENSION_ADDED, categoryInfo);
 };
 
 /** Rebuilds a registered extension's category from new `getInfo()` results, e.g. after a locale change. */
@@ -103,7 +103,7 @@ export const refreshExtensionPrimitives = (runtime: Runtime, extensionInfo: Exte
     if (!categoryInfo) return;
     categoryInfo.name = maybeFormatMessage(extensionInfo.name);
     fillExtensionCategory(runtime, categoryInfo, extensionInfo);
-    runtime.events.emit(RuntimeEventNames.BLOCKSINFO_UPDATE, categoryInfo);
+    runtime.events.emit(RuntimeEvent.BLOCKSINFO_UPDATE, categoryInfo);
 };
 
 /** Each category's palette XML, without blocks hidden from the palette or filtered out for `target`. */

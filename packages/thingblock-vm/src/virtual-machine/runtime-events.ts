@@ -1,38 +1,37 @@
-import {RuntimeEventNames, type RuntimeEvents} from '../engine/runtime/runtime-events';
+import {LinkEvent, PeripheralEvent, RuntimeEvent} from '../event/event-name';
 import type Runtime from '../engine/runtime';
 import type ExtensionManager from '../extension-support/extension-manager';
-
-type Emit = (event: string, ...args: unknown[]) => void;
+import type {Emit} from './vm-event-names';
 
 /** The runtime events VM consumers see unchanged on the VM's emitter. */
-const FORWARDED_EVENTS: Array<keyof RuntimeEvents> = [
-    RuntimeEventNames.SCRIPT_GLOW_ON,
-    RuntimeEventNames.SCRIPT_GLOW_OFF,
-    RuntimeEventNames.BLOCK_GLOW_ON,
-    RuntimeEventNames.BLOCK_GLOW_OFF,
-    RuntimeEventNames.PROJECT_START,
-    RuntimeEventNames.PROJECT_RUN_START,
-    RuntimeEventNames.PROJECT_RUN_STOP,
-    RuntimeEventNames.PROJECT_CHANGED,
-    RuntimeEventNames.VISUAL_REPORT,
-    RuntimeEventNames.MONITORS_UPDATE,
-    RuntimeEventNames.BLOCK_DRAG_UPDATE,
-    RuntimeEventNames.BLOCK_DRAG_END,
-    RuntimeEventNames.EXTENSION_ADDED,
-    RuntimeEventNames.EXTENSION_FIELD_ADDED,
-    RuntimeEventNames.BLOCKSINFO_UPDATE,
-    RuntimeEventNames.PERIPHERAL_LIST_UPDATE,
-    RuntimeEventNames.USER_PICKED_PERIPHERAL,
-    RuntimeEventNames.PERIPHERAL_CONNECTED,
-    RuntimeEventNames.PERIPHERAL_REQUEST_ERROR,
-    RuntimeEventNames.PERIPHERAL_DISCONNECTED,
-    RuntimeEventNames.PERIPHERAL_CONNECTION_LOST_ERROR,
-    RuntimeEventNames.PERIPHERAL_SCAN_TIMEOUT,
-    RuntimeEventNames.MIC_LISTENING,
-    RuntimeEventNames.EXTENSION_DATA_LOADING,
-    RuntimeEventNames.RUNTIME_STARTED,
-    RuntimeEventNames.DEVICE_CONNECTED,
-    RuntimeEventNames.DEVICE_DISCONNECTED
+const FORWARDED_EVENTS: string[] = [
+    RuntimeEvent.SCRIPT_GLOW_ON,
+    RuntimeEvent.SCRIPT_GLOW_OFF,
+    RuntimeEvent.BLOCK_GLOW_ON,
+    RuntimeEvent.BLOCK_GLOW_OFF,
+    RuntimeEvent.PROJECT_START,
+    RuntimeEvent.PROJECT_RUN_START,
+    RuntimeEvent.PROJECT_RUN_STOP,
+    RuntimeEvent.PROJECT_CHANGED,
+    RuntimeEvent.VISUAL_REPORT,
+    RuntimeEvent.MONITORS_UPDATE,
+    RuntimeEvent.BLOCK_DRAG_UPDATE,
+    RuntimeEvent.BLOCK_DRAG_END,
+    RuntimeEvent.EXTENSION_ADDED,
+    RuntimeEvent.EXTENSION_FIELD_ADDED,
+    RuntimeEvent.BLOCKSINFO_UPDATE,
+    PeripheralEvent.PERIPHERAL_LIST_UPDATE,
+    PeripheralEvent.USER_PICKED_PERIPHERAL,
+    PeripheralEvent.PERIPHERAL_CONNECTED,
+    PeripheralEvent.PERIPHERAL_REQUEST_ERROR,
+    PeripheralEvent.PERIPHERAL_DISCONNECTED,
+    PeripheralEvent.PERIPHERAL_CONNECTION_LOST_ERROR,
+    PeripheralEvent.PERIPHERAL_SCAN_TIMEOUT,
+    RuntimeEvent.MIC_LISTENING,
+    RuntimeEvent.EXTENSION_DATA_LOADING,
+    RuntimeEvent.RUNTIME_STARTED,
+    LinkEvent.DEVICE_CONNECTED,
+    LinkEvent.DEVICE_DISCONNECTED
 ];
 
 /**
@@ -46,7 +45,7 @@ const wireRuntimeEvents = (runtime: Runtime, emit: Emit, extensionManager: Exten
     for (const name of FORWARDED_EVENTS) {
         runtime.events.on(name, (...args: unknown[]) => emit(name, ...args));
     }
-    runtime.events.on(RuntimeEventNames.TOOLBOX_EXTENSIONS_NEED_UPDATE, () => {
+    runtime.events.on(RuntimeEvent.TOOLBOX_EXTENSIONS_NEED_UPDATE, () => {
         extensionManager.refreshBlocks();
     });
 };

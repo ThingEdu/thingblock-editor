@@ -1,5 +1,5 @@
 import log from '../../util/log';
-import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
+import {LinkEvent} from '../../event/event-name';
 import type Runtime from '../../engine/runtime';
 import type WebSerialLink from './web-serial-link';
 import type {SerialMonitor} from '../types';
@@ -76,7 +76,7 @@ export default class CloudMonitor implements SerialMonitor {
             for (;;) {
                 const {done, value} = await reader.read();
                 if (done) break;
-                this.runtime.events.emit(RuntimeEventNames.SERIAL_DATA, decoder.decode(value, {stream: true}));
+                this.runtime.events.emit(LinkEvent.SERIAL_DATA, decoder.decode(value, {stream: true}));
             }
         } catch (err) {
             // A yanked USB cable surfaces here; the port is gone, so report it rather than fail silently.

@@ -1,15 +1,14 @@
 import {test} from 'tap';
-import {EventEmitter} from 'events';
 import Control from '../../src/blocks/scratch3_control.ts';
 import BlockUtility from '../../src/engine/block-utility.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
+import {EventBus} from '../../src/event/event-bus.ts';
 
 /** Primitives only touch the parts of `util` each test fills in. */
 type Util = BlockUtility & Record<string, any>;
 const mockUtil = (util: object) => util as Util;
 
 const newControl = (requestRedraw = () => {}) => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     return {events, c: new Control(events, {requestRedraw})};
 };
 

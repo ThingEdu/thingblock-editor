@@ -3,6 +3,8 @@ import {Map} from 'immutable';
 import BlockType from '../../src/extension-support/block-type';
 import Runtime from '../../src/engine/runtime.ts';
 import MonitorRecord from '../../src/engine/monitor-record.ts';
+import {EventBus} from '../../src/event/event-bus.ts';
+import {RuntimeEvent} from '../../src/event/event-name.ts';
 import {newTarget} from '../fixtures/target.ts';
 import type {ScratchStorage} from '@thingblock/thingblock-storage';
 import type {ExtensionInfo} from '../../src/extensions/extension.ts';
@@ -24,6 +26,17 @@ const fakeExtension: ExtensionInfo = {
 
 test('spec', t => {
     t.ok(new Runtime() instanceof Runtime);
+    t.end();
+});
+
+test('a runtime emits on the bus it is given', t => {
+    const bus = new EventBus();
+    const rt = new Runtime(bus);
+    let changed = 0;
+    bus.on(RuntimeEvent.PROJECT_CHANGED, () => changed++);
+    rt.emitProjectChanged();
+    t.equal(rt.events, bus);
+    t.equal(changed, 1);
     t.end();
 });
 

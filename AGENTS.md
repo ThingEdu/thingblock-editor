@@ -139,9 +139,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - TS unit tests are `test/unit/*.ts`. Tap runs them through ts-node with `tsconfig.test.json` (CommonJS output),
   which the tap scripts select via `TS_NODE_PROJECT`. JS code that `require`s a TS module takes its `.default` (or
   a named export), since TS compiles to ES modules.
-- The engine (`src/engine/`) is TypeScript. Runtime events go through the typed `runtime.events` emitter with
-  names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
-  and the events only the VM emits are named and typed in `virtual-machine/vm-event-names.ts`.
+- The engine (`src/engine/`) is TypeScript. Runtime events go through `runtime.events`, an untyped `EventBus`
+  (`src/event/event-bus.ts`), with names grouped by the code that emits them in `src/event/event-name.ts`; the VM
+  forwards them on its own emitter, and the events only the VM emits are named in `virtual-machine/vm-event-names.ts`.
 - `VirtualMachine` (`src/virtual-machine/index.ts`) keeps only lifecycle and setup methods flat; the rest lives
   in owned parts: `vm.workspace` (Blockly events, editing target, workspace rendering), `vm.project` (load,
   save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built

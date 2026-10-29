@@ -1,10 +1,11 @@
 import type {HatInfo, HatStarter} from '../engine/runtime';
-import {RuntimeEventNames, type RuntimeEmitter} from '../engine/runtime/runtime-events';
+import {IoEvent} from '../event/event-name';
+import type {EventBus} from '../event/event-bus';
 
 /** Hats for the green flag, key presses and the Arduino setup/loop entry points. */
 class Scratch3EventBlocks {
-    constructor (events: RuntimeEmitter, hats: HatStarter) {
-        events.on(RuntimeEventNames.KEY_PRESSED, key => {
+    constructor (events: EventBus, hats: HatStarter) {
+        events.on(IoEvent.KEY_PRESSED, key => {
             hats.startHats('event_whenkeypressed', {KEY_OPTION: key});
             hats.startHats('event_whenkeypressed', {KEY_OPTION: 'any'});
         });

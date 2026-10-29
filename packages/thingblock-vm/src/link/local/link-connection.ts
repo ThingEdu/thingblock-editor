@@ -1,5 +1,5 @@
 import log from '../../util/log';
-import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
+import {LinkEvent} from '../../event/event-name';
 import type Runtime from '../../engine/runtime';
 import type LinkSession from './link-session';
 import type {Connection, ConnectionTarget, LinkDevice} from '../types';
@@ -44,7 +44,7 @@ export default class LinkConnection implements Connection {
         await this.session.request('connect', {port: target.id});
         this.session.connectedTarget = target;
         log.info('LinkClient.connect: connected');
-        this.runtime.events.emit(RuntimeEventNames.DEVICE_CONNECTED);
+        this.runtime.events.emit(LinkEvent.DEVICE_CONNECTED);
     }
 
     /** Clear the helper's selected port. Safe to call when already disconnected. */
@@ -58,7 +58,7 @@ export default class LinkConnection implements Connection {
         // The helper closes any open monitor as part of disconnect; drop our routing to match.
         this.session.monitor = null;
         this.session.connectedTarget = null;
-        this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
+        this.runtime.events.emit(LinkEvent.DEVICE_DISCONNECTED);
     }
 
     get isConnected (): boolean {

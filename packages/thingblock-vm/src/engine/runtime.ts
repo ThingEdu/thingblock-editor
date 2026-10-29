@@ -1,4 +1,3 @@
-import {EventEmitter} from 'events';
 import {v1 as uuidv1} from 'uuid';
 import type {ScratchStorage} from '@thingblock/thingblock-storage';
 
@@ -15,7 +14,8 @@ import GlowFeedback from './runtime/glow-feedback';
 import WorkspaceListener from './runtime/workspace-listener';
 import MonitorHandler, {type Monitor} from './runtime/runtime-monitor';
 import PeripheralHandler from './runtime/runtime-peripheral';
-import {RuntimeEventNames, type RuntimeEvents} from './runtime/runtime-events';
+import {RuntimeEvent} from '../event/event-name';
+import {EventBus} from '../event/event-bus';
 import type {ExtensionInfo, MenuInfo} from '../extensions/extension';
 import {
     getBlocksJSON,
@@ -93,7 +93,7 @@ class Runtime {
     static readonly THREAD_STEP_INTERVAL = 1000 / 60;
     static readonly THREAD_STEP_INTERVAL_COMPATIBILITY = 1000 / 30;
 
-    events = new EventEmitter<RuntimeEvents>();
+    events: EventBus;
     targets: Target[] = [];
     /** Targets in reverse order of execution. */
     executableTargets: Target[] = [];
@@ -148,7 +148,11 @@ class Runtime {
     /** The selected device and its peripherals, saved with the project; null without a board. */
     board: {device: string, peripherals: string[]} | null = null;
 
-    constructor () {
+    /**
+     * @param events - the bus this runtime and its blocks, monitors and IO devices emit and listen on.
+     */
+    constructor (events = new EventBus()) {
+        this.events = events;
         this.sequencer = new Sequencer(this);
         this.flyoutBlocks = new Blocks(this.events, true /* force no glow */);
         this.monitorBlocks = new Blocks(this.events, true /* force no glow */);
@@ -299,16 +303,16 @@ class Runtime {
         }
         this._editingTarget = null;
         this.monitors.reset();
-        this.events.emit(RuntimeEventNames.RUNTIME_DISPOSED);
+        this.events.emit(RuntimeEvent.RUNTIME_DISPOSED);
         this.ioDevices.clock.resetProjectTimer();
     }
 
     fireTargetWasCreated (newTarget: Target, sourceTarget?: Target) {
-        this.events.emit(RuntimeEventNames.targetWasCreated, newTarget, sourceTarget);
+        this.events.emit(RuntimeEvent.targetWasCreated, newTarget, sourceTarget);
     }
 
     fireTargetWasRemoved (target: Target) {
-        this.events.emit(RuntimeEventNames.targetWasRemoved, target);
+        this.events.emit(RuntimeEvent.targetWasRemoved, target);
     }
 
     /** Names of every variable of `varType`, on all targets. */
@@ -331,13 +335,13 @@ class Runtime {
     }
 
     handleProjectLoaded () {
-        this.events.emit(RuntimeEventNames.PROJECT_LOADED);
+        this.events.emit(RuntimeEvent.PROJECT_LOADED);
         this.resetRunId();
     }
 
     /** Reports a change that affects the saved project. */
     emitProjectChanged () {
-        this.events.emit(RuntimeEventNames.PROJECT_CHANGED);
+        this.events.emit(RuntimeEvent.PROJECT_CHANGED);
     }
 
     /** Makes the sequencer yield after the current thread, pacing work that should be visible per frame. */
@@ -480,12 +484,12 @@ class Runtime {
 
     /** Reports whether the microphone is streaming audio. */
     emitMicListening (listening: boolean) {
-        this.events.emit(RuntimeEventNames.MIC_LISTENING, listening);
+        this.events.emit(RuntimeEvent.MIC_LISTENING, listening);
     }
 
     /** Reports whether an extension is loading data it needs. */
     emitExtensionLoading (loading: boolean) {
-        this.events.emit(RuntimeEventNames.EXTENSION_DATA_LOADING, loading);
+        this.events.emit(RuntimeEvent.EXTENSION_DATA_LOADING, loading);
     }
 
     attachAudioEngine (audioEngine: unknown) {
@@ -551,7 +555,7 @@ class Runtime {
     /** Stops the target's threads, except `optThreadException`, e.g. "stop other scripts in sprite". */
     stopForTarget (target: Target, optThreadException?: Thread) {
         // Lets blocks clean up state they keep for the target
-        this.events.emit(RuntimeEventNames.STOP_FOR_TARGET, target, optThreadException);
+        this.events.emit(RuntimeEvent.STOP_FOR_TARGET, target, optThreadException);
         for (const thread of this.threads) {
             if (thread !== optThreadException && thread.target === target) {
                 this._stopThread(thread);
@@ -561,7 +565,7 @@ class Runtime {
 
     greenFlag () {
         this.stopAll();
-        this.events.emit(RuntimeEventNames.PROJECT_START);
+        this.events.emit(RuntimeEvent.PROJECT_START);
         this.ioDevices.clock.resetProjectTimer();
         for (const target of this.targets) {
             target.clearEdgeActivatedValues();
@@ -574,7 +578,7 @@ class Runtime {
 
     stopAll () {
         // Lets blocks clean up their state
-        this.events.emit(RuntimeEventNames.PROJECT_STOP_ALL);
+        this.events.emit(RuntimeEvent.PROJECT_STOP_ALL);
         for (const target of this.targets) {
             target.onStopAll();
         }
@@ -621,7 +625,7 @@ class Runtime {
         this._lastStepDoneThreads = doneThreads;
 
         if (this._refreshTargets) {
-            this.events.emit(RuntimeEventNames.TARGETS_UPDATE, false /* don't emit project changed */);
+            this.events.emit(RuntimeEvent.TARGETS_UPDATE, false /* don't emit project changed */);
             this._refreshTargets = false;
         }
 
@@ -648,10 +652,10 @@ class Runtime {
     /** Emits run start/stop when the count of running non-monitor threads moves between zero and non-zero. */
     _emitProjectRunStatus (nonMonitorThreadCount: number) {
         if (this._nonMonitorThreadCount === 0 && nonMonitorThreadCount > 0) {
-            this.events.emit(RuntimeEventNames.PROJECT_RUN_START);
+            this.events.emit(RuntimeEvent.PROJECT_RUN_START);
         }
         if (this._nonMonitorThreadCount > 0 && nonMonitorThreadCount === 0) {
-            this.events.emit(RuntimeEventNames.PROJECT_RUN_STOP);
+            this.events.emit(RuntimeEvent.PROJECT_RUN_STOP);
         }
         this._nonMonitorThreadCount = nonMonitorThreadCount;
     }
@@ -684,21 +688,21 @@ class Runtime {
 
     glowBlock (blockId: string, isGlowing: boolean) {
         this.events.emit(
-            isGlowing ? RuntimeEventNames.BLOCK_GLOW_ON : RuntimeEventNames.BLOCK_GLOW_OFF,
+            isGlowing ? RuntimeEvent.BLOCK_GLOW_ON : RuntimeEvent.BLOCK_GLOW_OFF,
             {id: blockId}
         );
     }
 
     glowScript (topBlockId: string, isGlowing: boolean) {
         this.events.emit(
-            isGlowing ? RuntimeEventNames.SCRIPT_GLOW_ON : RuntimeEventNames.SCRIPT_GLOW_OFF,
+            isGlowing ? RuntimeEvent.SCRIPT_GLOW_ON : RuntimeEvent.SCRIPT_GLOW_OFF,
             {id: topBlockId}
         );
     }
 
     /** Shows a reporter's value in a bubble on its block. */
     visualReport (blockId: string, value: unknown) {
-        this.events.emit(RuntimeEventNames.VISUAL_REPORT, {id: blockId, value: String(value)});
+        this.events.emit(RuntimeEvent.VISUAL_REPORT, {id: blockId, value: String(value)});
     }
 
     /** Emits a targets update at the end of the step. */
@@ -708,21 +712,21 @@ class Runtime {
 
     /** Asks the GUI to reload the workspace blocks. */
     requestBlocksUpdate () {
-        this.events.emit(RuntimeEventNames.BLOCKS_NEED_UPDATE);
+        this.events.emit(RuntimeEvent.BLOCKS_NEED_UPDATE);
     }
 
     /** Reports whether dragged blocks are over the GUI, outside the blocks workspace. */
     emitBlockDragUpdate (areBlocksOverGui: boolean) {
-        this.events.emit(RuntimeEventNames.BLOCK_DRAG_UPDATE, areBlocksOverGui);
+        this.events.emit(RuntimeEvent.BLOCK_DRAG_UPDATE, areBlocksOverGui);
     }
 
     /** Reports blocks dropped on the GUI; `topBlockId` is the dragged stack's original top block. */
     emitBlockEndDrag (blocks: Block[], topBlockId: string) {
-        this.events.emit(RuntimeEventNames.BLOCK_DRAG_END, blocks, topBlockId);
+        this.events.emit(RuntimeEvent.BLOCK_DRAG_END, blocks, topBlockId);
     }
 
     requestToolboxExtensionsUpdate () {
-        this.events.emit(RuntimeEventNames.TOOLBOX_EXTENSIONS_NEED_UPDATE);
+        this.events.emit(RuntimeEvent.TOOLBOX_EXTENSIONS_NEED_UPDATE);
     }
 
     /** Starts stepping on an interval; does nothing if already running. */
@@ -735,7 +739,7 @@ class Runtime {
         this._steppingInterval = setInterval(() => {
             this._step();
         }, interval);
-        this.events.emit(RuntimeEventNames.RUNTIME_STARTED);
+        this.events.emit(RuntimeEvent.RUNTIME_STARTED);
     }
 
     /** Clears the step interval so the process can exit; for test shutdown, the runtime is unusable after. */

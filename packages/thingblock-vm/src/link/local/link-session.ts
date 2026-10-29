@@ -1,5 +1,5 @@
 import log from '../../util/log';
-import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
+import {LinkEvent} from '../../event/event-name';
 import type Runtime from '../../engine/runtime';
 import type {ConnectionTarget, StreamCallbacks} from '../types';
 
@@ -253,7 +253,7 @@ export default class LinkSession {
             break;
         case 'monitorData':
             if (this.monitor && this.monitor.id === id) {
-                this.runtime.events.emit(RuntimeEventNames.SERIAL_DATA, payload.data);
+                this.runtime.events.emit(LinkEvent.SERIAL_DATA, payload.data);
             }
             break;
         case 'error': {
@@ -293,7 +293,7 @@ export default class LinkSession {
         this.monitor = null;
         if (this.connectedTarget) {
             this.connectedTarget = null;
-            this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
+            this.runtime.events.emit(LinkEvent.DEVICE_DISCONNECTED);
         }
     }
 

@@ -1,5 +1,5 @@
 import log from '../../util/log';
-import {RuntimeEventNames} from '../../engine/runtime/runtime-events';
+import {LinkEvent} from '../../event/event-name';
 import {DEFAULT_BAUD_RATE, type SerialPortLike, type WebSerialFilter} from './web-serial-link';
 import type Runtime from '../../engine/runtime';
 import type WebSerialLink from './web-serial-link';
@@ -116,7 +116,7 @@ export default class CloudConnection implements Connection {
         this.link.port = port;
         this.link.baudRate = DEFAULT_BAUD_RATE;
         log.info('CloudClient.connect: connected');
-        this.runtime.events.emit(RuntimeEventNames.DEVICE_CONNECTED);
+        this.runtime.events.emit(LinkEvent.DEVICE_CONNECTED);
     }
 
     /** Close the port and release it. Safe to call when already disconnected. Emits `DEVICE_DISCONNECTED`. */
@@ -130,7 +130,7 @@ export default class CloudConnection implements Connection {
         await this.monitor.closeMonitor();
         await port.close();
         this.link.port = null;
-        this.runtime.events.emit(RuntimeEventNames.DEVICE_DISCONNECTED);
+        this.runtime.events.emit(LinkEvent.DEVICE_DISCONNECTED);
     }
 
     get isConnected (): boolean {

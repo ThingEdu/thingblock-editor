@@ -1,15 +1,14 @@
 import {test} from 'tap';
-import {EventEmitter} from 'events';
 import Blocks from '../../src/engine/blocks.ts';
 import Variable from '../../src/engine/variable.ts';
 import adapter from '../../src/engine/adapter.ts';
 import {getScripts} from '../../src/engine/blocks-runtime-cache.ts';
 import {getCached} from '../../src/engine/blocks-execute-cache.ts';
 import type {Block} from '../../src/engine/block-types.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
+import {EventBus} from '../../src/event/event-bus.ts';
 import events from '../fixtures/events.json';
 
-const newBlocks = () => new Blocks(new EventEmitter<RuntimeEvents>());
+const newBlocks = () => new Blocks(new EventBus());
 
 /** Test blocks leave out the properties a case doesn't read. */
 const createBlock = (b: Blocks, block: object) => b.createBlock(block as Block);
@@ -504,7 +503,7 @@ test('changeField and changeMutation', t => {
 });
 
 test('changeFieldWhileEditing updates the field without a project change', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const b = new Blocks(events);
     createBlock(b, {
         id: 'foo',
@@ -887,7 +886,7 @@ test('createBlock does not add shadow blocks to _scripts', t => {
 });
 
 test('changes emit PROJECT_CHANGED except in no-glow containers', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     let changes = 0;
     events.on('PROJECT_CHANGED', () => changes++);
 

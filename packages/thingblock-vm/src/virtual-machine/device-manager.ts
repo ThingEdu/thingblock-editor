@@ -1,6 +1,6 @@
 import formatMessage from 'format-message';
 
-import VmEventNames, {type VmEmit} from './vm-event-names';
+import VmEventNames, {type Emit} from './vm-event-names';
 import log from '../util/log';
 import {DeviceRegistry, PeripheralRegistry, ManifestDevice} from '../devices';
 import {boards} from '../extensions/devices';
@@ -93,7 +93,7 @@ export default class DeviceManager {
     private readonly runtime: Runtime;
 
     /** Emits on the VM, where the GUI listens for `RESOURCE_PACKS_LOADED`, `PERIPHERALS_CHANGED`, `BOARD_RESTORED`. */
-    private readonly emit: VmEmit;
+    private readonly emit: Emit;
 
     /**
      * The active link backend's resource-pack origin. Read through a function because the link rebuilds
@@ -169,7 +169,7 @@ export default class DeviceManager {
      * @param emit - emits a VM event.
      * @param linkResourceOrigin - reads the active link backend's resource-pack origin.
      */
-    constructor (runtime: Runtime, emit: VmEmit, linkResourceOrigin: () => string | null) {
+    constructor (runtime: Runtime, emit: Emit, linkResourceOrigin: () => string | null) {
         this.runtime = runtime;
         this.emit = emit;
         this.linkResourceOrigin = linkResourceOrigin;

@@ -1,6 +1,6 @@
 import Variable from '../engine/variable';
-import {RuntimeEventNames} from '../engine/runtime/runtime-events';
-import VmEventNames, {type VmEmit} from './vm-event-names';
+import {RuntimeEvent} from '../event/event-name';
+import VmEventNames, {type Emit} from './vm-event-names';
 import type Runtime from '../engine/runtime';
 import type Target from '../engine/target';
 import type {WorkspaceEvent} from '../engine/runtime/workspace-listener';
@@ -15,13 +15,13 @@ export default class Workspace {
     private readonly runtime: Runtime;
 
     /** Emits on the VM, where the GUI listens for `targetsUpdate` and `workspaceUpdate`. */
-    private readonly emit: VmEmit;
+    private readonly emit: Emit;
 
     /**
      * @param runtime - the runtime whose targets and blocks the workspace shows.
      * @param emit - emits a VM event.
      */
-    constructor (runtime: Runtime, emit: VmEmit) {
+    constructor (runtime: Runtime, emit: Emit) {
         this.runtime = runtime;
         this.emit = emit;
 
@@ -31,10 +31,10 @@ export default class Workspace {
         this.monitorBlockListener = this.monitorBlockListener.bind(this);
         this.variableListener = this.variableListener.bind(this);
 
-        this.runtime.events.on(RuntimeEventNames.TARGETS_UPDATE, emitProjectChanged => {
+        this.runtime.events.on(RuntimeEvent.TARGETS_UPDATE, emitProjectChanged => {
             this.emitTargetsUpdate(emitProjectChanged);
         });
-        this.runtime.events.on(RuntimeEventNames.BLOCKS_NEED_UPDATE, () => {
+        this.runtime.events.on(RuntimeEvent.BLOCKS_NEED_UPDATE, () => {
             // No editing target means no project is loaded, so there is nothing to render.
             if (this.editingTarget) this.emitWorkspaceUpdate();
         });
