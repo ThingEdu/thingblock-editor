@@ -58,9 +58,9 @@ const makeModules = () => ({
 });
 
 const registerPacks = vm => {
-    vm.registerDeviceManifest(deviceManifest, deviceBase);
-    vm.registerPeripheralManifest(servoManifest, servoBase);
-    vm.registerPeripheralManifest(buzzerManifest, buzzerBase);
+    vm.devices.registerDeviceManifest(deviceManifest, deviceBase);
+    vm.devices.registerPeripheralManifest(servoManifest, servoBase);
+    vm.devices.registerPeripheralManifest(buzzerManifest, buzzerBase);
 };
 
 // `register` controls whether the device/peripheral packs are known to the VM up front, so a test can
@@ -68,18 +68,18 @@ const registerPacks = vm => {
 const makeVM = ({register = true} = {}) => {
     const vm = new VirtualMachine();
     const modules = makeModules();
-    vm._importPackModule = url => (
+    vm.devices._importPackModule = url => (
         url in modules ? Promise.resolve(modules[url]) : Promise.reject(new Error(`404 ${url}`))
     );
-    vm.setScratchBlocks({Blocks: {}, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0, NONE: 99}});
+    vm.devices.setScratchBlocks({Blocks: {}, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0, NONE: 99}});
     if (register) registerPacks(vm);
     return vm;
 };
 
 test('serialize persists the selected board and only the user-added peripherals', async t => {
     const vm = makeVM();
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('buzzer');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('buzzer');
 
     const obj = sb3.serialize(vm.runtime);
     t.same(obj.board, {device: 'thingbot', peripherals: ['buzzer']},
@@ -93,8 +93,8 @@ test('serialize writes no board field in host mode', async t => {
     const obj = sb3.serialize(vm.runtime);
     t.equal(obj.board, undefined, 'no board field when no device is selected');
 
-    await vm.selectDevice('thingbot');
-    await vm.selectDevice(null);
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.selectDevice(null);
     t.equal(sb3.serialize(vm.runtime).board, undefined, 'deselecting clears the board field');
 
     t.end();
@@ -114,18 +114,18 @@ test('deserialize surfaces the saved board, or null when absent', async t => {
     t.end();
 });
 
-test('_applyBoard restores the device and user peripherals, emitting BOARD_RESTORED', async t => {
+test('applyBoard restores the device and user peripherals, emitting BOARD_RESTORED', async t => {
     const vm = makeVM();
     let restored = null;
     vm.on('BOARD_RESTORED', payload => {
         restored = payload;
     });
 
-    await vm._applyBoard({device: 'thingbot', peripherals: ['buzzer']});
+    await vm.devices.applyBoard({device: 'thingbot', peripherals: ['buzzer']});
 
-    t.equal(vm._selectedDeviceId, 'thingbot', 'the device is selected');
-    t.same(vm.getProjectPeripheralIds(), ['buzzer'], 'the user peripheral is restored');
-    t.same(vm.getActivePeripheralToolboxCategories(), [servoToolbox, buzzerToolbox],
+    t.equal(vm.devices._selectedDeviceId, 'thingbot', 'the device is selected');
+    t.same(vm.devices.getProjectPeripheralIds(), ['buzzer'], 'the user peripheral is restored');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [servoToolbox, buzzerToolbox],
         'both the device-provided and restored user peripheral are active');
     t.same(restored, {device: 'thingbot', peripherals: ['buzzer']}, 'BOARD_RESTORED carries the applied board');
     t.same(vm.runtime.board, {device: 'thingbot', peripherals: ['buzzer']}, 'runtime board mirrors the restored state');
@@ -133,44 +133,44 @@ test('_applyBoard restores the device and user peripherals, emitting BOARD_RESTO
     t.end();
 });
 
-test('_applyBoard defers when the device is not yet registered, then applies on retry', async t => {
+test('applyBoard defers when the device is not yet registered, then applies on retry', async t => {
     const vm = makeVM({register: false});
     let restored = false;
     vm.on('BOARD_RESTORED', () => {
         restored = true;
     });
 
-    await vm._applyBoard({device: 'thingbot', peripherals: ['buzzer']});
+    await vm.devices.applyBoard({device: 'thingbot', peripherals: ['buzzer']});
 
-    t.same(vm._pendingBoard, {device: 'thingbot', peripherals: ['buzzer']}, 'the board is held pending');
-    t.equal(vm._selectedDeviceId, null, 'no device selected while pending');
+    t.same(vm.devices._pendingBoard, {device: 'thingbot', peripherals: ['buzzer']}, 'the board is held pending');
+    t.equal(vm.devices._selectedDeviceId, null, 'no device selected while pending');
     t.notOk(restored, 'BOARD_RESTORED not emitted while pending');
 
     // The helper packs arrive; the retry path re-applies the held board.
     registerPacks(vm);
-    await vm._applyBoard(vm._pendingBoard);
+    await vm.devices.applyBoard(vm.devices._pendingBoard);
 
-    t.equal(vm._pendingBoard, null, 'pending board cleared once applied');
-    t.same(vm.getProjectPeripheralIds(), ['buzzer'], 'the user peripheral is restored after retry');
+    t.equal(vm.devices._pendingBoard, null, 'pending board cleared once applied');
+    t.same(vm.devices.getProjectPeripheralIds(), ['buzzer'], 'the user peripheral is restored after retry');
     t.ok(restored, 'BOARD_RESTORED emitted after retry');
 
     t.end();
 });
 
-test('_applyBoard with no board resets to host mode and signals a null board', async t => {
+test('applyBoard with no board resets to host mode and signals a null board', async t => {
     const vm = makeVM();
     let restored = false;
     vm.on('BOARD_RESTORED', payload => {
         restored = payload;
     });
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('buzzer');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('buzzer');
 
-    await vm._applyBoard(null);
+    await vm.devices.applyBoard(null);
 
-    t.equal(vm._selectedDeviceId, null, 'device cleared');
-    t.same(vm.getProjectPeripheralIds(), [], 'user peripherals cleared');
-    t.same(vm.getActivePeripheralToolboxCategories(), [], 'no active categories');
+    t.equal(vm.devices._selectedDeviceId, null, 'device cleared');
+    t.same(vm.devices.getProjectPeripheralIds(), [], 'user peripherals cleared');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'no active categories');
     t.equal(vm.runtime.board, null, 'runtime board cleared');
     t.same(restored, {device: null, peripherals: []},
         'BOARD_RESTORED signals a null board so the editor clears its selection');
@@ -184,10 +184,12 @@ test('deserializeProject registers the board\'s blocks before emitting the works
     const blocks = {};
     const vm = new VirtualMachine();
     const modules = makeModules();
-    vm._importPackModule = url => (
+    vm.devices._importPackModule = url => (
         url in modules ? Promise.resolve(modules[url]) : Promise.reject(new Error(`404 ${url}`))
     );
-    vm.setScratchBlocks({Blocks: blocks, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0, NONE: 99}});
+    vm.devices.setScratchBlocks({
+        Blocks: blocks, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0, NONE: 99}
+    });
     registerPacks(vm);
 
     // What the GUI does on `workspaceUpdate`: hand the project XML to Blockly, which
@@ -232,10 +234,10 @@ test('applying a deferred board re-emits the workspace update', async t => {
     const blocks = {};
     const vm = new VirtualMachine();
     const modules = makeModules();
-    vm._importPackModule = url => (
+    vm.devices._importPackModule = url => (
         url in modules ? Promise.resolve(modules[url]) : Promise.reject(new Error(`404 ${url}`))
     );
-    vm.setScratchBlocks({
+    vm.devices.setScratchBlocks({
         Blocks: blocks,
         arduinoGenerator: {forBlock: {}},
         ArduinoOrder: {ATOMIC: 0, NONE: 99}
@@ -258,7 +260,7 @@ test('applying a deferred board re-emits the workspace update', async t => {
         }],
         board: {device: 'thingbot', peripherals: ['buzzer']}
     }, null);
-    t.ok(vm._pendingBoard, 'the board is held pending while the packs are unknown');
+    t.ok(vm.devices._pendingBoard, 'the board is held pending while the packs are unknown');
 
     let definedAtUpdate = null;
     vm.on('workspaceUpdate', () => {
@@ -267,7 +269,7 @@ test('applying a deferred board re-emits the workspace update', async t => {
 
     // The helper's packs arrive and the held board is applied.
     registerPacks(vm);
-    await vm._applyBoard(vm._pendingBoard);
+    await vm.devices.applyBoard(vm.devices._pendingBoard);
 
     t.ok(definedAtUpdate, 'a workspace update follows the deferred board being applied');
     t.ok(definedAtUpdate && definedAtUpdate.includes('servo_setangle'),

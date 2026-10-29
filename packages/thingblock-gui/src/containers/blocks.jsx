@@ -98,7 +98,7 @@ class Blocks extends React.Component {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         // Share the live scratch-blocks handle so device selection can register pack-served device
         // extension blocks and codegen against the same singleton this workspace generates from.
-        this.props.vm.setScratchBlocks(this.ScratchBlocks);
+        this.props.vm.devices.setScratchBlocks(this.ScratchBlocks);
         // Activate the hidden extension of an already-selected device (e.g. a restored selection) and
         // surface its toolbox categories.
         if (this.props.selectedDeviceId) {
@@ -455,7 +455,7 @@ class Blocks extends React.Component {
             // Append the selected device's active peripheral categories, in the device's `extensions`
             // order (its own hidden pack first). Empty in host mode, since the registry clears when no
             // device is selected.
-            for (const category of this.props.vm.getActivePeripheralToolboxCategories()) {
+            for (const category of this.props.vm.devices.getActivePeripheralToolboxCategories()) {
                 dynamicBlocksXML.push(packCategoryToToolboxXML(category, 'peripheral'));
             }
             return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
@@ -468,7 +468,7 @@ class Blocks extends React.Component {
     activateSelectedDevice () {
         // Activate the device's hidden extension first (registers its blocks/codegen), then rebuild the
         // toolbox so the device's categories appear. selectDevice(null) clears, rebuilding to host mode.
-        return this.props.vm.selectDevice(this.props.selectedDeviceId).then(() => {
+        return this.props.vm.devices.selectDevice(this.props.selectedDeviceId).then(() => {
             const toolboxXML = this.getToolboxXML();
             if (toolboxXML) {
                 this.props.updateToolboxState(toolboxXML);

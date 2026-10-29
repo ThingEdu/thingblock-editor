@@ -7,8 +7,6 @@ import {boards} from '../extensions/devices';
 import type {DeviceManifest} from '../devices/manifest-device';
 import type {LibRef} from '../devices/peripheral-registry';
 import type Runtime from '../engine/runtime';
-import type {Backend, StreamCallbacks} from '../link/types';
-import type LinkController from './link-controller';
 
 /**
  * How many times the pack index is fetched before giving up. The helper is a sidecar the host spawns
@@ -87,21 +85,23 @@ type PeripheralListEntry = {
     iconURL?: string
 };
 
+type Emit = (event: string, ...args: unknown[]) => void;
+
 /**
- * The board-mode device subsystem owned by the VM: the device registry, helper-served resource packs,
- * and the selected board's active peripherals. The VM exposes its public surface through delegators
- * and exposes `deviceRegistry`/`peripheralRegistry` through getters. Cross-subsystem state (the
- * runtime, the active link client, VM event emission) is reached through the `vm` back-reference.
+ * The board-mode device subsystem, exposed as `vm.devices`: the device registry, helper-served resource
+ * packs, and the selected board's active peripherals.
  */
 export default class DeviceManager {
-    readonly vm: {
-        runtime: Runtime
-        backend: Backend
-        link: LinkController
-        editingTarget: unknown
-        emit (event: string, ...args: unknown[]): boolean
-        emitWorkspaceUpdate (): void
-    };
+    private readonly runtime: Runtime;
+
+    /** Emits on the VM, where the GUI listens for `RESOURCE_PACKS_LOADED`, `PERIPHERALS_CHANGED`, `BOARD_RESTORED`. */
+    private readonly emit: Emit;
+
+    /**
+     * The active link backend's resource-pack origin. Read through a function because the link rebuilds
+     * its backend on a link-mode change.
+     */
+    private readonly linkResourceOrigin: () => string | null;
 
     /** Registry of upload-mode devices, keyed by deviceId. Drives the GUI device-selection list. */
     deviceRegistry = new DeviceRegistry();
@@ -167,13 +167,16 @@ export default class DeviceManager {
     private _moduleImporter: ModuleImporter | null = null;
 
     /**
-     * @param vm - the owning VM, used to reach the runtime, the active link client, and the VM event
-     *   emitter.
+     * @param runtime - the runtime devices are built against and the board selection is mirrored onto.
+     * @param emit - emits a VM event.
+     * @param linkResourceOrigin - reads the active link backend's resource-pack origin.
      */
-    constructor (vm: DeviceManager['vm']) {
-        this.vm = vm;
+    constructor (runtime: Runtime, emit: Emit, linkResourceOrigin: () => string | null) {
+        this.runtime = runtime;
+        this.emit = emit;
+        this.linkResourceOrigin = linkResourceOrigin;
         for (const board of boards) {
-            const device = this.deviceRegistry.register(new board.Device(this.vm.runtime));
+            const device = this.deviceRegistry.register(new board.Device(this.runtime));
             this._deviceManifestsById.set(device.deviceId, board);
         }
     }
@@ -207,7 +210,7 @@ export default class DeviceManager {
      * @returns the resource base, e.g. `http://localhost:3030/resources/extensions`.
      */
     getResourceOrigin (): string | null {
-        const origin = this.vm.backend.resourceOrigin;
+        const origin = this.linkResourceOrigin();
         return origin && `${origin}/extensions`;
     }
 
@@ -227,23 +230,20 @@ export default class DeviceManager {
     }
 
     /**
-     * Flash one of the device's pack-shipped firmware images, replacing whatever program is on the
-     * board. The pack path is expressed relative to the resource root because the browser cannot
-     * name a path on the helper's filesystem. Delegates to `LinkController#flashFirmware`, which gives
-     * this the same serial-monitor close/reopen discipline as `upload()` — the board's one serial port
-     * can't be monitored while the upload tool drives it.
-     * @param deviceId - the selected device.
+     * Locate one of the device's pack-shipped firmware images for `LinkController#flashFirmware`. The
+     * pack is expressed relative to the resource root because the browser cannot name a path on the
+     * helper's filesystem.
+     * @param deviceId - the device whose pack ships the image.
      * @param firmwareId - the image's manifest id.
-     * @param callbacks - log/progress callbacks, as `upload` takes.
-     * @returns resolves when the flash completes.
+     * @returns the pack directory relative to the resource root, and the image file within it.
      */
-    flashDeviceFirmware (deviceId: string, firmwareId: string, callbacks?: StreamCallbacks): Promise<void> {
+    getFirmwareImage (deviceId: string, firmwareId: string): {pack: string, file: string} {
         const pack = this._resourceDevicePacks.get(deviceId);
         const firmware = pack && (pack.manifest.firmware || []).find(fw => fw.id === firmwareId);
         if (!firmware) {
-            return Promise.reject(new Error(`flashDeviceFirmware: no firmware "${firmwareId}" for "${deviceId}"`));
+            throw new Error(`getFirmwareImage: no firmware "${firmwareId}" for "${deviceId}"`);
         }
-        return this.vm.link.flashFirmware(deviceId, this._packPath(deviceId), firmware.path, callbacks);
+        return {pack: this._packPath(deviceId), file: firmware.path};
     }
 
     /**
@@ -254,7 +254,7 @@ export default class DeviceManager {
      */
     registerDeviceManifest (manifest: DevicePackManifest, base: string): void {
         if (this.deviceRegistry.get(manifest.id)) return;
-        const device = this.deviceRegistry.register(new ManifestDevice(this.vm.runtime, manifest));
+        const device = this.deviceRegistry.register(new ManifestDevice(this.runtime, manifest));
         const iconURL = `${base}/${manifest.icon.replace(/^\.\//, '')}`;
         this._deviceManifestsById.set(device.deviceId, {iconURL});
         this._resourceDevicePacks.set(device.deviceId, {manifest, base});
@@ -327,14 +327,14 @@ export default class DeviceManager {
         }
 
         this._resourcePacksLoaded = true;
-        this.vm.emit(VmEventNames.RESOURCE_PACKS_LOADED);
+        this.emit(VmEventNames.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
         // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
         // re-rendered afterward — the update emitted during the load dropped every block it lacked.
         if (this._pendingBoard) {
-            await this._applyBoard(this._pendingBoard);
-            if (this.vm.editingTarget) this.vm.emitWorkspaceUpdate();
+            await this.applyBoard(this._pendingBoard);
+            this.runtime.requestBlocksUpdate();
         }
     }
 
@@ -349,7 +349,7 @@ export default class DeviceManager {
      */
     _importPackModule (url: string): Promise<PackModule> {
         if (!this._moduleImporter) {
-            return Promise.reject(new Error('VirtualMachine: no module importer set; call setModuleImporter()'));
+            return Promise.reject(new Error('DeviceManager: no module importer set; call setModuleImporter()'));
         }
         return this._moduleImporter(url);
     }
@@ -412,7 +412,7 @@ export default class DeviceManager {
         this._projectPeripheralIds.add(id);
         await this._activatePeripheral(id);
         this._syncRuntimeBoard();
-        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
+        this.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -429,7 +429,7 @@ export default class DeviceManager {
         if (!this._projectPeripheralIds.delete(id)) return;
         this.peripheralRegistry.setInactive(id);
         this._syncRuntimeBoard();
-        this.vm.emit(VmEventNames.PERIPHERALS_CHANGED);
+        this.emit(VmEventNames.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -477,7 +477,7 @@ export default class DeviceManager {
      * @param board - the saved board, or null in host mode.
      * @returns resolves once the board is applied or deferred.
      */
-    async _applyBoard (board: Board | null): Promise<void> {
+    async applyBoard (board: Board | null): Promise<void> {
         // A board held pending means the workspace was already rendered without its blocks.
         const wasPending = Boolean(this._pendingBoard);
         this._selectedDeviceId = null;
@@ -493,15 +493,14 @@ export default class DeviceManager {
         if (board && board.device) {
             this._projectPeripheralIds = new Set(board.peripherals || []);
             await this.selectDevice(board.device);
-            if (wasPending && this.vm.editingTarget) {
+            if (wasPending) {
                 // The workspace already rendered once, before this board's packs existed,
                 // so every one of the project's board blocks was dropped as an unknown
-                // type. Re-render now that they are defined. No editing target means no
-                // project is loaded and there is nothing to re-render.
-                this.vm.emitWorkspaceUpdate();
+                // type. Re-render now that they are defined.
+                this.runtime.requestBlocksUpdate();
             }
         }
-        this.vm.emit(VmEventNames.BOARD_RESTORED, {
+        this.emit(VmEventNames.BOARD_RESTORED, {
             device: this._selectedDeviceId,
             peripherals: this.getProjectPeripheralIds()
         });
@@ -531,7 +530,7 @@ export default class DeviceManager {
      * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
      * `extensions/devices/thingbot`.
      *
-     * Derived from `this.vm.backend.resourceOrigin` rather than a literal `/resources/` split: the
+     * Derived from the link backend's `resourceOrigin` rather than a literal `/resources/` split: the
      * latter only holds for the helper's own route and yields `undefined` under a
      * `__THINGBLOCK_RESOURCE_BASE__`-style host override, whose base need not contain `/resources/`
      * at all (see `Backend#resourceOrigin`).
@@ -539,7 +538,7 @@ export default class DeviceManager {
      * @returns the pack directory, relative to the helper's resource root.
      */
     private _packRelativePath (base: string): string {
-        const origin = this.vm.backend.resourceOrigin;
+        const origin = this.linkResourceOrigin();
         return base.slice(origin.length + 1);
     }
 
@@ -569,7 +568,7 @@ export default class DeviceManager {
      * runtime) can persist it. Null in host mode, so host-mode projects carry no board field.
      */
     private _syncRuntimeBoard (): void {
-        this.vm.runtime.board = this._selectedDeviceId ?
+        this.runtime.board = this._selectedDeviceId ?
             {device: this._selectedDeviceId, peripherals: this.getProjectPeripheralIds()} :
             null;
     }

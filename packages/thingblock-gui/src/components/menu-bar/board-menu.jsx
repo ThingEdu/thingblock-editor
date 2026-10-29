@@ -30,7 +30,7 @@ const BoardMenu = ({
     const intl = useIntl();
 
     const selectedDevice = selectedDeviceId ?
-        vm.getDeviceList().find(device => device.deviceId === selectedDeviceId) :
+        vm.devices.getDeviceList().find(device => device.deviceId === selectedDeviceId) :
         null;
     const label = selectedDevice ?
         intl.formatMessage(boardMenuMessage, {boardName: selectedDevice.name}) :

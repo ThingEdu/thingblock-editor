@@ -91,23 +91,23 @@ test('a project using resource-pack blocks loads when no packs have been registe
 
 test('registering a peripheral manifest makes its id a device extension', async t => {
     const vm = new VirtualMachine();
-    t.notOk(vm._devices.isDeviceExtension('serial'), 'unknown before registration');
+    t.notOk(vm.devices.isDeviceExtension('serial'), 'unknown before registration');
 
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
 
-    t.ok(vm._devices.isDeviceExtension('serial'), 'the pack id, which is also its opcode prefix, is recognized');
+    t.ok(vm.devices.isDeviceExtension('serial'), 'the pack id, which is also its opcode prefix, is recognized');
     t.end();
 });
 
 const registerPackPeripherals = vm => {
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'thingBotC3', kind: 'peripheral', name: 'ThingBot', hidden: true},
         'http://localhost:3030/resources/extensions/peripheral/thingBotC3'
     );
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
@@ -161,7 +161,7 @@ test('sharing blocks does not ask the extension manager for device extensions', 
 test('the saved board is applied before the workspace update that renders its blocks', async t => {
     const base = 'http://localhost:3030/resources/extensions/peripheral/thingBotC3';
     const vm = new VirtualMachine();
-    vm._importPackModule = url => Promise.resolve({
+    vm.devices._importPackModule = url => Promise.resolve({
         [`${base}/toolbox.js`]: {default: {kind: 'category', name: 'ThingBot', contents: []}},
         [`${base}/blocks.js`]: {registerBlocks: Blockly => {
             Blockly.Blocks.thingBotC3_init = {};
@@ -169,8 +169,8 @@ test('the saved board is applied before the workspace update that renders its bl
         [`${base}/generator.js`]: {registerGenerators: () => {}}
     }[url]);
     const scratchBlocks = {Blocks: {}, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0}};
-    vm.setScratchBlocks(scratchBlocks);
-    vm.registerDeviceManifest({
+    vm.devices.setScratchBlocks(scratchBlocks);
+    vm.devices.registerDeviceManifest({
         id: 'thingbot',
         kind: 'device',
         name: 'ThingBot',
@@ -179,7 +179,7 @@ test('the saved board is applied before the workspace update that renders its bl
         description: {id: 'device.thingbot.description', default: 'A ThingEdu board.'},
         extensions: ['thingBotC3']
     }, 'http://localhost:3030/resources/extensions/devices/thingbot');
-    vm.registerPeripheralManifest({
+    vm.devices.registerPeripheralManifest({
         id: 'thingBotC3',
         kind: 'peripheral',
         name: 'ThingBot',

@@ -10,7 +10,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 test('connectBoard auto-opens the monitor at the default baud after connecting', async t => {
     const vm = new VirtualMachine();
     const order = [];
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         connect: () => {
             order.push('connect');
             return Promise.resolve();
@@ -29,7 +29,7 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
 
 test('connectBoard still resolves when the monitor fails to open', async t => {
     const vm = new VirtualMachine();
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         connect: () => Promise.resolve(),
         openMonitor: () => Promise.reject(new Error('port busy'))
     });
@@ -42,9 +42,9 @@ test('connectBoard still resolves when the monitor fails to open', async t => {
 test('upload closes the monitor before the flash and reopens it after', async t => {
     const vm = new VirtualMachine();
     const fakeDevice = {getUploadConfig: () => ({pnpid: []})};
-    vm.deviceRegistry.get = () => fakeDevice;
+    vm.devices.deviceRegistry.get = () => fakeDevice;
     const order = [];
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         closeMonitor: () => {
             order.push('close');
             return Promise.resolve();
@@ -69,9 +69,9 @@ test('upload closes the monitor before the flash and reopens it after', async t 
 
 test('upload does not reopen the monitor when the board is no longer connected', async t => {
     const vm = new VirtualMachine();
-    vm.deviceRegistry.get = () => ({getUploadConfig: () => ({pnpid: []})});
+    vm.devices.deviceRegistry.get = () => ({getUploadConfig: () => ({pnpid: []})});
     let reopened = false;
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         closeMonitor: () => Promise.resolve(),
         flash: () => Promise.resolve(),
         openMonitor: () => {
@@ -90,7 +90,7 @@ test('upload does not reopen the monitor when the board is no longer connected',
 test('setMonitorBaud reopens the monitor at the new rate when connected', async t => {
     const vm = new VirtualMachine();
     const order = [];
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         closeMonitor: () => {
             order.push('close');
             return Promise.resolve();
@@ -111,7 +111,7 @@ test('setMonitorBaud reopens the monitor at the new rate when connected', async 
 test('setMonitorBaud just remembers the rate when not connected', async t => {
     const vm = new VirtualMachine();
     let touched = false;
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         closeMonitor: () => {
             touched = true;
             return Promise.resolve();
@@ -126,6 +126,6 @@ test('setMonitorBaud just remembers the rate when not connected', async t => {
     vm.link.setMonitorBaud(9600);
     await flush();
     t.equal(touched, false, 'no reopen attempted while disconnected');
-    t.equal(vm._monitorBaud, 9600, 'the rate is remembered for the next auto-open');
+    t.equal(vm.link.monitorBaud, 9600, 'the rate is remembered for the next auto-open');
     t.end();
 });

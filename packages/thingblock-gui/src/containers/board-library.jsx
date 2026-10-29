@@ -65,7 +65,7 @@ class BoardLibrary extends React.PureComponent {
 
         // VM devices own their presentation data. `rawURL` gives the library a stable per-item key
         // for items whose name is a localized node.
-        const devices = this.props.vm.getDeviceList().map(device => ({
+        const devices = this.props.vm.devices.getDeviceList().map(device => ({
             ...device,
             rawURL: device.iconURL
         }));

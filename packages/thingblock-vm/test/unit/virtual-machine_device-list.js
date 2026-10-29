@@ -5,7 +5,7 @@ const test = tap.test;
 
 test('getDeviceList includes VM-owned presentation data', t => {
     const vm = new VirtualMachine();
-    const devices = vm.getDeviceList();
+    const devices = vm.devices.getDeviceList();
 
     t.ok(devices.length > 0, 'returns registered devices');
     for (const device of devices) {

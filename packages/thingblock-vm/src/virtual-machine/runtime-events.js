@@ -57,7 +57,8 @@ const wireRuntimeEvents = vm => {
         vm.emit(RuntimeEventNames.BLOCKSINFO_UPDATE, categoryInfo);
     });
     vm.runtime.events.on(RuntimeEventNames.BLOCKS_NEED_UPDATE, () => {
-        vm.emitWorkspaceUpdate();
+        // No editing target means no project is loaded, so there is nothing to render.
+        if (vm.editingTarget) vm.emitWorkspaceUpdate();
     });
     vm.runtime.events.on(RuntimeEventNames.TOOLBOX_EXTENSIONS_NEED_UPDATE, () => {
         vm.extensionManager.refreshBlocks();

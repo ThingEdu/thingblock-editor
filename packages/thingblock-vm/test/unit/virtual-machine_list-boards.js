@@ -20,9 +20,9 @@ test('listBoards resolves the device and delegates to the link client', t => {
     const fakeDevice = {getUploadConfig: () => ({pnpid: ['USB\\VID_2341&PID_0043']})};
     const targets = [{id: '/dev/ttyACM0', name: 'Arduino Uno'}];
 
-    vm.deviceRegistry.get = deviceId => (deviceId === 'arduinoUno' ? fakeDevice : null);
+    vm.devices.deviceRegistry.get = deviceId => (deviceId === 'arduinoUno' ? fakeDevice : null);
     let receivedDevice = null;
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         listBoards: device => {
             receivedDevice = device;
             return Promise.resolve(targets);
@@ -40,7 +40,7 @@ test('connectBoard delegates the target to the link client', t => {
     const vm = new VirtualMachine();
     const target = {id: '/dev/ttyACM0', name: 'Arduino Uno'};
     let received = null;
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         connect: t2 => {
             received = t2;
             return Promise.resolve();
@@ -58,7 +58,7 @@ test('connectBoard delegates the target to the link client', t => {
 test('disconnectBoard delegates to the link client', t => {
     const vm = new VirtualMachine();
     let called = false;
-    vm.backend = flatBackend({disconnect: () => {
+    vm.link.backend = flatBackend({disconnect: () => {
         called = true;
         return Promise.resolve();
     }});
@@ -86,9 +86,9 @@ test('upload resolves the device and delegates the artifact to the link client',
     const artifact = {format: 'hex', path: '/tmp/a.hex'};
     const callbacks = {onLog: () => {}};
 
-    vm.deviceRegistry.get = deviceId => (deviceId === 'arduinoUno' ? fakeDevice : null);
+    vm.devices.deviceRegistry.get = deviceId => (deviceId === 'arduinoUno' ? fakeDevice : null);
     let received = null;
-    vm.backend = flatBackend({
+    vm.link.backend = flatBackend({
         flash: (device, art, cbs) => {
             received = {device, art, cbs};
             return Promise.resolve();
@@ -109,7 +109,7 @@ test('upload resolves the device and delegates the artifact to the link client',
 test('cancelUpload delegates to the link client', t => {
     const vm = new VirtualMachine();
     let called = false;
-    vm.backend = flatBackend({cancel: () => {
+    vm.link.backend = flatBackend({cancel: () => {
         called = true;
     }});
 
@@ -120,17 +120,17 @@ test('cancelUpload delegates to the link client', t => {
 
 test('setLinkMode swaps the active client between the helper and cloud backends', t => {
     const vm = new VirtualMachine();
-    const helper = vm.backend;
+    const helper = vm.link.backend;
 
     vm.link.setLinkMode('cloud');
-    const cloud = vm.backend;
+    const cloud = vm.link.backend;
     t.not(cloud, helper, 'cloud mode activates a different backend');
 
     vm.link.setLinkMode('cloud');
-    t.equal(vm.backend, cloud, 'selecting the active mode again keeps the backend');
+    t.equal(vm.link.backend, cloud, 'selecting the active mode again keeps the backend');
 
     vm.link.setLinkMode('link');
-    t.not(vm.backend, cloud, 'link mode leaves the cloud backend');
+    t.not(vm.link.backend, cloud, 'link mode leaves the cloud backend');
     t.end();
 });
 
@@ -138,8 +138,8 @@ test('setLinkMode disconnects the current client before switching', t => {
     const vm = new VirtualMachine();
     let disconnected = false;
     // The helper backend reads its connection from the session, so the switch sees an open link.
-    vm.backend.session.connectedTarget = {id: '/dev/ttyACM0', name: 'Arduino Uno'};
-    vm.backend.connection.disconnect = () => {
+    vm.link.backend.session.connectedTarget = {id: '/dev/ttyACM0', name: 'Arduino Uno'};
+    vm.link.backend.connection.disconnect = () => {
         disconnected = true;
         return Promise.resolve();
     };

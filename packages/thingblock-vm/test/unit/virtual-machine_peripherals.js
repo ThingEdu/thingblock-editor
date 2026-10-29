@@ -98,16 +98,16 @@ const makeVM = () => {
             generator.forBlock.buzzer_tone = () => `tone(8, 440);${Order.ATOMIC}`;
         }}
     };
-    vm._importPackModule = url => {
+    vm.devices._importPackModule = url => {
         counts[url] = (counts[url] || 0) + 1;
         if (!(url in modules)) return Promise.reject(new Error(`404 ${url}`));
         return Promise.resolve(modules[url]);
     };
-    vm.registerDeviceManifest(deviceManifest, deviceBase);
-    vm.registerPeripheralManifest(coreManifest, coreBase);
-    vm.registerPeripheralManifest(servoManifest, servoBase);
-    vm.registerPeripheralManifest(buzzerManifest, buzzerBase);
-    vm.registerPeripheralManifest(lcdManifest, lcdBase);
+    vm.devices.registerDeviceManifest(deviceManifest, deviceBase);
+    vm.devices.registerPeripheralManifest(coreManifest, coreBase);
+    vm.devices.registerPeripheralManifest(servoManifest, servoBase);
+    vm.devices.registerPeripheralManifest(buzzerManifest, buzzerBase);
+    vm.devices.registerPeripheralManifest(lcdManifest, lcdBase);
     return {vm, counts};
 };
 
@@ -120,9 +120,9 @@ const makeScratchBlocks = () => ({
 test('selectDevice registers each referenced peripheral\'s blocks and codegen on the injected singleton', async t => {
     const {vm} = makeVM();
     const scratchBlocks = makeScratchBlocks();
-    vm.setScratchBlocks(scratchBlocks);
+    vm.devices.setScratchBlocks(scratchBlocks);
 
-    await vm.selectDevice('thingbot');
+    await vm.devices.selectDevice('thingbot');
 
     t.ok(scratchBlocks.Blocks.thingbot_digitalwrite, 'hidden core block registered on the shared Blockly');
     t.ok(scratchBlocks.Blocks.servo_setangle, 'reusable peripheral block registered on the shared Blockly');
@@ -138,12 +138,12 @@ test('selectDevice registers each referenced peripheral\'s blocks and codegen on
     );
 
     t.same(
-        vm.getActivePeripheralToolboxCategories(),
+        vm.devices.getActivePeripheralToolboxCategories(),
         [coreToolbox, servoToolbox],
         'toolbox categories follow the device extensions order (own pack first)'
     );
     t.same(
-        vm.getActivePeripheralLibs(),
+        vm.devices.getActivePeripheralLibs(),
         [
             {pack: 'extensions/peripheral/thingbot-core', lib: 'libs/ThingBot'},
             {pack: 'extensions/peripheral/servo', lib: 'libs/Servo'}
@@ -156,17 +156,18 @@ test('selectDevice registers each referenced peripheral\'s blocks and codegen on
 
 test('getActivePeripheral* reflect the active device and clear on deselect', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    t.same(vm.getActivePeripheralToolboxCategories(), [], 'no categories before a device is selected');
-    t.same(vm.getActivePeripheralLibs(), [], 'no libs before a device is selected');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'no categories before a device is selected');
+    t.same(vm.devices.getActivePeripheralLibs(), [], 'no libs before a device is selected');
 
-    await vm.selectDevice('thingbot');
-    t.same(vm.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 'surfaces active categories');
+    await vm.devices.selectDevice('thingbot');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox],
+        'surfaces active categories');
 
-    await vm.selectDevice(null);
-    t.same(vm.getActivePeripheralToolboxCategories(), [], 'categories cleared after deselect');
-    t.same(vm.getActivePeripheralLibs(), [], 'libs cleared after deselect');
+    await vm.devices.selectDevice(null);
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'categories cleared after deselect');
+    t.same(vm.devices.getActivePeripheralLibs(), [], 'libs cleared after deselect');
 
     t.end();
 });
@@ -175,11 +176,12 @@ test('records peripherals headless: toolbox/libs recorded, blocks skipped', asyn
     const {vm, counts} = makeVM();
     // No setScratchBlocks: headless.
 
-    await vm.selectDevice('thingbot');
+    await vm.devices.selectDevice('thingbot');
 
-    t.same(vm.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 'toolbox recorded without a handle');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox],
+        'toolbox recorded without a handle');
     t.same(
-        vm.getActivePeripheralLibs(),
+        vm.devices.getActivePeripheralLibs(),
         [
             {pack: 'extensions/peripheral/thingbot-core', lib: 'libs/ThingBot'},
             {pack: 'extensions/peripheral/servo', lib: 'libs/Servo'}
@@ -194,13 +196,13 @@ test('records peripherals headless: toolbox/libs recorded, blocks skipped', asyn
 
 test('re-selecting a device re-activates without re-importing its modules', async t => {
     const {vm, counts} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    await vm.selectDevice('thingbot');
-    await vm.selectDevice(null);
-    await t.resolves(vm.selectDevice('thingbot'), 're-selection does not throw');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.selectDevice(null);
+    await t.resolves(vm.devices.selectDevice('thingbot'), 're-selection does not throw');
 
-    t.same(vm.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 're-activated');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 're-activated');
     t.equal(counts[`${coreBase}/blocks.js`], 1, 'core blocks imported once');
     t.equal(counts[`${servoBase}/blocks.js`], 1, 'peripheral blocks imported once');
 
@@ -209,23 +211,24 @@ test('re-selecting a device re-activates without re-importing its modules', asyn
 
 test('selecting null or a built-in board clears the active peripherals', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    await vm.selectDevice('thingbot');
-    await vm.selectDevice(null);
-    t.same(vm.getActivePeripheralToolboxCategories(), [], 'null selection clears active peripherals');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.selectDevice(null);
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'null selection clears active peripherals');
 
-    await vm.selectDevice('thingbot');
-    await vm.selectDevice('esp32c3');
-    t.same(vm.getActivePeripheralToolboxCategories(), [], 'a built-in board (no pack) clears active peripherals');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.selectDevice('esp32c3');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [],
+        'a built-in board (no pack) clears active peripherals');
 
     t.end();
 });
 
 test('a device referencing an unknown peripheral skips it without throwing', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
-    vm.registerDeviceManifest(
+    vm.devices.setScratchBlocks(makeScratchBlocks());
+    vm.devices.registerDeviceManifest(
         {
             id: 'ghost',
             kind: 'device',
@@ -240,18 +243,18 @@ test('a device referencing an unknown peripheral skips it without throwing', asy
         deviceBase
     );
 
-    await t.resolves(vm.selectDevice('ghost'), 'unknown peripheral does not break selection');
-    t.same(vm.getActivePeripheralToolboxCategories(), [servoToolbox], 'the known peripheral still activates');
+    await t.resolves(vm.devices.selectDevice('ghost'), 'unknown peripheral does not break selection');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [servoToolbox], 'the known peripheral still activates');
 
     t.end();
 });
 
 test('getPeripheralList lists non-hidden packs with active/locked flags', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    await vm.selectDevice('thingbot');
-    const list = vm.getPeripheralList();
+    await vm.devices.selectDevice('thingbot');
+    const list = vm.devices.getPeripheralList();
     const byId = Object.fromEntries(list.map(p => [p.id, p]));
 
     t.notOk(byId['thingbot-core'], 'the hidden device-owned pack is excluded from the library');
@@ -265,12 +268,12 @@ test('getPeripheralList lists non-hidden packs with active/locked flags', async 
 
 test('getPeripheralList surfaces icon and description when the manifest provides them', async t => {
     const {vm} = makeVM();
-    const lcd = vm.getPeripheralList().find(p => p.id === 'lcd');
+    const lcd = vm.devices.getPeripheralList().find(p => p.id === 'lcd');
 
     t.equal(lcd.iconURL, `${lcdBase}/icon.svg`, 'the icon resolves against the pack base');
     t.equal(lcd.description, 'A 16x2 character display.', 'the localized description resolves to its default');
 
-    const buzzer = vm.getPeripheralList().find(p => p.id === 'buzzer');
+    const buzzer = vm.devices.getPeripheralList().find(p => p.id === 'buzzer');
     t.notOk('iconURL' in buzzer, 'a pack without an icon has no iconURL');
     t.notOk('description' in buzzer, 'a pack without a description has no description');
 
@@ -280,20 +283,20 @@ test('getPeripheralList surfaces icon and description when the manifest provides
 test('addPeripheral activates a user-chosen peripheral and emits PERIPHERALS_CHANGED', async t => {
     const {vm} = makeVM();
     const scratchBlocks = makeScratchBlocks();
-    vm.setScratchBlocks(scratchBlocks);
+    vm.devices.setScratchBlocks(scratchBlocks);
     let changed = 0;
     vm.on('PERIPHERALS_CHANGED', () => changed++);
 
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('buzzer');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('buzzer');
 
     t.ok(scratchBlocks.Blocks.buzzer_tone, 'the added peripheral\'s blocks register on the shared Blockly');
     t.same(
-        vm.getActivePeripheralToolboxCategories(),
+        vm.devices.getActivePeripheralToolboxCategories(),
         [coreToolbox, servoToolbox, buzzerToolbox],
         'the added category appends after the device-provided ones'
     );
-    t.same(vm.getProjectPeripheralIds(), ['buzzer'], 'the user-added id is recorded for the project');
+    t.same(vm.devices.getProjectPeripheralIds(), ['buzzer'], 'the user-added id is recorded for the project');
     t.equal(changed, 1, 'PERIPHERALS_CHANGED fired once');
 
     t.end();
@@ -301,16 +304,16 @@ test('addPeripheral activates a user-chosen peripheral and emits PERIPHERALS_CHA
 
 test('removePeripheral deactivates a user-added peripheral and emits', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
     let changed = 0;
     vm.on('PERIPHERALS_CHANGED', () => changed++);
 
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('buzzer');
-    vm.removePeripheral('buzzer');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('buzzer');
+    vm.devices.removePeripheral('buzzer');
 
-    t.same(vm.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 'the category is gone');
-    t.same(vm.getProjectPeripheralIds(), [], 'the user-added id is cleared');
+    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 'the category is gone');
+    t.same(vm.devices.getProjectPeripheralIds(), [], 'the user-added id is cleared');
     t.equal(changed, 2, 'PERIPHERALS_CHANGED fired for the add and the remove');
 
     t.end();
@@ -318,15 +321,15 @@ test('removePeripheral deactivates a user-added peripheral and emits', async t =
 
 test('a device-provided peripheral cannot be added or removed by the user', async t => {
     const {vm} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('servo');
-    t.same(vm.getProjectPeripheralIds(), [], 'adding a device-provided peripheral is a no-op');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('servo');
+    t.same(vm.devices.getProjectPeripheralIds(), [], 'adding a device-provided peripheral is a no-op');
 
-    vm.removePeripheral('servo');
+    vm.devices.removePeripheral('servo');
     t.same(
-        vm.getActivePeripheralToolboxCategories(),
+        vm.devices.getActivePeripheralToolboxCategories(),
         [coreToolbox, servoToolbox],
         'servo stays active after a remove attempt'
     );
@@ -336,15 +339,15 @@ test('a device-provided peripheral cannot be added or removed by the user', asyn
 
 test('user-added peripherals re-activate across device re-selection without re-importing', async t => {
     const {vm, counts} = makeVM();
-    vm.setScratchBlocks(makeScratchBlocks());
+    vm.devices.setScratchBlocks(makeScratchBlocks());
 
-    await vm.selectDevice('thingbot');
-    await vm.addPeripheral('buzzer');
-    await vm.selectDevice(null);
-    await vm.selectDevice('thingbot');
+    await vm.devices.selectDevice('thingbot');
+    await vm.devices.addPeripheral('buzzer');
+    await vm.devices.selectDevice(null);
+    await vm.devices.selectDevice('thingbot');
 
     t.same(
-        vm.getActivePeripheralToolboxCategories(),
+        vm.devices.getActivePeripheralToolboxCategories(),
         [coreToolbox, servoToolbox, buzzerToolbox],
         'the user-added peripheral comes back on re-selection'
     );
@@ -373,21 +376,21 @@ const hostedCoreManifest = {
 
 test('getActivePeripheralLibs resolves pack paths under a __THINGBLOCK_RESOURCE_BASE__-style override', async t => {
     const vm = new VirtualMachine();
-    vm.backend = createLocalBackend(vm.runtime, {resourceBase: '/thingblock-resource'});
-    vm._importPackModule = url => {
+    vm.link.backend = createLocalBackend(vm.runtime, {resourceBase: '/thingblock-resource'});
+    vm.devices._importPackModule = url => {
         if (url === `${hostedCoreBase}/toolbox.js`) return Promise.resolve({default: coreToolbox});
         return Promise.reject(new Error(`404 ${url}`));
     };
-    vm.registerDeviceManifest(
+    vm.devices.registerDeviceManifest(
         Object.assign({}, deviceManifest, {extensions: ['thingbot-core']}),
         hostedDeviceBase
     );
-    vm.registerPeripheralManifest(hostedCoreManifest, hostedCoreBase);
+    vm.devices.registerPeripheralManifest(hostedCoreManifest, hostedCoreBase);
 
-    await vm.selectDevice('thingbot');
+    await vm.devices.selectDevice('thingbot');
 
     t.same(
-        vm.getActivePeripheralLibs(),
+        vm.devices.getActivePeripheralLibs(),
         [{pack: 'extensions/peripheral/thingbot-core', lib: 'libs/ThingBot'}],
         'the pack path resolves against the override base, not a literal "/resources/" split'
     );

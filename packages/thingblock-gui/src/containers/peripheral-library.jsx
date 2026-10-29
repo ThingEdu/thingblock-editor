@@ -41,12 +41,12 @@ class PeripheralLibrary extends React.PureComponent {
         this.forceUpdate();
     }
     handleToggle (id) {
-        const item = this.props.vm.getPeripheralList().find(p => p.id === id);
+        const item = this.props.vm.devices.getPeripheralList().find(p => p.id === id);
         if (!item || item.locked) return;
         if (item.active) {
-            this.props.vm.removePeripheral(id);
+            this.props.vm.devices.removePeripheral(id);
         } else {
-            this.props.vm.addPeripheral(id);
+            this.props.vm.devices.addPeripheral(id);
         }
     }
     renderItem (item) {
@@ -68,7 +68,7 @@ class PeripheralLibrary extends React.PureComponent {
     render () {
         if (!this.props.visible) return null;
 
-        const data = this.props.vm.getPeripheralList().map(item => ({
+        const data = this.props.vm.devices.getPeripheralList().map(item => ({
             ...item,
             rawURL: item.id
         }));

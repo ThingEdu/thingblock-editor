@@ -71,8 +71,9 @@ export default class LinkController {
         return this.flashWithMonitorFreed(flasher => flasher.flash(device, artifact, callbacks));
     }
 
-    async flashFirmware (deviceId: string, pack: string, file: string, callbacks?: StreamCallbacks): Promise<void> {
+    async flashFirmware (deviceId: string, firmwareId: string, callbacks?: StreamCallbacks): Promise<void> {
         const device = this.getDevice(deviceId);
+        const {pack, file} = this.devices.getFirmwareImage(deviceId, firmwareId);
         return this.flashWithMonitorFreed(flasher => flasher.flashFirmware(device, pack, file, callbacks));
     }
 

@@ -139,7 +139,7 @@ module.exports = class ProjectIoMixin {
                 }
                 // The board's peripherals register their blocks on the shared Blockly, so the board is
                 // restored before `installTargets` emits the workspace update that renders those blocks.
-                return this._applyBoard(board || null)
+                return this.devices.applyBoard(board || null)
                     .then(() => this.installTargets(targets, extensions));
             });
     }
@@ -156,7 +156,7 @@ module.exports = class ProjectIoMixin {
         extensions.extensionIDs.forEach(extensionID => {
             if (this.extensionManager.isExtensionLoaded(extensionID)) return;
             // A resource pack's blocks are registered by board selection, not by the extension manager.
-            if (this._devices.isDeviceExtension(extensionID)) return;
+            if (this.devices.isDeviceExtension(extensionID)) return;
 
             // A block's opcode prefix is not necessarily a VM extension id, so only attempt the ids that
             // are genuinely resolvable: built-in extensions, ids with a real URL recorded in project

@@ -178,7 +178,7 @@ class DeviceControls extends React.Component {
             selectedDeviceId
         } = this.props;
         const selectedDevice = selectedDeviceId ?
-            this.props.vm.getDeviceList().find(device => device.deviceId === selectedDeviceId) :
+            this.props.vm.devices.getDeviceList().find(device => device.deviceId === selectedDeviceId) :
             null;
 
         const uploading = this.state.uploadStatus === 'compiling' ||

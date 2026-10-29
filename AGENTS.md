@@ -143,8 +143,8 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
   and the events only the VM emits are named in `virtual-machine/vm-event-names.js`.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
-  `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
-  VM devices.
+  `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
+  maps for VM devices.
 - i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
   call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
   through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.

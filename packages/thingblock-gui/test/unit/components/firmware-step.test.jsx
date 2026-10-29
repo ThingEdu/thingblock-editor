@@ -16,7 +16,7 @@ describe('FirmwareStep', () => {
         jest.spyOn(vm.link, 'listBoards').mockResolvedValue([port]);
         jest.spyOn(vm.link, 'connectBoard').mockResolvedValue();
         jest.spyOn(vm.link, 'disconnectBoard').mockResolvedValue();
-        jest.spyOn(vm, 'flashDeviceFirmware').mockResolvedValue();
+        jest.spyOn(vm.link, 'flashFirmware').mockResolvedValue();
     });
 
     afterEach(() => jest.restoreAllMocks());
@@ -40,14 +40,14 @@ describe('FirmwareStep', () => {
         const {onScanning} = renderStep();
 
         await screen.findByText(port.name);
-        expect(vm.flashDeviceFirmware).not.toHaveBeenCalled();
+        expect(vm.link.flashFirmware).not.toHaveBeenCalled();
 
         fireEvent.click(screen.getByRole('button', {name: 'Install'}));
 
         await screen.findByText('Firmware installed');
         expect(vm.link.listBoards).toHaveBeenCalledWith('thingbot');
         expect(vm.link.connectBoard).toHaveBeenCalledWith(port);
-        expect(vm.flashDeviceFirmware).toHaveBeenCalledWith('thingbot', 'telemetrix-ble');
+        expect(vm.link.flashFirmware).toHaveBeenCalledWith('thingbot', 'telemetrix-ble');
         await waitFor(() => expect(vm.link.disconnectBoard).toHaveBeenCalled());
 
         // The user starts the Bluetooth scan themselves.
@@ -68,7 +68,7 @@ describe('FirmwareStep', () => {
     });
 
     test('shows the error when the flash fails', async () => {
-        vm.flashDeviceFirmware.mockRejectedValue(new Error('esptool exited 2'));
+        vm.link.flashFirmware.mockRejectedValue(new Error('esptool exited 2'));
         renderStep();
 
         fireEvent.click(await screen.findByRole('button', {name: 'Install'}));
@@ -77,7 +77,7 @@ describe('FirmwareStep', () => {
     });
 
     test('returns to the port list when the flash is stopped', async () => {
-        vm.flashDeviceFirmware.mockRejectedValue(Object.assign(new Error('cancelled'), {code: 'cancelled'}));
+        vm.link.flashFirmware.mockRejectedValue(Object.assign(new Error('cancelled'), {code: 'cancelled'}));
         renderStep();
 
         fireEvent.click(await screen.findByRole('button', {name: 'Install'}));

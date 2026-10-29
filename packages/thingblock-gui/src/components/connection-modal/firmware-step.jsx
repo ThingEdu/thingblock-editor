@@ -63,7 +63,7 @@ const FirmwareStep = ({
         const ownsPort = !connectedBoard;
         setStatus('flashing');
         (ownsPort ? vm.link.connectBoard(port) : Promise.resolve())
-            .then(() => vm.flashDeviceFirmware(firmware.deviceId, firmware.firmwareId))
+            .then(() => vm.link.flashFirmware(firmware.deviceId, firmware.firmwareId))
             .then(() => {
                 if (unmountedRef.current) return;
                 setStatus('done');

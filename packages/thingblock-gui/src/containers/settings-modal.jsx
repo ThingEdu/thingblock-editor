@@ -14,7 +14,7 @@ const SettingsModal = ({linkMode, onRequestClose, onSetLinkMode, vm, ...props}) 
         persistLinkMode(mode);
         vm.link.setLinkMode(mode);
         // Switching into link mode is the retry point if packs did not load at startup (helper down).
-        vm.loadResourcePacks();
+        vm.devices.loadResourcePacks();
     }, [onSetLinkMode, vm]);
 
     return (

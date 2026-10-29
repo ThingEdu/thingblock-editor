@@ -61,19 +61,22 @@ class VirtualMachine extends EventEmitter {
             this.extensionManager.loadExtensionIdSync(id);
         }
 
+        // Looked up on each call, so a replaced `vm.emit` still receives the parts' events.
+        const emit = (...args) => this.emit(...args);
+
         /**
          * The board-mode device subsystem: device registry, helper-served resource packs, and the
          * selected board's active peripherals. See {@link DeviceManager}.
          * @type {DeviceManager}
          */
-        this._devices = new DeviceManager(this);
+        this.devices = new DeviceManager(this.runtime, emit, () => this.link.backend.resourceOrigin);
 
         /**
          * The device link: backends, the active one, and the board operations (discovery, connect,
-         * compile, upload, platform install, serial monitor). See {@link LinkController}.
+         * compile, upload, firmware flashing, platform install, serial monitor). See {@link LinkController}.
          * @type {LinkController}
          */
-        this.link = new LinkController(this.runtime, this._devices);
+        this.link = new LinkController(this.runtime, this.devices);
 
         this.blockListener = this.blockListener.bind(this);
         this.flyoutBlockListener = this.flyoutBlockListener.bind(this);
@@ -203,134 +206,6 @@ class VirtualMachine extends EventEmitter {
      */
     getPeripheralIsConnected (extensionId) {
         return this.runtime.getPeripheralIsConnected(extensionId);
-    }
-
-    /**
-     * The active device-link backend's capability objects (connection, builder, flasher, monitor),
-     * helper or cloud. Backed by {@link LinkController}; tests assign a fake here.
-     * @type {Backend}
-     */
-    get backend () {
-        return this.link.backend;
-    }
-    set backend (value) {
-        this.link.backend = value;
-    }
-
-    /**
-     * The upload-mode device registry. Backed by {@link DeviceManager}.
-     * @type {DeviceRegistry}
-     */
-    get deviceRegistry () {
-        return this._devices.deviceRegistry;
-    }
-    set deviceRegistry (value) {
-        this._devices.deviceRegistry = value;
-    }
-
-    /**
-     * The active peripherals registry. Backed by {@link DeviceManager}.
-     * @type {PeripheralRegistry}
-     */
-    get peripheralRegistry () {
-        return this._devices.peripheralRegistry;
-    }
-    set peripheralRegistry (value) {
-        this._devices.peripheralRegistry = value;
-    }
-
-    // Board/link internal state, surfaced on the VM so existing consumers and tests reach it as
-    // before. The state itself lives on the {@link DeviceManager}/{@link LinkController} subsystems.
-
-    get _selectedDeviceId () {
-        return this._devices._selectedDeviceId;
-    }
-
-    get _pendingBoard () {
-        return this._devices._pendingBoard;
-    }
-
-    get _monitorBaud () {
-        return this.link.monitorBaud;
-    }
-
-    // The pack-module import seam tests override to supply in-memory modules; the setter writes
-    // through so DeviceManager's own `_importPackModule` calls pick up the override.
-    get _importPackModule () {
-        return this._devices._importPackModule;
-    }
-    set _importPackModule (importer) {
-        this._devices._importPackModule = importer;
-    }
-
-    // Board-mode device & resource-pack surface. See {@link DeviceManager}.
-
-    getDeviceList () {
-        return this._devices.getDeviceList();
-    }
-
-    getResourceOrigin () {
-        return this._devices.getResourceOrigin();
-    }
-
-    registerDeviceManifest (manifest, base) {
-        return this._devices.registerDeviceManifest(manifest, base);
-    }
-
-    registerPeripheralManifest (manifest, base) {
-        return this._devices.registerPeripheralManifest(manifest, base);
-    }
-
-    loadResourcePacks () {
-        return this._devices.loadResourcePacks();
-    }
-
-    setScratchBlocks (scratchBlocks) {
-        return this._devices.setScratchBlocks(scratchBlocks);
-    }
-
-    setModuleImporter (importer) {
-        return this._devices.setModuleImporter(importer);
-    }
-
-    selectDevice (deviceId) {
-        return this._devices.selectDevice(deviceId);
-    }
-
-    addPeripheral (id) {
-        return this._devices.addPeripheral(id);
-    }
-
-    removePeripheral (id) {
-        return this._devices.removePeripheral(id);
-    }
-
-    getProjectPeripheralIds () {
-        return this._devices.getProjectPeripheralIds();
-    }
-
-    getPeripheralList () {
-        return this._devices.getPeripheralList();
-    }
-
-    getActivePeripheralToolboxCategories () {
-        return this._devices.getActivePeripheralToolboxCategories();
-    }
-
-    getActivePeripheralLibs () {
-        return this._devices.getActivePeripheralLibs();
-    }
-
-    getDeviceFirmware (deviceId) {
-        return this._devices.getDeviceFirmware(deviceId);
-    }
-
-    flashDeviceFirmware (deviceId, firmwareId, callbacks) {
-        return this._devices.flashDeviceFirmware(deviceId, firmwareId, callbacks);
-    }
-
-    _applyBoard (board) {
-        return this._devices._applyBoard(board);
     }
 }
 
