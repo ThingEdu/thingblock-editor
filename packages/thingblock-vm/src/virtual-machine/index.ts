@@ -1,4 +1,3 @@
-import {EventEmitter} from 'events';
 import formatMessage from 'format-message';
 import type {ScratchStorage} from '@thingblock/thingblock-storage';
 
@@ -7,9 +6,10 @@ import ExtensionManager from '../extension-support/extension-manager';
 import log from '../util/log';
 import Runtime from '../engine/runtime';
 import type Variable from '../engine/variable';
-import VmEventNames from './vm-event-names';
+import {EventBus} from '../event/event-bus';
+import {RuntimeEvent, VMEvent} from '../event/event-name';
+import type {Emit} from '../event/type';
 
-import wireRuntimeEvents from './runtime-events';
 import DeviceManager from './device-manager';
 import LinkController from './link-controller';
 import ProjectIo from './project-io';
@@ -34,7 +34,10 @@ const CORE_EXTENSIONS: string[] = [
  * Handles connections between blocks, stage, and extensions. Its parts are owned objects built from
  * the runtime and the few things each one uses; none of them holds the VM.
  */
-export default class VirtualMachine extends EventEmitter {
+export default class VirtualMachine {
+    /** The one bus every event of this VM goes through: the runtime's, the parts' and the GUI's. */
+    readonly events: EventBus;
+
     /** VM runtime, to store blocks, I/O devices, targets, etc. */
     readonly runtime: Runtime;
 
@@ -53,21 +56,18 @@ export default class VirtualMachine extends EventEmitter {
     readonly project: ProjectIo;
 
     constructor () {
-        super();
-
-        this.runtime = new Runtime();
+        this.events = new EventBus();
+        this.runtime = new Runtime(this.events);
         centralDispatch.setService('runtime', this.runtime).catch(e => {
             log.error(`Failed to register runtime service: ${JSON.stringify(e)}`);
         });
 
         this.extensionManager = new ExtensionManager(this.runtime);
+        this.events.on(RuntimeEvent.TOOLBOX_EXTENSIONS_NEED_UPDATE, () => {
+            this.extensionManager.refreshBlocks();
+        });
 
-        // Looked up on each call, so a replaced `vm.emit` still receives the parts' events.
-        const emit = (event: string, ...args: unknown[]) => {
-            this.emit(event, ...args);
-        };
-
-        wireRuntimeEvents(this.runtime, emit, this.extensionManager);
+        const emit: Emit = this.events.emit.bind(this.events);
 
         // Load core extensions
         for (const id of CORE_EXTENSIONS) {
@@ -106,9 +106,9 @@ export default class VirtualMachine extends EventEmitter {
     setTurboMode (turboModeOn: boolean): void {
         this.runtime.turboMode = !!turboModeOn;
         if (this.runtime.turboMode) {
-            this.emit(VmEventNames.TURBO_MODE_ON);
+            this.events.emit(VMEvent.TURBO_MODE_ON);
         } else {
-            this.emit(VmEventNames.TURBO_MODE_OFF);
+            this.events.emit(VMEvent.TURBO_MODE_OFF);
         }
     }
 
@@ -141,7 +141,7 @@ export default class VirtualMachine extends EventEmitter {
             if (key === 'target' || key === 'blockContainer') return;
             return value;
         }, 2);
-        this.emit(VmEventNames.playgroundData, {
+        this.events.emit(VMEvent.playgroundData, {
             blocks: editingTarget.blocks,
             threads: filteredThreadData
         });

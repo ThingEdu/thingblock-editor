@@ -24,20 +24,20 @@ class ScanningStep extends React.Component {
     }
     componentDidMount () {
         this.props.vm.scanForPeripheral(this.props.extensionId);
-        this.props.vm.on(
+        this.props.vm.events.on(
             'PERIPHERAL_LIST_UPDATE', this.handlePeripheralListUpdate);
-        this.props.vm.on(
+        this.props.vm.events.on(
             'PERIPHERAL_SCAN_TIMEOUT', this.handlePeripheralScanTimeout);
-        this.props.vm.on(
+        this.props.vm.events.on(
             'USER_PICKED_PERIPHERAL', this.handleUserPickedPeripheral);
     }
     componentWillUnmount () {
         // @todo: stop the peripheral scan here
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'PERIPHERAL_LIST_UPDATE', this.handlePeripheralListUpdate);
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'PERIPHERAL_SCAN_TIMEOUT', this.handlePeripheralScanTimeout);
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'USER_PICKED_PERIPHERAL', this.handleUserPickedPeripheral);
     }
     handlePeripheralScanTimeout () {

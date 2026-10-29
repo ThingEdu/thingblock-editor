@@ -37,12 +37,12 @@ class DeviceControls extends React.Component {
     componentDidMount () {
         // The link drops on user disconnect and on a helper crash (socket close); the VM signals both
         // with one event, so this is the single source of truth for clearing the connected board.
-        this.props.vm.on('DEVICE_DISCONNECTED', this.handleDeviceDisconnected);
+        this.props.vm.events.on('DEVICE_DISCONNECTED', this.handleDeviceDisconnected);
     }
 
     componentWillUnmount () {
         this._unmounted = true;
-        this.props.vm.removeListener('DEVICE_DISCONNECTED', this.handleDeviceDisconnected);
+        this.props.vm.events.removeListener('DEVICE_DISCONNECTED', this.handleDeviceDisconnected);
     }
 
     handleRun () {

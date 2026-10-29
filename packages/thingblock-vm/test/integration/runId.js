@@ -48,7 +48,7 @@ test('runId', async t => {
 
     // Turn the playgroundData event into a Promise that we can await
     const playgroundDataPromise = new Promise(resolve => {
-        vm.on('playgroundData', data => resolve(data));
+        vm.events.on('playgroundData', data => resolve(data));
     });
 
     // Let the project run for a bit, then get playground data and stop the project

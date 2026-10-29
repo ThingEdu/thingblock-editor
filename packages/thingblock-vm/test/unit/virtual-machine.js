@@ -95,7 +95,7 @@ test('emitWorkspaceUpdate', t => {
     vm.runtime.setEditingTarget(vm.runtime.targets[2]);
 
     let xml = null;
-    vm.emit = (event, data) => (xml = data.xml);
+    vm.events.on('workspaceUpdate', data => (xml = data.xml));
     vm.workspace.emitWorkspaceUpdate();
     t.not(xml.indexOf('global'), -1);
     t.not(xml.indexOf('local'), -1);
@@ -465,10 +465,10 @@ test('Setting turbo mode emits events', t => {
 
     const vm = new VirtualMachine();
 
-    vm.addListener('TURBO_MODE_ON', () => {
+    vm.events.addListener('TURBO_MODE_ON', () => {
         turboMode = true;
     });
-    vm.addListener('TURBO_MODE_OFF', () => {
+    vm.events.addListener('TURBO_MODE_OFF', () => {
         turboMode = false;
     });
 
@@ -484,7 +484,7 @@ test('Setting turbo mode emits events', t => {
 test('Starting the VM emits an event', t => {
     let started = false;
     const vm = new VirtualMachine();
-    vm.addListener('RUNTIME_STARTED', () => {
+    vm.events.addListener('RUNTIME_STARTED', () => {
         started = true;
     });
     vm.start();
@@ -496,7 +496,7 @@ test('Starting the VM emits an event', t => {
 test('vm.greenFlag() emits a PROJECT_START event', t => {
     let greenFlagged = false;
     const vm = new VirtualMachine();
-    vm.addListener('PROJECT_START', () => {
+    vm.events.addListener('PROJECT_START', () => {
         greenFlagged = true;
     });
     vm.greenFlag();
@@ -542,7 +542,7 @@ test('clearFlyoutBlocks removes all of the flyout blocks', t => {
 test('a blocks update request re-renders the workspace only once a project is loaded', t => {
     const vm = new VirtualMachine();
     let updates = 0;
-    vm.on('workspaceUpdate', () => updates++);
+    vm.events.on('workspaceUpdate', () => updates++);
 
     vm.runtime.requestBlocksUpdate();
     t.equal(updates, 0, 'nothing to render without an editing target');

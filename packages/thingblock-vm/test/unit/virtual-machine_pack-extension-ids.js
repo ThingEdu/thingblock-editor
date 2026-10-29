@@ -190,7 +190,7 @@ test('the saved board is applied before the workspace update that renders its bl
     }, base);
 
     let registeredAtUpdate = false;
-    vm.on('workspaceUpdate', () => {
+    vm.events.on('workspaceUpdate', () => {
         registeredAtUpdate = Boolean(scratchBlocks.Blocks.thingBotC3_init);
     });
 

@@ -12,7 +12,7 @@ test('importing sb3 project with incorrect list monitor name', t => {
     vm.attachStorage(makeTestStorage());
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', () => {
+    vm.events.on('playgroundData', () => {
         const stage = vm.runtime.targets[0];
         const cat = vm.runtime.targets[1];
 

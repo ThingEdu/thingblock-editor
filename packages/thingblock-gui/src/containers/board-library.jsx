@@ -33,10 +33,10 @@ class BoardLibrary extends React.PureComponent {
     componentDidMount () {
         // Refresh if helper-served packs land while the library is open; if they loaded earlier,
         // getDeviceList() already includes them on first render.
-        this.props.vm.on('RESOURCE_PACKS_LOADED', this.handlePacksLoaded);
+        this.props.vm.events.on('RESOURCE_PACKS_LOADED', this.handlePacksLoaded);
     }
     componentWillUnmount () {
-        this.props.vm.off('RESOURCE_PACKS_LOADED', this.handlePacksLoaded);
+        this.props.vm.events.off('RESOURCE_PACKS_LOADED', this.handlePacksLoaded);
     }
     handlePacksLoaded () {
         this.forceUpdate();

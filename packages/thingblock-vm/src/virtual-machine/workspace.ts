@@ -1,6 +1,6 @@
 import Variable from '../engine/variable';
-import {RuntimeEvent} from '../event/event-name';
-import VmEventNames, {type Emit} from './vm-event-names';
+import {RuntimeEvent, VMWorkspaceEvent} from '../event/event-name';
+import type {Emit} from '../event/type';
 import type Runtime from '../engine/runtime';
 import type Target from '../engine/target';
 import type {WorkspaceEvent} from '../engine/runtime/workspace-listener';
@@ -14,12 +14,12 @@ import type {WorkspaceEvent} from '../engine/runtime/workspace-listener';
 export default class Workspace {
     private readonly runtime: Runtime;
 
-    /** Emits on the VM, where the GUI listens for `targetsUpdate` and `workspaceUpdate`. */
+    /** Emits on the VM's bus, where the GUI listens for `targetsUpdate` and `workspaceUpdate`. */
     private readonly emit: Emit;
 
     /**
      * @param runtime - the runtime whose targets and blocks the workspace shows.
-     * @param emit - emits a VM event.
+     * @param emit - emits on the VM's bus.
      */
     constructor (runtime: Runtime, emit: Emit) {
         this.runtime = runtime;
@@ -117,7 +117,7 @@ export default class Workspace {
      *   that don't affect project serialization.
      */
     emitTargetsUpdate (triggerProjectChange = true): void {
-        this.emit(VmEventNames.targetsUpdate, {
+        this.emit(VMWorkspaceEvent.targetsUpdate, {
             // [[target id, human readable target name], ...].
             targetList: this.runtime.targets.map(target => target.toJSON()),
             // Currently editing target id.
@@ -184,6 +184,6 @@ export default class Workspace {
                             ${editingTarget.blocks.toXML(editingTarget.comments)}
                         </xml>`;
 
-        this.emit(VmEventNames.workspaceUpdate, {xml: xmlString});
+        this.emit(VMWorkspaceEvent.workspaceUpdate, {xml: xmlString});
     }
 }

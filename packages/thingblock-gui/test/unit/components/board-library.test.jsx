@@ -19,6 +19,7 @@ jest.mock('../../../src/components/library/library.jsx', () => {
 
 describe('BoardLibrary', () => {
     const vm = Object.create(VM.prototype);
+    vm.events = {on: jest.fn(), off: jest.fn()};
     vm.devices = {getDeviceList: jest.fn(() => [
         {
             deviceId: 'arduinoUno',

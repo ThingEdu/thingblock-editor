@@ -12,7 +12,7 @@ test('load an sb3 project with comments', t => {
     vm.attachStorage(makeTestStorage());
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', e => {
+    vm.events.on('playgroundData', e => {
         const threads = JSON.parse(e.threads);
         t.equal(threads.length, 0);
 

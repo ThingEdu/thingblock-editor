@@ -1,6 +1,7 @@
 import formatMessage from 'format-message';
 
-import VmEventNames, {type Emit} from './vm-event-names';
+import {DeviceEvent} from '../event/event-name';
+import type {Emit} from '../event/type';
 import log from '../util/log';
 import {DeviceRegistry, PeripheralRegistry, ManifestDevice} from '../devices';
 import {boards} from '../extensions/devices';
@@ -92,7 +93,10 @@ type PeripheralListEntry = {
 export default class DeviceManager {
     private readonly runtime: Runtime;
 
-    /** Emits on the VM, where the GUI listens for `RESOURCE_PACKS_LOADED`, `PERIPHERALS_CHANGED`, `BOARD_RESTORED`. */
+    /**
+     * Emits on the VM's bus, where the GUI listens for `RESOURCE_PACKS_LOADED`, `PERIPHERALS_CHANGED` and
+     * `BOARD_RESTORED`.
+     */
     private readonly emit: Emit;
 
     /**
@@ -166,7 +170,7 @@ export default class DeviceManager {
 
     /**
      * @param runtime - the runtime devices are built against and the board selection is mirrored onto.
-     * @param emit - emits a VM event.
+     * @param emit - emits on the VM's bus.
      * @param linkResourceOrigin - reads the active link backend's resource-pack origin.
      */
     constructor (runtime: Runtime, emit: Emit, linkResourceOrigin: () => string | null) {
@@ -325,7 +329,7 @@ export default class DeviceManager {
         }
 
         this._resourcePacksLoaded = true;
-        this.emit(VmEventNames.RESOURCE_PACKS_LOADED);
+        this.emit(DeviceEvent.RESOURCE_PACKS_LOADED);
 
         // A project loaded before its device's pack was available left its board pending; apply it now.
         // Its peripherals' blocks reach the shared Blockly only here, so the workspace has to be
@@ -410,7 +414,7 @@ export default class DeviceManager {
         this._projectPeripheralIds.add(id);
         await this._activatePeripheral(id);
         this._syncRuntimeBoard();
-        this.emit(VmEventNames.PERIPHERALS_CHANGED);
+        this.emit(DeviceEvent.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -427,7 +431,7 @@ export default class DeviceManager {
         if (!this._projectPeripheralIds.delete(id)) return;
         this.peripheralRegistry.setInactive(id);
         this._syncRuntimeBoard();
-        this.emit(VmEventNames.PERIPHERALS_CHANGED);
+        this.emit(DeviceEvent.PERIPHERALS_CHANGED);
     }
 
     /**
@@ -498,7 +502,7 @@ export default class DeviceManager {
                 this.runtime.requestBlocksUpdate();
             }
         }
-        this.emit(VmEventNames.BOARD_RESTORED, {
+        this.emit(DeviceEvent.BOARD_RESTORED, {
             device: this._selectedDeviceId,
             peripherals: this.getProjectPeripheralIds()
         });

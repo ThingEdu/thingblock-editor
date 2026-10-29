@@ -43,7 +43,7 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.devices.loadResourcePacks();
                 // A loaded project carries its target board; mirror it into the board selection so the
                 // editor enters (or leaves) board mode to match. A null device clears the selection.
-                this.props.vm.on('BOARD_RESTORED', ({device}) => this.props.onSetDevice(device));
+                this.props.vm.events.on('BOARD_RESTORED', ({device}) => this.props.onSetDevice(device));
             }
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();

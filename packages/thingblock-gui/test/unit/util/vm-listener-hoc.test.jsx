@@ -34,7 +34,7 @@ describe('VMListenerHOC', () => {
             />
         );
         expect(onGreenFlag).not.toHaveBeenCalled();
-        vm.emit('PROJECT_START');
+        vm.events.emit('PROJECT_START');
         expect(onGreenFlag).toHaveBeenCalled();
     });
 
@@ -68,7 +68,7 @@ describe('VMListenerHOC', () => {
         );
         const targetList = [];
         const editingTarget = 'id';
-        vm.emit('targetsUpdate', {targetList, editingTarget});
+        vm.events.emit('targetsUpdate', {targetList, editingTarget});
         const actions = store.getActions();
         expect(actions[0].type).toEqual('scratch-gui/targets/UPDATE_TARGET_LIST');
         expect(actions[0].targets).toEqual(targetList);
@@ -91,7 +91,7 @@ describe('VMListenerHOC', () => {
                 vm={vm}
             />
         );
-        vm.emit('PROJECT_CHANGED');
+        vm.events.emit('PROJECT_CHANGED');
         const actions = store.getActions();
         expect(actions.length).toEqual(0);
     });

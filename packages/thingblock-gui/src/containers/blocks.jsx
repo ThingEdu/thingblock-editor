@@ -343,34 +343,34 @@ class Blocks extends React.Component {
             .getWorkspace();
         this.flyoutWorkspace.addChangeListener(this.props.vm.workspace.flyoutBlockListener);
         this.flyoutWorkspace.addChangeListener(this.props.vm.workspace.monitorBlockListener);
-        this.props.vm.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
-        this.props.vm.addListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
-        this.props.vm.addListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
-        this.props.vm.addListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
-        this.props.vm.addListener('VISUAL_REPORT', this.onVisualReport);
-        this.props.vm.addListener('workspaceUpdate', this.onWorkspaceUpdate);
-        this.props.vm.addListener('targetsUpdate', this.onTargetsUpdate);
-        this.props.vm.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
-        this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
-        this.props.vm.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
-        this.props.vm.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.addListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
+        this.props.vm.events.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
+        this.props.vm.events.addListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
+        this.props.vm.events.addListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
+        this.props.vm.events.addListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
+        this.props.vm.events.addListener('VISUAL_REPORT', this.onVisualReport);
+        this.props.vm.events.addListener('workspaceUpdate', this.onWorkspaceUpdate);
+        this.props.vm.events.addListener('targetsUpdate', this.onTargetsUpdate);
+        this.props.vm.events.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
+        this.props.vm.events.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
+        this.props.vm.events.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.events.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.addListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
     }
     detachVM () {
-        this.props.vm.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
-        this.props.vm.removeListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
-        this.props.vm.removeListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
-        this.props.vm.removeListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
-        this.props.vm.removeListener('VISUAL_REPORT', this.onVisualReport);
-        this.props.vm.removeListener('workspaceUpdate', this.onWorkspaceUpdate);
-        this.props.vm.removeListener('targetsUpdate', this.onTargetsUpdate);
-        this.props.vm.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
-        this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
-        this.props.vm.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
-        this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.removeListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
+        this.props.vm.events.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
+        this.props.vm.events.removeListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
+        this.props.vm.events.removeListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
+        this.props.vm.events.removeListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
+        this.props.vm.events.removeListener('VISUAL_REPORT', this.onVisualReport);
+        this.props.vm.events.removeListener('workspaceUpdate', this.onWorkspaceUpdate);
+        this.props.vm.events.removeListener('targetsUpdate', this.onTargetsUpdate);
+        this.props.vm.events.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
+        this.props.vm.events.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
+        this.props.vm.events.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.events.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.removeListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
     }
 
     updateToolboxBlockValue (id, value) {

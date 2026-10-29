@@ -30,12 +30,12 @@ class PeripheralLibrary extends React.PureComponent {
     componentDidMount () {
         // The list and each card's state are derived from the VM, so refresh whenever packs land or the
         // active set changes (the user toggling a peripheral here, or a loaded project restoring one).
-        this.props.vm.on('RESOURCE_PACKS_LOADED', this.handlePacksChanged);
-        this.props.vm.on('PERIPHERALS_CHANGED', this.handlePacksChanged);
+        this.props.vm.events.on('RESOURCE_PACKS_LOADED', this.handlePacksChanged);
+        this.props.vm.events.on('PERIPHERALS_CHANGED', this.handlePacksChanged);
     }
     componentWillUnmount () {
-        this.props.vm.off('RESOURCE_PACKS_LOADED', this.handlePacksChanged);
-        this.props.vm.off('PERIPHERALS_CHANGED', this.handlePacksChanged);
+        this.props.vm.events.off('RESOURCE_PACKS_LOADED', this.handlePacksChanged);
+        this.props.vm.events.off('PERIPHERALS_CHANGED', this.handlePacksChanged);
     }
     handlePacksChanged () {
         this.forceUpdate();

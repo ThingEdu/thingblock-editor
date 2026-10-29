@@ -200,9 +200,9 @@ const GUIComponent = props => {
         const handlePrint = message => {
             setSerialLogs(prev => appendLogs(prev, [{message: String(message)}]));
         };
-        vm.runtime.events.on('PRINT_TO_MONITOR', handlePrint);
+        vm.events.on('PRINT_TO_MONITOR', handlePrint);
         return () => {
-            vm.runtime.events.off('PRINT_TO_MONITOR', handlePrint);
+            vm.events.off('PRINT_TO_MONITOR', handlePrint);
         };
     }, [vm]);
 
@@ -217,17 +217,17 @@ const GUIComponent = props => {
                 setSerialLogs(prev => appendLogs(prev, parts.map(line => ({message: line.replace(/\r$/, '')}))));
             }
         };
-        vm.runtime.events.on('SERIAL_DATA', handleSerial);
+        vm.events.on('SERIAL_DATA', handleSerial);
         return () => {
-            vm.runtime.events.off('SERIAL_DATA', handleSerial);
+            vm.events.off('SERIAL_DATA', handleSerial);
         };
     }, [vm]);
 
     useEffect(() => {
         const onPrompt = q => setMonitorPrompt(q === null || typeof q === 'undefined' ? null : q);
-        vm.runtime.events.on('QUESTION', onPrompt);
+        vm.events.on('QUESTION', onPrompt);
         return () => {
-            vm.runtime.events.off('QUESTION', onPrompt);
+            vm.events.off('QUESTION', onPrompt);
         };
     }, [vm]);
 
@@ -246,7 +246,7 @@ const GUIComponent = props => {
             vm.link.writeMonitor(`${value}\n`);
             return;
         }
-        vm.runtime.events.emit('ANSWER', value);
+        vm.events.emit('ANSWER', value);
         setMonitorPrompt(null);
     }, [vm, connectedBoard]);
 

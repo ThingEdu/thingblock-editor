@@ -117,7 +117,7 @@ test('deserialize surfaces the saved board, or null when absent', async t => {
 test('applyBoard restores the device and user peripherals, emitting BOARD_RESTORED', async t => {
     const vm = makeVM();
     let restored = null;
-    vm.on('BOARD_RESTORED', payload => {
+    vm.events.on('BOARD_RESTORED', payload => {
         restored = payload;
     });
 
@@ -136,7 +136,7 @@ test('applyBoard restores the device and user peripherals, emitting BOARD_RESTOR
 test('applyBoard defers when the device is not yet registered, then applies on retry', async t => {
     const vm = makeVM({register: false});
     let restored = false;
-    vm.on('BOARD_RESTORED', () => {
+    vm.events.on('BOARD_RESTORED', () => {
         restored = true;
     });
 
@@ -160,7 +160,7 @@ test('applyBoard defers when the device is not yet registered, then applies on r
 test('applyBoard with no board resets to host mode and signals a null board', async t => {
     const vm = makeVM();
     let restored = false;
-    vm.on('BOARD_RESTORED', payload => {
+    vm.events.on('BOARD_RESTORED', payload => {
         restored = payload;
     });
     await vm.devices.selectDevice('thingbot');
@@ -197,7 +197,7 @@ test('deserializeProject registers the board\'s blocks before emitting the works
     // only defined once the board is applied, so record what was registered at the
     // moment the update fired.
     let definedAtUpdate = null;
-    vm.on('workspaceUpdate', () => {
+    vm.events.on('workspaceUpdate', () => {
         definedAtUpdate = Object.keys(blocks);
     });
 
@@ -263,7 +263,7 @@ test('applying a deferred board re-emits the workspace update', async t => {
     t.ok(vm.devices._pendingBoard, 'the board is held pending while the packs are unknown');
 
     let definedAtUpdate = null;
-    vm.on('workspaceUpdate', () => {
+    vm.events.on('workspaceUpdate', () => {
         definedAtUpdate = Object.keys(blocks);
     });
 

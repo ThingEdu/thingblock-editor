@@ -36,8 +36,7 @@ describe('ConnectionModal container', () => {
         // running the heavy constructor; only the methods the container calls are stubbed.
         vm = Object.create(VM.prototype);
         vm.getPeripheralIsConnected = () => false;
-        vm.on = () => {};
-        vm.removeListener = () => {};
+        vm.events = {on: () => {}, removeListener: () => {}};
     });
 
     afterEach(() => {

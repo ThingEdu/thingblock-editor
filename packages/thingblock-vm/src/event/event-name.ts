@@ -58,3 +58,23 @@ export const LinkEvent = {
 export const GuiEvent = {
     ANSWER: 'ANSWER' // (answer: string)
 };
+
+/** Emitted by the VM itself. */
+export const VMEvent = {
+    TURBO_MODE_ON: 'TURBO_MODE_ON',
+    TURBO_MODE_OFF: 'TURBO_MODE_OFF',
+    playgroundData: 'playgroundData' // (data: {blocks: Blocks, threads: string})
+};
+
+/** Emitted by `vm.workspace` for the GUI to render. */
+export const VMWorkspaceEvent = {
+    targetsUpdate: 'targetsUpdate', // (update: {targetList: object[], editingTarget: string | null})
+    workspaceUpdate: 'workspaceUpdate' // (update: {xml: string})
+};
+
+/** Emitted by `vm.devices` about the board, its resource packs and its peripherals. */
+export const DeviceEvent = {
+    RESOURCE_PACKS_LOADED: 'RESOURCE_PACKS_LOADED',
+    PERIPHERALS_CHANGED: 'PERIPHERALS_CHANGED',
+    BOARD_RESTORED: 'BOARD_RESTORED' // (board: {device: string | null, peripherals: string[]})
+};

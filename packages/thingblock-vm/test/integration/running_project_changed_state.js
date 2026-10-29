@@ -12,12 +12,12 @@ test('Running project should not emit project changed event', t => {
     vm.attachStorage(makeTestStorage());
 
     let projectChanged = false;
-    vm.on('PROJECT_CHANGED', () => {
+    vm.events.on('PROJECT_CHANGED', () => {
         projectChanged = true;
     });
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', () => {
+    vm.events.on('playgroundData', () => {
         t.equal(projectChanged, false);
         vm.quit();
         t.end();

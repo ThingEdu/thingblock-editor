@@ -285,7 +285,7 @@ test('addPeripheral activates a user-chosen peripheral and emits PERIPHERALS_CHA
     const scratchBlocks = makeScratchBlocks();
     vm.devices.setScratchBlocks(scratchBlocks);
     let changed = 0;
-    vm.on('PERIPHERALS_CHANGED', () => changed++);
+    vm.events.on('PERIPHERALS_CHANGED', () => changed++);
 
     await vm.devices.selectDevice('thingbot');
     await vm.devices.addPeripheral('buzzer');
@@ -306,7 +306,7 @@ test('removePeripheral deactivates a user-added peripheral and emits', async t =
     const {vm} = makeVM();
     vm.devices.setScratchBlocks(makeScratchBlocks());
     let changed = 0;
-    vm.on('PERIPHERALS_CHANGED', () => changed++);
+    vm.events.on('PERIPHERALS_CHANGED', () => changed++);
 
     await vm.devices.selectDevice('thingbot');
     await vm.devices.addPeripheral('buzzer');

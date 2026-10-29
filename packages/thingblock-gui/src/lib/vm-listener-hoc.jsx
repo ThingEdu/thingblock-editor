@@ -34,19 +34,19 @@ const vmListenerHOC = function (WrappedComponent) {
             // mounts.
             // If the wrapped component uses the vm in componentDidMount, then
             // we need to start listening before mounting the wrapped component.
-            this.props.vm.on('targetsUpdate', this.handleTargetsUpdate);
-            this.props.vm.on('MONITORS_UPDATE', this.props.onMonitorsUpdate);
-            this.props.vm.on('BLOCK_DRAG_UPDATE', this.props.onBlockDragUpdate);
-            this.props.vm.on('TURBO_MODE_ON', this.props.onTurboModeOn);
-            this.props.vm.on('TURBO_MODE_OFF', this.props.onTurboModeOff);
-            this.props.vm.on('PROJECT_RUN_START', this.props.onProjectRunStart);
-            this.props.vm.on('PROJECT_RUN_STOP', this.props.onProjectRunStop);
-            this.props.vm.on('PROJECT_CHANGED', this.handleProjectChanged);
-            this.props.vm.on('RUNTIME_STARTED', this.props.onRuntimeStarted);
-            this.props.vm.on('PROJECT_START', this.props.onGreenFlag);
-            this.props.vm.on('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
-            this.props.vm.on('MIC_LISTENING', this.props.onMicListeningUpdate);
-            this.props.vm.on('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
+            this.props.vm.events.on('targetsUpdate', this.handleTargetsUpdate);
+            this.props.vm.events.on('MONITORS_UPDATE', this.props.onMonitorsUpdate);
+            this.props.vm.events.on('BLOCK_DRAG_UPDATE', this.props.onBlockDragUpdate);
+            this.props.vm.events.on('TURBO_MODE_ON', this.props.onTurboModeOn);
+            this.props.vm.events.on('TURBO_MODE_OFF', this.props.onTurboModeOff);
+            this.props.vm.events.on('PROJECT_RUN_START', this.props.onProjectRunStart);
+            this.props.vm.events.on('PROJECT_RUN_STOP', this.props.onProjectRunStop);
+            this.props.vm.events.on('PROJECT_CHANGED', this.handleProjectChanged);
+            this.props.vm.events.on('RUNTIME_STARTED', this.props.onRuntimeStarted);
+            this.props.vm.events.on('PROJECT_START', this.props.onGreenFlag);
+            this.props.vm.events.on('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
+            this.props.vm.events.on('MIC_LISTENING', this.props.onMicListeningUpdate);
+            this.props.vm.events.on('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
 
         }
         componentDidMount () {
@@ -69,19 +69,19 @@ const vmListenerHOC = function (WrappedComponent) {
             }
         }
         componentWillUnmount () {
-            this.props.vm.removeListener('targetsUpdate', this.handleTargetsUpdate);
-            this.props.vm.removeListener('MONITORS_UPDATE', this.props.onMonitorsUpdate);
-            this.props.vm.removeListener('BLOCK_DRAG_UPDATE', this.props.onBlockDragUpdate);
-            this.props.vm.removeListener('TURBO_MODE_ON', this.props.onTurboModeOn);
-            this.props.vm.removeListener('TURBO_MODE_OFF', this.props.onTurboModeOff);
-            this.props.vm.removeListener('PROJECT_RUN_START', this.props.onProjectRunStart);
-            this.props.vm.removeListener('PROJECT_RUN_STOP', this.props.onProjectRunStop);
-            this.props.vm.removeListener('PROJECT_CHANGED', this.handleProjectChanged);
-            this.props.vm.removeListener('RUNTIME_STARTED', this.props.onRuntimeStarted);
-            this.props.vm.removeListener('PROJECT_START', this.props.onGreenFlag);
-            this.props.vm.removeListener('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
-            this.props.vm.removeListener('MIC_LISTENING', this.props.onMicListeningUpdate);
-            this.props.vm.removeListener('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
+            this.props.vm.events.removeListener('targetsUpdate', this.handleTargetsUpdate);
+            this.props.vm.events.removeListener('MONITORS_UPDATE', this.props.onMonitorsUpdate);
+            this.props.vm.events.removeListener('BLOCK_DRAG_UPDATE', this.props.onBlockDragUpdate);
+            this.props.vm.events.removeListener('TURBO_MODE_ON', this.props.onTurboModeOn);
+            this.props.vm.events.removeListener('TURBO_MODE_OFF', this.props.onTurboModeOff);
+            this.props.vm.events.removeListener('PROJECT_RUN_START', this.props.onProjectRunStart);
+            this.props.vm.events.removeListener('PROJECT_RUN_STOP', this.props.onProjectRunStop);
+            this.props.vm.events.removeListener('PROJECT_CHANGED', this.handleProjectChanged);
+            this.props.vm.events.removeListener('RUNTIME_STARTED', this.props.onRuntimeStarted);
+            this.props.vm.events.removeListener('PROJECT_START', this.props.onGreenFlag);
+            this.props.vm.events.removeListener('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
+            this.props.vm.events.removeListener('MIC_LISTENING', this.props.onMicListeningUpdate);
+            this.props.vm.events.removeListener('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
 
             if (this.props.attachKeyboardEvents) {
                 document.removeEventListener('keydown', this.handleKeyDown);
