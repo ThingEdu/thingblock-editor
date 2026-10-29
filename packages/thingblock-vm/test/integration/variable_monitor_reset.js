@@ -19,7 +19,7 @@ test('importing one project after the other resets monitored variables', t => {
     vm.clear();
     vm.setCompatibilityMode(false);
     vm.setTurboMode(false);
-    vm.loadProject(project).then(() => {
+    vm.project.load(project).then(() => {
         const refSprite = vm.runtime.targets[1];
         const refVarId = Object.keys(refSprite.variables)[0];
         const refBlock = vm.runtime.monitorBlocks.getBlock(refVarId);
@@ -28,7 +28,7 @@ test('importing one project after the other resets monitored variables', t => {
         const jamalVarId = Object.keys(jamalSprite.variables)[0];
         const jamalBlock = vm.runtime.monitorBlocks.getBlock(jamalVarId);
         t.ok(jamalBlock);
-        vm.loadProject(anotherProject).then(() => {
+        vm.project.load(anotherProject).then(() => {
             // Blocks from the previously loaded project should be gone.
             const refVarBlock = vm.runtime.monitorBlocks.getBlock(refVarId);
             t.notOk(refVarBlock);

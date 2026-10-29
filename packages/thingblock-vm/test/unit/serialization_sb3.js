@@ -13,7 +13,7 @@ const originAbsentSB3ProjectPath = path.resolve(__dirname, '../fixtures/origin-a
 
 test('serialize', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(exampleProjectPath))
+    vm.project.load(readFileToBuffer(exampleProjectPath))
         .then(() => {
             const result = sb3.serialize(vm.runtime);
             // @todo Analyze
@@ -34,7 +34,7 @@ test('deserialize', t => {
 
 test('deserialize sb3 project with comments', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(commentsSB3ProjectPath))
+    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
         .then(() => {
             const runtime = vm.runtime;
 
@@ -73,7 +73,7 @@ test('deserialize sb3 project with comments', t => {
 
 test('deserialize sb3 project with comments - no duplicate id serialization', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(commentsSB3NoDupeIds))
+    vm.project.load(readFileToBuffer(commentsSB3NoDupeIds))
         .then(() => {
             const runtime = vm.runtime;
 
@@ -108,7 +108,7 @@ test('deserialize sb3 project with comments - no duplicate id serialization', t 
 
 test('serializeBlocks', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(commentsSB3ProjectPath))
+    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
         .then(() => {
             const blocks = vm.runtime.targets[1].blocks._blocks;
             const result = sb3.serializeBlocks(blocks);
@@ -122,7 +122,7 @@ test('serializeBlocks', t => {
 
 test('serializeBlocks serializes x and y for topLevel blocks with x,y of 0,0', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(topLevelReportersProjectPath))
+    vm.project.load(readFileToBuffer(topLevelReportersProjectPath))
         .then(() => {
             // Verify that there are 2 blocks and they are both top level
             const blocks = vm.runtime.targets[1].blocks._blocks;
@@ -218,7 +218,7 @@ test('serializeBlock does not serialize shadow blocks as top-level', t => {
 
 test('deserializeBlocks', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(commentsSB3ProjectPath))
+    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
         .then(() => {
             const blocks = vm.runtime.targets[1].blocks._blocks;
             const serialized = sb3.serializeBlocks(blocks)[0];
@@ -230,7 +230,7 @@ test('deserializeBlocks', t => {
 
 test('deserializeBlocks on already deserialized input', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(commentsSB3ProjectPath))
+    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
         .then(() => {
             const blocks = vm.runtime.targets[1].blocks._blocks;
             const serialized = sb3.serializeBlocks(blocks)[0];
@@ -300,7 +300,7 @@ test('getExtensionIdForOpcode', t => {
 
 test('(#1608) serializeBlocks maintains top level variable reporters', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(exampleProjectPath))
+    vm.project.load(readFileToBuffer(exampleProjectPath))
         .then(() => {
             const stage = vm.runtime.targets[0];
             stage.blocks.deleteAllBlocks();
@@ -333,11 +333,11 @@ test('(#1608) serializeBlocks maintains top level variable reporters', t => {
 
 test('load origin value from SB3 file json metadata', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(originSB3ProjectPath))
+    vm.project.load(readFileToBuffer(originSB3ProjectPath))
         .then(() => {
             t.type(vm.runtime.origin, 'string');
         })
-        .then(() => vm.loadProject(readFileToBuffer(originAbsentSB3ProjectPath)))
+        .then(() => vm.project.load(readFileToBuffer(originAbsentSB3ProjectPath)))
         .then(() => {
             // After loading a project with an origin, then loading one without an origin,
             // origin value should no longer be set.
@@ -348,7 +348,7 @@ test('load origin value from SB3 file json metadata', t => {
 
 test('serialize origin value if it is present', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(originSB3ProjectPath))
+    vm.project.load(readFileToBuffer(originSB3ProjectPath))
         .then(() => {
             const result = sb3.serialize(vm.runtime);
             t.type(result.meta.origin, 'string');
@@ -358,7 +358,7 @@ test('serialize origin value if it is present', t => {
 
 test('do not serialize origin value if it is not present', t => {
     const vm = new VirtualMachine();
-    vm.loadProject(readFileToBuffer(originAbsentSB3ProjectPath))
+    vm.project.load(readFileToBuffer(originAbsentSB3ProjectPath))
         .then(() => {
             const result = sb3.serialize(vm.runtime);
             t.equal(result.meta.origin, undefined);
@@ -593,7 +593,7 @@ test('deserializeBlocks repairs broken shadow references', t => {
 
 test('serializing and deserializing sb3 preserves explicit variable dataType', t => {
     const vm = new VirtualMachine();
-    return vm.loadProject(readFileToBuffer(exampleProjectPath))
+    return vm.project.load(readFileToBuffer(exampleProjectPath))
         .then(() => {
             const stage = vm.runtime.targets[0];
             stage.createVariable('typedVarId', 'temperature', '', 'float');
@@ -611,7 +611,7 @@ test('serializing and deserializing sb3 preserves explicit variable dataType', t
 
 test('deserializing sb3 rejects an unrecognized variable dataType', t => {
     const vm = new VirtualMachine();
-    return vm.loadProject(readFileToBuffer(exampleProjectPath))
+    return vm.project.load(readFileToBuffer(exampleProjectPath))
         .then(() => {
             const stage = vm.runtime.targets[0];
             stage.createVariable('typedVarId', 'temperature', '', 'float');

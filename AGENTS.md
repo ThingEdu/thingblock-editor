@@ -142,6 +142,11 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - The engine (`src/engine/`) is TypeScript. Runtime events go through the typed `runtime.events` emitter with
   names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
   and the events only the VM emits are named in `virtual-machine/vm-event-names.js`.
+- `VirtualMachine` (`src/virtual-machine/index.ts`) keeps only lifecycle and setup methods flat; the rest lives
+  in owned parts: `vm.workspace` (Blockly events, editing target, workspace rendering), `vm.project` (load,
+  save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
+  from the runtime, an `emit` function and the sibling parts it uses, never the VM itself; add new behavior to
+  the part it belongs to. The runtime holds the only copy of the editing target.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
   maps for VM devices.

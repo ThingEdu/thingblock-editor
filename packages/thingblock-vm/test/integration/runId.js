@@ -40,7 +40,7 @@ test('runId', async t => {
 
     vm.setCompatibilityMode(false);
     vm.setTurboMode(false);
-    await vm.loadProject(project);
+    await vm.project.load(project);
     pushRunId();
 
     vm.greenFlag();

@@ -14,13 +14,13 @@ test('interface', t => {
     t.type(vm.getPlaygroundData, 'function');
     t.type(vm.postIOData, 'function');
 
-    t.type(vm.loadProject, 'function');
+    t.type(vm.project.load, 'function');
 
-    t.type(vm.blockListener, 'function');
-    t.type(vm.flyoutBlockListener, 'function');
-    t.type(vm.setEditingTarget, 'function');
+    t.type(vm.workspace.blockListener, 'function');
+    t.type(vm.workspace.flyoutBlockListener, 'function');
+    t.type(vm.workspace.setEditingTarget, 'function');
 
-    t.type(vm.emitTargetsUpdate, 'function');
-    t.type(vm.emitWorkspaceUpdate, 'function');
+    t.type(vm.workspace.emitTargetsUpdate, 'function');
+    t.type(vm.workspace.emitWorkspaceUpdate, 'function');
     t.end();
 });

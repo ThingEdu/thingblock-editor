@@ -137,7 +137,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 this.props.onLoadingStarted();
                 const filename = this.fileToUpload && this.fileToUpload.name;
                 let loadingSuccess = false;
-                this.props.vm.loadProject(this.fileReader.result)
+                this.props.vm.project.load(this.fileReader.result)
                     .then(() => {
                         if (filename) {
                             const uploadedProjectTitle = getProjectTitleFromFilename(filename);
@@ -212,7 +212,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         requestProjectUpload: PropTypes.func,
         userOwnsProject: PropTypes.bool,
         vm: PropTypes.shape({
-            loadProject: PropTypes.func
+            project: PropTypes.shape({
+                load: PropTypes.func
+            })
         })
     };
     const mapStateToProps = (state, ownProps) => {

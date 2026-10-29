@@ -96,6 +96,15 @@ test('dispose removes targets and monitors, and resets the project timer', t => 
     t.end();
 });
 
+test('dispose clears the editing target, which it has just removed', t => {
+    const {rt, devices: [a]} = setup('a');
+    rt.setEditingTarget(a);
+
+    rt.dispose();
+    t.equal(rt.getEditingTarget(), null);
+    t.end();
+});
+
 test('getAllVarNamesOfType lists the names of that type on every target', t => {
     const {rt, stage, devices: [a]} = setup('a');
     stage.createVariable('g', 'global', Variable.SCALAR_TYPE);

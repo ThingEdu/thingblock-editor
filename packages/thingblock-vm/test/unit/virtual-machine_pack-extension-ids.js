@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const test = tap.test;
 
@@ -81,7 +81,7 @@ const projectWithPackBlocks = () => JSON.stringify({
 test('a project using resource-pack blocks loads when no packs have been registered', async t => {
     const vm = new VirtualMachine();
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     const sprite = vm.runtime.targets.find(target => !target.isStage);
     t.ok(sprite.blocks.getBlock('init'), 'the device-owned pack block survived the load');
@@ -128,7 +128,7 @@ test('loading a project does not ask the extension manager for device extensions
     registerPackPeripherals(vm);
     const requested = spyExtensionLoads(vm);
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     t.same(requested, [], 'device-owned and reusable pack ids never reach loadExtensionURL');
     t.end();
@@ -136,12 +136,12 @@ test('loading a project does not ask the extension manager for device extensions
 
 test('sharing blocks does not ask the extension manager for device extensions', async t => {
     const vm = new VirtualMachine();
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
     registerPackPeripherals(vm);
     const requested = spyExtensionLoads(vm);
     const sprite = vm.runtime.targets.find(target => !target.isStage);
 
-    await vm.shareBlocksToTarget([{
+    await vm.project.shareBlocksToTarget([{
         id: 'shared',
         opcode: 'serial_begin',
         inputs: {},
@@ -194,7 +194,7 @@ test('the saved board is applied before the workspace update that renders its bl
         registeredAtUpdate = Boolean(scratchBlocks.Blocks.thingBotC3_init);
     });
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     t.ok(registeredAtUpdate, 'the pack block was on the shared Blockly by the time the workspace updated');
     t.end();

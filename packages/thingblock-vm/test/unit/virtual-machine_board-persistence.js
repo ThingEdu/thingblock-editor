@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 const sb3 = require('../../src/serialization/sb3');
 
 const test = tap.test;
@@ -201,7 +201,7 @@ test('deserializeProject registers the board\'s blocks before emitting the works
         definedAtUpdate = Object.keys(blocks);
     });
 
-    await vm.deserializeProject({
+    await vm.project.deserialize({
         projectVersion: 3,
         targets: [{isStage: true,
             name: 'Stage',
@@ -243,7 +243,7 @@ test('applying a deferred board re-emits the workspace update', async t => {
         ArduinoOrder: {ATOMIC: 0, NONE: 99}
     });
 
-    await vm.deserializeProject({
+    await vm.project.deserialize({
         projectVersion: 3,
         targets: [{
             isStage: true,

@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 const {createLocalBackend} = require('../../src/link/local');
 
 const test = tap.test;

@@ -297,6 +297,7 @@ class Runtime {
         for (const target of [...this.targets]) {
             this.disposeTarget(target);
         }
+        this._editingTarget = null;
         this.monitors.reset();
         this.events.emit(RuntimeEventNames.RUNTIME_DISPOSED);
         this.ioDevices.clock.resetProjectTimer();

@@ -130,7 +130,7 @@ test('importing sb3 project with special chars in variable names', t => {
         vm.clear();
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             vm.greenFlag();
             setTimeout(() => {
                 vm.getPlaygroundData();

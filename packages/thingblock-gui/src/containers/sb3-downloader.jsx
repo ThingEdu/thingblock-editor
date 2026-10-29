@@ -64,7 +64,7 @@ SB3Downloader.defaultProps = {
 };
 
 const mapStateToProps = state => ({
-    saveProjectSb3: state.scratchGui.vm.saveProjectSb3.bind(state.scratchGui.vm),
+    saveProjectSb3: state.scratchGui.vm.project.saveSb3.bind(state.scratchGui.vm.project),
     projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState)
 });
 

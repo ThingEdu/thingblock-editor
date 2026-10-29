@@ -32,7 +32,7 @@ test('monitor thread runs every frame', t => {
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
 
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             t.equal(vm.runtime.threads.length, 0);
 
             vm.runtime._step();
@@ -71,7 +71,7 @@ test('monitor thread not added twice', t => {
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
 
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             t.equal(vm.runtime.threads.length, 0);
 
             vm.runtime._step();

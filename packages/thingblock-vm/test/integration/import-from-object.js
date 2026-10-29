@@ -25,7 +25,7 @@ test('default', t => {
         vm.clear();
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             vm.greenFlag();
 
             // After two seconds, get playground data and stop

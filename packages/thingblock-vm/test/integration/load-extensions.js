@@ -16,7 +16,7 @@ test('Load external extensions', async t => {
         const project = readFileToBuffer(uri);
 
         await t.test('Confirm expected extension is installed in example projects', extTest => {
-            vm.loadProject(project)
+            vm.project.load(project)
                 .then(() => {
                     extTest.ok(vm.extensionManager.isExtensionLoaded(ext));
                     extTest.end();
