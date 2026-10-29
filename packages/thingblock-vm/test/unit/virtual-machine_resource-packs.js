@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const test = tap.test;
 
@@ -22,14 +22,14 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
     const vm = new VirtualMachine();
 
     t.equal(
-        vm.getResourceOrigin(),
+        vm.devices.getResourceOrigin(),
         'http://localhost:3030/resources/extensions',
         'swaps ws->http and appends the resource path'
     );
 
     // The build server serves the same pack root it compiles against, so cloud mode has an origin too.
-    vm.setLinkMode('cloud');
-    t.equal(vm.getResourceOrigin(), 'http://localhost:8080/resources/extensions', 'the build server origin');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getResourceOrigin(), 'http://localhost:8080/resources/extensions', 'the build server origin');
 
     t.end();
 });
@@ -38,9 +38,9 @@ test('registerDeviceManifest exposes the pack device through getDeviceList', t =
     const vm = new VirtualMachine();
     const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
 
-    vm.registerDeviceManifest(sampleManifest, base);
+    vm.devices.registerDeviceManifest(sampleManifest, base);
 
-    const device = vm.getDeviceList().find(d => d.deviceId === 'thingbot');
+    const device = vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot');
     t.ok(device, 'the pack device joins the device list');
     t.equal(device.fqbn, 'esp32:esp32:esp32c3', 'carries the manifest FQBN');
     t.equal(device.iconURL, `${base}/icon.svg`, 'resolves the relative icon against the served base');
@@ -55,11 +55,11 @@ test('registerDeviceManifest is idempotent on a duplicate id', t => {
     const vm = new VirtualMachine();
     const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
 
-    vm.registerDeviceManifest(sampleManifest, base);
-    const count = vm.getDeviceList().filter(d => d.deviceId === 'thingbot').length;
+    vm.devices.registerDeviceManifest(sampleManifest, base);
+    const count = vm.devices.getDeviceList().filter(d => d.deviceId === 'thingbot').length;
 
-    t.doesNotThrow(() => vm.registerDeviceManifest(sampleManifest, base), 'a repeat load does not throw');
-    t.equal(vm.getDeviceList().filter(d => d.deviceId === 'thingbot').length, count, 'no duplicate device');
+    t.doesNotThrow(() => vm.devices.registerDeviceManifest(sampleManifest, base), 'a repeat load does not throw');
+    t.equal(vm.devices.getDeviceList().filter(d => d.deviceId === 'thingbot').length, count, 'no duplicate device');
     t.equal(count, 1, 'registered exactly once');
 
     t.end();
@@ -69,8 +69,8 @@ test('ManifestDevice maps compile and upload config from the manifest', t => {
     const vm = new VirtualMachine();
     const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
 
-    vm.registerDeviceManifest(sampleManifest, base);
-    const device = vm.deviceRegistry.get('thingbot');
+    vm.devices.registerDeviceManifest(sampleManifest, base);
+    const device = vm.devices.deviceRegistry.get('thingbot');
 
     t.same(device.getCompileConfig(), {options: {CDCOnBoot: 'cdc'}}, 'compile options pass through');
     t.same(
@@ -93,16 +93,17 @@ test('loadResourcePacks retries the index while the helper is still starting', a
         if (attempts < 3) return Promise.reject(new Error('ECONNREFUSED'));
         return Promise.resolve({json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})});
     };
-    vm.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
+    vm.devices.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
 
     try {
-        await vm.loadResourcePacks();
+        await vm.devices.loadResourcePacks();
     } finally {
         global.fetch = realFetch;
     }
 
     t.equal(attempts, 3, 'kept trying until the helper answered');
-    t.ok(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'the pack device joins the list after the retry');
+    t.ok(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'),
+        'the pack device joins the list after the retry');
 
     t.end();
 });
@@ -126,7 +127,7 @@ test('loadResourcePacks gives up after a bounded number of attempts', async t =>
     };
 
     try {
-        await vm.loadResourcePacks();
+        await vm.devices.loadResourcePacks();
     } finally {
         global.fetch = realFetch;
         global.setTimeout = realSetTimeout;
@@ -135,7 +136,7 @@ test('loadResourcePacks gives up after a bounded number of attempts', async t =>
     t.equal(attempts, 14, 'stops after the bounded number of attempts');
     t.ok(requestedDelaysMs.reduce((total, ms) => total + ms, 0) > 47000,
         'the bounded window still covers the 47s worst case measured on real hardware');
-    t.notOk(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered');
+    t.notOk(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered');
 
     t.end();
 });
@@ -151,7 +152,7 @@ test('loadResourcePacks does not latch after a failed run, so a later call still
         requestedDelaysMs.push(ms);
         return realSetTimeout(fn, 0);
     };
-    vm.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
+    vm.devices.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
 
     try {
         // First call: the helper never answers, so this run exhausts its bounded attempts and gives up.
@@ -159,10 +160,10 @@ test('loadResourcePacks does not latch after a failed run, so a later call still
             attempts++;
             return Promise.reject(new Error('ECONNREFUSED'));
         };
-        await vm.loadResourcePacks();
+        await vm.devices.loadResourcePacks();
 
         t.equal(attempts, 14, 'the first run gives up after the bounded number of attempts');
-        t.notOk(vm.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered yet');
+        t.notOk(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'), 'no pack device registered yet');
 
         // Second call: the helper now answers. If the failed run had set the loaded guard, this call
         // would short-circuit at the top of loadResourcePacks and never call fetch again.
@@ -173,11 +174,11 @@ test('loadResourcePacks does not latch after a failed run, so a later call still
                 json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})
             });
         };
-        await vm.loadResourcePacks();
+        await vm.devices.loadResourcePacks();
 
         t.ok(attempts > attemptsAfterFirstRun,
             'the second call actually re-fetched instead of short-circuiting on the guard');
-        t.ok(vm.getDeviceList().find(d => d.deviceId === 'thingbot'),
+        t.ok(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'),
             'the pack device from the second call is registered');
     } finally {
         global.fetch = realFetch;
@@ -212,10 +213,10 @@ test('loadResourcePacks still gets the packs when the helper answers well past t
         if (attempts < 11) return Promise.reject(new Error('ECONNREFUSED'));
         return Promise.resolve({json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})});
     };
-    vm.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
+    vm.devices.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
 
     try {
-        await vm.loadResourcePacks();
+        await vm.devices.loadResourcePacks();
     } finally {
         global.fetch = realFetch;
         global.setTimeout = realSetTimeout;
@@ -227,7 +228,7 @@ test('loadResourcePacks still gets the packs when the helper answers well past t
     t.ok(cumulativeDelayMs > 47000,
         `retry window before this attempt (${cumulativeDelayMs}ms) covers the 47s worst case measured ` +
         'on real hardware');
-    t.ok(vm.getDeviceList().find(d => d.deviceId === 'thingbot'),
+    t.ok(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'),
         'the pack device joins the list once the helper finally answers');
 
     t.end();
@@ -243,9 +244,9 @@ const firmwareManifest = Object.assign({}, sampleManifest, {
 
 test('getDeviceFirmware lists what the pack declared', t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
-    const list = vm.getDeviceFirmware('thingbot');
+    const list = vm.devices.getDeviceFirmware('thingbot');
 
     t.equal(list.length, 1, 'one image offered');
     t.equal(list[0].id, 'telemetrix-ble', 'carries the id');
@@ -255,29 +256,28 @@ test('getDeviceFirmware lists what the pack declared', t => {
 
 test('getDeviceFirmware is empty for a device that declares none', t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(sampleManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(sampleManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
-    t.same(vm.getDeviceFirmware('thingbot'), [], 'no images, no menu entry');
+    t.same(vm.devices.getDeviceFirmware('thingbot'), [], 'no images, no menu entry');
     t.end();
 });
 
-test('flashDeviceFirmware sends flashFirmware with the pack-relative image', async t => {
+test('flashFirmware sends flashFirmware with the pack-relative image', async t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
-    // `LinkClient._request(type, payload, callbacks, cancellable)` is the single send path every
+    // `LinkSession.request(type, payload, callbacks, cancellable)` is the single send path every
     // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket. The
     // flash is followed by a real `monitorOpen` reopen (the board stays connected), so this sees two
     // requests; the flashFirmware payload assertions below only care about the first.
     const sent = [];
-    vm.client._request = (type, payload) => {
+    vm.link.backend.session.request = (type, payload) => {
         sent.push({type, payload});
         return Promise.resolve({});
     };
-    vm.client.isConnected = true;
-    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+    vm.link.backend.session.connectedTarget = {id: '/dev/ttyUSB0'};
 
-    await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
+    await vm.link.flashFirmware('thingbot', 'telemetrix-ble');
 
     t.equal(sent[0].type, 'flashFirmware', 'uses the firmware request, not upload');
     t.equal(sent[0].payload.pack, 'extensions/devices/thingbot', 'pack is relative to the resource root');
@@ -288,52 +288,50 @@ test('flashDeviceFirmware sends flashFirmware with the pack-relative image', asy
     t.end();
 });
 
-test('flashDeviceFirmware closes the monitor before the flash and reopens it after', async t => {
+test('flashFirmware closes the monitor before the flash and reopens it after', async t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
     // The board's one serial port can't be monitored while esptool drives it (confirmed on real
     // hardware: arduino-cli's serial-monitor holds the port and the flash fails with EBUSY), so
-    // `flashDeviceFirmware` must free it first, same as `upload()`.
+    // `flashFirmware` must free it first, same as `upload()`.
     const order = [];
-    vm.client._request = type => {
+    vm.link.backend.session.request = type => {
         order.push(type);
         return Promise.resolve({});
     };
-    vm.client.closeMonitor = () => {
+    vm.link.backend.monitor.closeMonitor = () => {
         order.push('closeMonitor');
         return Promise.resolve();
     };
-    vm.client.openMonitor = opts => {
+    vm.link.backend.monitor.openMonitor = opts => {
         order.push(`openMonitor:${opts.baudRate}`);
         return Promise.resolve();
     };
-    vm.client.isConnected = true;
-    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+    vm.link.backend.session.connectedTarget = {id: '/dev/ttyUSB0'};
 
-    await vm.flashDeviceFirmware('thingbot', 'telemetrix-ble');
+    await vm.link.flashFirmware('thingbot', 'telemetrix-ble');
 
     t.same(order, ['closeMonitor', 'flashFirmware', 'openMonitor:115200'],
         'frees the port for the flash, then restores the monitor at the stored baud, in that order');
     t.end();
 });
 
-test('flashDeviceFirmware reopens the monitor even when the flash rejects', async t => {
+test('flashFirmware reopens the monitor even when the flash rejects', async t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
     let reopened = false;
-    vm.client._request = () => Promise.reject(new Error('flash failed'));
-    vm.client.closeMonitor = () => Promise.resolve();
-    vm.client.openMonitor = () => {
+    vm.link.backend.session.request = () => Promise.reject(new Error('flash failed'));
+    vm.link.backend.monitor.closeMonitor = () => Promise.resolve();
+    vm.link.backend.monitor.openMonitor = () => {
         reopened = true;
         return Promise.resolve();
     };
-    vm.client.isConnected = true;
-    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+    vm.link.backend.session.connectedTarget = {id: '/dev/ttyUSB0'};
 
     await t.rejects(
-        vm.flashDeviceFirmware('thingbot', 'telemetrix-ble'),
+        vm.link.flashFirmware('thingbot', 'telemetrix-ble'),
         /flash failed/,
         'the flash rejection still surfaces'
     );
@@ -341,34 +339,33 @@ test('flashDeviceFirmware reopens the monitor even when the flash rejects', asyn
     t.end();
 });
 
-test('flashDeviceFirmware does not fail the flash when the monitor fails to reopen', async t => {
+test('flashFirmware does not fail the flash when the monitor fails to reopen', async t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
     let reopenAttempted = false;
-    vm.client._request = () => Promise.resolve({});
-    vm.client.closeMonitor = () => Promise.resolve();
-    vm.client.openMonitor = () => {
+    vm.link.backend.session.request = () => Promise.resolve({});
+    vm.link.backend.monitor.closeMonitor = () => Promise.resolve();
+    vm.link.backend.monitor.openMonitor = () => {
         reopenAttempted = true;
         return Promise.reject(new Error('port busy'));
     };
-    vm.client.isConnected = true;
-    vm.client._connectedTarget = {id: '/dev/ttyUSB0'};
+    vm.link.backend.session.connectedTarget = {id: '/dev/ttyUSB0'};
 
     await t.resolves(
-        vm.flashDeviceFirmware('thingbot', 'telemetrix-ble'),
+        vm.link.flashFirmware('thingbot', 'telemetrix-ble'),
         'a reopen failure is swallowed to a warning, not turned into a flash failure'
     );
     t.equal(reopenAttempted, true, 'the reopen was actually attempted, not skipped');
     t.end();
 });
 
-test('flashDeviceFirmware rejects an unknown image id', async t => {
+test('flashFirmware rejects an unknown image id', async t => {
     const vm = new VirtualMachine();
-    vm.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
 
     await t.rejects(
-        vm.flashDeviceFirmware('thingbot', 'no-such-image'),
+        vm.link.flashFirmware('thingbot', 'no-such-image'),
         /no firmware "no-such-image"/,
         'names the missing id rather than failing silently'
     );

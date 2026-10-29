@@ -19,7 +19,8 @@ jest.mock('../../../src/components/library/library.jsx', () => {
 
 describe('BoardLibrary', () => {
     const vm = Object.create(VM.prototype);
-    vm.getDeviceList = jest.fn(() => [
+    vm.events = {on: jest.fn(), off: jest.fn()};
+    vm.devices = {getDeviceList: jest.fn(() => [
         {
             deviceId: 'arduinoUno',
             iconURL: 'vm-arduino-uno.svg',
@@ -38,7 +39,7 @@ describe('BoardLibrary', () => {
             name: 'ESP32 Dev Module',
             description: 'A Wi-Fi and Bluetooth capable board.'
         }
-    ]);
+    ])};
 
     const renderBoardLibrary = (visible = true) => {
         const store = configureStore()({

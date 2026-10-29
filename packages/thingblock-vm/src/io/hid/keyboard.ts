@@ -1,5 +1,6 @@
 import Cast from '../../util/cast';
-import {RuntimeEventNames, type RuntimeEmitter} from '../../engine/runtime/runtime-events';
+import {IoEvent} from '../../event/event-name';
+import type {EventBus} from '../../event/event-bus';
 
 /** Internal names of the non-character Scratch keys. */
 const KEY_NAME = {
@@ -19,11 +20,11 @@ export interface KeyboardData {
 }
 
 class Keyboard {
-    events: RuntimeEmitter;
+    events: EventBus;
     /** Pressed Scratch keys: a `KEY_NAME` value or one uppercase character, never a modifier. */
     _keysPressed: string[] = [];
 
-    constructor (events: RuntimeEmitter) {
+    constructor (events: EventBus) {
         this.events = events;
     }
 
@@ -75,7 +76,7 @@ class Keyboard {
         if (scratchKey === '') return;
         const index = this._keysPressed.indexOf(scratchKey);
         if (data.isDown) {
-            this.events.emit(RuntimeEventNames.KEY_PRESSED, scratchKey);
+            this.events.emit(IoEvent.KEY_PRESSED, scratchKey);
             if (index < 0) this._keysPressed.push(scratchKey);
         } else if (index > -1) {
             this._keysPressed.splice(index, 1);

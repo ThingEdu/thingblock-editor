@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const test = tap.test;
 
@@ -81,7 +81,7 @@ const projectWithPackBlocks = () => JSON.stringify({
 test('a project using resource-pack blocks loads when no packs have been registered', async t => {
     const vm = new VirtualMachine();
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     const sprite = vm.runtime.targets.find(target => !target.isStage);
     t.ok(sprite.blocks.getBlock('init'), 'the device-owned pack block survived the load');
@@ -91,23 +91,23 @@ test('a project using resource-pack blocks loads when no packs have been registe
 
 test('registering a peripheral manifest makes its id a device extension', async t => {
     const vm = new VirtualMachine();
-    t.notOk(vm._devices.isDeviceExtension('serial'), 'unknown before registration');
+    t.notOk(vm.devices.isDeviceExtension('serial'), 'unknown before registration');
 
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
 
-    t.ok(vm._devices.isDeviceExtension('serial'), 'the pack id, which is also its opcode prefix, is recognized');
+    t.ok(vm.devices.isDeviceExtension('serial'), 'the pack id, which is also its opcode prefix, is recognized');
     t.end();
 });
 
 const registerPackPeripherals = vm => {
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'thingBotC3', kind: 'peripheral', name: 'ThingBot', hidden: true},
         'http://localhost:3030/resources/extensions/peripheral/thingBotC3'
     );
-    vm.registerPeripheralManifest(
+    vm.devices.registerPeripheralManifest(
         {id: 'serial', kind: 'peripheral', name: 'Serial'},
         'http://localhost:3030/resources/extensions/peripheral/serial'
     );
@@ -128,7 +128,7 @@ test('loading a project does not ask the extension manager for device extensions
     registerPackPeripherals(vm);
     const requested = spyExtensionLoads(vm);
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     t.same(requested, [], 'device-owned and reusable pack ids never reach loadExtensionURL');
     t.end();
@@ -136,12 +136,12 @@ test('loading a project does not ask the extension manager for device extensions
 
 test('sharing blocks does not ask the extension manager for device extensions', async t => {
     const vm = new VirtualMachine();
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
     registerPackPeripherals(vm);
     const requested = spyExtensionLoads(vm);
     const sprite = vm.runtime.targets.find(target => !target.isStage);
 
-    await vm.shareBlocksToTarget([{
+    await vm.project.shareBlocksToTarget([{
         id: 'shared',
         opcode: 'serial_begin',
         inputs: {},
@@ -161,7 +161,7 @@ test('sharing blocks does not ask the extension manager for device extensions', 
 test('the saved board is applied before the workspace update that renders its blocks', async t => {
     const base = 'http://localhost:3030/resources/extensions/peripheral/thingBotC3';
     const vm = new VirtualMachine();
-    vm._importPackModule = url => Promise.resolve({
+    vm.devices._importPackModule = url => Promise.resolve({
         [`${base}/toolbox.js`]: {default: {kind: 'category', name: 'ThingBot', contents: []}},
         [`${base}/blocks.js`]: {registerBlocks: Blockly => {
             Blockly.Blocks.thingBotC3_init = {};
@@ -169,8 +169,8 @@ test('the saved board is applied before the workspace update that renders its bl
         [`${base}/generator.js`]: {registerGenerators: () => {}}
     }[url]);
     const scratchBlocks = {Blocks: {}, arduinoGenerator: {forBlock: {}}, ArduinoOrder: {ATOMIC: 0}};
-    vm.setScratchBlocks(scratchBlocks);
-    vm.registerDeviceManifest({
+    vm.devices.setScratchBlocks(scratchBlocks);
+    vm.devices.registerDeviceManifest({
         id: 'thingbot',
         kind: 'device',
         name: 'ThingBot',
@@ -179,7 +179,7 @@ test('the saved board is applied before the workspace update that renders its bl
         description: {id: 'device.thingbot.description', default: 'A ThingEdu board.'},
         extensions: ['thingBotC3']
     }, 'http://localhost:3030/resources/extensions/devices/thingbot');
-    vm.registerPeripheralManifest({
+    vm.devices.registerPeripheralManifest({
         id: 'thingBotC3',
         kind: 'peripheral',
         name: 'ThingBot',
@@ -190,11 +190,11 @@ test('the saved board is applied before the workspace update that renders its bl
     }, base);
 
     let registeredAtUpdate = false;
-    vm.on('workspaceUpdate', () => {
+    vm.events.on('workspaceUpdate', () => {
         registeredAtUpdate = Boolean(scratchBlocks.Blocks.thingBotC3_init);
     });
 
-    await vm.loadProject(projectWithPackBlocks());
+    await vm.project.load(projectWithPackBlocks());
 
     t.ok(registeredAtUpdate, 'the pack block was on the shared Blockly by the time the workspace updated');
     t.end();

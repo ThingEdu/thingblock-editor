@@ -42,7 +42,7 @@ const FirmwareStep = ({
             return;
         }
         setStatus('listing');
-        vm.listBoards(firmware.deviceId)
+        vm.link.listBoards(firmware.deviceId)
             .catch(err => {
                 // eslint-disable-next-line no-console
                 console.warn(`FirmwareStep: listBoards failed: ${err.message}`);
@@ -62,8 +62,8 @@ const FirmwareStep = ({
         // Only release the port afterwards if this step opened it.
         const ownsPort = !connectedBoard;
         setStatus('flashing');
-        (ownsPort ? vm.connectBoard(port) : Promise.resolve())
-            .then(() => vm.flashDeviceFirmware(firmware.deviceId, firmware.firmwareId))
+        (ownsPort ? vm.link.connectBoard(port) : Promise.resolve())
+            .then(() => vm.link.flashFirmware(firmware.deviceId, firmware.firmwareId))
             .then(() => {
                 if (unmountedRef.current) return;
                 setStatus('done');
@@ -79,7 +79,7 @@ const FirmwareStep = ({
             })
             .finally(() => {
                 if (!ownsPort) return;
-                vm.disconnectBoard().catch(err => {
+                vm.link.disconnectBoard().catch(err => {
                     // eslint-disable-next-line no-console
                     console.warn(`FirmwareStep: disconnectBoard failed: ${err.message}`);
                 });
@@ -87,7 +87,7 @@ const FirmwareStep = ({
     }, [connectedBoard, firmware, listPorts, ports, vm]);
 
     const handleStop = useCallback(() => {
-        vm.cancelUpload();
+        vm.link.cancelUpload();
     }, [vm]);
 
     return (

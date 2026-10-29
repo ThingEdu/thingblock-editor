@@ -2,7 +2,7 @@ const tap = require('tap');
 const path = require('path');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
 const makeTestStorage = require('../fixtures/make-test-storage');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const test = tap.test;
 
@@ -21,7 +21,7 @@ test('Loading a project should not emit a project changed event', t => {
     });
 
     vm.attachStorage(makeTestStorage());
-    return vm.loadProject(project).then(() => {
+    return vm.project.load(project).then(() => {
         t.equal(projectChanged, false);
         t.end();
     });

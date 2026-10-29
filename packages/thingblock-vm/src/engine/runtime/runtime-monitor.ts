@@ -1,18 +1,19 @@
 import {Map, OrderedMap} from 'immutable';
 
-import {RuntimeEventNames, type RuntimeEmitter} from './runtime-events';
+import {RuntimeEvent} from '../../event/event-name';
+import type {EventBus} from '../../event/event-bus';
 
 /** A `MonitorRecord`, or a partial map of its fields when updating. */
 export type Monitor = Map<string, any>;
 
 /** Owns the ordered monitor records shown in the GUI and publishes changes once per step. */
 class MonitorHandler {
-    events: RuntimeEmitter;
+    events: EventBus;
     _state = OrderedMap<string, Monitor>({});
     /** State as of the last emitted update. */
     _prevState = OrderedMap<string, Monitor>({});
 
-    constructor (events: RuntimeEmitter) {
+    constructor (events: EventBus) {
         this.events = events;
     }
 
@@ -57,7 +58,7 @@ class MonitorHandler {
 
     emitIfChanged () {
         if (!this._prevState.equals(this._state)) {
-            this.events.emit(RuntimeEventNames.MONITORS_UPDATE, this._state);
+            this.events.emit(RuntimeEvent.MONITORS_UPDATE, this._state);
             this._prevState = this._state;
         }
     }

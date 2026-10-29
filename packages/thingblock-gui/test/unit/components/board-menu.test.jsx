@@ -10,7 +10,7 @@ import BoardMenu from '../../../src/components/menu-bar/board-menu.jsx';
 
 describe('BoardMenu', () => {
     const vm = new VM();
-    const selectedDevice = vm.getDeviceList()[0];
+    const selectedDevice = vm.devices.getDeviceList()[0];
 
     const renderBoardMenu = (selectedDeviceId = selectedDevice.deviceId) => {
         const store = configureStore()({

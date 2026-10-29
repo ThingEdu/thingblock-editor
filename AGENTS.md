@@ -139,12 +139,17 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - TS unit tests are `test/unit/*.ts`. Tap runs them through ts-node with `tsconfig.test.json` (CommonJS output),
   which the tap scripts select via `TS_NODE_PROJECT`. JS code that `require`s a TS module takes its `.default` (or
   a named export), since TS compiles to ES modules.
-- The engine (`src/engine/`) is TypeScript. Runtime events go through the typed `runtime.events` emitter with
-  names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
-  and the events only the VM emits are named in `virtual-machine/vm-event-names.js`.
+- The engine (`src/engine/`) is TypeScript. Every event goes through one untyped `EventBus` per VM
+  (`src/event/event-bus.ts`), shared as `vm.events` and `runtime.events`, with names grouped by the code that emits
+  them in `src/event/event-name.ts`. The GUI subscribes on `vm.events`.
+- `VirtualMachine` (`src/virtual-machine/index.ts`) keeps only lifecycle and setup methods flat; the rest lives
+  in owned parts: `vm.workspace` (Blockly events, editing target, workspace rendering), `vm.project` (load,
+  save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
+  from the runtime, an `emit` function and the sibling parts it uses, never the VM itself; add new behavior to
+  the part it belongs to. The runtime holds the only copy of the editing target.
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
-  `assets/icon.svg` and are exposed through `vm.getDeviceList()` as `iconURL`; do not add GUI-side icon maps for
-  VM devices.
+  `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
+  maps for VM devices.
 - i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
   call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
   through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.
@@ -154,16 +159,16 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `board` field; saves carry a placeholder costume and an empty sounds list only because scratch-parser requires
   them. Scratch 1/2 projects (`.sb`/`.sb2`) are not supported, and saved projects no longer round-trip through
   stock Scratch.
-- Resource packs are served by the link helper (`LinkClient.resourceOrigin` → its `/resources` route) unless the
-  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.js`
-  and passed to `LinkClient` as `resourceBase`. That global is the seam for a host that ships the packs itself —
+- Resource packs are served by the link helper (`LinkController.resourceOrigin` → the helper backend's `/resources` route) unless the
+  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.ts`
+  and passed to the helper backend as `resourceBase`. That global is the seam for a host that ships the packs itself —
   the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
   loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
 - A peripheral pack's manifest `id` must equal the opcode prefix its `blocks.ts` registers (pack `serial` owns
   `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
   skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
   cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
-- `virtual-machine/resource-pack-manager.js` is a placeholder recording the direction for resource packs as the
+- `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 
 ## npm workflow

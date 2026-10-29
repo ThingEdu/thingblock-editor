@@ -35,15 +35,15 @@ const vmManagerHOC = function (WrappedComponent) {
                 this.props.vm.setCompatibilityMode(true);
                 this.props.vm.initialized = true;
                 this.props.vm.setLocale(this.props.locale, this.props.messages);
-                this.props.vm.setLinkMode(this.props.linkMode);
+                this.props.vm.link.setLinkMode(this.props.linkMode);
                 // Supply the dynamic importer from the GUI build so the remote import() stays out of the
                 // VM bundle (where webpack would rewrite it and strip the bundle's default export). Then
                 // pull helper-served device packs — a no-op in cloud mode or when the helper is down.
-                this.props.vm.setModuleImporter(url => import(/* webpackIgnore: true */ url));
-                this.props.vm.loadResourcePacks();
+                this.props.vm.devices.setModuleImporter(url => import(/* webpackIgnore: true */ url));
+                this.props.vm.devices.loadResourcePacks();
                 // A loaded project carries its target board; mirror it into the board selection so the
                 // editor enters (or leaves) board mode to match. A null device clears the selection.
-                this.props.vm.on('BOARD_RESTORED', ({device}) => this.props.onSetDevice(device));
+                this.props.vm.events.on('BOARD_RESTORED', ({device}) => this.props.onSetDevice(device));
             }
             if (!this.props.isPlayerOnly && !this.props.isStarted) {
                 this.props.vm.start();
@@ -62,7 +62,7 @@ const vmManagerHOC = function (WrappedComponent) {
             }
         }
         loadProject () {
-            return this.props.vm.loadProject(this.props.projectData)
+            return this.props.vm.project.load(this.props.projectData)
                 .then(() => {
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
                     // Wrap in a setTimeout so any project-changed events emitted while

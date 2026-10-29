@@ -34,10 +34,10 @@ const MenuBarHOC = function (WrappedComponent) {
         }
 
         componentDidMount () {
-            this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
-            this.props.vm.addListener(PERIPHERAL_CONNECTED, this.handleBLEConnected);
-            this.props.vm.addListener(PERIPHERAL_DISCONNECTED, this.handleBLEDisconnected);
-            this.props.vm.addListener(PERIPHERAL_REQUEST_ERROR, this.handleBLEError);
+            this.props.vm.events.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
+            this.props.vm.events.addListener(PERIPHERAL_CONNECTED, this.handleBLEConnected);
+            this.props.vm.events.addListener(PERIPHERAL_DISCONNECTED, this.handleBLEDisconnected);
+            this.props.vm.events.addListener(PERIPHERAL_REQUEST_ERROR, this.handleBLEError);
 
             // Handle restored project (extension already loaded)
             if (this.props.vm.extensionManager.isExtensionLoaded(THINGBOT_EXTENSION_ID)) {
@@ -46,10 +46,10 @@ const MenuBarHOC = function (WrappedComponent) {
         }
 
         componentWillUnmount () {
-            this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
-            this.props.vm.removeListener(PERIPHERAL_CONNECTED, this.handleBLEConnected);
-            this.props.vm.removeListener(PERIPHERAL_DISCONNECTED, this.handleBLEDisconnected);
-            this.props.vm.removeListener(PERIPHERAL_REQUEST_ERROR, this.handleBLEError);
+            this.props.vm.events.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
+            this.props.vm.events.removeListener(PERIPHERAL_CONNECTED, this.handleBLEConnected);
+            this.props.vm.events.removeListener(PERIPHERAL_DISCONNECTED, this.handleBLEDisconnected);
+            this.props.vm.events.removeListener(PERIPHERAL_REQUEST_ERROR, this.handleBLEError);
         }
 
         handleExtensionAdded (categoryInfo) {

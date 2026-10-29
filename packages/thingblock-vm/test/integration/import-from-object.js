@@ -12,7 +12,7 @@ test('default', t => {
     vm.attachStorage(makeTestStorage());
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', e => {
+    vm.events.on('playgroundData', e => {
         const threads = JSON.parse(e.threads);
         t.ok(threads.length === 0);
         vm.quit();
@@ -25,7 +25,7 @@ test('default', t => {
         vm.clear();
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             vm.greenFlag();
 
             // After two seconds, get playground data and stop

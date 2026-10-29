@@ -1,5 +1,5 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 const Target = require('../../src/engine/target').default;
 const Variable = require('../../src/engine/variable').default;
 const adapter = require('../../src/engine/adapter').default;
@@ -20,7 +20,7 @@ test('Project loaded emits runtime event', t => {
         projectLoaded = true;
     });
 
-    vm.loadProject(project).then(() => {
+    vm.project.load(project).then(() => {
         t.equal(projectLoaded, true, 'Project load event emitted');
         t.end();
     });
@@ -92,11 +92,11 @@ test('emitWorkspaceUpdate', t => {
             }
         }
     ];
-    vm.editingTarget = vm.runtime.targets[2];
+    vm.runtime.setEditingTarget(vm.runtime.targets[2]);
 
     let xml = null;
-    vm.emit = (event, data) => (xml = data.xml);
-    vm.emitWorkspaceUpdate();
+    vm.events.on('workspaceUpdate', data => (xml = data.xml));
+    vm.workspace.emitWorkspaceUpdate();
     t.not(xml.indexOf('global'), -1);
     t.not(xml.indexOf('local'), -1);
     t.equal(xml.indexOf('unused'), -1);
@@ -158,7 +158,6 @@ test('shareBlocksToTarget without a source target creates a missing variable on 
     const target = new Target(runtime);
 
     runtime.targets = [stage, target];
-    vm.editingTarget = target;
     vm.runtime.setEditingTarget(target);
 
     const blocksToShare = adapter(events.mockVariableBlock);
@@ -166,7 +165,7 @@ test('shareBlocksToTarget without a source target creates a missing variable on 
     t.equal(Object.keys(stage.variables).length, 0);
     t.equal(Object.keys(target.variables).length, 0);
 
-    vm.shareBlocksToTarget(blocksToShare, target.id).then(() => {
+    vm.project.shareBlocksToTarget(blocksToShare, target.id).then(() => {
         t.equal(Object.keys(stage.variables).length, 1, 'variable created on stage');
         const newVar = stage.variables['mock var id'];
         t.ok(newVar, 'variable preserves the original id');
@@ -190,14 +189,13 @@ test('shareBlocksToTarget without a source target creates a missing broadcast on
     const target = new Target(runtime);
 
     runtime.targets = [stage, target];
-    vm.editingTarget = target;
     vm.runtime.setEditingTarget(target);
 
     const blocksToShare = adapter(events.mockBroadcastBlock);
 
     t.equal(Object.keys(stage.variables).length, 0);
 
-    vm.shareBlocksToTarget(blocksToShare, target.id).then(() => {
+    vm.project.shareBlocksToTarget(blocksToShare, target.id).then(() => {
         t.equal(Object.keys(stage.variables).length, 1, 'broadcast created on stage');
         const newBroadcast = stage.variables['mock broadcast message id'];
         t.ok(newBroadcast, 'broadcast preserves the original id');
@@ -222,14 +220,13 @@ test('shareBlocksToTarget without a source target remaps a variable to an existi
     const target = new Target(runtime);
 
     runtime.targets = [stage, target];
-    vm.editingTarget = target;
     vm.runtime.setEditingTarget(target);
 
     stage.createVariable('pre-existing global var id', 'a mock variable', Variable.SCALAR_TYPE);
 
     const blocksToShare = adapter(events.mockVariableBlock);
 
-    vm.shareBlocksToTarget(blocksToShare, target.id).then(() => {
+    vm.project.shareBlocksToTarget(blocksToShare, target.id).then(() => {
         t.equal(Object.keys(stage.variables).length, 1, 'no duplicate variable created');
         t.ok(stage.variables['pre-existing global var id'], 'existing variable preserved');
 
@@ -248,12 +245,11 @@ test('shareBlocksToTarget without a source target creates broadcasts when pasted
     stage.isStage = true;
 
     runtime.targets = [stage];
-    vm.editingTarget = stage;
     vm.runtime.setEditingTarget(stage);
 
     const blocksToShare = adapter(events.mockBroadcastBlock);
 
-    vm.shareBlocksToTarget(blocksToShare, stage.id).then(() => {
+    vm.project.shareBlocksToTarget(blocksToShare, stage.id).then(() => {
         t.equal(Object.keys(stage.variables).length, 1, 'broadcast created on stage when stage is the target');
         const newBroadcast = stage.variables['mock broadcast message id'];
         t.ok(newBroadcast);
@@ -275,17 +271,17 @@ test('shareBlocksToTarget loads extensions that have not yet been loaded', t => 
         {opcode: 'notloaded_fakeblock'}
     ];
 
-    // Stub the extension manager
+    // Stub the extension manager, on the instance the VM's parts share
     const loadedIds = [];
-    vm.extensionManager = {
+    Object.assign(vm.extensionManager, {
         isExtensionLoaded: id => id === 'loaded',
         loadExtensionURL: id => new Promise(resolve => {
             loadedIds.push(id);
             resolve();
         })
-    };
+    });
 
-    vm.shareBlocksToTarget(fakeBlocks, stage.id).then(() => {
+    vm.project.shareBlocksToTarget(fakeBlocks, stage.id).then(() => {
         // Verify that only the not-loaded extension gets loaded
         t.same(loadedIds, ['notloaded']);
         t.end();
@@ -312,7 +308,7 @@ test('installTargets repairs dangling variable references on whole-project load'
     t.equal(Object.keys(sprite.variables).length, 0);
 
     const extensions = {extensionIDs: new Set(), extensionURLs: new Map()};
-    vm.installTargets([stage, sprite], extensions, true).then(() => {
+    vm.project.installTargets([stage, sprite], extensions, true).then(() => {
         t.equal(Object.keys(stage.variables).length, 2, 'variable and broadcast created on stage');
         t.ok(stage.variables['mock var id'], 'dangling variable reference reconciled');
         t.ok(stage.variables['mock broadcast message id'], 'dangling broadcast reference reconciled');
@@ -360,7 +356,7 @@ test('installTargets does NOT rename clean local-vs-global name collisions on wh
     });
 
     const extensions = {extensionIDs: new Set(), extensionURLs: new Map()};
-    vm.installTargets([stage, sprite], extensions, true).then(() => {
+    vm.project.installTargets([stage, sprite], extensions, true).then(() => {
         t.equal(sprite.variables['local score id'].name, 'score',
             'sprite local variable name unchanged after whole-project load');
         t.equal(sprite.blocks.getBlock('a block').fields.VARIABLE.id, 'local score id',
@@ -392,7 +388,7 @@ test('installTargets loads a project whose blocks come from resource packs inste
         extensionURLs: new Map()
     };
 
-    return vm.installTargets([stage], extensions, true)
+    return vm.project.installTargets([stage], extensions, true)
         .then(() => {
             log.warn = originalWarn;
             t.match(warnings.join('\n'), /thingBotC3/, 'skip of thingBotC3 is logged');
@@ -421,7 +417,7 @@ test('installTargets still loads a builtin extension id', t => {
         extensionURLs: new Map()
     };
 
-    return vm.installTargets([stage], extensions, true).then(() => {
+    return vm.project.installTargets([stage], extensions, true).then(() => {
         t.ok(vm.extensionManager.isExtensionLoaded('coreExample'), 'builtin extension was loaded');
         t.end();
     });
@@ -436,7 +432,7 @@ test('installTargets still loads an extension id that has a real URL recorded in
     stage.name = 'Stage';
 
     const loadedURLs = [];
-    vm.extensionManager = {
+    Object.assign(vm.extensionManager, {
         isExtensionLoaded: () => false,
         isBuiltinExtension: () => false,
         loadExtensionURL: url => {
@@ -444,7 +440,7 @@ test('installTargets still loads an extension id that has a real URL recorded in
             return Promise.resolve();
         },
         refreshBlocks: () => Promise.resolve()
-    };
+    });
 
     const originalWarn = log.warn;
     const warnings = [];
@@ -455,7 +451,7 @@ test('installTargets still loads an extension id that has a real URL recorded in
         extensionURLs: new Map([['remoteThing', 'https://example.com/remoteThing.js']])
     };
 
-    return vm.installTargets([stage], extensions, true).then(() => {
+    return vm.project.installTargets([stage], extensions, true).then(() => {
         log.warn = originalWarn;
         t.same(loadedURLs, ['https://example.com/remoteThing.js'],
             'the recorded URL, not the bare id, is passed to the loader');
@@ -469,10 +465,10 @@ test('Setting turbo mode emits events', t => {
 
     const vm = new VirtualMachine();
 
-    vm.addListener('TURBO_MODE_ON', () => {
+    vm.events.addListener('TURBO_MODE_ON', () => {
         turboMode = true;
     });
-    vm.addListener('TURBO_MODE_OFF', () => {
+    vm.events.addListener('TURBO_MODE_OFF', () => {
         turboMode = false;
     });
 
@@ -485,10 +481,26 @@ test('Setting turbo mode emits events', t => {
     t.end();
 });
 
+test('writeMonitor gives the sensing blocks their answer, and writes a line to a connected board', t => {
+    const vm = new VirtualMachine();
+    const written = [];
+    const connection = {isConnected: false};
+    vm.link.backend = {connection, monitor: {writeMonitor: data => written.push(data)}};
+
+    vm.writeMonitor('hi');
+    t.equal(vm.runtime._primitives.sensing_answer(), 'hi');
+    t.same(written, []);
+
+    connection.isConnected = true;
+    vm.writeMonitor('led on');
+    t.same(written, ['led on\n']);
+    t.end();
+});
+
 test('Starting the VM emits an event', t => {
     let started = false;
     const vm = new VirtualMachine();
-    vm.addListener('RUNTIME_STARTED', () => {
+    vm.events.addListener('RUNTIME_STARTED', () => {
         started = true;
     });
     vm.start();
@@ -500,7 +512,7 @@ test('Starting the VM emits an event', t => {
 test('vm.greenFlag() emits a PROJECT_START event', t => {
     let greenFlagged = false;
     const vm = new VirtualMachine();
-    vm.addListener('PROJECT_START', () => {
+    vm.events.addListener('PROJECT_START', () => {
         greenFlagged = true;
     });
     vm.greenFlag();
@@ -522,7 +534,7 @@ test('toJSON encodes Infinity/NaN as 0, not null', t => {
 
     runtime.targets = [stage];
 
-    const json = JSON.parse(vm.toJSON());
+    const json = JSON.parse(vm.project.toJSON());
     t.equal(json.targets[0].variables.id1[1], 0);
     t.equal(json.targets[0].variables.id2[1], 0);
     t.equal(json.targets[0].variables.id3[1], 0);
@@ -537,8 +549,27 @@ test('clearFlyoutBlocks removes all of the flyout blocks', t => {
     flyoutBlocks.createBlock(adapter(events.mockVariableBlock)[0]);
     t.equal(Object.keys(flyoutBlocks._blocks).length, 1);
 
-    vm.clearFlyoutBlocks();
+    vm.workspace.clearFlyoutBlocks();
     t.equal(Object.keys(flyoutBlocks._blocks).length, 0);
 
+    t.end();
+});
+
+test('a blocks update request re-renders the workspace only once a project is loaded', t => {
+    const vm = new VirtualMachine();
+    let updates = 0;
+    vm.events.on('workspaceUpdate', () => updates++);
+
+    vm.runtime.requestBlocksUpdate();
+    t.equal(updates, 0, 'nothing to render without an editing target');
+
+    const stage = new Target(vm.runtime);
+    stage.isStage = true;
+    vm.runtime.addTarget(stage);
+    vm.workspace.setEditingTarget(stage.id);
+    updates = 0;
+
+    vm.runtime.requestBlocksUpdate();
+    t.equal(updates, 1, 'renders the editing target');
     t.end();
 });

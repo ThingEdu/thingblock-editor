@@ -2,18 +2,19 @@ import Cast from '../util/cast';
 import type BlockUtility from '../engine/block-utility';
 import type {VariableArg} from '../engine/block-types';
 import type Runtime from '../engine/runtime';
-import {RuntimeEventNames, type RuntimeEmitter} from '../engine/runtime/runtime-events';
+import {OpcodeEvent, RuntimeEvent} from '../event/event-name';
+import type {EventBus} from '../event/event-bus';
 
 class Scratch3ControlBlocks {
-    events: RuntimeEmitter;
+    events: EventBus;
     redraw: Pick<Runtime, 'requestRedraw'>;
     /** The "counter" block value, for Scratch 2 compatibility. */
     _counter = 0;
 
-    constructor (events: RuntimeEmitter, redraw: Pick<Runtime, 'requestRedraw'>) {
+    constructor (events: EventBus, redraw: Pick<Runtime, 'requestRedraw'>) {
         this.events = events;
         this.redraw = redraw;
-        events.on(RuntimeEventNames.RUNTIME_DISPOSED, this.clearCounter.bind(this));
+        events.on(RuntimeEvent.RUNTIME_DISPOSED, this.clearCounter.bind(this));
     }
 
     getPrimitives () {
@@ -134,7 +135,7 @@ class Scratch3ControlBlocks {
     }
 
     print (args: {STRING: unknown}) {
-        this.events.emit(RuntimeEventNames.PRINT_TO_MONITOR, String(args.STRING ?? ''));
+        this.events.emit(OpcodeEvent.PRINT_TO_MONITOR, String(args.STRING ?? ''));
     }
 }
 

@@ -45,24 +45,24 @@ class AutoScanningStep extends React.Component {
         }
     }
     bindPeripheralUpdates () {
-        this.props.vm.on(
+        this.props.vm.events.on(
             'PERIPHERAL_LIST_UPDATE', this.handlePeripheralListUpdate);
-        this.props.vm.on(
+        this.props.vm.events.on(
             'PERIPHERAL_SCAN_TIMEOUT', this.handlePeripheralScanTimeout);
 
         // USER_PICKED_PERIPHERAL means the user picked the peripheral outside of this UI, say through the Android
         // CDM, in which case it'll pass a list of exactly one peripheral which we should connect to. If the user
         // canceled the CDM dialog, we'll get an empty list and we shouldn't connect. That already matches the
         // behavior of handlePeripheralListUpdate, so we just reuse that handler.
-        this.props.vm.on(
+        this.props.vm.events.on(
             'USER_PICKED_PERIPHERAL', this.handlePeripheralListUpdate);
     }
     unbindPeripheralUpdates () {
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'PERIPHERAL_LIST_UPDATE', this.handlePeripheralListUpdate);
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'PERIPHERAL_SCAN_TIMEOUT', this.handlePeripheralScanTimeout);
-        this.props.vm.removeListener(
+        this.props.vm.events.removeListener(
             'USER_PICKED_PERIPHERAL', this.handlePeripheralListUpdate);
     }
     handleRefresh () {

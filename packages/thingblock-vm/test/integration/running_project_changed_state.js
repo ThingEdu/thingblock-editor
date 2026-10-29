@@ -12,12 +12,12 @@ test('Running project should not emit project changed event', t => {
     vm.attachStorage(makeTestStorage());
 
     let projectChanged = false;
-    vm.on('PROJECT_CHANGED', () => {
+    vm.events.on('PROJECT_CHANGED', () => {
         projectChanged = true;
     });
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', () => {
+    vm.events.on('playgroundData', () => {
         t.equal(projectChanged, false);
         vm.quit();
         t.end();
@@ -29,7 +29,7 @@ test('Running project should not emit project changed event', t => {
         vm.clear();
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             // The test in unit/project_load_changed_state.js tests
             // that loading a project does not emit a project changed
             // event. This setup tries to be agnostic of whether that

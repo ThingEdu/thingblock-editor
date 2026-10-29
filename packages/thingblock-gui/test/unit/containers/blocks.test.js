@@ -10,7 +10,7 @@ describe('Blocks container onWorkspaceUpdate', () => {
             onWorkspaceMetricsChange: jest.fn(),
             toolboxUpdateChangeListener: jest.fn(),
             props: {
-                vm: {editingTarget: null},
+                vm: {workspace: {editingTarget: null}},
                 workspaceMetrics: {targets: {}},
                 updateToolboxState: jest.fn()
             },

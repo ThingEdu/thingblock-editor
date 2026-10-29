@@ -98,7 +98,7 @@ class Blocks extends React.Component {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         // Share the live scratch-blocks handle so device selection can register pack-served device
         // extension blocks and codegen against the same singleton this workspace generates from.
-        this.props.vm.setScratchBlocks(this.ScratchBlocks);
+        this.props.vm.devices.setScratchBlocks(this.ScratchBlocks);
         // Activate the hidden extension of an already-selected device (e.g. a restored selection) and
         // surface its toolbox categories.
         if (this.props.selectedDeviceId) {
@@ -238,7 +238,7 @@ class Blocks extends React.Component {
                 // vm.getLocale() will be out of sync if locale was changed while not visible
                 this.setLocale();
             } else {
-                this.props.vm.refreshWorkspace();
+                this.props.vm.workspace.refreshWorkspace();
             }
 
             window.dispatchEvent(new Event('resize'));
@@ -267,7 +267,7 @@ class Blocks extends React.Component {
         clearTimeout(this.toolboxUpdateTimeout);
 
         // Clear the flyout blocks so that they can be recreated on mount.
-        this.props.vm.clearFlyoutBlocks();
+        this.props.vm.workspace.clearFlyoutBlocks();
     }
     requestToolboxUpdate () {
         clearTimeout(this.toolboxUpdateTimeout);
@@ -280,7 +280,7 @@ class Blocks extends React.Component {
         this.props.vm.setLocale(this.props.locale, this.props.messages)
             .then(() => {
                 this.workspace.getFlyout().setRecyclingEnabled(false);
-                this.props.vm.refreshWorkspace();
+                this.props.vm.workspace.refreshWorkspace();
                 this.requestToolboxUpdate();
                 this.withToolboxUpdates(() => {
                     this.workspace.getFlyout().setRecyclingEnabled(true);
@@ -337,40 +337,40 @@ class Blocks extends React.Component {
     }
 
     attachVM () {
-        this.workspace.addChangeListener(this.props.vm.blockListener);
+        this.workspace.addChangeListener(this.props.vm.workspace.blockListener);
         this.flyoutWorkspace = this.workspace
             .getFlyout()
             .getWorkspace();
-        this.flyoutWorkspace.addChangeListener(this.props.vm.flyoutBlockListener);
-        this.flyoutWorkspace.addChangeListener(this.props.vm.monitorBlockListener);
-        this.props.vm.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
-        this.props.vm.addListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
-        this.props.vm.addListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
-        this.props.vm.addListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
-        this.props.vm.addListener('VISUAL_REPORT', this.onVisualReport);
-        this.props.vm.addListener('workspaceUpdate', this.onWorkspaceUpdate);
-        this.props.vm.addListener('targetsUpdate', this.onTargetsUpdate);
-        this.props.vm.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
-        this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
-        this.props.vm.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
-        this.props.vm.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.addListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
+        this.flyoutWorkspace.addChangeListener(this.props.vm.workspace.flyoutBlockListener);
+        this.flyoutWorkspace.addChangeListener(this.props.vm.workspace.monitorBlockListener);
+        this.props.vm.events.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
+        this.props.vm.events.addListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
+        this.props.vm.events.addListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
+        this.props.vm.events.addListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
+        this.props.vm.events.addListener('VISUAL_REPORT', this.onVisualReport);
+        this.props.vm.events.addListener('workspaceUpdate', this.onWorkspaceUpdate);
+        this.props.vm.events.addListener('targetsUpdate', this.onTargetsUpdate);
+        this.props.vm.events.addListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
+        this.props.vm.events.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
+        this.props.vm.events.addListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.events.addListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.addListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
     }
     detachVM () {
-        this.props.vm.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
-        this.props.vm.removeListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
-        this.props.vm.removeListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
-        this.props.vm.removeListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
-        this.props.vm.removeListener('VISUAL_REPORT', this.onVisualReport);
-        this.props.vm.removeListener('workspaceUpdate', this.onWorkspaceUpdate);
-        this.props.vm.removeListener('targetsUpdate', this.onTargetsUpdate);
-        this.props.vm.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
-        this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
-        this.props.vm.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
-        this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
-        this.props.vm.removeListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
+        this.props.vm.events.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
+        this.props.vm.events.removeListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
+        this.props.vm.events.removeListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
+        this.props.vm.events.removeListener('BLOCK_GLOW_OFF', this.onBlockGlowOff);
+        this.props.vm.events.removeListener('VISUAL_REPORT', this.onVisualReport);
+        this.props.vm.events.removeListener('workspaceUpdate', this.onWorkspaceUpdate);
+        this.props.vm.events.removeListener('targetsUpdate', this.onTargetsUpdate);
+        this.props.vm.events.removeListener('MONITORS_UPDATE', this.handleMonitorsUpdate);
+        this.props.vm.events.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
+        this.props.vm.events.removeListener('BLOCKSINFO_UPDATE', this.handleBlocksInfoUpdate);
+        this.props.vm.events.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
+        this.props.vm.events.removeListener('PERIPHERALS_CHANGED', this.handlePeripheralsChanged);
     }
 
     updateToolboxBlockValue (id, value) {
@@ -386,15 +386,16 @@ class Blocks extends React.Component {
     }
 
     onTargetsUpdate () {
-        if (this.props.vm.editingTarget && this.workspace.getFlyout()) {
+        const editingTarget = this.props.vm.workspace.editingTarget;
+        if (editingTarget && this.workspace.getFlyout()) {
             ['glide', 'move', 'set'].forEach(prefix => {
-                this.updateToolboxBlockValue(`${prefix}x`, Math.round(this.props.vm.editingTarget.x).toString());
-                this.updateToolboxBlockValue(`${prefix}y`, Math.round(this.props.vm.editingTarget.y).toString());
+                this.updateToolboxBlockValue(`${prefix}x`, Math.round(editingTarget.x).toString());
+                this.updateToolboxBlockValue(`${prefix}y`, Math.round(editingTarget.y).toString());
             });
         }
     }
     onWorkspaceMetricsChange () {
-        const target = this.props.vm.editingTarget;
+        const target = this.props.vm.workspace.editingTarget;
         if (target && target.id) {
             // Dispatch updateMetrics later, since onWorkspaceMetricsChange may be (very indirectly)
             // called from a reducer, i.e. when you create a custom procedure.
@@ -455,7 +456,7 @@ class Blocks extends React.Component {
             // Append the selected device's active peripheral categories, in the device's `extensions`
             // order (its own hidden pack first). Empty in host mode, since the registry clears when no
             // device is selected.
-            for (const category of this.props.vm.getActivePeripheralToolboxCategories()) {
+            for (const category of this.props.vm.devices.getActivePeripheralToolboxCategories()) {
                 dynamicBlocksXML.push(packCategoryToToolboxXML(category, 'peripheral'));
             }
             return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
@@ -468,7 +469,7 @@ class Blocks extends React.Component {
     activateSelectedDevice () {
         // Activate the device's hidden extension first (registers its blocks/codegen), then rebuild the
         // toolbox so the device's categories appear. selectDevice(null) clears, rebuilding to host mode.
-        return this.props.vm.selectDevice(this.props.selectedDeviceId).then(() => {
+        return this.props.vm.devices.selectDevice(this.props.selectedDeviceId).then(() => {
             const toolboxXML = this.getToolboxXML();
             if (toolboxXML) {
                 this.props.updateToolboxState(toolboxXML);
@@ -487,13 +488,14 @@ class Blocks extends React.Component {
         this.updateGeneratedCode();
     }
     onWorkspaceUpdate (data) {
+        const editingTarget = this.props.vm.workspace.editingTarget;
         // When we change sprites, update the toolbox to have the new sprite's blocks
         const toolboxXML = this.getToolboxXML();
         if (toolboxXML) {
             this.props.updateToolboxState(toolboxXML);
         }
 
-        if (this.props.vm.editingTarget && !this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
+        if (editingTarget && !this.props.workspaceMetrics.targets[editingTarget.id]) {
             this.onWorkspaceMetricsChange();
         }
 
@@ -525,8 +527,8 @@ class Blocks extends React.Component {
             this.ScratchBlocks.Events.enable();
         }
 
-        if (this.props.vm.editingTarget && this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
-            const {scrollX, scrollY, scale} = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
+        if (editingTarget && this.props.workspaceMetrics.targets[editingTarget.id]) {
+            const {scrollX, scrollY, scale} = this.props.workspaceMetrics.targets[editingTarget.id];
             this.workspace.scrollX = scrollX;
             this.workspace.scrollY = scrollY;
             this.workspace.scale = scale;

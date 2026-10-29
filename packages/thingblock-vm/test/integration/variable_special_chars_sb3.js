@@ -15,7 +15,7 @@ test('importing sb3 project with special chars in variable names', t => {
     vm.attachStorage(makeTestStorage());
 
     // Evaluate playground data and exit
-    vm.on('playgroundData', e => {
+    vm.events.on('playgroundData', e => {
         const threads = JSON.parse(e.threads);
         // All monitors should create threads that finish during the step and
         // are revoved from runtime.threads.
@@ -130,7 +130,7 @@ test('importing sb3 project with special chars in variable names', t => {
         vm.clear();
         vm.setCompatibilityMode(false);
         vm.setTurboMode(false);
-        vm.loadProject(project).then(() => {
+        vm.project.load(project).then(() => {
             vm.greenFlag();
             setTimeout(() => {
                 vm.getPlaygroundData();

@@ -4,7 +4,7 @@ const Worker = require('tiny-worker');
 const BlockType = require('../../src/extension-support/block-type');
 
 const dispatch = require('../../src/dispatch/central-dispatch');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const Target = require('../../src/engine/target').default;
 

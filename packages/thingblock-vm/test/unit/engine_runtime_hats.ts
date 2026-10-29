@@ -1,12 +1,11 @@
 import {test} from 'tap';
-import {EventEmitter} from 'events';
 import Blocks from '../../src/engine/blocks.ts';
 import Thread from '../../src/engine/thread.ts';
 import type RuntimeType from '../../src/engine/runtime.ts';
 import type Sequencer from '../../src/engine/sequencer';
 import type Target from '../../src/engine/target';
 import type {Block} from '../../src/engine/block-types.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
+import {EventBus} from '../../src/event/event-bus.ts';
 
 const keyHat = (id: string, key: string, next: string | null = null) => ({
     id,
@@ -22,7 +21,7 @@ const keyHat = (id: string, key: string, next: string | null = null) => ({
 const flagHat = (id: string) => ({...keyHat(id, ''), opcode: 'event_whenflagclicked', fields: {}});
 
 const newTarget = (...blocks: object[]) => {
-    const container = new Blocks(new EventEmitter<RuntimeEvents>());
+    const container = new Blocks(new EventBus());
     blocks.forEach(block => container.createBlock(block as Block));
     return {blocks: container} as unknown as Target;
 };

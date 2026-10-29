@@ -1,4 +1,4 @@
-const VirtualMachine = require('./virtual-machine');
+const VirtualMachine = require('./virtual-machine').default;
 
 const ArgumentType = require('./extension-support/argument-type');
 const BlockType = require('./extension-support/block-type');

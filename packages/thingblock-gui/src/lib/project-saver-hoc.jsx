@@ -215,7 +215,7 @@ const ProjectSaverHOC = function (WrappedComponent) {
             requestParams = requestParams || {};
             this.clearAutoSaveTimeout();
             // Projects carry no assets (no costumes or sounds), so saving is just the project JSON
-            const savedVMState = this.props.vm.toJSON();
+            const savedVMState = this.props.vm.project.toJSON();
 
             const saveProject = this.props.onUpdateProjectData ||
                 ((id, vmState, params) => this.props.storage.saveProject(id, vmState, params));

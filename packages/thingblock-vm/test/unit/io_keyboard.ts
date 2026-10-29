@@ -1,10 +1,9 @@
 import {test} from 'tap';
-import {EventEmitter} from 'events';
 import Keyboard from '../../src/io/hid/keyboard.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
+import {EventBus} from '../../src/event/event-bus.ts';
 
 test('spec', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     t.type(k, 'object');
@@ -14,7 +13,7 @@ test('spec', t => {
 });
 
 test('keydown emits KEY_PRESSED', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
     const pressed: string[] = [];
     events.on('KEY_PRESSED', key => pressed.push(key));
@@ -27,7 +26,7 @@ test('keydown emits KEY_PRESSED', t => {
 });
 
 test('space key', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({
@@ -41,7 +40,7 @@ test('space key', t => {
 });
 
 test('letter key', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({
@@ -57,7 +56,7 @@ test('letter key', t => {
 });
 
 test('number key', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({
@@ -72,7 +71,7 @@ test('number key', t => {
 });
 
 test('non-english key', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({
@@ -86,7 +85,7 @@ test('non-english key', t => {
 });
 
 test('ignore modifier key', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({
@@ -99,7 +98,7 @@ test('ignore modifier key', t => {
 });
 
 test('keyup', t => {
-    const events = new EventEmitter<RuntimeEvents>();
+    const events = new EventBus();
     const k = new Keyboard(events);
 
     k.postData({

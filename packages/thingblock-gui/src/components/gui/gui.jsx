@@ -188,7 +188,7 @@ const GUIComponent = props => {
         return next.length > MAX_MONITOR_LOGS ? next.slice(next.length - MAX_MONITOR_LOGS) : next;
     };
     const [monitorPrompt, setMonitorPrompt] = useState(null);
-    // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.setMonitorBaud.
+    // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.link.setMonitorBaud.
     const [baudRate, setBaudRate] = useState(115200);
     // Holds the partial trailing line between serial chunks; serial frames are not line-aligned.
     const serialBuffer = useRef('');
@@ -200,9 +200,9 @@ const GUIComponent = props => {
         const handlePrint = message => {
             setSerialLogs(prev => appendLogs(prev, [{message: String(message)}]));
         };
-        vm.runtime.events.on('PRINT_TO_MONITOR', handlePrint);
+        vm.events.on('PRINT_TO_MONITOR', handlePrint);
         return () => {
-            vm.runtime.events.off('PRINT_TO_MONITOR', handlePrint);
+            vm.events.off('PRINT_TO_MONITOR', handlePrint);
         };
     }, [vm]);
 
@@ -217,17 +217,17 @@ const GUIComponent = props => {
                 setSerialLogs(prev => appendLogs(prev, parts.map(line => ({message: line.replace(/\r$/, '')}))));
             }
         };
-        vm.runtime.events.on('SERIAL_DATA', handleSerial);
+        vm.events.on('SERIAL_DATA', handleSerial);
         return () => {
-            vm.runtime.events.off('SERIAL_DATA', handleSerial);
+            vm.events.off('SERIAL_DATA', handleSerial);
         };
     }, [vm]);
 
     useEffect(() => {
         const onPrompt = q => setMonitorPrompt(q === null || typeof q === 'undefined' ? null : q);
-        vm.runtime.events.on('QUESTION', onPrompt);
+        vm.events.on('QUESTION', onPrompt);
         return () => {
-            vm.runtime.events.off('QUESTION', onPrompt);
+            vm.events.off('QUESTION', onPrompt);
         };
     }, [vm]);
 
@@ -240,19 +240,14 @@ const GUIComponent = props => {
     }, []);
 
     const handleMonitorSend = useCallback(value => {
-        if (connectedBoard) {
-            // Real board: write to its serial port, line-terminated as Arduino sketches expect. The
-            // device's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
-            vm.writeMonitor(`${value}\n`);
-            return;
-        }
-        vm.runtime.events.emit('ANSWER', value);
-        setMonitorPrompt(null);
+        // A connected board's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
+        vm.writeMonitor(value);
+        if (!connectedBoard) setMonitorPrompt(null);
     }, [vm, connectedBoard]);
 
     const handleBaudChange = useCallback(rate => {
         setBaudRate(rate);
-        vm.setMonitorBaud(rate);
+        vm.link.setMonitorBaud(rate);
     }, [vm]);
 
     const handleResizeMouseDown = useCallback(e => {

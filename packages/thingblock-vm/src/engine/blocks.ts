@@ -2,7 +2,8 @@ import Clone from '../util/clone';
 import log from '../util/log';
 import xmlEscape from '../util/xml-escape';
 import Variable, {type VariableType} from './variable';
-import {RuntimeEventNames, type RuntimeEmitter} from './runtime/runtime-events';
+import {RuntimeEvent} from '../event/event-name';
+import type {EventBus} from '../event/event-bus';
 import type {Block, BlockField, BlockInput} from './block-types';
 import type {RuntimeScriptCache} from './blocks-runtime-cache';
 import type Comment from './comment';
@@ -60,7 +61,7 @@ class Blocks {
     /** Inputs whose names start with this hold statement branches. */
     static readonly BRANCH_INPUT_PREFIX = 'SUBSTACK';
 
-    events: RuntimeEmitter;
+    events: EventBus;
     /** Set for the flyout and monitor containers: their blocks don't glow while running or change the project. */
     forceNoGlow: boolean;
     _blocks: Record<string, Block> = {};
@@ -68,7 +69,7 @@ class Blocks {
     _scripts: string[] = [];
     declare _cache: BlocksCache;
 
-    constructor (events: RuntimeEmitter, forceNoGlow = false) {
+    constructor (events: EventBus, forceNoGlow = false) {
         this.events = events;
         this.forceNoGlow = forceNoGlow;
         // Non-enumerable so cloning and comparing containers skip derived data.
@@ -169,7 +170,7 @@ class Blocks {
 
     emitProjectChanged () {
         if (!this.forceNoGlow) {
-            this.events.emit(RuntimeEventNames.PROJECT_CHANGED);
+            this.events.emit(RuntimeEvent.PROJECT_CHANGED);
         }
     }
 

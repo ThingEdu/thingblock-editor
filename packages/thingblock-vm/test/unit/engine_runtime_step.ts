@@ -3,7 +3,6 @@ import Runtime from '../../src/engine/runtime.ts';
 import Thread from '../../src/engine/thread.ts';
 import {block, newTarget} from '../fixtures/target.ts';
 import type {Block} from '../../src/engine/block-types.ts';
-import type {RuntimeEvents} from '../../src/engine/runtime/runtime-events.ts';
 
 /** A runtime with one editing target holding `blocks`; `test_wait` yields until `release` is called. */
 const setup = (...blocks: Block[]) => {
@@ -23,7 +22,7 @@ const setup = (...blocks: Block[]) => {
     }};
 };
 
-const record = (rt: Runtime, ...names: Array<keyof RuntimeEvents>) => {
+const record = (rt: Runtime, ...names: string[]) => {
     const emitted: string[] = [];
     for (const name of names) {
         rt.events.on(name, () => emitted.push(name));

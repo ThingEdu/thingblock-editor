@@ -21,7 +21,7 @@ const SNAPSHOT_DIR = path.resolve(__dirname, '../../tap-snapshots');
 const makeTestStorage = require('../fixtures/make-test-storage');
 const patchTimers = require('../fixtures/patch-timers');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 // To test a subset, replace with a literal array of fixture names, e.g.:
 //   const FIXTURES = ['comments.sb3', 'monitors.sb3'];
@@ -41,7 +41,7 @@ const FIXTURES = fs.readdirSync(FIXTURES_DIR, {recursive: true, withFileTypes: t
  * Child inputs are embedded recursively; SUBSTACK/SUBSTACK2 inputs become
  * flat arrays via `buildSeq`. Dropped: id, parent, topLevel, x, y.
  * @param {string} id - block ID to build
- * @param {Record<string, any>} blocks - flat block map from vm.toJSON()
+ * @param {Record<string, any>} blocks - flat block map from vm.project.toJSON()
  * @param {Map<string, string>} varIdMap - variable/list/broadcast ID normalization map
  * @param {Function} buildSeq - callback for building script sequences (avoids forward ref)
  * @returns {object|null} block node, or null if ID not found
@@ -107,7 +107,7 @@ const buildBlockNode = function (id, blocks, varIdMap, buildSeq) {
  * Build a flat array of block nodes by following the `next` chain from startId.
  * Used for both top-level scripts and C-block SUBSTACK sequences.
  * @param {string} startId - ID of the first block in the sequence
- * @param {Record<string, any>} blocks - flat block map from vm.toJSON()
+ * @param {Record<string, any>} blocks - flat block map from vm.project.toJSON()
  * @param {Map<string, string>} varIdMap - variable/list/broadcast ID normalization map
  * @returns {Array<object>} sequence of block nodes
  */
@@ -123,13 +123,13 @@ const buildScriptSequence = function (startId, blocks, varIdMap) {
 
 /**
  * Capture a deterministic snapshot of the VM's state after loading a project.
- * Calls vm.toJSON() then restructures blocks into SB2-style nested trees
+ * Calls vm.project.toJSON() then restructures blocks into SB2-style nested trees
  * ordered by vm.runtime.targets[i].blocks._scripts (execution order).
  * @param {VirtualMachine} vm
  * @returns {object}
  */
 const captureVMState = function (vm) {
-    const projectJson = JSON.parse(vm.toJSON());
+    const projectJson = JSON.parse(vm.project.toJSON());
 
     delete projectJson.meta.agent;
     delete projectJson.meta.vm;
@@ -248,7 +248,7 @@ FIXTURES.forEach(name => {
 
         try {
             await Promise.race([
-                vm.loadProject(projectBuffer),
+                vm.project.load(projectBuffer),
                 new Promise((_, reject) => {
                     const timer = timers.origSetTimeout(() => {
                         reject(new Error(`Timed out loading ${name}`));

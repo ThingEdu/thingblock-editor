@@ -1,14 +1,14 @@
 const tap = require('tap');
-const VirtualMachine = require('../../src/virtual-machine');
+const VirtualMachine = require('../../src/virtual-machine').default;
 
 const test = tap.test;
 
 test('ESP32-C3 Dev Module registers and exposes its compile/upload config', t => {
     const vm = new VirtualMachine();
 
-    t.ok(vm.deviceRegistry.deviceIds.includes('esp32c3'), 'esp32c3 is registered');
+    t.ok(vm.devices.deviceRegistry.deviceIds.includes('esp32c3'), 'esp32c3 is registered');
 
-    const device = vm.deviceRegistry.get('esp32c3');
+    const device = vm.devices.deviceRegistry.get('esp32c3');
     t.equal(device.fqbn, 'esp32:esp32:esp32c3', 'uses the ESP32-C3 FQBN');
     t.same(
         device.getCompileConfig(),

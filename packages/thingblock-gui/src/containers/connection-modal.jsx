@@ -29,12 +29,12 @@ class ConnectionModal extends React.Component {
         };
     }
     componentDidMount () {
-        this.props.vm.on('PERIPHERAL_CONNECTED', this.handleConnected);
-        this.props.vm.on('PERIPHERAL_REQUEST_ERROR', this.handleError);
+        this.props.vm.events.on('PERIPHERAL_CONNECTED', this.handleConnected);
+        this.props.vm.events.on('PERIPHERAL_REQUEST_ERROR', this.handleError);
     }
     componentWillUnmount () {
-        this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleConnected);
-        this.props.vm.removeListener('PERIPHERAL_REQUEST_ERROR', this.handleError);
+        this.props.vm.events.removeListener('PERIPHERAL_CONNECTED', this.handleConnected);
+        this.props.vm.events.removeListener('PERIPHERAL_REQUEST_ERROR', this.handleError);
     }
     handleScanning () {
         this.setState({
@@ -123,8 +123,9 @@ class ConnectionModal extends React.Component {
         // Offer the firmware install only when the pack ships the image and the client can flash it
         // (the cloud client cannot).
         const firmware = this.state.extension && this.state.extension.firmware;
-        const canInstallFirmware = Boolean(firmware && this.props.vm.client && this.props.vm.client.canFlashFirmware &&
-            this.props.vm.getDeviceFirmware(firmware.deviceId).some(fw => fw.id === firmware.firmwareId));
+        const canInstallFirmware = Boolean(firmware && this.props.vm.link.backend &&
+            this.props.vm.link.backend.flasher.canFlashFirmware &&
+            this.props.vm.devices.getDeviceFirmware(firmware.deviceId).some(fw => fw.id === firmware.firmwareId));
         return (
             <ConnectionModalComponent
                 connectedBoard={this.props.connectedBoard}

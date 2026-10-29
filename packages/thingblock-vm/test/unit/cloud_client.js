@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const CloudClient = require('../../src/link/client/cloud-client');
+const {createCloudBackend, filtersFromDevice, isCloudSupported} = require('../../src/link/cloud');
 const Runtime = require('../../src/engine/runtime').default;
 
 // A minimal fake of a Web Serial SerialPort that records open/close and serves scripted reads.
@@ -83,22 +83,22 @@ const uninstallSerial = () => {
 };
 
 test('spec', t => {
-    const c = new CloudClient(new Runtime());
+    const c = createCloudBackend(new Runtime());
 
-    t.type(CloudClient, 'function');
-    t.type(c.listBoards, 'function');
-    t.type(c.connect, 'function');
-    t.type(c.disconnect, 'function');
-    t.equal(c.isConnected, false);
+    t.type(createCloudBackend, 'function');
+    t.type(c.connection.listBoards, 'function');
+    t.type(c.connection.connect, 'function');
+    t.type(c.connection.disconnect, 'function');
+    t.equal(c.connection.isConnected, false);
     t.end();
 });
 
 test('isSupported reflects navigator.serial presence', t => {
     uninstallSerial();
-    t.equal(CloudClient.isSupported(), false);
+    t.equal(isCloudSupported(), false);
 
     installSerial(makeFakePort());
-    t.equal(CloudClient.isSupported(), true);
+    t.equal(isCloudSupported(), true);
     uninstallSerial();
     t.end();
 });
@@ -109,11 +109,11 @@ test('filtersFromDevice parses pnpid VID/PID', t => {
             pnpid: ['USB\\VID_2341&PID_0043', 'USB\\VID_2341&PID_0001', 'not-a-pnpid']
         })
     };
-    t.same(CloudClient.filtersFromDevice(device), [
+    t.same(filtersFromDevice(device), [
         {usbVendorId: 0x2341, usbProductId: 0x0043},
         {usbVendorId: 0x2341, usbProductId: 0x0001}
     ]);
-    t.same(CloudClient.filtersFromDevice({getUploadConfig: () => ({})}), []);
+    t.same(filtersFromDevice({getUploadConfig: () => ({})}), []);
     t.end();
 });
 
@@ -124,8 +124,8 @@ const stubDevice = (name = 'Arduino Uno') => ({
 
 test('listBoards returns one picker entry labelled with the device when Web Serial is supported', t => {
     installSerial(makeFakePort());
-    const c = new CloudClient(new Runtime());
-    c.listBoards(stubDevice('Arduino Uno')).then(targets => {
+    const c = createCloudBackend(new Runtime());
+    c.connection.listBoards(stubDevice('Arduino Uno')).then(targets => {
         t.same(targets, [{id: 'web-serial', name: 'Arduino Uno'}]);
         uninstallSerial();
         t.end();
@@ -134,8 +134,8 @@ test('listBoards returns one picker entry labelled with the device when Web Seri
 
 test('listBoards is empty when Web Serial is unavailable', t => {
     uninstallSerial();
-    const c = new CloudClient(new Runtime());
-    c.listBoards(stubDevice()).then(targets => {
+    const c = createCloudBackend(new Runtime());
+    c.connection.listBoards(stubDevice()).then(targets => {
         t.same(targets, []);
         t.end();
     });
@@ -143,20 +143,20 @@ test('listBoards is empty when Web Serial is unavailable', t => {
 
 test('connect opens the port, exposes transport, and emits DEVICE_CONNECTED', t => {
     const rt = new Runtime();
-    const c = new CloudClient(rt);
+    const c = createCloudBackend(rt);
     const port = makeFakePort();
     const calls = installSerial(port);
 
     let connectedEvents = 0;
     rt.events.on('DEVICE_CONNECTED', () => connectedEvents++);
 
-    t.throws(() => c.transport, 'transport throws before connect');
+    t.throws(() => c.connection.transport, 'transport throws before connect');
 
-    c.connect({filters: [{usbVendorId: 0x2341, usbProductId: 0x0043}]}).then(() => {
-        t.equal(c.isConnected, true);
+    c.connection.connect({filters: [{usbVendorId: 0x2341, usbProductId: 0x0043}]}).then(() => {
+        t.equal(c.connection.isConnected, true);
         t.equal(port.opened, true);
         t.equal(port.openOptions.baudRate, 115200);
-        t.equal(c.transport, port);
+        t.equal(c.connection.transport, port);
         t.same(calls.filters, [{usbVendorId: 0x2341, usbProductId: 0x0043}]);
         t.equal(connectedEvents, 1);
         uninstallSerial();
@@ -165,10 +165,10 @@ test('connect opens the port, exposes transport, and emits DEVICE_CONNECTED', t 
 });
 
 test('connect with no target shows all ports (empty filters)', t => {
-    const c = new CloudClient(new Runtime());
+    const c = createCloudBackend(new Runtime());
     const calls = installSerial(makeFakePort());
 
-    c.connect().then(() => {
+    c.connection.connect().then(() => {
         t.same(calls.filters, []);
         uninstallSerial();
         t.end();
@@ -177,19 +177,19 @@ test('connect with no target shows all ports (empty filters)', t => {
 
 test('disconnect closes the port and emits DEVICE_DISCONNECTED', t => {
     const rt = new Runtime();
-    const c = new CloudClient(rt);
+    const c = createCloudBackend(rt);
     const port = makeFakePort();
     installSerial(port);
 
     let disconnectedEvents = 0;
     rt.events.on('DEVICE_DISCONNECTED', () => disconnectedEvents++);
 
-    c.connect()
-        .then(() => c.disconnect())
+    c.connection.connect()
+        .then(() => c.connection.disconnect())
         .then(() => {
-            t.equal(c.isConnected, false);
+            t.equal(c.connection.isConnected, false);
             t.equal(port.opened, false);
-            t.throws(() => c.transport);
+            t.throws(() => c.connection.transport);
             t.equal(disconnectedEvents, 1);
             uninstallSerial();
             t.end();
@@ -198,12 +198,12 @@ test('disconnect closes the port and emits DEVICE_DISCONNECTED', t => {
 
 test('disconnect is a no-op when not connected', t => {
     const rt = new Runtime();
-    const c = new CloudClient(rt);
+    const c = createCloudBackend(rt);
 
     let disconnectedEvents = 0;
     rt.events.on('DEVICE_DISCONNECTED', () => disconnectedEvents++);
 
-    c.disconnect().then(() => {
+    c.connection.disconnect().then(() => {
         t.equal(disconnectedEvents, 0);
         t.end();
     });
@@ -211,8 +211,8 @@ test('disconnect is a no-op when not connected', t => {
 
 test('connect throws when Web Serial is unavailable', t => {
     uninstallSerial();
-    const c = new CloudClient(new Runtime());
-    c.connect().then(
+    const c = createCloudBackend(new Runtime());
+    c.connection.connect().then(
         () => {
             t.fail('expected connect to reject');
             t.end();
@@ -226,17 +226,21 @@ test('connect throws when Web Serial is unavailable', t => {
 
 
 test('platform management is gracefully unsupported (base Client defaults)', async t => {
-    const c = new CloudClient(new Runtime());
-    t.equal(await c.getPlatformStatus({}), null, 'no platform manager: status is null, not a throw');
-    await t.rejects(c.installPlatform({}), /does not support installPlatform/);
+    const c = createCloudBackend(new Runtime());
+    t.equal(await c.builder.getPlatformStatus({}), null, 'no platform manager: status is null, not a throw');
+    await t.rejects(c.builder.installPlatform({}), /does not support installPlatform/);
     t.end();
 });
 
 test('firmware restore is unsupported in cloud mode', async t => {
-    const c = new CloudClient(new Runtime());
-    t.equal(c.canFlashFirmware, false, 'the GUI must not offer the restore item in cloud mode');
+    const c = createCloudBackend(new Runtime());
+    t.equal(c.flasher.canFlashFirmware, false, 'the GUI must not offer the restore item in cloud mode');
     await t.rejects(
-        () => c.flashFirmware({}, 'extensions/devices/thingbot', 'firmware/telemetrix-ble/telemetrix-ble.ino.bin'),
+        () => c.flasher.flashFirmware(
+            {},
+            'extensions/devices/thingbot',
+            'firmware/telemetrix-ble/telemetrix-ble.ino.bin'
+        ),
         /not available in cloud mode/,
         'flashFirmware fails with a clear, mode-specific message rather than a generic must-implement one'
     );
@@ -280,11 +284,11 @@ test('compile streams log/progress and resolves the artifact', async t => {
         {type: 'log', payload: {chunk: 'Sketch uses 1 byte\n'}},
         {type: 'result', payload: {artifact: {format: 'bin', data: 'QUJD'}}}
     ]);
-    const c = new CloudClient(new Runtime(), {url: 'http://build.test/', fetch});
+    const c = createCloudBackend(new Runtime(), {url: 'http://build.test/', fetch});
 
     const logs = [];
     const progress = [];
-    const artifact = await c.compile(
+    const artifact = await c.builder.compile(
         fakeDevice({CDCOnBoot: 'cdc'}),
         'void setup(){}',
         [{pack: 'dht', lib: 'src/DHT'}],
@@ -306,8 +310,8 @@ test('compile rejects on a terminal error frame', async t => {
         {type: 'log', payload: {chunk: 'error: expected ;\n'}},
         {type: 'error', payload: {code: 'grpc', message: 'compilation failed'}}
     ]);
-    const c = new CloudClient(new Runtime(), {fetch});
-    await t.rejects(c.compile(fakeDevice(), 'bad'), /compilation failed/);
+    const c = createCloudBackend(new Runtime(), {fetch});
+    await t.rejects(c.builder.compile(fakeDevice(), 'bad'), /compilation failed/);
     t.end();
 });
 
@@ -317,55 +321,54 @@ test('compile rejects on a pre-stream HTTP error, using the server message', asy
         status: 400,
         json: () => Promise.resolve({code: 'resource', message: 'lib nope/x is unreadable'})
     });
-    const c = new CloudClient(new Runtime(), {fetch});
-    await t.rejects(c.compile(fakeDevice(), 'x', [{pack: 'nope', lib: 'x'}]), /lib nope\/x is unreadable/);
+    const c = createCloudBackend(new Runtime(), {fetch});
+    await t.rejects(c.builder.compile(fakeDevice(), 'x', [{pack: 'nope', lib: 'x'}]), /lib nope\/x is unreadable/);
     t.end();
 });
 
 test('compile rejects when the stream ends without an artifact', async t => {
     const [, fetch] = fetchStreaming([{type: 'log', payload: {chunk: 'nothing\n'}}]);
-    const c = new CloudClient(new Runtime(), {fetch});
-    await t.rejects(c.compile(fakeDevice(), 'x'), /without an artifact/);
+    const c = createCloudBackend(new Runtime(), {fetch});
+    await t.rejects(c.builder.compile(fakeDevice(), 'x'), /without an artifact/);
     t.end();
 });
 
 test('cancel aborts the in-flight compile', async t => {
     let signal = null;
-    const c = new CloudClient(new Runtime(), {
-        fetch: (url, init) => {
-            signal = init.signal;
-            return new Promise((resolve, reject) => {
-                init.signal.addEventListener('abort', () => reject(new Error('aborted')));
-            });
-        }
-    });
+    const fetch = (url, init) => {
+        signal = init.signal;
+        return new Promise((resolve, reject) => {
+            init.signal.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+    };
+    const c = createCloudBackend(new Runtime(), {fetch});
 
-    const pending = c.compile(fakeDevice(), 'x');
-    c.cancel();
+    const pending = c.builder.compile(fakeDevice(), 'x');
+    c.builder.cancel();
     await t.rejects(pending, /aborted/);
     t.equal(signal.aborted, true);
-    c.cancel(); // no-op once settled
+    c.builder.cancel(); // no-op once settled
     t.end();
 });
 
 test('openMonitor emits inbound bytes as SERIAL_DATA and closeMonitor releases the lock', async t => {
     const rt = new Runtime();
-    const c = new CloudClient(rt);
+    const c = createCloudBackend(rt);
     const port = makeFakePort(['hello ', 'board\n']);
     installSerial(port);
 
     const seen = [];
     rt.events.on('SERIAL_DATA', chunk => seen.push(chunk));
 
-    await c.connect();
-    await c.openMonitor({baudRate: 115200});
+    await c.connection.connect();
+    await c.monitor.openMonitor({baudRate: 115200});
     // Let the pump drain the scripted chunks.
     await new Promise(resolve => setTimeout(resolve, 10));
 
     t.same(seen, ['hello ', 'board\n'], 'each chunk is emitted as it arrives');
     t.equal(port.locked, true, 'the reader holds the readable lock while open');
 
-    await c.closeMonitor();
+    await c.monitor.closeMonitor();
     t.equal(port.locked, false, 'closeMonitor releases the lock');
     t.equal(port.opened, true, 'the port stays open');
 
@@ -374,33 +377,33 @@ test('openMonitor emits inbound bytes as SERIAL_DATA and closeMonitor releases t
 });
 
 test('openMonitor reopens the port when the baud rate differs', async t => {
-    const c = new CloudClient(new Runtime());
+    const c = createCloudBackend(new Runtime());
     const port = makeFakePort();
     installSerial(port);
 
-    await c.connect();
+    await c.connection.connect();
     t.equal(port.openOptions.baudRate, 115200);
 
-    await c.openMonitor({baudRate: 9600});
+    await c.monitor.openMonitor({baudRate: 9600});
     t.equal(port.openOptions.baudRate, 9600, 'reopened at the requested rate');
 
-    await c.closeMonitor();
+    await c.monitor.closeMonitor();
     uninstallSerial();
     t.end();
 });
 
 test('writeMonitor writes to the port and warns with no port', async t => {
-    const c = new CloudClient(new Runtime());
+    const c = createCloudBackend(new Runtime());
     const port = makeFakePort();
     installSerial(port);
 
-    await c.connect();
-    c.writeMonitor('ping\n');
+    await c.connection.connect();
+    c.monitor.writeMonitor('ping\n');
     await new Promise(resolve => setTimeout(resolve, 5));
     t.same(port.written, ['ping\n']);
 
-    await c.disconnect();
-    c.writeMonitor('dropped'); // no port: warn-and-drop, not a throw
+    await c.connection.disconnect();
+    c.monitor.writeMonitor('dropped'); // no port: warn-and-drop, not a throw
     t.same(port.written, ['ping\n']);
 
     uninstallSerial();
@@ -408,26 +411,26 @@ test('writeMonitor writes to the port and warns with no port', async t => {
 });
 
 test('disconnect closes an open monitor first so the port can close', async t => {
-    const c = new CloudClient(new Runtime());
+    const c = createCloudBackend(new Runtime());
     const port = makeFakePort(['x']);
     installSerial(port);
 
-    await c.connect();
-    await c.openMonitor({baudRate: 115200});
+    await c.connection.connect();
+    await c.monitor.openMonitor({baudRate: 115200});
     t.equal(port.locked, true);
 
-    await c.disconnect();
+    await c.connection.disconnect();
     t.equal(port.locked, false, 'lock released');
     t.equal(port.opened, false, 'port actually closed');
-    t.equal(c.isConnected, false);
+    t.equal(c.connection.isConnected, false);
 
     uninstallSerial();
     t.end();
 });
 
 test('openMonitor throws when no port is connected', async t => {
-    const c = new CloudClient(new Runtime());
-    await t.rejects(c.openMonitor({baudRate: 115200}), /no open port/);
+    const c = createCloudBackend(new Runtime());
+    await t.rejects(c.monitor.openMonitor({baudRate: 115200}), /no open port/);
     t.end();
 });
 
@@ -491,13 +494,13 @@ test('flash writes every image at its offset and hands the port over closed', as
     const calls = {};
     const port = makeFakePort();
     installSerial(port);
-    const c = new CloudClient(new Runtime(), {esptool: fakeEsptool(calls)});
+    const c = createCloudBackend(new Runtime(), {esptool: fakeEsptool(calls)});
 
-    await c.connect();
-    await c.openMonitor({baudRate: 115200});
+    await c.connection.connect();
+    await c.monitor.openMonitor({baudRate: 115200});
 
     const progress = [];
-    await c.flash(flashDevice(), espArtifact(), {onProgress: p => progress.push(p)});
+    await c.flasher.flash(flashDevice(), espArtifact(), {onProgress: p => progress.push(p)});
 
     t.same(
         calls.writeFlash.fileArray.map(f => f.address),
@@ -525,10 +528,10 @@ test('flash reopens the port even when esptool fails', async t => {
     esptool.ESPLoader.prototype.writeFlash = () => Promise.reject(new Error('flash write failed'));
     const port = makeFakePort();
     installSerial(port);
-    const c = new CloudClient(new Runtime(), {esptool});
+    const c = createCloudBackend(new Runtime(), {esptool});
 
-    await c.connect();
-    await t.rejects(c.flash(flashDevice(), espArtifact()), /flash write failed/);
+    await c.connection.connect();
+    await t.rejects(c.flasher.flash(flashDevice(), espArtifact()), /flash write failed/);
     t.equal(port.opened, true, 'the port is handed back so the monitor can reopen');
 
     uninstallSerial();
@@ -538,11 +541,11 @@ test('flash reopens the port even when esptool fails', async t => {
 test('flash rejects an AVR single-image artifact with an actionable message', async t => {
     const port = makeFakePort();
     installSerial(port);
-    const c = new CloudClient(new Runtime(), {esptool: fakeEsptool({})});
+    const c = createCloudBackend(new Runtime(), {esptool: fakeEsptool({})});
 
-    await c.connect();
+    await c.connection.connect();
     await t.rejects(
-        c.flash(flashDevice(), {format: 'hex', data: 'AAAA'}),
+        c.flasher.flash(flashDevice(), {format: 'hex', data: 'AAAA'}),
         /supports ESP boards only/
     );
 
@@ -551,7 +554,7 @@ test('flash rejects an AVR single-image artifact with an actionable message', as
 });
 
 test('flash throws when no port is connected', async t => {
-    const c = new CloudClient(new Runtime(), {esptool: fakeEsptool({})});
-    await t.rejects(c.flash(flashDevice(), espArtifact()), /no open port/);
+    const c = createCloudBackend(new Runtime(), {esptool: fakeEsptool({})});
+    await t.rejects(c.flasher.flash(flashDevice(), espArtifact()), /no open port/);
     t.end();
 });

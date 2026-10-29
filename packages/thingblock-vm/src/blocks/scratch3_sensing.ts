@@ -2,7 +2,8 @@ import Cast from '../util/cast';
 import getMonitorIdForBlockWithArgs from '../util/get-monitor-id';
 import type BlockUtility from '../engine/block-utility';
 import type Target from '../engine/target';
-import {RuntimeEventNames, type RuntimeEmitter} from '../engine/runtime/runtime-events';
+import {OpcodeEvent, RuntimeEvent, VMEvent} from '../event/event-name';
+import type {EventBus} from '../event/event-bus';
 
 interface QueuedQuestion {
     question: string
@@ -11,19 +12,19 @@ interface QueuedQuestion {
 }
 
 class Scratch3SensingBlocks {
-    events: RuntimeEmitter;
+    events: EventBus;
     /** The "answer" reporter value. */
     _answer = '';
     /** Pending "ask and wait" questions; the head is the one on screen. */
     _questionList: QueuedQuestion[] = [];
 
-    constructor (events: RuntimeEmitter) {
+    constructor (events: EventBus) {
         this.events = events;
-        events.on(RuntimeEventNames.ANSWER, this._onAnswer.bind(this));
-        events.on(RuntimeEventNames.PROJECT_START, this._resetAnswer.bind(this));
-        events.on(RuntimeEventNames.PROJECT_STOP_ALL, this._clearAllQuestions.bind(this));
-        events.on(RuntimeEventNames.STOP_FOR_TARGET, this._clearTargetQuestions.bind(this));
-        events.on(RuntimeEventNames.RUNTIME_DISPOSED, this._resetAnswer.bind(this));
+        events.on(VMEvent.WRITE_MONITOR, this._onAnswer.bind(this));
+        events.on(RuntimeEvent.PROJECT_START, this._resetAnswer.bind(this));
+        events.on(RuntimeEvent.PROJECT_STOP_ALL, this._clearAllQuestions.bind(this));
+        events.on(RuntimeEvent.STOP_FOR_TARGET, this._clearTargetQuestions.bind(this));
+        events.on(RuntimeEvent.RUNTIME_DISPOSED, this._resetAnswer.bind(this));
     }
 
     getPrimitives () {
@@ -75,13 +76,13 @@ class Scratch3SensingBlocks {
 
     _askNextQuestion () {
         if (this._questionList.length > 0) {
-            this.events.emit(RuntimeEventNames.QUESTION, this._questionList[0].question);
+            this.events.emit(OpcodeEvent.QUESTION, this._questionList[0].question);
         }
     }
 
     _clearAllQuestions () {
         this._questionList = [];
-        this.events.emit(RuntimeEventNames.QUESTION, null);
+        this.events.emit(OpcodeEvent.QUESTION, null);
     }
 
     _clearTargetQuestions (stopTarget: Target) {
@@ -91,7 +92,7 @@ class Scratch3SensingBlocks {
         if (this._questionList.length > 0) {
             this._askNextQuestion();
         } else {
-            this.events.emit(RuntimeEventNames.QUESTION, null);
+            this.events.emit(OpcodeEvent.QUESTION, null);
         }
     }
 
