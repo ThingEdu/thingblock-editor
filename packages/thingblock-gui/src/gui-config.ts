@@ -12,10 +12,7 @@ export interface GUIStorage {
     scratchStorage: ScratchStorage;
 
     // Called multiple times (as changes happen)
-    setProjectHost?(host: string): void;
-    setProjectToken?(token: string): void;
     setProjectMetadata?(projectId: string | null | undefined): void;
-    setAssetHost?(host: string): void;
     setTranslatorFunction?(formatMessageFn: TranslatorFunction): void;
 
     saveProject(
@@ -46,10 +43,7 @@ export interface MessageObject {
 export const GUIStoragePropType = PropTypes.shape({
     scratchStorage: PropTypes.object.isRequired,
 
-    setProjectHost: PropTypes.func,
-    setProjectToken: PropTypes.func,
     setProjectMetadata: PropTypes.func,
-    setAssetHost: PropTypes.func,
     setTranslatorFunction: PropTypes.func,
 
     saveProject: PropTypes.func.isRequired,

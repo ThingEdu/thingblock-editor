@@ -96,7 +96,6 @@ class GUI extends React.Component {
         }
         const {
              
-            assetHost,
             error,
             isError,
             isShowingProject,
@@ -104,7 +103,6 @@ class GUI extends React.Component {
             onStorageInit,
             onUpdateProjectId,
             onVmInit,
-            projectHost,
             projectId,
              
             children,
@@ -129,7 +127,6 @@ class GUI extends React.Component {
 GUI.propTypes = {
     storage: GUIStoragePropType,
     accountMenuOptions: AccountMenuOptionsPropTypes,
-    assetHost: PropTypes.string,
     children: PropTypes.node,
     dynamicAssets: PropTypes.shape({
         backdrops: PropTypes.arrayOf(costumeShape),
@@ -158,7 +155,6 @@ GUI.propTypes = {
      * Used only when there are new features to highlight.
      */
     showNewFeatureCallouts: PropTypes.bool,
-    projectHost: PropTypes.string,
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     shouldStopProject: PropTypes.bool,
     selectedDeviceId: PropTypes.string,

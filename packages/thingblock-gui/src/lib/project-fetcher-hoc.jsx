@@ -39,9 +39,6 @@ const ProjectFetcherHOC = function (WrappedComponent) {
 
             const storage = this.props.storage;
 
-            storage.setProjectHost?.(props.projectHost);
-            storage.setProjectToken?.(props.projectToken);
-            storage.setAssetHost?.(props.assetHost);
             storage.setTranslatorFunction?.(props.intl.formatMessage);
 
             // props.projectId might be unset, in which case we use our default;
@@ -57,17 +54,6 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
         }
         componentDidUpdate (prevProps) {
-            const storage = this.props.storage;
-
-            if (prevProps.projectHost !== this.props.projectHost) {
-                storage.setProjectHost?.(this.props.projectHost);
-            }
-            if (prevProps.projectToken !== this.props.projectToken) {
-                storage.setProjectToken?.(this.props.projectToken);
-            }
-            if (prevProps.assetHost !== this.props.assetHost) {
-                storage.setAssetHost?.(this.props.assetHost);
-            }
             if (this.props.isFetchingWithId && !prevProps.isFetchingWithId) {
                 this.fetchProject(this.props.reduxProjectId, this.props.loadingState);
             }
@@ -100,7 +86,6 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         render () {
             const {
                  
-                assetHost,
                 intl,
                 isLoadingProject: isLoadingProjectProp,
                 loadingState,
@@ -108,9 +93,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 onError: onErrorProp,
                 onFetchedProjectData: onFetchedProjectDataProp,
                 onProjectUnchanged,
-                projectHost,
                 projectId,
-                projectToken,
                 reduxProjectId,
                 setProjectId: setProjectIdProp,
                  
@@ -127,7 +110,6 @@ const ProjectFetcherHOC = function (WrappedComponent) {
     }
     ProjectFetcherComponent.propTypes = {
         storage: GUIStoragePropType,
-        assetHost: PropTypes.string,
         canSave: PropTypes.bool,
         intl: intlShape.isRequired,
         isCreatingNew: PropTypes.bool,
@@ -139,15 +121,9 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: PropTypes.func,
         onFetchedProjectData: PropTypes.func,
         onProjectUnchanged: PropTypes.func,
-        projectHost: PropTypes.string,
-        projectToken: PropTypes.string,
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         reduxProjectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         setProjectId: PropTypes.func
-    };
-    ProjectFetcherComponent.defaultProps = {
-        assetHost: 'https://assets.scratch.mit.edu',
-        projectHost: 'https://projects.scratch.mit.edu'
     };
 
     const mapStateToProps = state => ({

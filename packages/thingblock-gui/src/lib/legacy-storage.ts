@@ -1,29 +1,15 @@
-import {ScratchStorage, Asset} from '@thingblock/thingblock-storage';
+import {ScratchStorage} from '@thingblock/thingblock-storage';
 
 import defaultProject from './default-project';
 import {GUIStorage, TranslatorFunction} from '../gui-config';
 
-import saveProjectToServer from '../lib/save-project-to-server';
-
 export class LegacyStorage implements GUIStorage {
-    private projectHost?: string;
-    private projectToken?: string;
-    private assetHost?: string;
     private translator?: TranslatorFunction;
 
     readonly scratchStorage = new ScratchStorage();
 
     constructor () {
         this.cacheDefaultProject(this.scratchStorage);
-        this.addOfficialScratchWebStores(this.scratchStorage);
-    }
-
-    setProjectHost (host: string): void {
-        this.projectHost = host;
-    }
-
-    setProjectToken (token: string): void {
-        this.projectToken = token;
     }
 
     setProjectMetadata (projectId: string | null | undefined): void {
@@ -38,28 +24,14 @@ export class LegacyStorage implements GUIStorage {
         }
     }
 
-    setAssetHost (host: string): void {
-        this.assetHost = host;
-    }
-
     setTranslatorFunction (translator: TranslatorFunction): void {
         this.translator = translator;
 
         this.cacheDefaultProject(this.scratchStorage);
     }
 
-    saveProject (
-        projectId: number,
-        vmState: string,
-        params: {originalId: string; isCopy: boolean; isRemix: boolean; title: string;}
-    ): Promise<{id: string | number;}> {
-        const host = this.projectHost;
-
-        if (!host) {
-            return Promise.reject(new Error('Project host not set'));
-        }
-        // Haven't inlined the code here so that we can keep Git history on the implementation, just in case
-        return saveProjectToServer(host, projectId, vmState, params);
+    saveProject (): Promise<{id: string | number;}> {
+        return Promise.reject(new Error('saveProject: no project server is configured'));
     }
 
     private cacheDefaultProject (storage: ScratchStorage) {
@@ -70,60 +42,5 @@ export class LegacyStorage implements GUIStorage {
             asset.data,
             asset.id
         ));
-    }
-
-    private addOfficialScratchWebStores (storage: ScratchStorage) {
-        storage.addWebStore(
-            [storage.AssetType.Project],
-            this.getProjectGetConfig.bind(this),
-            this.getProjectCreateConfig.bind(this),
-            this.getProjectUpdateConfig.bind(this)
-        );
-
-        storage.addWebStore(
-            [storage.AssetType.ImageVector, storage.AssetType.ImageBitmap, storage.AssetType.Sound],
-            this.getAssetGetConfig.bind(this),
-            // We set both the create and update configs to the same method because
-            // storage assumes it should update if there is an assetId, but the
-            // asset store uses the assetId as part of the create URI.
-            this.getAssetCreateConfig.bind(this),
-            this.getAssetCreateConfig.bind(this)
-        );
-    }
-
-    private getProjectGetConfig (projectAsset) {
-        const path = `${this.projectHost}/${projectAsset.assetId}`;
-        const qs = this.projectToken ? `?token=${this.projectToken}` : '';
-        return path + qs;
-    }
-
-    private getProjectCreateConfig () {
-        return {
-            url: `${this.projectHost}/`,
-            withCredentials: true
-        };
-    }
-
-    private getProjectUpdateConfig (projectAsset: Asset) {
-        return {
-            url: `${this.projectHost}/${projectAsset.assetId}`,
-            withCredentials: true
-        };
-    }
-
-    private getAssetGetConfig (asset: Asset) {
-        return `${this.assetHost}/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
-    }
-
-    private getAssetCreateConfig (asset: Asset) {
-        return {
-            // There is no such thing as updating assets, but storage assumes it
-            // should update if there is an assetId, and the asset store uses the
-            // assetId as part of the create URI. So, force the method to POST.
-            // Then when storage finds this config to use for the "update", still POSTs
-            method: 'post',
-            url: `${this.assetHost}/${asset.assetId}.${asset.dataFormat}`,
-            withCredentials: true
-        };
     }
 }
