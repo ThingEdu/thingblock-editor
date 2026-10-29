@@ -1,10 +1,9 @@
 import Variable from '../engine/variable';
 import {RuntimeEventNames} from '../engine/runtime/runtime-events';
+import VmEventNames, {type VmEmit} from './vm-event-names';
 import type Runtime from '../engine/runtime';
 import type Target from '../engine/target';
 import type {WorkspaceEvent} from '../engine/runtime/workspace-listener';
-
-type Emit = (event: string, ...args: unknown[]) => void;
 
 /**
  * The editor's side of the runtime, exposed as `vm.workspace`: routes Blockly events into the runtime,
@@ -16,13 +15,13 @@ export default class Workspace {
     private readonly runtime: Runtime;
 
     /** Emits on the VM, where the GUI listens for `targetsUpdate` and `workspaceUpdate`. */
-    private readonly emit: Emit;
+    private readonly emit: VmEmit;
 
     /**
      * @param runtime - the runtime whose targets and blocks the workspace shows.
      * @param emit - emits a VM event.
      */
-    constructor (runtime: Runtime, emit: Emit) {
+    constructor (runtime: Runtime, emit: VmEmit) {
         this.runtime = runtime;
         this.emit = emit;
 
@@ -118,7 +117,7 @@ export default class Workspace {
      *   that don't affect project serialization.
      */
     emitTargetsUpdate (triggerProjectChange = true): void {
-        this.emit('targetsUpdate', {
+        this.emit(VmEventNames.targetsUpdate, {
             // [[target id, human readable target name], ...].
             targetList: this.runtime.targets.map(target => target.toJSON()),
             // Currently editing target id.
@@ -185,6 +184,6 @@ export default class Workspace {
                             ${editingTarget.blocks.toXML(editingTarget.comments)}
                         </xml>`;
 
-        this.emit('workspaceUpdate', {xml: xmlString});
+        this.emit(VmEventNames.workspaceUpdate, {xml: xmlString});
     }
 }

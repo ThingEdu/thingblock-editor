@@ -11,4 +11,4 @@
  * opcode-prefix ownership — once a pack kind other than device/peripheral exists. `DeviceManager` then
  * keeps devices and asks this manager for the packs a device references.
  */
-module.exports = class ResourcePackManager {};
+export default class ResourcePackManager {}

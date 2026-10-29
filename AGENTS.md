@@ -141,7 +141,7 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   a named export), since TS compiles to ES modules.
 - The engine (`src/engine/`) is TypeScript. Runtime events go through the typed `runtime.events` emitter with
   names from `RuntimeEventNames` (`engine/runtime/runtime-events.ts`); the VM forwards them on its own emitter,
-  and the events only the VM emits are named in `virtual-machine/vm-event-names.js`.
+  and the events only the VM emits are named and typed in `virtual-machine/vm-event-names.ts`.
 - `VirtualMachine` (`src/virtual-machine/index.ts`) keeps only lifecycle and setup methods flat; the rest lives
   in owned parts: `vm.workspace` (Blockly events, editing target, workspace rendering), `vm.project` (load,
   save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
@@ -168,7 +168,7 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
   skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
   cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
-- `virtual-machine/resource-pack-manager.js` is a placeholder recording the direction for resource packs as the
+- `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 
 ## npm workflow

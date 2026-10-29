@@ -141,7 +141,7 @@ export default class VirtualMachine extends EventEmitter {
             if (key === 'target' || key === 'blockContainer') return;
             return value;
         }, 2);
-        this.emit('playgroundData', {
+        this.emit(VmEventNames.playgroundData, {
             blocks: editingTarget.blocks,
             threads: filteredThreadData
         });
