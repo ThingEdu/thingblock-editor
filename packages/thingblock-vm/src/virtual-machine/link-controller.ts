@@ -1,6 +1,7 @@
 import {createCloudBackend} from '../link/cloud';
 import {createLocalBackend} from '../link/local';
 import type Runtime from '../engine/runtime';
+import {VMEvent} from '../event/event-name';
 import log from '../util/log';
 import type DeviceManager from './device-manager';
 import type {
@@ -34,6 +35,12 @@ export default class LinkController {
         this.runtime = runtime;
         this.devices = devices;
         this.backend = this.createBackend(this.mode);
+
+        this.runtime.events.on(VMEvent.WRITE_MONITOR, (text: string) => {
+            if (!this.backend.connection.isConnected) return;
+            // Arduino sketches read line-terminated input.
+            this.backend.monitor.writeMonitor(`${text}\n`);
+        });
     }
 
     setLinkMode (mode: LinkMode): void {
@@ -97,10 +104,6 @@ export default class LinkController {
 
     openMonitor (options: {baudRate: number}): Promise<void> {
         return this.backend.monitor.openMonitor(options);
-    }
-
-    writeMonitor (data: string): void {
-        this.backend.monitor.writeMonitor(data);
     }
 
     closeMonitor (): Promise<void> {

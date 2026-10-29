@@ -240,14 +240,9 @@ const GUIComponent = props => {
     }, []);
 
     const handleMonitorSend = useCallback(value => {
-        if (connectedBoard) {
-            // Real board: write to its serial port, line-terminated as Arduino sketches expect. The
-            // device's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
-            vm.link.writeMonitor(`${value}\n`);
-            return;
-        }
-        vm.events.emit('ANSWER', value);
-        setMonitorPrompt(null);
+        // A connected board's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
+        vm.writeMonitor(value);
+        if (!connectedBoard) setMonitorPrompt(null);
     }, [vm, connectedBoard]);
 
     const handleBaudChange = useCallback(rate => {

@@ -160,6 +160,15 @@ export default class VirtualMachine {
     }
 
     /**
+     * Send a line typed into the monitor, so the GUI has one call whether or not a board is connected:
+     * `vm.link` writes it to a connected board, and the sensing blocks take it as the answer to "ask and wait".
+     * @param text - the line the user typed.
+     */
+    writeMonitor (text: string): void {
+        this.events.emit(VMEvent.WRITE_MONITOR, text);
+    }
+
+    /**
      * Set the audio engine for the VM/runtime
      * @param audioEngine - the audio engine to attach.
      */

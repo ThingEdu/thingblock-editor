@@ -18,7 +18,7 @@ test('ask and answer', t => {
 
     events.on('QUESTION', question => {
         t.equal(question, 'a question');
-        events.emit('ANSWER', 'the answer');
+        events.emit('WRITE_MONITOR', 'the answer');
     });
 
     s.askAndWait({QUESTION: 'a question'}, utilFor({})).then(() => {
@@ -72,7 +72,7 @@ test('ask and stop for target asks the next question', t => {
 test('answer gets reset when runtime is disposed', t => {
     const events = new EventBus();
     const s = new Sensing(events);
-    events.on('QUESTION', () => events.emit('ANSWER', 'the answer'));
+    events.on('QUESTION', () => events.emit('WRITE_MONITOR', 'the answer'));
 
     s.askAndWait({QUESTION: ''}, utilFor({})).then(() => {
         t.equal(s.getAnswer(), 'the answer');

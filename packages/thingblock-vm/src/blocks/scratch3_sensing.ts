@@ -2,7 +2,7 @@ import Cast from '../util/cast';
 import getMonitorIdForBlockWithArgs from '../util/get-monitor-id';
 import type BlockUtility from '../engine/block-utility';
 import type Target from '../engine/target';
-import {GuiEvent, OpcodeEvent, RuntimeEvent} from '../event/event-name';
+import {OpcodeEvent, RuntimeEvent, VMEvent} from '../event/event-name';
 import type {EventBus} from '../event/event-bus';
 
 interface QueuedQuestion {
@@ -20,7 +20,7 @@ class Scratch3SensingBlocks {
 
     constructor (events: EventBus) {
         this.events = events;
-        events.on(GuiEvent.ANSWER, this._onAnswer.bind(this));
+        events.on(VMEvent.WRITE_MONITOR, this._onAnswer.bind(this));
         events.on(RuntimeEvent.PROJECT_START, this._resetAnswer.bind(this));
         events.on(RuntimeEvent.PROJECT_STOP_ALL, this._clearAllQuestions.bind(this));
         events.on(RuntimeEvent.STOP_FOR_TARGET, this._clearTargetQuestions.bind(this));

@@ -37,7 +37,8 @@ export const IoEvent = {
     KEY_PRESSED: 'KEY_PRESSED'
 };
 
-/** Emitted by peripheral extensions while scanning and connecting. */export const PeripheralEvent = {
+/** Emitted by peripheral extensions while scanning and connecting. */
+export const PeripheralEvent = {
     PERIPHERAL_LIST_UPDATE: 'PERIPHERAL_LIST_UPDATE', // (peripherals: Record<string, PeripheralListEntry>)
     USER_PICKED_PERIPHERAL: 'USER_PICKED_PERIPHERAL', // (peripherals: Record<string, PeripheralListEntry>)
     PERIPHERAL_CONNECTED: 'PERIPHERAL_CONNECTED',
@@ -54,15 +55,11 @@ export const LinkEvent = {
     SERIAL_DATA: 'SERIAL_DATA' // (text: string)
 };
 
-/** Emitted by the GUI into the runtime. */
-export const GuiEvent = {
-    ANSWER: 'ANSWER' // (answer: string)
-};
-
 /** Emitted by the VM itself. */
 export const VMEvent = {
     TURBO_MODE_ON: 'TURBO_MODE_ON',
     TURBO_MODE_OFF: 'TURBO_MODE_OFF',
+    WRITE_MONITOR: 'WRITE_MONITOR', // (text: string)
     playgroundData: 'playgroundData' // (data: {blocks: Blocks, threads: string})
 };
 

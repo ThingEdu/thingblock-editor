@@ -481,6 +481,22 @@ test('Setting turbo mode emits events', t => {
     t.end();
 });
 
+test('writeMonitor gives the sensing blocks their answer, and writes a line to a connected board', t => {
+    const vm = new VirtualMachine();
+    const written = [];
+    const connection = {isConnected: false};
+    vm.link.backend = {connection, monitor: {writeMonitor: data => written.push(data)}};
+
+    vm.writeMonitor('hi');
+    t.equal(vm.runtime._primitives.sensing_answer(), 'hi');
+    t.same(written, []);
+
+    connection.isConnected = true;
+    vm.writeMonitor('led on');
+    t.same(written, ['led on\n']);
+    t.end();
+});
+
 test('Starting the VM emits an event', t => {
     let started = false;
     const vm = new VirtualMachine();
