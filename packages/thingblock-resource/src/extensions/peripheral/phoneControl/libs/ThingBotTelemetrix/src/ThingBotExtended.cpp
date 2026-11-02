@@ -20,7 +20,9 @@ uint16_t map_speed_to_pwm(int value) {
 }
 
 uint16_t map_angle_to_pwm(int angle) {
-    return (uint16_t)map(angle, 0, 180, 150, 600);
+    // The generated sketch runs the shared PCA9685 at 50 Hz (20 ms frames, 4096 counts), so
+    // 102..512 counts is a 0.5..2.5 ms pulse -- the same range thingbot-core's servo blocks use.
+    return (uint16_t)map(angle, 0, 180, 102, 512);
 }
 
 void setup_pwm_driver() {

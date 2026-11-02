@@ -105,4 +105,17 @@ describe('ThingBot motor and servo channels', () => {
     expect(generatorDrives(motor, 'backward')).toBe(`M${motor}_A`)
     expect(firmwareDrives(motor, false)).toBe(generatorDrives(motor, 'backward'))
   })
+
+  it('maps servo angles onto the same 50 Hz pulse range as upload mode', () => {
+    generator.forBlock.thingBotC3_setServoAngle({ getFieldValue: () => '1' })
+    const helpers = generator.globals.get('thingbot_servo_angle') ?? ''
+    const min = /#define SERVO_PULSE_MIN (\d+)/.exec(helpers)?.[1]
+    const max = /#define SERVO_PULSE_MAX (\d+)/.exec(helpers)?.[1]
+    expect([min, max]).toEqual(['102', '512'])
+
+    // Phone control shares the sketch's PCA9685, which upload mode runs at 50 Hz, so the firmware's
+    // angle map must land on the same 0.5..2.5 ms pulses.
+    const firmwareMap = /map\(angle, 0, 180, (\d+), (\d+)\)/.exec(firmwareSource)
+    expect([firmwareMap?.[1], firmwareMap?.[2]]).toEqual([min, max])
+  })
 })
