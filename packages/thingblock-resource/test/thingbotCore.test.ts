@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { registerBlocks } from '../src/extensions/peripheral/thingbot-core/blocks'
 import { registerGenerators } from '../src/extensions/peripheral/thingbot-core/generator'
-import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
+import type { ArduinoGenerator, ArduinoOrder, Blockly } from '../src/shared/types'
 
 const Order = { ATOMIC: 0 } as unknown as ArduinoOrder
 
@@ -47,5 +48,15 @@ describe('set buzzer to N pulse', () => {
     // Adafruit_PWMServoDriver::setPin(num, val, invert = false): a third argument would be `invert`.
     const { code } = generate('thingBotC3_buzzer', {}, { SOUND: '2048' })
     expect(code).toBe('pwm.setPin(BUZZER, 2048);\n')
+  })
+})
+
+describe('start servo block', () => {
+  it('tells the learner the motion needs "wait for servos"', () => {
+    const Blocks: Record<string, { init(this: { jsonInit: (config: { tooltip?: string }) => void }): void }> = {}
+    registerBlocks({ Blocks } as unknown as Blockly)
+    let tooltip: string | undefined
+    Blocks.thingBotC3_startServoAngle.init.call({ jsonInit: (config) => (tooltip = config.tooltip) })
+    expect(tooltip).toContain('wait for servos')
   })
 })
