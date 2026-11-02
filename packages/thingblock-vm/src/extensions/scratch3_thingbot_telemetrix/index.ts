@@ -213,7 +213,7 @@ class ThingBotTelemetrixExtension implements Extension {
                     text: formatMessage({
                         id: 'thingbotTelemetrix.controlDC',
                         default: 'motor [MOTOR_ID] speed [SPEED]',
-                        description: 'Set a DC motor speed (0–100)'
+                        description: 'Set a DC motor speed (-100–100, negative runs it backwards)'
                     }),
                     arguments: {
                         MOTOR_ID: {
@@ -426,7 +426,7 @@ class ThingBotTelemetrixExtension implements Extension {
 
     controlDC ({MOTOR_ID, SPEED}: {MOTOR_ID: ArgValue, SPEED: ArgValue}) {
         const motorId = parseInt(String(MOTOR_ID), 10);
-        const speed = Math.max(0, Math.min(100, Math.round(Number(SPEED))));
+        const speed = Math.max(-100, Math.min(100, Math.round(Number(SPEED))));
         this._telemetrix.controlDC(motorId, speed);
         return Promise.resolve();
     }

@@ -149,7 +149,8 @@ class ThingBotTelemetrix {
     }
 
     controlDC (motorId: number, speed: number) {
-        this.sendCommand(CMD.DC_WRITE, motorId, speed);
+        // The firmware reads the speed byte as int8_t: -100..100 in two's complement.
+        this.sendCommand(CMD.DC_WRITE, motorId, speed & 0xff);
     }
 
     controlBuzzer (frequency: number) {
