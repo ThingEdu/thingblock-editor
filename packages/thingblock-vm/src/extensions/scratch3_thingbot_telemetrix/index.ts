@@ -279,8 +279,9 @@ class ThingBotTelemetrixExtension implements Extension {
                         description: 'Configure an HC-SR04 ultrasonic sensor'
                     }),
                     arguments: {
-                        TRIG: {type: ArgumentType.NUMBER, defaultValue: 7},
-                        ECHO: {type: ArgumentType.NUMBER, defaultValue: 8}
+                        // IO7 is the PS2 DATA line and IO8 the PCA9685's SDA, so default clear of both.
+                        TRIG: {type: ArgumentType.NUMBER, defaultValue: 0},
+                        ECHO: {type: ArgumentType.NUMBER, defaultValue: 4}
                     }
                 },
                 {

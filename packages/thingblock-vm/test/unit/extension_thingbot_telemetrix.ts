@@ -77,3 +77,30 @@ test('stopping the project sends nothing while no ThingBot is connected', t => {
     t.same(sent, []);
     t.end();
 });
+
+test('setPinMode sends the Arduino-ESP32 pin mode values the firmware switches on', t => {
+    const sent: number[][] = [];
+    const {ext} = extensionSending(sent);
+
+    ext.setPinMode({PIN: '13', MODE: 'OUTPUT'});
+    ext.setPinMode({PIN: '5', MODE: 'INPUT'});
+    ext.setPinMode({PIN: '5', MODE: 'INPUT_PULLUP'});
+
+    // esp32-hal-gpio.h: INPUT 0x01, OUTPUT 0x03, INPUT_PULLUP 0x05. Inputs also enable reporting.
+    t.same(sent, [[3, 1, 13, 0x03], [4, 1, 5, 0x01, 1], [4, 1, 5, 0x05, 1]]);
+    t.end();
+});
+
+test('setupUltrasonic defaults to TRIG 0 / ECHO 4, clear of the I2C and PS2 pins', t => {
+    const sent: number[][] = [];
+    const {ext} = extensionSending(sent);
+
+    const block = ext.getInfo().blocks.find(b => typeof b === 'object' && b.opcode === 'setupUltrasonic');
+    const args = (block as {arguments: Record<string, {defaultValue: unknown}>}).arguments;
+    t.equal(args.TRIG.defaultValue, 0);
+    t.equal(args.ECHO.defaultValue, 4);
+
+    ext.setupUltrasonic({TRIG: args.TRIG.defaultValue as number, ECHO: args.ECHO.defaultValue as number});
+    t.same(sent, [[4, 1, 0, 0x12, 4]]);
+    t.end();
+});
