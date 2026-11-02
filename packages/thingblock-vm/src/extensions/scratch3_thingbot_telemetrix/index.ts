@@ -4,7 +4,7 @@ import formatMessage from 'format-message';
 import ThingBotTelemetrix, {DHT_TYPE, PIN_MODE} from './thingbot-telemetrix';
 import BLETransport from './transport/ble';
 import type {ScannedDevice} from './transport/transport';
-import {PeripheralEvent} from '../../event/event-name';
+import {PeripheralEvent, RuntimeEvent} from '../../event/event-name';
 import type {Extension, ExtensionInfo} from '../extension';
 
 /** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
@@ -36,6 +36,7 @@ class ThingBotTelemetrixExtension implements Extension {
         this._stopScan = null;
 
         this.runtime.registerPeripheralExtension(EXTENSION_ID, this);
+        this.runtime.events.on(RuntimeEvent.PROJECT_STOP_ALL, () => this._stopAll());
     }
 
     // ─── Peripheral interface ───
@@ -102,6 +103,15 @@ class ThingBotTelemetrixExtension implements Extension {
 
     _onDisconnect () {
         this.runtime.events.emit(PeripheralEvent.PERIPHERAL_DISCONNECTED);
+    }
+
+    /** The firmware holds a motor or the buzzer at its last command, so Stop must silence them. */
+    _stopAll () {
+        if (!this._telemetrix.isConnected()) return;
+        for (const motorId of [1, 2, 3, 4]) {
+            this._telemetrix.controlDC(motorId, 0);
+        }
+        this._telemetrix.controlBuzzer(0);
     }
 
     // ─── Extension metadata ───
