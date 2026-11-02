@@ -217,7 +217,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   generator.forBlock.thingBotC3_buzzer = (block) => {
     registerBoardHardware()
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
-    return `pwm.setPin(BUZZER, 0, ${sound});\n`
+    return `pwm.setPin(BUZZER, ${sound});\n`
   }
 
   /**
@@ -282,19 +282,27 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
         '#define PS2_CMD 2   // DOUT',
         '#define PS2_SEL 10  // CS',
         '#define PS2_CLK 6   // CLK',
+        '#define PS2_MAX_TRIES 10',
         '#define pressures false',
         '#define rumble false',
       ].join('\n'),
     )
     generator.globals.set('ps2x_instance', 'PS2X ps2x;')
     generator.globals.set('thingbot_ps2_config', 'int error = 1;\nint tryNum = 1;')
+    // Bounded so a missing receiver or controller cannot hold the robot in setup() forever: after
+    // PS2_MAX_TRIES the program runs on without one, and `error` stays non-zero.
     return [
-      'while (error != 0) {',
+      'while (error != 0 && tryNum <= PS2_MAX_TRIES) {',
       '\tdelay(1000);',
       '\terror = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);',
       '\tSerial.print("#try config ");',
       '\tSerial.println(tryNum);',
       '\ttryNum++;',
+      '}',
+      'if (error != 0) {',
+      '\tSerial.print("PS2 controller not found, error ");',
+      '\tSerial.print(error);',
+      '\tSerial.println("; continuing without it");',
       '}',
       '',
     ].join('\n')

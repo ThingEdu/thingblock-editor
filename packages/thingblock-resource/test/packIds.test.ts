@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { describe, expect, it } from 'vitest'
-import type { PeripheralManifest, RegisterBlocks } from '../src/shared/types'
+import type { Blockly, PeripheralManifest, RegisterBlocks } from '../src/shared/types'
 
 const manifests = import.meta.glob<{ default: PeripheralManifest }>('../src/extensions/peripheral/*/manifest.ts', {
   eager: true,
@@ -23,7 +23,7 @@ describe('peripheral pack ids', () => {
 
     it(`${dir} registers blocks under its own id`, () => {
       const blocks: Record<string, unknown> = {}
-      module.registerBlocks({ Blocks: blocks })
+      module.registerBlocks({ Blocks: blocks } as unknown as Blockly)
 
       const prefixes = new Set(Object.keys(blocks).map((type) => type.split('_')[0]))
       expect([...prefixes]).toEqual([manifest.id])

@@ -15,10 +15,10 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
 
   generator.forBlock.ps2_init = (block) => {
     ensurePs2()
-    const din = fieldValue(block, 'DIN', '2')
-    const dout = fieldValue(block, 'DOUT', '3')
-    const cs = fieldValue(block, 'CS', '4')
-    const clk = fieldValue(block, 'CLK', '5')
+    const din = fieldValue(block, 'DIN', '7')
+    const dout = fieldValue(block, 'DOUT', '2')
+    const cs = fieldValue(block, 'CS', '10')
+    const clk = fieldValue(block, 'CLK', '6')
     return `ps2x.config_gamepad(${clk}, ${dout}, ${cs}, ${din}, false, false);\n`
   }
 

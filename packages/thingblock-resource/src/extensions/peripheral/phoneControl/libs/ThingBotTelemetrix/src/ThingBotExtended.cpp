@@ -12,16 +12,17 @@
 extern Adafruit_PWMServoDriver pwm;
 
 uint16_t map_speed_to_pwm(int value) {
-    // map() cua Arduino KHONG kep dai. Mot byte toc do bi hieu sai - vi du 196,
-    // la bu hai cua -60 ma firmware cu doc nhu so khong dau - se cho 8026, vuot
-    // xa thanh ghi 12-bit cua PCA9685 va sinh duty khong xac dinh. Kep truoc.
+    // Arduino's map() does not clamp: an out-of-range value would land past the PCA9685's
+    // 12-bit duty register, and the resulting duty is undefined. Clamp first.
     if (value < 0) value = 0;
     if (value > 100) value = 100;
     return (uint16_t)map(value, 0, 100, 0, 4095);
 }
 
 uint16_t map_angle_to_pwm(int angle) {
-    return (uint16_t)map(angle, 0, 180, 150, 600);
+    // The generated sketch runs the shared PCA9685 at 50 Hz (20 ms frames, 4096 counts), so
+    // 102..512 counts is a 0.5..2.5 ms pulse -- the same range thingbot-core's servo blocks use.
+    return (uint16_t)map(angle, 0, 180, 102, 512);
 }
 
 void setup_pwm_driver() {
@@ -38,49 +39,50 @@ void setup_sw_input() {
 
 void control_dc() {
     byte motor;
-    // Byte toc do la ma hoa bu hai cua so co dau -100..100. Doc bang `byte`
-    // (khong dau) khien `if (speed >= 0)` luon dung, nen toan bo nhanh dao
-    // chieu ben duoi la ma chet: firmware khong bao gio lui duoc, bat ke
-    // client gui gi. Trieu chung de bo sot vi thu tien van binh thuong.
+    // The speed byte is a two's-complement signed value in -100..100, so it must be read as
+    // int8_t for the reverse branches below to be reachable.
     int8_t speed;
     motor = command_buffer[0];
     speed = (int8_t)command_buffer[1];
+    // Forward (speed >= 0) drives channel B and holds A low, the same convention the thingbot-core
+    // `motor M forward` block generates, so a positive speed turns the wheel the same way from the
+    // phone as in the student's program.
     // send_debug_info(DC_WRITE, speed);
     switch (motor) {
         case M1:
             if (speed >= 0) {
-                pwm.setPWM(M1_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M1_B, 0, 0);
-            } else {
                 pwm.setPWM(M1_A, 0, 0);
-                pwm.setPWM(M1_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M1_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M1_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M1_B, 0, 0);
             }
             break;
         case M2:
             if (speed >= 0) {
-                pwm.setPWM(M2_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M2_B, 0, 0);
-            } else {
                 pwm.setPWM(M2_A, 0, 0);
-                pwm.setPWM(M2_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M2_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M2_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M2_B, 0, 0);
             }
             break;
         case M3:
             if (speed >= 0) {
-                pwm.setPWM(M3_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M3_B, 0, 0);
-            } else {
                 pwm.setPWM(M3_A, 0, 0);
-                pwm.setPWM(M3_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M3_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M3_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M3_B, 0, 0);
             }
             break;
         case M4:
             if (speed >= 0) {
-                pwm.setPWM(M4_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M4_B, 0, 0);
-            } else {
                 pwm.setPWM(M4_A, 0, 0);
-                pwm.setPWM(M4_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M4_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M4_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M4_B, 0, 0);
             }
             break;
     }

@@ -20,7 +20,8 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'init PS2 receiver pin DIN %1 DOUT %2 CS %3 CLK %4',
-        args0: [pinField('DIN', 2), pinField('DOUT', 3), pinField('CS', 4), pinField('CLK', 5)],
+        // Defaults are ThingBot's PS2 port, the same pins `init PS2 on ThingBot` uses.
+        args0: [pinField('DIN', 7), pinField('DOUT', 2), pinField('CS', 10), pinField('CLK', 6)],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],

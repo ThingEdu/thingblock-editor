@@ -34,7 +34,10 @@ const manifest: DeviceManifest = {
         default: 'Live mode (Telemetrix over BLE)',
         description: 'Name of the ThingBot live-mode firmware image',
       },
-      source: 'd4d72de',
+      // MEO-3/thingbot-telemetrix-arduino at a41229a (tag 3.1), PlatformIO env esp32-c3-devkitm-1-ble,
+      // plus the fix/motor-direction-m3b patch (b0112c0, af58ad9): a positive DC speed drives channel B
+      // like upload mode's `forward`, and M3's B channel is 6. Bootloader and partitions are unchanged.
+      source: 'a41229a',
     },
   ],
 }

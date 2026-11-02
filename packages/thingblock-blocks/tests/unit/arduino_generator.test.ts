@@ -30,6 +30,7 @@ const BLOCK_TYPES = [
   'data_setvariableto',
   'data_variable',
   'sensing_timer',
+  'sensing_resettimer',
   'procedures_definition',
   'procedures_prototype',
 ]
@@ -177,6 +178,7 @@ beforeEach(() => {
       message0: 'timer',
       output: null,
     },
+    { type: 'sensing_resettimer', message0: 'reset timer', previousStatement: null, nextStatement: null },
     {
       type: 'colour_picker',
       message0: '%1',
@@ -395,7 +397,30 @@ describe('ArduinoGenerator', () => {
     connectValue(wait, 'DURATION', workspace.newBlock('sensing_timer'))
     connectNext(loop, wait)
 
-    expect(arduinoGenerator.workspaceToCode(workspace)).toContain('millis() / 1000.0')
+    expect(arduinoGenerator.workspaceToCode(workspace)).toContain('(millis() - scratchTimerStart) / 1000.0')
+  })
+
+  it('makes reset timer restart the timer reporter from zero', () => {
+    const loop = workspace.newBlock('event_whenarduinoloop')
+    const reset = workspace.newBlock('sensing_resettimer')
+    const wait = workspace.newBlock('control_wait')
+    connectValue(wait, 'DURATION', workspace.newBlock('sensing_timer'))
+    connectNext(loop, reset)
+    connectNext(reset, wait)
+
+    const code = arduinoGenerator.workspaceToCode(workspace)
+    expect(code).toContain('unsigned long scratchTimerStart = 0;')
+    expect(code).toContain('scratchTimerStart = millis();')
+    expect(code).toContain('(millis() - scratchTimerStart) / 1000.0')
+  })
+
+  it('declares the timer start for reset timer used without the timer reporter', () => {
+    const loop = workspace.newBlock('event_whenarduinoloop')
+    connectNext(loop, workspace.newBlock('sensing_resettimer'))
+
+    const code = arduinoGenerator.workspaceToCode(workspace)
+    expect(code).toContain('unsigned long scratchTimerStart = 0;')
+    expect(code).toContain('scratchTimerStart = millis();')
   })
 
   it('maps the colour picker to a hex literal', () => {
