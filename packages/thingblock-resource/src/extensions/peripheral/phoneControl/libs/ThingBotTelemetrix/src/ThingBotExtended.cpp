@@ -42,42 +42,45 @@ void control_dc() {
     int8_t speed;
     motor = command_buffer[0];
     speed = (int8_t)command_buffer[1];
+    // Forward (speed >= 0) drives channel B and holds A low, the same convention the thingbot-core
+    // `motor M forward` block generates, so a positive speed turns the wheel the same way from the
+    // phone as in the student's program.
     // send_debug_info(DC_WRITE, speed);
     switch (motor) {
         case M1:
             if (speed >= 0) {
-                pwm.setPWM(M1_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M1_B, 0, 0);
-            } else {
                 pwm.setPWM(M1_A, 0, 0);
-                pwm.setPWM(M1_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M1_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M1_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M1_B, 0, 0);
             }
             break;
         case M2:
             if (speed >= 0) {
-                pwm.setPWM(M2_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M2_B, 0, 0);
-            } else {
                 pwm.setPWM(M2_A, 0, 0);
-                pwm.setPWM(M2_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M2_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M2_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M2_B, 0, 0);
             }
             break;
         case M3:
             if (speed >= 0) {
-                pwm.setPWM(M3_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M3_B, 0, 0);
-            } else {
                 pwm.setPWM(M3_A, 0, 0);
-                pwm.setPWM(M3_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M3_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M3_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M3_B, 0, 0);
             }
             break;
         case M4:
             if (speed >= 0) {
-                pwm.setPWM(M4_A, 0, map_speed_to_pwm(speed));
-                pwm.setPWM(M4_B, 0, 0);
-            } else {
                 pwm.setPWM(M4_A, 0, 0);
-                pwm.setPWM(M4_B, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M4_B, 0, map_speed_to_pwm(speed));
+            } else {
+                pwm.setPWM(M4_A, 0, map_speed_to_pwm(-speed));
+                pwm.setPWM(M4_B, 0, 0);
             }
             break;
     }

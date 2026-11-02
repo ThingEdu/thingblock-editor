@@ -29,7 +29,7 @@
 #define M2_A 4
 #define M2_B 5
 #define M3_A 7
-#define M3_B 8
+#define M3_B 6  // channel 8 is SERVO_5
 #define M4_A 1
 #define M4_B 0
 
