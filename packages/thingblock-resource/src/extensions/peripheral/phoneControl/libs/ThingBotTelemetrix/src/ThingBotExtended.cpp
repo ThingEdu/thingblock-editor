@@ -12,9 +12,8 @@
 extern Adafruit_PWMServoDriver pwm;
 
 uint16_t map_speed_to_pwm(int value) {
-    // map() cua Arduino KHONG kep dai. Mot byte toc do bi hieu sai - vi du 196,
-    // la bu hai cua -60 ma firmware cu doc nhu so khong dau - se cho 8026, vuot
-    // xa thanh ghi 12-bit cua PCA9685 va sinh duty khong xac dinh. Kep truoc.
+    // Arduino's map() does not clamp: an out-of-range value would land past the PCA9685's
+    // 12-bit duty register, and the resulting duty is undefined. Clamp first.
     if (value < 0) value = 0;
     if (value > 100) value = 100;
     return (uint16_t)map(value, 0, 100, 0, 4095);
@@ -38,10 +37,8 @@ void setup_sw_input() {
 
 void control_dc() {
     byte motor;
-    // Byte toc do la ma hoa bu hai cua so co dau -100..100. Doc bang `byte`
-    // (khong dau) khien `if (speed >= 0)` luon dung, nen toan bo nhanh dao
-    // chieu ben duoi la ma chet: firmware khong bao gio lui duoc, bat ke
-    // client gui gi. Trieu chung de bo sot vi thu tien van binh thuong.
+    // The speed byte is a two's-complement signed value in -100..100, so it must be read as
+    // int8_t for the reverse branches below to be reachable.
     int8_t speed;
     motor = command_buffer[0];
     speed = (int8_t)command_buffer[1];
