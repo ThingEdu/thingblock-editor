@@ -1,0 +1,8 @@
+{
+    "gui.exampleLibrary.groupFanRoc": "FanRoc",
+    "gui.exampleLibrary.groupK12": "K12 cơ bản",
+    "gui.exampleLibrary.groupSim": "Mô phỏng ThingBot Sim",
+    "gui.exampleLibrary.title": "Ví dụ",
+    "gui.menuBar.examples": "Ví dụ...",
+    "gui.projectLoader.exampleLoadError": "Không mở được dự án ví dụ."
+}

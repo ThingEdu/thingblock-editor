@@ -15,6 +15,7 @@ import useMenuNavigation from '../../hooks/use-menu-navigation';
 import sharedMessages from '../../lib/shared-messages';
 
 import {saveProjectAsCopy} from '../../reducers/project-state';
+import {openExampleLibrary} from '../../reducers/modals';
 
 const fileMenu = defineMessage({
     id: 'gui.aria.fileMenu',
@@ -27,6 +28,7 @@ const FileMenu = ({
     canSave,
     canCreateCopy,
     canRemix,
+    onClickExamples,
     onClickNew,
     onClickSave,
     onClickSaveAsCopy,
@@ -140,6 +142,17 @@ const FileMenu = ({
                 )}
                 <MenuSection>
                     <MenuItem
+                        onClick={onClickExamples}
+                        isDataMenuItem
+                        onParentKeyDown={handleKeyDownOpenMenu}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Examples..."
+                            description="Menu bar item for opening the library of bundled example projects"
+                            id="gui.menuBar.examples"
+                        />
+                    </MenuItem>
+                    <MenuItem
                         onClick={onStartSelectingFileUpload}
                         isDataMenuItem
                         onParentKeyDown={handleKeyDownOpenMenu}
@@ -172,6 +185,7 @@ FileMenu.propTypes = {
     canCreateCopy: PropTypes.bool.isRequired,
     canRemix: PropTypes.bool.isRequired,
     onStartSelectingFileUpload: PropTypes.func.isRequired,
+    onClickExamples: PropTypes.func,
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onClickRemix: PropTypes.func,
@@ -186,6 +200,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
+    onClickExamples: () => dispatch(openExampleLibrary()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy())
 });
 

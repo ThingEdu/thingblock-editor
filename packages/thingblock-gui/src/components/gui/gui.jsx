@@ -26,6 +26,7 @@ import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import BoardLibrary from '../../containers/board-library.jsx';
+import ExampleLibrary from '../../containers/example-library.jsx';
 import PeripheralLibrary from '../../containers/peripheral-library.jsx';
 
 import layout, {STAGE_SIZE_MODES} from '../../lib/layout-constants';
@@ -135,6 +136,7 @@ const GUIComponent = props => {
         onSeeCommunity,
         onShare,
         onShowPrivacyPolicy,
+        onStartLoadingExample,
         onStartSelectingFileUpload,
         onTelemetryModalCancel,
         onTelemetryModalOptIn,
@@ -320,6 +322,7 @@ const GUIComponent = props => {
                         />
                     ) : null}
                     <BoardLibrary />
+                    {onStartLoadingExample ? <ExampleLibrary onSelectExample={onStartLoadingExample} /> : null}
                     <PeripheralLibrary />
                     {cardsVisible ? (
                         <Cards />
@@ -559,6 +562,7 @@ GUIComponent.propTypes = {
     onSeeCommunity: PropTypes.func,
     onShare: PropTypes.func,
     onShowPrivacyPolicy: PropTypes.func,
+    onStartLoadingExample: PropTypes.func,
     onStartSelectingFileUpload: PropTypes.func,
     onTabSelect: PropTypes.func,
     onTelemetryModalCancel: PropTypes.func,

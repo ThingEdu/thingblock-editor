@@ -217,6 +217,16 @@ export default class DeviceManager {
     }
 
     /**
+     * The HTTP base the bundled example projects are served from: `examples/index.json` lists them and
+     * each entry's `file` is relative to this base. Null when the active link backend serves no packs.
+     * @returns the examples base, e.g. `http://localhost:3030/resources/examples`.
+     */
+    getExamplesOrigin (): string | null {
+        const origin = this.linkResourceOrigin();
+        return origin && `${origin}/examples`;
+    }
+
+    /**
      * The firmware images the selected device's pack ships, for the GUI's restore menu. Empty when
      * the device declares none, which is how a pack opts out of the feature.
      * @param deviceId - the device to list images for.

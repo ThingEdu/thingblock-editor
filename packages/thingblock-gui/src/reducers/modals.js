@@ -3,6 +3,7 @@ const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
 
 const MODAL_BOARD_LIBRARY = 'boardLibrary';
 const MODAL_DEBUG = 'debugModal';
+const MODAL_EXAMPLE_LIBRARY = 'exampleLibrary';
 const MODAL_EXTENSION_LIBRARY = 'extensionLibrary';
 const MODAL_LOADING_PROJECT = 'loadingProject';
 const MODAL_PERIPHERAL_LIBRARY = 'peripheralLibrary';
@@ -14,6 +15,7 @@ const MODAL_TIPS_LIBRARY = 'tipsLibrary';
 const initialState = {
     [MODAL_BOARD_LIBRARY]: false,
     [MODAL_DEBUG]: false,
+    [MODAL_EXAMPLE_LIBRARY]: false,
     [MODAL_EXTENSION_LIBRARY]: false,
     [MODAL_LOADING_PROJECT]: false,
     [MODAL_PERIPHERAL_LIBRARY]: false,
@@ -56,6 +58,9 @@ const openBoardLibrary = function () {
 const openDebugModal = function () {
     return openModal(MODAL_DEBUG);
 };
+const openExampleLibrary = function () {
+    return openModal(MODAL_EXAMPLE_LIBRARY);
+};
 const openExtensionLibrary = function () {
     return openModal(MODAL_EXTENSION_LIBRARY);
 };
@@ -83,6 +88,9 @@ const closeBoardLibrary = function () {
 const closeDebugModal = function () {
     return closeModal(MODAL_DEBUG);
 };
+const closeExampleLibrary = function () {
+    return closeModal(MODAL_EXAMPLE_LIBRARY);
+};
 const closeExtensionLibrary = function () {
     return closeModal(MODAL_EXTENSION_LIBRARY);
 };
@@ -109,6 +117,7 @@ export {
     initialState as modalsInitialState,
     openBoardLibrary,
     openDebugModal,
+    openExampleLibrary,
     openExtensionLibrary,
     openLoadingProject,
     openPeripheralLibrary,
@@ -118,6 +127,7 @@ export {
     openSettingsModal,
     closeBoardLibrary,
     closeDebugModal,
+    closeExampleLibrary,
     closeExtensionLibrary,
     closeLoadingProject,
     closePeripheralLibrary,

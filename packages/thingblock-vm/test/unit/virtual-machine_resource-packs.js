@@ -34,6 +34,16 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
     t.end();
 });
 
+test('getExamplesOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:3030/resources/examples', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:8080/resources/examples', 'cloud mode');
+
+    t.end();
+});
+
 test('registerDeviceManifest exposes the pack device through getDeviceList', t => {
     const vm = new VirtualMachine();
     const base = 'http://localhost:3030/resources/extensions/devices/thingbot';

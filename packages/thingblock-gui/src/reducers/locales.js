@@ -1,5 +1,13 @@
 import {isRtl} from 'scratch-l10n';
-import editorMessages from 'scratch-l10n/locales/editor-msgs';
+import scratchEditorMessages from 'scratch-l10n/locales/editor-msgs';
+import thingblockMessagesVi from '../locales/vi.json';
+
+// ThingBlock's own GUI strings have no entry in scratch-l10n: English comes from each message's
+// `defaultMessage`, Vietnamese from src/locales/vi.json (edited by hand, keyed by message id).
+const editorMessages = {
+    ...scratchEditorMessages,
+    vi: {...scratchEditorMessages.vi, ...thingblockMessagesVi}
+};
 
 const UPDATE_LOCALES = 'scratch-gui/locales/UPDATE_LOCALES';
 const SELECT_LOCALE = 'scratch-gui/locales/SELECT_LOCALE';

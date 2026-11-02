@@ -1,0 +1,66 @@
+@import "../../css/colors.css";
+@import "../../css/units.css";
+
+.card {
+    display: flex;
+    flex-basis: 300px;
+    max-width: 300px;
+    margin: $space;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: $text-primary;
+    background: $ui-white;
+    border: 2px solid $ui-black-transparent;
+    border-radius: $space;
+    box-sizing: border-box;
+}
+
+.card:hover,
+.card:focus-within {
+    border-color: $motion-primary;
+}
+
+.select-button {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0;
+    padding: 1rem 1.25rem;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+[dir="rtl"] .select-button {
+    text-align: right;
+}
+
+.select-button:focus {
+    outline: none;
+}
+
+.group {
+    font-size: 12px;
+    font-weight: bold;
+    color: $motion-primary;
+}
+
+.name {
+    padding-top: 0.25rem;
+    font-weight: bold;
+}
+
+.description {
+    padding-top: 0.3125rem;
+    line-height: 1.375rem;
+}
+
+.hardware {
+    margin: 0;
+    padding: 0.5rem 0 0;
+    list-style: none;
+    font-size: 12px;
+    opacity: 0.75;
+}

@@ -98,4 +98,50 @@ describe('SBFileUploaderHOC', () => {
         );
         expect(mockedCancelFileUpload).toHaveBeenCalled();
     });
+    test('loading an example fetches its .tb and opens it like a chosen file', async () => {
+        let startLoadingExample;
+        const Component = ({onStartLoadingExample}) => {
+            startLoadingExample = onStartLoadingExample;
+            return <div />;
+        };
+        const WrappedComponent = SBFileUploaderHOC(Component);
+        const data = new ArrayBuffer(4);
+        global.fetch = jest.fn(() => Promise.resolve({ok: true, arrayBuffer: () => Promise.resolve(data)}));
+        vm.project.load = jest.fn(() => Promise.resolve());
+        const props = {
+            canSave: false,
+            cancelFileUpload: jest.fn(),
+            projectChanged: false,
+            requestProjectUpload: jest.fn(),
+            store: store,
+            userOwnsProject: false,
+            vm: vm,
+            onLoadingFinished: jest.fn(),
+            onLoadingStarted: jest.fn(),
+            onSetProjectTitle: jest.fn()
+        };
+        const {rerender} = renderWithIntl(<WrappedComponent
+            {...props}
+            isLoadingUpload={false}
+        />);
+
+        startLoadingExample({url: 'http://host/examples/thingbot/a.tb', title: 'Robot vũ công'});
+        expect(props.requestProjectUpload).toHaveBeenCalled();
+
+        rerender(
+            <IntlProvider locale="en">
+                <WrappedComponent
+                    {...props}
+                    isLoadingUpload
+                />
+            </IntlProvider>
+        );
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(global.fetch).toHaveBeenCalledWith('http://host/examples/thingbot/a.tb');
+        expect(vm.project.load).toHaveBeenCalledWith(data);
+        expect(props.onSetProjectTitle).toHaveBeenCalledWith('Robot vũ công');
+        expect(props.onLoadingFinished).toHaveBeenCalledWith(expect.anything(), true);
+        expect(props.cancelFileUpload).not.toHaveBeenCalled();
+    });
 });
