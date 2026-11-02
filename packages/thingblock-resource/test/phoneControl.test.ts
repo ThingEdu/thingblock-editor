@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
 import { registerGenerators } from '../src/extensions/peripheral/phoneControl/generator'
 import toolbox from '../src/extensions/peripheral/phoneControl/toolbox'
+import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
 
 const Order = { ATOMIC: 0, NONE: 99 } as unknown as ArduinoOrder
 

@@ -6,7 +6,6 @@
  * the block twice cannot start it twice. `ArduinoGenerator.assemble` runs the setups bucket ahead
  * of the hat's body, which is what makes that ordering hold.
  */
-
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
