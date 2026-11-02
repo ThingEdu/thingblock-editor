@@ -65,6 +65,27 @@ THINGBLOCK_RESOURCE_ROOT=<helper-resource-dir> \
   npm run deploy --workspace=packages/thingblock-resource    # copy the pack folder into the helper
 ```
 
+## Example projects
+
+`src/examples/<device>/` holds the example projects the editor lists under **File → Examples…**: one
+`.tb` per example plus an `index.json` (`{groups, examples:[{id, file, title, group, level, description,
+device, peripherals, hardware, source}]}`). The build copies them to `dist/thingblock-resource/examples/`
+and writes one merged `examples/index.json` whose `file` paths are relative to that folder; the editor
+reads it from `vm.devices.getExamplesOrigin()`.
+
+The `.tb` files are generated, not hand-edited:
+
+```sh
+node scripts/examples/build-examples.mjs     # rewrite src/examples/thingbot/*.tb + index.json
+npx tsx scripts/check-examples.mjs            # generate each sketch with the real generators and compile it
+```
+
+`scripts/examples/lessons-k12.mjs` writes the K12 and FanRoc programs with the block helpers in
+`dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons. `check-examples`
+needs `arduino-cli` (`ARDUINO_CLI`) and the ESP32 core (`ARDUINO_DIRECTORIES_DATA`), so it is run by hand;
+`test/examples.test.ts` covers the rest in `npm test` (every block registered, field values valid, inputs
+type-compatible, sketch generated).
+
 ## Adding a pack
 
 1. Create `src/extensions/peripheral/<id>/` (or `src/extensions/devices/<id>/`) with a `manifest.ts`.
