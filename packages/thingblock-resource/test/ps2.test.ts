@@ -51,14 +51,15 @@ describe('PS2 blocks', () => {
     expect(Object.keys(Blocks)).toEqual(blockIds)
   })
 
-  it('uses numeric pin fields with the PS2 defaults', () => {
+  it('defaults the pin fields to the ThingBot PS2 port', () => {
     const Blocks: Record<string, unknown> = {}
     registerBlocks({ Blocks } as unknown as Blockly)
 
     const args = configFor(Blocks.ps2_init).args0 ?? []
     expect(args.map(({ name }) => name)).toEqual(['DIN', 'DOUT', 'CS', 'CLK'])
     // `field_number` (a FieldTextInput subclass) reads its default from `text`, so the pin numbers live there.
-    expect(args.map(({ text }) => text)).toEqual(['2', '3', '4', '5'])
+    // They match `init PS2 on ThingBot`: DAT on IO7, CMD on IO2, SEL on IO10, CLK on IO6.
+    expect(args.map(({ text }) => text)).toEqual(['7', '2', '10', '6'])
   })
 
   it('preserves the button and joystick constants', () => {
@@ -81,7 +82,7 @@ describe('PS2 generator', () => {
     expect(gen.forBlock.ps2_init(makeBlock({ DIN: 7, DOUT: 2, CS: 10, CLK: 6 }))).toBe(
       'ps2x.config_gamepad(6, 2, 10, 7, false, false);\n',
     )
-    expect(gen.forBlock.ps2_init(makeBlock())).toBe('ps2x.config_gamepad(5, 3, 4, 2, false, false);\n')
+    expect(gen.forBlock.ps2_init(makeBlock())).toBe('ps2x.config_gamepad(6, 2, 10, 7, false, false);\n')
   })
 
   it('emits polling, button, and joystick code', () => {
