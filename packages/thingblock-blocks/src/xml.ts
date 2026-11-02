@@ -94,8 +94,9 @@ export function clearWorkspaceAndLoadFromXml(xml: Element, workspace: Blockly.Wo
     const name = variable.textContent
     const isLocal = variable.getAttribute('islocal') === 'true'
     const isCloud = variable.getAttribute('iscloud') === 'true'
+    const dataType = variable.getAttribute('datatype') ?? ''
 
-    const variableModel = new ScratchVariableModel(workspace, name, type, id, isLocal, isCloud)
+    const variableModel = new ScratchVariableModel(workspace, name, type, id, isLocal, isCloud, dataType)
     Blockly.Events.fire(new (Blockly.Events.get(Blockly.Events.VAR_CREATE))(variableModel))
     workspace.getVariableMap().addVariable(variableModel)
   }

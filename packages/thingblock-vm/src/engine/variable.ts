@@ -45,8 +45,11 @@ class Variable {
     }
 
     toXML (isLocal?: boolean): string {
+        // The editor's workspace is rebuilt from this XML, and the Arduino generator reads the variable's
+        // C++ type from that workspace, so the data type travels with it.
+        const dataType = this.dataType ? ` datatype="${this.dataType}"` : '';
         return `<variable type="${this.type}" id="${this.id}" islocal="${isLocal === true
-        }">${xmlEscape(this.name)}</variable>`;
+        }"${dataType}>${xmlEscape(this.name)}</variable>`;
     }
 
     /** Returns `dataType` if it is a known data type, else `''`; used where projects and callers supply one. */
