@@ -41,3 +41,11 @@ describe('init PS2 on ThingBot', () => {
     expect(afterLoop).toContain('Serial.println')
   })
 })
+
+describe('set buzzer to N pulse', () => {
+  it('passes the pulse as the duty value, not as the invert flag of setPin()', () => {
+    // Adafruit_PWMServoDriver::setPin(num, val, invert = false): a third argument would be `invert`.
+    const { code } = generate('thingBotC3_buzzer', {}, { SOUND: '2048' })
+    expect(code).toBe('pwm.setPin(BUZZER, 2048);\n')
+  })
+})

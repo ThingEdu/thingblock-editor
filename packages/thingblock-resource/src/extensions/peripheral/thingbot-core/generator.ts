@@ -217,7 +217,7 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   generator.forBlock.thingBotC3_buzzer = (block) => {
     registerBoardHardware()
     const sound = generator.valueToCode(block, 'SOUND', Order.ATOMIC) || '0'
-    return `pwm.setPin(BUZZER, 0, ${sound});\n`
+    return `pwm.setPin(BUZZER, ${sound});\n`
   }
 
   /**

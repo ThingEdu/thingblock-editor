@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { registerBlocks } from '../src/extensions/peripheral/ps2/blocks'
 import { registerGenerators } from '../src/extensions/peripheral/ps2/generator'
@@ -130,5 +132,18 @@ describe('PS2 resource pack', () => {
   it('preserves the toolbox block order', () => {
     expect(ps2Toolbox.colour).toBe('#FF3399')
     expect(ps2Toolbox.contents.map(({ type }) => type)).toEqual(blockIds)
+  })
+
+  it('ships the vendored PS2X library with its metadata and licence', () => {
+    // Without library.properties arduino-cli treats the folder as a bare legacy library and has no
+    // name, version or licence to report for it.
+    const properties = readFileSync(
+      join(__dirname, '../src/extensions/peripheral/ps2/libs/PS2X_lib/library.properties'),
+      'utf8',
+    )
+    expect(properties).toMatch(/^name=PS2X_lib$/m)
+    expect(properties).toMatch(/^version=\d+\.\d+$/m)
+    expect(properties).toMatch(/^architectures=\*$/m)
+    expect(properties).toContain('GPL-3.0-or-later')
   })
 })
