@@ -36,6 +36,7 @@ import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 import {updateMetrics} from '../reducers/workspace-metrics';
 import {isTimeTravel2020} from '../reducers/time-travel';
 import {setGeneratedCode, setSimCode} from '../reducers/code';
+import {registerCodeFlush} from '../lib/code-flush';
 
 
 const addFunctionListener = (object, property, callback) => {
@@ -157,6 +158,13 @@ class Blocks extends React.Component {
         // Regenerate the firmware code view whenever the workspace changes.
         this.workspace.addChangeListener(this.updateGeneratedCodeDebounced);
         this.updateGeneratedCode();
+        // Run and Upload regenerate through this before using the code, so a click inside the
+        // debounce never acts on the code from before an edit.
+        this.unregisterCodeFlush = registerCodeFlush(() => {
+            this.updateGeneratedCodeDebounced.cancel();
+            this.updateGeneratedCode();
+            return this.lastGeneratedCode;
+        });
 
         // Register buttons under new callback keys for creating variables,
         // lists, and procedures from extensions.
@@ -251,6 +259,7 @@ class Blocks extends React.Component {
     }
     componentWillUnmount () {
         this.updateGeneratedCodeDebounced.cancel();
+        if (this.unregisterCodeFlush) this.unregisterCodeFlush();
         this.detachVM();
         // Hide any open field editor and move Blockly focus to the workspace
         // root before disposing. Without this, BlockSvg.dispose() detects the
@@ -416,34 +425,41 @@ class Blocks extends React.Component {
     updateGeneratedCode () {
         // Code generation only applies in board mode; host mode has no code view.
         if (!this.props.selectedDeviceId) {
+            this.lastGeneratedCode = {generatedCode: '', simCode: '', simDiagnostics: []};
             this.props.onSetGeneratedCode('');
             this.props.onSetSimCode('', []);
             return;
         }
         // A block left mid-edit (e.g. an unsupported host block) makes the
         // generator throw; keep the last good output rather than blanking the view.
+        let generatedCode = this.lastGeneratedCode ? this.lastGeneratedCode.generatedCode : '';
         try {
-            this.props.onSetGeneratedCode(this.ScratchBlocks.arduinoGenerator.workspaceToCode(this.workspace));
+            generatedCode = this.ScratchBlocks.arduinoGenerator.workspaceToCode(this.workspace);
+            this.props.onSetGeneratedCode(generatedCode);
         } catch (e) {
             log.warn('Arduino code generation failed', e);
         }
-        this.updateSimCode();
+        this.lastGeneratedCode = {generatedCode, ...this.updateSimCode()};
     }
     updateSimCode () {
         const generator = this.ScratchBlocks.simGenerator;
-        if (!generator) return;
+        if (!generator) return {simCode: '', simDiagnostics: []};
+        let simCode = '';
+        let simDiagnostics;
         try {
-            const code = generator.workspaceToCode(this.workspace);
-            this.props.onSetSimCode(code, [...generator.diagnostics]);
+            simCode = generator.workspaceToCode(this.workspace);
+            simDiagnostics = [...generator.diagnostics];
         } catch (e) {
             // Blockly throws for a block type with no generator: a peripheral block
             // that has no simulation yet. Name it rather than running a partial program.
             const unsupported = /block type: (\S+)/.exec(e.message);
-            this.props.onSetSimCode('', [{
+            simDiagnostics = [{
                 blockId: '',
                 message: unsupported ? `No simulation yet for block "${unsupported[1]}"` : e.message
-            }]);
+            }];
         }
+        this.props.onSetSimCode(simCode, simDiagnostics);
+        return {simCode, simDiagnostics};
     }
     updateSimHighlight (prevProps) {
         if (prevProps.simHighlight === this.props.simHighlight || !this.workspace) return;

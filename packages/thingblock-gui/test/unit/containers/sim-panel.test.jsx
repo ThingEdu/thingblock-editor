@@ -34,6 +34,7 @@ import {Provider} from 'react-redux';
 import configureStore from 'redux-mock-store';
 import SimPanel from '../../../src/containers/sim-panel.jsx';
 import {setWorkerFactory} from '../../../src/lib/sim/sim-client';
+import {registerCodeFlush} from '../../../src/lib/code-flush';
 
 class FakeWorker {
     constructor () {
@@ -87,4 +88,21 @@ test('drives the distance sensor and gamepad inputs, and keeps them across a rel
 
     fireEvent.mouseUp(getByText('Up'));
     expect(inputs().slice(-1)).toEqual([{type: 'input', key: 'ps2:PSB_PAD_UP', value: 0}]);
+});
+
+test('Run and Reset load the code an edit just produced, not the debounced older code', () => {
+    let worker;
+    setWorkerFactory(() => (worker = new FakeWorker()));
+    // The store still holds the code from before the edit; the pending regeneration yields new code.
+    const store = configureStore()({scratchGui: {code: {simCode: 'old', simDiagnostics: []}}});
+    const unregister = registerCodeFlush(() => ({generatedCode: 'g', simCode: 'new', simDiagnostics: []}));
+    try {
+        const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+        fireEvent.click(getByText('Run'));
+        expect(worker.posted.filter(m => m.type === 'load').map(m => m.code)).toEqual(['new']);
+        fireEvent.click(getByText('Reset'));
+        expect(worker.posted.filter(m => m.type === 'load').map(m => m.code)).toEqual(['new', 'new']);
+    } finally {
+        unregister();
+    }
 });

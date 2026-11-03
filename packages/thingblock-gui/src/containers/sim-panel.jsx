@@ -3,6 +3,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
 
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
+import {flushGeneratedCode} from '../lib/code-flush';
 import {getSimClient} from '../lib/sim/sim-client';
 import {setSimHighlight, setSimLoadedCode} from '../reducers/code';
 
@@ -74,38 +75,47 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
         setStale(true);
     }, [post, simCode]);
 
-    const load = useCallback(() => {
+    // The code the workspace shows right now: an edit within the code view's debounce has not reached
+    // simCode yet, so regenerate before loading rather than run the program from before the edit.
+    const currentCode = useCallback(() => {
+        const fresh = flushGeneratedCode();
+        return fresh ? fresh.simCode : simCode;
+    }, [simCode]);
+
+    const load = useCallback(code => {
         setWorkerError(null);
         setSerial('');
-        post({type: 'load', code: simCode});
-        onLoaded(simCode);
+        post({type: 'load', code});
+        onLoaded(code);
         post({type: 'speed', speed});
         post({type: 'input', key: 'gpio3', value: switchPressed ? 0 : 1});
         post({type: 'input', key: DISTANCE_INPUT, value: distance});
         for (const [name, held] of Object.entries(ps2Held)) {
             if (held) post({type: 'input', key: ps2Input(name), value: 1});
         }
-        loadedRef.current = simCode;
+        loadedRef.current = code;
         setStale(false);
-    }, [post, simCode, speed, switchPressed, distance, ps2Held, onLoaded]);
+    }, [post, speed, switchPressed, distance, ps2Held, onLoaded]);
 
     const handleRun = useCallback(() => {
-        if (loadedRef.current !== simCode || (snapshot && snapshot.phase === 'halted')) load();
+        const code = currentCode();
+        if (loadedRef.current !== code || (snapshot && snapshot.phase === 'halted')) load(code);
         post({type: 'run'});
-    }, [load, post, simCode, snapshot]);
+    }, [currentCode, load, post, snapshot]);
 
     const handleStep = useCallback(() => {
-        if (loadedRef.current !== simCode) load();
+        const code = currentCode();
+        if (loadedRef.current !== code) load(code);
         post({type: 'step'});
-    }, [load, post, simCode]);
+    }, [currentCode, load, post]);
 
     const handlePause = useCallback(() => post({type: 'pause'}), [post]);
 
     const handleReset = useCallback(() => {
         const wasRunning = snapshot && snapshot.running;
-        load();
+        load(currentCode());
         if (wasRunning) post({type: 'run'});
-    }, [load, post, snapshot]);
+    }, [currentCode, load, post, snapshot]);
 
     const handleSpeedChange = useCallback(value => {
         setSpeed(value);

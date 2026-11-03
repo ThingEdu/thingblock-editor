@@ -5,6 +5,7 @@ import VM from '@thingblock/thingblock-vm';
 
 import DeviceControlsComponent from '../components/device-controls/device-controls.jsx';
 import {setConnectedBoard} from '../reducers/board';
+import {flushGeneratedCode} from '../lib/code-flush';
 
 class DeviceControls extends React.Component {
     constructor (props) {
@@ -63,7 +64,10 @@ class DeviceControls extends React.Component {
             this.handleConnect();
             return;
         }
-        const {selectedDeviceId, generatedCode} = this.props;
+        const {selectedDeviceId} = this.props;
+        // Regenerate first: an edit just before pressing Upload may not have reached the code view yet.
+        const fresh = flushGeneratedCode();
+        const generatedCode = fresh ? fresh.generatedCode : this.props.generatedCode;
         if (!generatedCode.trim()) {
             console.warn('upload: no generated code to build'); // eslint-disable-line no-console
             return;
