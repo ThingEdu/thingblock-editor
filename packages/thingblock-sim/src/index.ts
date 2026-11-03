@@ -1,5 +1,6 @@
 export { createBoard, type Board, type Scope } from './board'
 export { cpp } from './cpp'
+export { DEFAULT_DISTANCE_CM, DISTANCE_INPUT, PS2_NAMES, ps2Input } from './hal/sensors'
 export { compileProgram, loadProject, type Sb3Project } from './headless'
 export { BoardTrap, Clock, COST, EventLog, Runner, type LogEntry, type Phase, type Program } from './runtime'
 export { Session, type Snapshot } from './session'

@@ -8,12 +8,17 @@ import { cpp } from './cpp'
 import COSTS from './hal/costs.json'
 import { I2cBus } from './hal/i2c'
 import { Pca9685 } from './hal/pca9685'
+import { Ps2x, Ultrasonic } from './hal/sensors'
 import { Ssd1306 } from './hal/ssd1306'
 import { Clock, EventLog, type Wait } from './runtime'
 
 export interface Devices {
   pwm?: Pca9685
   oled?: Ssd1306
+  /** The program reads a distance sensor, so the panel shows its control. */
+  ultrasonic?: boolean
+  /** The program reads a PS2 gamepad, so the panel shows its buttons. */
+  ps2?: boolean
 }
 
 export const createBoard = () => {
@@ -21,6 +26,7 @@ export const createBoard = () => {
   const log = new EventLog(clock)
   /** Levels the rig drives onto inputs, keyed `gpio<n>` or by sensor name. */
   const inputs = new Map<string, number>()
+  const readInput = (key: string): number | undefined => inputs.get(key)
   const devices: Devices = {}
   const bus = new I2cBus(clock)
 
@@ -77,6 +83,14 @@ export const createBoard = () => {
       Adafruit_PWMServoDriver: (): Pca9685 => (devices.pwm = new Pca9685(clock, log, bus)),
       Adafruit_SSD1306: (width: number, height: number): Ssd1306 =>
         (devices.oled = new Ssd1306(width, height, log, bus)),
+      Ultrasonic: (_trig: number, _echo: number): Ultrasonic => {
+        devices.ultrasonic = true
+        return new Ultrasonic(clock, readInput)
+      },
+      PS2X: (): Ps2x => {
+        devices.ps2 = true
+        return new Ps2x(readInput)
+      },
     },
   }
 

@@ -85,4 +85,16 @@ describe('Session', () => {
     session.running = true
     expect(session.tick(16).behind).toBe(false)
   })
+
+  it('lists the input modules the program declares, so the panel shows only their controls', () => {
+    expect(new Session(BLINK).snapshot().inputs).toEqual({ ultrasonic: false, ps2: false })
+    const code = `
+const sonar = $.hw.Ultrasonic(0, 4);
+const ps2x = $.hw.PS2X();
+function* setup() {}
+function* loop() { yield "d"; }
+return { setup, loop };
+`
+    expect(new Session(code).snapshot().inputs).toEqual({ ultrasonic: true, ps2: true })
+  })
 })

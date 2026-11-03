@@ -21,6 +21,8 @@ export interface Snapshot {
   pwm: number[]
   /** The OLED's shown frame (page layout), or null when the program has no display. */
   oled: { width: number; height: number; frame: Uint8Array } | null
+  /** The input modules the program declares, whose rig controls the panel shows. */
+  inputs: { ultrasonic: boolean; ps2: boolean }
   /** Serial text printed since the previous snapshot. */
   serial: string
   /** The last tick ran out of real time before reaching the virtual time it was asked for. */
@@ -116,7 +118,7 @@ export class Session {
       const entry = entries[this.logCursor]
       if (entry.dev === 'serial') serial += String(entry.value)
     }
-    const { pwm, oled } = this.board.devices
+    const { pwm, oled, ultrasonic, ps2 } = this.board.devices
     return {
       t: this.board.clock.now,
       phase: this.runner.phase,
@@ -125,6 +127,7 @@ export class Session {
       error: this.runner.error,
       pwm: pwm ? [...pwm.duty] : new Array<number>(16).fill(0),
       oled: oled ? { width: oled.width, height: oled.height, frame: oled.getShownFrame() } : null,
+      inputs: { ultrasonic: Boolean(ultrasonic), ps2: Boolean(ps2) },
       serial,
       behind: this.behind,
     }
