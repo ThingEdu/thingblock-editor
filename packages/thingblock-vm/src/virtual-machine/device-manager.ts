@@ -128,7 +128,7 @@ export default class DeviceManager {
      */
     _pendingBoard: Board | null = null;
 
-    private readonly _deviceManifestsById = new Map<string, {iconURL: string}>();
+    private readonly _deviceManifestsById = new Map<string, {iconURL: string, hidden?: boolean}>();
 
     /**
      * Guards {@link loadResourcePacks} to one successful run per VM instance: the registries throw
@@ -187,11 +187,16 @@ export default class DeviceManager {
 
     /**
      * The list of selectable devices for the GUI, each with its presentation info and FQBN.
+     * @param options - `includeHidden`: also list boards retired from the picker, for looking up the
+     *   board an older project was saved on.
+     * @param options.includeHidden - include hidden boards.
      * @returns device descriptors: {deviceId, fqbn, iconURL, name, description, manufacturer, requires,
      *   learnMore, help}.
      */
-    getDeviceList (): object[] {
-        return this.deviceRegistry.deviceIds.map(deviceId => {
+    getDeviceList ({includeHidden = false}: {includeHidden?: boolean} = {}): object[] {
+        const deviceIds = this.deviceRegistry.deviceIds.filter(deviceId =>
+            includeHidden || !this._deviceManifestsById.get(deviceId)?.hidden);
+        return deviceIds.map(deviceId => {
             const device = this.deviceRegistry.get(deviceId);
             const manifest = this._deviceManifestsById.get(deviceId);
             if (!manifest) {

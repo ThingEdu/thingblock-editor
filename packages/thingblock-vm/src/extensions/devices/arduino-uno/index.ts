@@ -9,6 +9,8 @@ import type {BoardManifest} from '..';
 const manifest: BoardManifest = {
     id: 'arduinoUno',
     iconURL,
+    // Retired from the board picker in 0.6: ThingBlock ships for ThingBot and ESP32-C3 boards.
+    hidden: true,
     Device: ArduinoUno
 };
 
