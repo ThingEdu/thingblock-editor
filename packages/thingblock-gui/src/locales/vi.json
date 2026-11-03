@@ -139,6 +139,7 @@
     "gui.simPanel.distance": "Vật cản cách cảm biến",
     "gui.simPanel.gamepad": "Tay cầm PS2 (giữ nút để bấm)",
     "gui.simPanel.halted": "Mạch đã dừng: {reason}",
+    "gui.simPanel.restarted": "Mô phỏng bị treo nên đã được khởi động lại. Bấm Chạy để chạy lại chương trình.",
     "gui.simPanel.pause": "Tạm dừng",
     "gui.simPanel.pauseTip": "Tạm dừng; sau đó bấm Từng bước để chạy từng khối",
     "gui.simPanel.reset": "Chạy lại",

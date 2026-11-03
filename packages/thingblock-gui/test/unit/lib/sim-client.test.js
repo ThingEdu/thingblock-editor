@@ -5,7 +5,7 @@ jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
     }
 }));
 
-import {getSimClient, setWorkerFactory} from '../../../src/lib/sim/sim-client';
+import {getSimClient, HUNG_MS, setWorkerFactory} from '../../../src/lib/sim/sim-client';
 
 class FakeWorker {
     constructor () {
@@ -15,6 +15,9 @@ class FakeWorker {
     }
     postMessage (m) {
         this.posted.push(m);
+    }
+    terminate () {
+        this.terminated = true;
     }
 }
 FakeWorker.instances = [];
@@ -59,6 +62,41 @@ describe('sim client', () => {
         getSimClient().post({type: 'run'});
         expect(factory).toHaveBeenCalledTimes(2);
         expect(FakeWorker.instances[1].posted).toEqual([{type: 'run'}]);
+    });
+
+    test('a worker that stops answering is replaced, and subscribers hear it hung', () => {
+        jest.useFakeTimers();
+        try {
+            const seen = [];
+            getSimClient().subscribe(m => seen.push(m));
+            getSimClient().post({type: 'load', code: 'c'});
+            jest.advanceTimersByTime(HUNG_MS + 1);
+
+            expect(FakeWorker.instances[0].terminated).toBe(true);
+            expect(seen).toEqual([{type: 'hung'}]);
+            getSimClient().post({type: 'load', code: 'c'});
+            expect(FakeWorker.instances).toHaveLength(2);
+            expect(FakeWorker.instances[1].posted).toEqual([{type: 'load', code: 'c'}]);
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    test('any answer from the worker keeps it, and commands that need no answer never time out', () => {
+        jest.useFakeTimers();
+        try {
+            const seen = [];
+            getSimClient().subscribe(m => seen.push(m));
+            getSimClient().post({type: 'speed', speed: 10});
+            getSimClient().post({type: 'run'});
+            FakeWorker.instances[0].onmessage({data: {type: 'snapshot', snapshot: {t: 0}}});
+            jest.advanceTimersByTime(HUNG_MS * 3);
+
+            expect(FakeWorker.instances[0].terminated).toBeUndefined();
+            expect(seen.map(m => m.type)).toEqual(['snapshot']);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     test('a throwing listener does not starve later listeners', () => {

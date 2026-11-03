@@ -95,6 +95,9 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    /* Keep the scrollbar's room whether or not it shows: with classic scrollbars the drawing would
+       otherwise narrow when the bar appears, get shorter, lose the bar, widen again, and so on. */
+    scrollbar-gutter: stable;
 }
 
 /* The board and, when the program uses one, its display, drawn to one scale and growing with the panel. */
@@ -110,8 +113,10 @@
     flex: 0 1 auto;
     min-width: 0;
     /* As wide as the panel allows, but no taller than a third of the window, so on a short screen
-       the whole board stays in view instead of scrolling. `--aspect` is the drawing's width / height. */
-    width: min(100%, 480px, calc(34vh * var(--aspect, 1)));
+       the whole board stays in view instead of scrolling. `--aspect` is width / height of the board
+       with its display; `--part` is the share of that width the drawing needs now (1 with the display),
+       so the board is drawn at the same scale with or without it. */
+    width: calc(min(100%, 480px, calc(34vh * var(--aspect, 1))) * var(--part, 1));
 }
 
 /* With the code pane folded away the simulator takes the freed height, and the board grows into it. */
@@ -120,7 +125,7 @@
 }
 
 .roomy .drawing {
-    width: min(100%, 560px, calc(55vh * var(--aspect, 1)));
+    width: calc(min(100%, 560px, calc(55vh * var(--aspect, 1))) * var(--part, 1));
 }
 
 .board {

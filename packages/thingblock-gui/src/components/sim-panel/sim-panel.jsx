@@ -87,6 +87,11 @@ const messages = defineMessages({
         defaultMessage: 'Hide the zoomed display',
         description: 'Button that hides the enlarged copy of the virtual OLED display'
     },
+    restarted: {
+        id: 'gui.simPanel.restarted',
+        defaultMessage: 'The simulator stopped responding and was restarted. Press Run to start again.',
+        description: 'Shown when the virtual board hung (a program that never gives control back) and was replaced'
+    },
     gamepad: {
         id: 'gui.simPanel.gamepad',
         defaultMessage: 'PS2 gamepad (hold a button)',
@@ -291,6 +296,8 @@ const overlayStyle = (box, extent) => ({
 
 const SimPanel = ({
     distance,
+    restarted,
+    runError,
     roomy,
     usesOled,
     ps2Held,
@@ -322,8 +329,11 @@ const SimPanel = ({
     // the running board after.
     const showOled = Boolean(usesOled || oled);
     const rows = oled ? oled.height : BLANK_OLED.height;
-    const extent = boardExtent(showOled);
-    const aspect = extent.width / extent.height;
+    // The room is sized for the board with its display; without the display the drawing takes only the
+    // board's share of that width, so the board keeps one scale as the display comes and goes.
+    const full = boardExtent(true);
+    const aspect = full.width / full.height;
+    const part = boardExtent(showOled).width / full.width;
 
     useEffect(() => {
         // A reset before the next run sends no OLED state: paint the screen dark rather than keep the
@@ -401,10 +411,13 @@ const SimPanel = ({
                         key={i}
                     >{problem.message}</div>
                 ))}
+                {/* An error from the last run is shown but does not lock the controls: Run or Reset tries again. */}
+                {runError && <div className={styles.problem}>{runError}</div>}
+                {restarted && <div className={styles.problem}>{intl.formatMessage(messages.restarted)}</div>}
                 <div className={styles.rig}>
                     <div
                         className={styles.drawing}
-                        style={{'--aspect': aspect}}
+                        style={{'--aspect': aspect, '--part': part}}
                     >
                         <ThingBotBoard
                             oledRows={showOled ? rows : null}
@@ -488,7 +501,9 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    restarted: PropTypes.bool,
     roomy: PropTypes.bool,
+    runError: PropTypes.string,
     usesOled: PropTypes.bool,
     distance: PropTypes.number.isRequired,
     ps2Held: PropTypes.objectOf(PropTypes.bool).isRequired,

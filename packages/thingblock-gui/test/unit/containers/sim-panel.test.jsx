@@ -5,8 +5,10 @@ jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
 }));
 jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
     /* eslint-disable react/jsx-no-bind -- a stand-in panel: one button per control the tests press */
-    const MockSimPanel = ({onRun, onReset, onDistanceChange, onPs2Change, usesOled}) => (<div>
+    const MockSimPanel = ({onRun, onReset, onDistanceChange, onPs2Change, usesOled, restarted, runError}) => (<div>
         <span>{usesOled ? 'with display' : 'no display'}</span>
+        <span>{restarted ? 'restarted' : 'live'}</span>
+        <span>{runError || 'no run error'}</span>
         <button
             type="button"
             onClick={onReset}
@@ -30,11 +32,11 @@ jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
 });
 
 import React from 'react';
-import {fireEvent, render} from '@testing-library/react';
+import {act, fireEvent, render} from '@testing-library/react';
 import {Provider} from 'react-redux';
 import configureStore from 'redux-mock-store';
 import SimPanel from '../../../src/containers/sim-panel.jsx';
-import {setWorkerFactory} from '../../../src/lib/sim/sim-client';
+import {HUNG_MS, setWorkerFactory} from '../../../src/lib/sim/sim-client';
 import {registerCodeFlush} from '../../../src/lib/code-flush';
 
 class FakeWorker {
@@ -44,6 +46,9 @@ class FakeWorker {
     }
     postMessage (m) {
         this.posted.push(m);
+    }
+    terminate () {
+        this.terminated = true;
     }
 }
 
@@ -119,4 +124,46 @@ test('tells the panel the program uses a display when its code builds one', () =
     const without = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
     const second = render(<Provider store={without}><SimPanel /></Provider>);
     expect(second.getByText('no display')).toBeTruthy();
+});
+
+test('after the worker hangs, Run loads the program again into a fresh worker', () => {
+    jest.useFakeTimers();
+    try {
+        const workers = [];
+        setWorkerFactory(() => {
+            const w = new FakeWorker();
+            workers.push(w);
+            return w;
+        });
+        const store = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
+        const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+        fireEvent.click(getByText('Run'));
+        expect(workers[0].posted.map(m => m.type)).toContain('load');
+
+        // The worker never answers: it is stuck in a program that does not give control back.
+        act(() => {
+            jest.advanceTimersByTime(HUNG_MS + 1);
+        });
+        expect(workers[0].terminated).toBe(true);
+        expect(getByText('restarted')).toBeTruthy();
+
+        fireEvent.click(getByText('Run'));
+        expect(workers[1].posted.filter(m => m.type === 'load').map(m => m.code)).toEqual(['code-1']);
+        expect(workers[1].posted.slice(-1)).toEqual([{type: 'run'}]);
+        expect(getByText('live')).toBeTruthy();
+    } finally {
+        jest.useRealTimers();
+    }
+});
+
+test('a run error is passed on separately from the code problems', () => {
+    let worker;
+    setWorkerFactory(() => (worker = new FakeWorker()));
+    const store = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
+    const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+    fireEvent.click(getByText('Run'));
+    act(() => {
+        worker.onmessage({data: {type: 'error', message: 'Unexpected token'}});
+    });
+    expect(getByText('Unexpected token')).toBeTruthy();
 });

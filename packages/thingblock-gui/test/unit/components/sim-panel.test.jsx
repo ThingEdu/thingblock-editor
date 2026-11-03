@@ -159,3 +159,47 @@ test('with the code pane folded the panel takes the freed room', () => {
     />);
     expect(container.firstChild.dataset.roomy).toBe('false');
 });
+
+test('an error from the last run is shown without locking Run, Step or Reset', () => {
+    const {getByRole, getByText} = renderPanel(<SimPanel
+        {...props}
+        runError="Unexpected token"
+        snapshot={null}
+    />);
+    expect(getByText('Unexpected token')).toBeTruthy();
+    for (const name of ['Run', 'Step', 'Reset']) {
+        expect(getByRole('button', {name}).disabled).toBe(false);
+    }
+});
+
+test('says the simulator was restarted after it stopped responding', () => {
+    const {getByText, getByRole} = renderPanel(<SimPanel
+        {...props}
+        restarted
+        snapshot={null}
+    />);
+    expect(getByText(/stopped responding and was restarted/)).toBeTruthy();
+    expect(getByRole('button', {name: 'Run'}).disabled).toBe(false);
+});
+
+test('draws the board at one scale whether or not the display is shown', () => {
+    // The drawing's width is a share (--part) of the room the board-and-display drawing gets, so the board
+    // does not grow when the display goes away and shrink when it comes back.
+    const scale = usesOled => {
+        const {container, unmount} = renderPanel(<SimPanel
+            {...props}
+            snapshot={null}
+            usesOled={usesOled}
+        />);
+        const drawing = container.querySelector('[style*="--part"]');
+        const part = Number(drawing.style.getPropertyValue('--part'));
+        const aspect = Number(drawing.style.getPropertyValue('--aspect'));
+        unmount();
+        return {perUnit: part / boardExtent(usesOled).width, aspect};
+    };
+    const withOled = scale(true);
+    const without = scale(false);
+    expect(without.perUnit).toBeCloseTo(withOled.perUnit, 10);
+    // The room is sized from the widest drawing either way.
+    expect(without.aspect).toBeCloseTo(withOled.aspect, 10);
+});

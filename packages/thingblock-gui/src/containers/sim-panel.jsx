@@ -37,6 +37,8 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
     const [distance, setDistance] = useState(DEFAULT_DISTANCE_CM);
     const [ps2Held, setPs2Held] = useState({});
     const [workerError, setWorkerError] = useState(null);
+    // The worker stopped answering and was replaced: the program has to be loaded again.
+    const [restarted, setRestarted] = useState(false);
 
     // The simulator worker is shared with other panels and outlives this one, so on unmount the panel
     // stops its session instead of terminating the worker.
@@ -45,6 +47,12 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
         const unsubscribe = client.subscribe(data => {
             if (data.type === 'error') {
                 setWorkerError(data.message);
+                return;
+            }
+            if (data.type === 'hung') {
+                loadedRef.current = null;
+                setSnapshot(null);
+                setRestarted(true);
                 return;
             }
             if (data.type !== 'snapshot') return;
@@ -86,6 +94,7 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
 
     const load = useCallback(code => {
         setWorkerError(null);
+        setRestarted(false);
         setSerial('');
         post({type: 'load', code});
         onLoaded(code);
@@ -140,12 +149,12 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
         post({type: 'input', key: ps2Input(name), value: held ? 1 : 0});
     }, [post]);
 
-    const problems = workerError ? [...simDiagnostics, {message: workerError}] : simDiagnostics;
-
     return (
         <SimPanelComponent
             distance={distance}
-            problems={problems}
+            problems={simDiagnostics}
+            restarted={restarted}
+            runError={workerError}
             ps2Held={ps2Held}
             serial={serial}
             snapshot={snapshot}
