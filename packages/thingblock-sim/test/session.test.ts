@@ -53,6 +53,17 @@ describe('Session', () => {
     expect(session.tick(10).serial).toBe('')
   })
 
+  it('returns from a tick when the program only yields zero-length waits, so the worker stays responsive', () => {
+    // A library wait loop whose delay works out to 0 (or NaN) never reaches a block and never moves the
+    // clock; a tick must still hand control back to the worker.
+    const session = new Session(
+      'function* setup() { for (;;) yield $.delay(0); } function* loop() {} return { setup, loop };',
+    )
+    session.running = true
+    expect(session.tick(16).phase).toBe('setup')
+    expect(session.step().phase).toBe('setup')
+  })
+
   it('stops running when the program halts on a board trap', () => {
     const session = new Session('function* setup() { $.idiv(1, 0); } function* loop() {} return { setup, loop };')
     session.running = true

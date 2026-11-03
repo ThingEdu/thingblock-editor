@@ -22,6 +22,8 @@ export type Message =
   | { type: 'snapshot'; snapshot: Snapshot }
   | { type: 'error'; message: string }
   | { type: 'check'; results: RuleResult[]; t: number; phase: Phase }
+  /** Run or Step with no program loaded: nothing to do, but the page waits for an answer to either. */
+  | { type: 'idle' }
 
 interface WorkerScope {
   postMessage(message: Message): void
@@ -73,7 +75,10 @@ scope.onmessage = ({ data }) => {
       }
       break
     case 'run':
-      if (!session) return
+      if (!session) {
+        scope.postMessage({ type: 'idle' })
+        return
+      }
       session.running = true
       last = performance.now()
       timer ??= setInterval(tick, TICK_MS)
@@ -85,6 +90,8 @@ scope.onmessage = ({ data }) => {
       if (session) {
         post(session.step())
         report()
+      } else {
+        scope.postMessage({ type: 'idle' })
       }
       break
     case 'speed':

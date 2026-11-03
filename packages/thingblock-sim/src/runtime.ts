@@ -38,6 +38,15 @@ export const COST = {
   loopReturn: 1,
 }
 
+/**
+ * How far one Step may carry the program through waits and `loop()` passes that reach no block before it
+ * hands control back: a `wait until` nobody satisfies, or a project with only hat blocks, would otherwise
+ * keep the worker spinning forever and every later command would go unanswered.
+ */
+export const STEP_LIMIT_US = 60_000_000
+/** Yields one Step may pull without reaching a block (a project with no blocks returns from loop() at once). */
+const STEP_LIMIT_PULLS = 100_000
+
 /** Microsecond virtual clock. Only the runner and the hardware models move it. */
 export class Clock {
   now = 0
@@ -155,12 +164,13 @@ export class Runner {
    * first. A sleep that ends after `target` leaves the clock at `target`, so the next call picks up
    * where this one stopped.
    * @param target The virtual time to stop at, in microseconds.
-   * @param maxSteps Statement budget, so a caller on a frame deadline gets control back.
+   * @param maxSteps Budget of yields (statements and waits alike), so a caller on a frame deadline gets
+   *     control back even from a loop that only waits zero-length waits and never moves the clock.
    * @returns How many statements ran.
    */
   runUntil(target: number, maxSteps = Infinity): number {
     let steps = 0
-    while (this.phase !== 'halted' && steps < maxSteps) {
+    for (let pulls = 0; this.phase !== 'halted' && pulls < maxSteps; pulls++) {
       if (this.resumeAt > this.clock.now) {
         if (this.resumeAt > target) {
           if (target > this.clock.now) this.clock.now = target
@@ -174,10 +184,18 @@ export class Runner {
     return steps
   }
 
-  /** Run to the next block marker, sleeping through any wait on the way (single-step). */
+  /**
+   * Run to the next block marker, sleeping through any wait on the way (single-step). Gives up after
+   * `STEP_LIMIT_US` of virtual time or `STEP_LIMIT_PULLS` yields without reaching a block, so a step
+   * into a wait that never ends, or through a project with no blocks, still returns.
+   */
   stepBlock(): void {
-    while (this.phase !== 'halted') {
-      if (this.resumeAt > this.clock.now) this.clock.now = this.resumeAt
+    const limit = this.clock.now + STEP_LIMIT_US
+    for (let pulls = 0; this.phase !== 'halted' && pulls < STEP_LIMIT_PULLS; pulls++) {
+      if (this.resumeAt > this.clock.now) {
+        if (this.resumeAt > limit) return
+        this.clock.now = this.resumeAt
+      }
       if (this.pull()) return
     }
   }

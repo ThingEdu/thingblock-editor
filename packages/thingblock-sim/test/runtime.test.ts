@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BoardTrap, Clock, COST, EventLog, Runner, type Program, type Routine } from '../src/runtime'
+import { BoardTrap, Clock, COST, EventLog, Runner, STEP_LIMIT_US, type Program, type Routine } from '../src/runtime'
 
 const make = (program: Program) => {
   const clock = new Clock()
@@ -121,6 +121,36 @@ describe('Runner', () => {
     expect(clock.now).toBe(500 + 2 * COST.statement)
     runner.stepBlock()
     expect(runner.currentBlock).toBe('third')
+  })
+
+  it('hands a step back when the program has no block to stop on, instead of spinning forever', () => {
+    // A project with only hat blocks: setup and loop both return at once, so no block marker ever comes.
+    const { clock, runner } = make({
+      *setup() {},
+      *loop() {},
+    })
+
+    runner.stepBlock()
+    expect(runner.currentBlock).toBeUndefined()
+    expect(runner.phase).toBe('loop')
+    expect(clock.now).toBeGreaterThan(0)
+  })
+
+  it('hands a step back from a wait that never ends, leaving the program waiting', () => {
+    // `wait until SW pressed` polls with waits only; nobody presses SW, so it never reaches a block.
+    const { clock, runner } = make({
+      *setup() {
+        yield 'wait-until'
+        for (;;) yield { wait: 16_000 }
+      },
+      *loop() {},
+    })
+
+    runner.stepBlock()
+    expect(runner.currentBlock).toBe('wait-until')
+    runner.stepBlock()
+    expect(runner.currentBlock).toBe('wait-until')
+    expect(clock.now).toBeLessThanOrEqual(STEP_LIMIT_US + 16_000 + 2 * COST.statement)
   })
 })
 
