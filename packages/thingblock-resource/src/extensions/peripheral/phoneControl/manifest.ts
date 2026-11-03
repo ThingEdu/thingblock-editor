@@ -7,6 +7,9 @@
  * The firmware sources are vendored under `libs/`, adapted from the standalone ThingBot
  * Telemetrix firmware: it owns the command table and pin state here instead of a `main.cpp`, and
  * it shares the sketch's own `pwm` object rather than constructing a second PCA9685 driver.
+ * Apart from that, its command handlers match MEO-3/thingbot-telemetrix-arduino at a41229a (tag 3.1)
+ * with the motor-direction and M3 channel patch, the same sources the ThingBot live-mode image is
+ * built from.
  */
 import type { PeripheralManifest } from '../../../shared/types'
 

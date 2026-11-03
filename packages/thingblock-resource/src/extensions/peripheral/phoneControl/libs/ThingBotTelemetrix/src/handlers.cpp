@@ -51,11 +51,9 @@ void set_pin_mode() {
             the_digital_pins[pin].pin_mode = DHT_REPORT;
             break;
         case ULTRASONIC_PIN_MODE:
-            // THU NGHIEM: dao lai thu tu hai chan. Client (app joystick VA ThingBlock)
-            // deu gui [trigger, 0x12, echo], tuc command_buffer[0]=trigger va
-            // command_buffer[2]=echo. Ban cu goi Ultrasonic(command_buffer[2], pin)
-            // tuc Ultrasonic(trigger=echo, echo=trigger) - dao nguoc. Bo tu to cao:
-            // goi bao ve mang echo_pin=5 trigger_pin=6 trong khi client gui trigger=5.
+            // Ultrasonic's constructor is (triggerPin, echoPin), and a client sends
+            // [triggerPin, ULTRASONIC_PIN_MODE, echoPin] -- so `pin` is the trigger and
+            // command_buffer[2] is the echo.
             delete ultrasonic_sensors[pin].ultrasonic_instance;
             ultrasonic_sensors[pin].ultrasonic_instance = new Ultrasonic(pin, command_buffer[2]);
             the_analog_pins[pin].pin_mode = ULTRASONIC_REPORT;
@@ -108,7 +106,7 @@ void read_ultrasonic() {
             long distance = ultrasonic_sensors[i].ultrasonic_instance->readDistance();
             byte echo_pin = ultrasonic_sensors[i].ultrasonic_instance->getEchoPin();
             byte trigger_pin = ultrasonic_sensors[i].ultrasonic_instance->getTriggerPin();
-            byte report_message[6] = {6, ULTRASONIC_REPORT, echo_pin, trigger_pin, highByte(distance), lowByte(distance)};
+            byte report_message[6] = {5, ULTRASONIC_REPORT, echo_pin, trigger_pin, highByte(distance), lowByte(distance)};
             transport->write(report_message, 6);
             // send_debug_info(ULTRASONIC_REPORT, distance);
         }

@@ -23,11 +23,12 @@ const REPORT = {
     THINGBOT_SW: 102
 };
 
-// Pin mode constants (Arduino.h + pin_state.h)
+// Pin mode constants: the firmware compares against Arduino-ESP32's own (esp32-hal-gpio.h), plus
+// the Telemetrix sensor modes from pin_state.h.
 export const PIN_MODE: Record<string, number> = {
-    INPUT: 0,
-    OUTPUT: 1,
-    INPUT_PULLUP: 2,
+    INPUT: 0x01,
+    OUTPUT: 0x03,
+    INPUT_PULLUP: 0x05,
     DHT: 0x11,
     ULTRASONIC: 0x12
 };
@@ -149,7 +150,8 @@ class ThingBotTelemetrix {
     }
 
     controlDC (motorId: number, speed: number) {
-        this.sendCommand(CMD.DC_WRITE, motorId, speed);
+        // The firmware reads the speed byte as int8_t: -100..100 in two's complement.
+        this.sendCommand(CMD.DC_WRITE, motorId, speed & 0xff);
     }
 
     controlBuzzer (frequency: number) {

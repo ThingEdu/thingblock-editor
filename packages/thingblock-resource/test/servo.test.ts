@@ -209,7 +209,7 @@ describe('thingbot-core peripheral', () => {
     expect(gen.forBlock.thingBotC3_setServo(makeBlock({ PULSE: '1500' }, { SERVO: '3' }))).toBe(
       'pwm.setPWM(SERVO_3, 0, 1500);\n',
     )
-    expect(gen.forBlock.thingBotC3_buzzer(makeBlock())).toBe('pwm.setPin(BUZZER, 0, 0);\n')
+    expect(gen.forBlock.thingBotC3_buzzer(makeBlock())).toBe('pwm.setPin(BUZZER, 0);\n')
     expect(gen.forBlock.thingBotC3_setLed(makeBlock({ BRIGHTNESS: '50' }, { LED: 'LED_2' }))).toBe(
       'pwm.setPin(LED_2, mapToPulse(50));\n',
     )

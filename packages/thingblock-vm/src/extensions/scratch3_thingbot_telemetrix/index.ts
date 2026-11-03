@@ -4,7 +4,7 @@ import formatMessage from 'format-message';
 import ThingBotTelemetrix, {DHT_TYPE, PIN_MODE} from './thingbot-telemetrix';
 import BLETransport from './transport/ble';
 import type {ScannedDevice} from './transport/transport';
-import {PeripheralEvent} from '../../event/event-name';
+import {PeripheralEvent, RuntimeEvent} from '../../event/event-name';
 import type {Extension, ExtensionInfo} from '../extension';
 
 /** A block argument as Scratch delivers it: a field's string, or a reporter's number. */
@@ -36,6 +36,7 @@ class ThingBotTelemetrixExtension implements Extension {
         this._stopScan = null;
 
         this.runtime.registerPeripheralExtension(EXTENSION_ID, this);
+        this.runtime.events.on(RuntimeEvent.PROJECT_STOP_ALL, () => this._stopAll());
     }
 
     // ─── Peripheral interface ───
@@ -102,6 +103,15 @@ class ThingBotTelemetrixExtension implements Extension {
 
     _onDisconnect () {
         this.runtime.events.emit(PeripheralEvent.PERIPHERAL_DISCONNECTED);
+    }
+
+    /** The firmware holds a motor or the buzzer at its last command, so Stop must silence them. */
+    _stopAll () {
+        if (!this._telemetrix.isConnected()) return;
+        for (const motorId of [1, 2, 3, 4]) {
+            this._telemetrix.controlDC(motorId, 0);
+        }
+        this._telemetrix.controlBuzzer(0);
     }
 
     // ─── Extension metadata ───
@@ -213,7 +223,7 @@ class ThingBotTelemetrixExtension implements Extension {
                     text: formatMessage({
                         id: 'thingbotTelemetrix.controlDC',
                         default: 'motor [MOTOR_ID] speed [SPEED]',
-                        description: 'Set a DC motor speed (0–100)'
+                        description: 'Set a DC motor speed (-100–100, negative runs it backwards)'
                     }),
                     arguments: {
                         MOTOR_ID: {
@@ -269,8 +279,9 @@ class ThingBotTelemetrixExtension implements Extension {
                         description: 'Configure an HC-SR04 ultrasonic sensor'
                     }),
                     arguments: {
-                        TRIG: {type: ArgumentType.NUMBER, defaultValue: 7},
-                        ECHO: {type: ArgumentType.NUMBER, defaultValue: 8}
+                        // IO7 is the PS2 DATA line and IO8 the PCA9685's SDA, so default clear of both.
+                        TRIG: {type: ArgumentType.NUMBER, defaultValue: 0},
+                        ECHO: {type: ArgumentType.NUMBER, defaultValue: 4}
                     }
                 },
                 {
@@ -426,7 +437,7 @@ class ThingBotTelemetrixExtension implements Extension {
 
     controlDC ({MOTOR_ID, SPEED}: {MOTOR_ID: ArgValue, SPEED: ArgValue}) {
         const motorId = parseInt(String(MOTOR_ID), 10);
-        const speed = Math.max(0, Math.min(100, Math.round(Number(SPEED))));
+        const speed = Math.max(-100, Math.min(100, Math.round(Number(SPEED))));
         this._telemetrix.controlDC(motorId, speed);
         return Promise.resolve();
     }
