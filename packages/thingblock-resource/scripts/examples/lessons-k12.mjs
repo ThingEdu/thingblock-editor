@@ -415,7 +415,7 @@ export const K12_LESSONS = [
     source: 'K4-M7 (#37) Chong chóng điện gió',
     hardware: ['Động cơ M1 gắn cánh quạt', 'Nút SW', 'Màn OLED I2C'],
     description: 'Bấm SW chuyển cấp gió 0–3; tốc độ tăng giảm dần bằng biến chứ không nhảy bậc.',
-    note: 'Bài 11 · Chong chóng điện gió (K4-M7)\nTốc độ động cơ là một con số từ 0 đến 100. Mỗi lần bấm SW, cấp gió tăng 1 (0 → 1 → 2 → 3 → 0). Biến "tốc độ" nhích dần về tốc độ đích, cánh quạt quay nhanh lên từ từ như cối xay gió thật.',
+    note: 'Bài 11 · Chong chóng điện gió (K4-M7)\nTốc độ động cơ tính theo phần trăm, từ 0% (dừng) đến 100% (nhanh nhất). Mỗi lần bấm SW, cấp gió tăng 1 (0 → 1 → 2 → 3 → 0). Biến "tốc độ" nhích dần về tốc độ đích, cánh quạt quay nhanh lên từ từ như cối xay gió thật.',
     variables: [
       { name: 'cấp', type: 'int' },
       { name: 'tốc độ', type: 'int' },
@@ -425,7 +425,7 @@ export const K12_LESSONS = [
       whenBegin(init(), oledInit(), oledText(2), set('cấp', 0), set('tốc độ', 0)),
       whenLoop(
         ifThen(pressed(), change('cấp', 1), ifThen(gt(v('cấp'), 3), set('cấp', 0)), waitUntil(not(pressed()))),
-        note('Cấp 1, 2, 3 ứng với tốc độ đích 30, 60, 90.', set('đích', mul(v('cấp'), 30))),
+        note('Cấp 1, 2, 3 ứng với tốc độ đích 30%, 60%, 90%.', set('đích', mul(v('cấp'), 30))),
         ifThen(lt(v('tốc độ'), v('đích')), change('tốc độ', 2)),
         ifThen(gt(v('tốc độ'), v('đích')), change('tốc độ', -2)),
         note('Ô tốc độ chỉ nhận số, nên biến được đặt trong khối «làm tròn».', motor(1, 'forward', v('tốc độ'))),
@@ -687,7 +687,7 @@ export const K12_LESSONS = [
     source: 'K5-M7 (#47) Xe điều khiển từ xa',
     hardware: ['Bộ thu tay cầm PS2 ở cổng PS2', 'Động cơ M1 (bánh trái), M2 (bánh phải)'],
     description: 'Cần analog trái của tay PS2: đẩy tới để chạy, nghiêng ngang để rẽ; tốc độ tỉ lệ theo độ đẩy.',
-    note: 'Bài 17 · Xe điều khiển từ xa (K5-M7)\nCần trái trả về số từ 0 đến 255, ở giữa là khoảng 128. "Tiến" = 128 − LY (đẩy lên là dương), "rẽ" = LX − 128. Bánh trái = tiến + rẽ, bánh phải = tiến − rẽ. Khối động cơ chỉ nhận tốc độ 0..100, nên số âm thì quay lùi.',
+    note: 'Bài 17 · Xe điều khiển từ xa (K5-M7)\nCần trái trả về số từ 0 đến 255, ở giữa là khoảng 128. "Tiến" = 128 − LY (đẩy lên là dương), "rẽ" = LX − 128. Bánh trái = tiến + rẽ, bánh phải = tiến − rẽ. Khối động cơ chỉ nhận tốc độ 0%..100%, nên số âm thì quay lùi.',
     variables: [
       { name: 'tiến', type: 'float' },
       { name: 'rẽ', type: 'float' },
@@ -747,7 +747,7 @@ export const K12_LESSONS = [
         driveWheel(1, 'trái'),
         driveWheel(2, 'phải'),
         note(
-          'Cơ cấu nâng: nhả nút thì tốc độ 0, an toàn.',
+          'Cơ cấu nâng: nhả nút thì tốc độ 0%, an toàn.',
           ifElse(
             button('L1'),
             [motor(3, 'forward', 80)],
@@ -829,7 +829,7 @@ export const K12_LESSONS = [
         deadZone('rẽ', 4),
         set('trái', add(v('tiến'), v('rẽ'))),
         set('phải', sub(v('tiến'), v('rẽ'))),
-        note('Khối động cơ chỉ nhận 0..100, nên tách chiều bằng nếu/không thì.', driveWheel(1, 'trái')),
+        note('Khối động cơ chỉ nhận tốc độ 0%..100%, nên tách chiều bằng nếu/không thì.', driveWheel(1, 'trái')),
         driveWheel(2, 'phải'),
       ),
       define(

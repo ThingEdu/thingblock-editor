@@ -17,9 +17,9 @@ Bấm **Tiếp**.
 
 Kéo khối **vòng lặp Arduino** ra. Bên trong, xếp lần lượt:
 
-- **đặt đèn L1 độ sáng 100**
+- **đặt đèn L1 độ sáng 100%**
 - **đợi 0.5 giây**
-- **đặt đèn L1 độ sáng 0**
+- **đặt đèn L1 độ sáng 0%**
 - **đợi 0.5 giây**
 
 Bấm **Chạy** và nhìn đèn L1 trên mạch ảo. Chờ vài giây để mô phỏng đếm được ít nhất ba lần chớp.

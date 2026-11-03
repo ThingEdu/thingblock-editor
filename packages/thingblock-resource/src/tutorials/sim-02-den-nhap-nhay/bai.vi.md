@@ -17,9 +17,9 @@ Bấm sang bước sau để bắt đầu.
 
 Giữ khối **khi Arduino khởi động** với **khởi động ThingBot** như bài trước. Kéo thêm khối **vòng lặp Arduino** (nhóm **Sự kiện**). Bên trong nó, xếp lần lượt:
 
-- **đặt đèn L1 độ sáng 100**
+- **đặt đèn L1 độ sáng 100%**
 - **đợi 0.5 giây**
-- **đặt đèn L1 độ sáng 0**
+- **đặt đèn L1 độ sáng 0%**
 - **đợi 0.5 giây**
 
 Bấm **Chạy** và chờ vài giây cho mô phỏng đếm đủ ba lần chớp.

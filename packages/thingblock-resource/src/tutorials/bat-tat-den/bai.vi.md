@@ -15,18 +15,18 @@ Bấm **Tiếp** để bắt đầu.
 
 ## Bật đèn L1
 
-Mở nhóm **ThingBot** ở cột khối bên trái. Kéo khối **đặt đèn L1 độ sáng 100** vào bên trong khối **khi Arduino khởi động**.
+Mở nhóm **ThingBot** ở cột khối bên trái. Kéo khối **đặt đèn L1 độ sáng 100%** vào bên trong khối **khi Arduino khởi động**.
 
 Bấm **Chạy** ở bảng mô phỏng. Đèn L1 trên mạch ảo sẽ sáng.
 
-> gợi ý: Khối **đặt đèn** có hai ô: ô đầu chọn **L1**, ô sau là độ sáng, để **100** là sáng hết cỡ.
+> gợi ý: Khối **đặt đèn** có hai ô: ô đầu chọn **L1**, ô sau là độ sáng, để **100%** là sáng hết cỡ.
 > gợi ý: Khối phải nằm _bên trong_ khối **khi Arduino khởi động** thì mới chạy.
 
 kiểm: L1 sáng
 
 ## Tắt đèn L1
 
-Giờ hãy tắt đèn. Trong khối **đặt đèn L1 độ sáng 100**, đổi **100** thành **0**, rồi bấm **Chạy** lại. Đèn L1 sẽ tắt.
+Giờ hãy tắt đèn. Trong khối **đặt đèn L1 độ sáng 100%**, đổi **100%** thành **0%**, rồi bấm **Chạy** lại. Đèn L1 sẽ tắt.
 
 kiểm: L1 tắt
 

@@ -17,15 +17,15 @@ Bấm sang bước sau để bắt đầu.
 
 Dưới **khởi động ThingBot** trong **khi Arduino khởi động**, xếp:
 
-1. **động cơ M1 chạy tiến tốc độ 50**
-2. **động cơ M2 chạy tiến tốc độ 50**
+1. **động cơ M1 chạy tiến tốc độ 50%**
+2. **động cơ M2 chạy tiến tốc độ 50%**
 3. **đợi 2 giây**
-4. **động cơ M1 chạy tiến tốc độ 0**
-5. **động cơ M2 chạy tiến tốc độ 0**
+4. **động cơ M1 chạy tiến tốc độ 0%**
+5. **động cơ M2 chạy tiến tốc độ 0%**
 
 Bấm **Chạy**: xe đi thẳng 2 giây rồi dừng.
 
-> gợi ý: Tốc độ **0** nghĩa là dừng.
+> gợi ý: Tốc độ **0%** nghĩa là dừng.
 
 kiểm: M1 tiến
 kiểm: M2 tiến
@@ -34,7 +34,7 @@ kiểm: M2 dừng
 
 ## Xoay tại chỗ
 
-Đổi khối thứ hai thành **động cơ M2 chạy lùi tốc độ 50** và đổi **đợi 2 giây** thành **đợi 1 giây**. Bánh trái tới, bánh phải lùi: xe xoay tại chỗ.
+Đổi khối thứ hai thành **động cơ M2 chạy lùi tốc độ 50%** và đổi **đợi 2 giây** thành **đợi 1 giây**. Bánh trái tới, bánh phải lùi: xe xoay tại chỗ.
 
 kiểm: M1 tiến
 kiểm: M2 lùi

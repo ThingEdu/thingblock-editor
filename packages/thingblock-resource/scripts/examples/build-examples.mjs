@@ -58,7 +58,7 @@ const SIM_META = {
     slug: 'dong-co-m1',
     hardware: ['Động cơ M1'],
     description: 'Động cơ M1 quay tới 2 giây rồi quay lùi 2 giây, lặp mãi.',
-    note: 'Bật công tắc nguồn động cơ trên mạch trước khi chạy. Tốc độ từ 0 đến 100.',
+    note: 'Bật công tắc nguồn động cơ trên mạch trước khi chạy. Tốc độ từ 0% (dừng) đến 100% (nhanh nhất).',
   },
   'bai-8': {
     slug: 'xe-di-thang-re',

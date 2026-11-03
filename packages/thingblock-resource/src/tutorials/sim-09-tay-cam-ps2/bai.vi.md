@@ -18,7 +18,7 @@ Bấm sang bước sau để bắt đầu.
 1. Dưới **khởi động ThingBot**, thêm **khởi động tay cầm PS2 trên ThingBot** (nhóm **ThingBot**).
 2. Trong **vòng lặp Arduino**, đặt **đọc dữ liệu tay cầm PS2** (nhóm **PS2**) đầu tiên để đọc tay cầm.
 3. Thêm **nếu … thì … nếu không thì** với ô lục giác là **nút lên của PS2 đang bấm?**.
-4. Chỗ **thì**: **động cơ M1 chạy tiến tốc độ 50** và **động cơ M2 chạy tiến tốc độ 50**.
+4. Chỗ **thì**: **động cơ M1 chạy tiến tốc độ 50%** và **động cơ M2 chạy tiến tốc độ 50%**.
 5. Thêm **đợi 0.02 giây** dưới khối **nếu**.
 
 Bấm **Chạy**, đợi một giây cho tay cầm kết nối, rồi giữ nút **▲** ở khung **Tay cầm PS2**.
@@ -33,8 +33,8 @@ kiểm: M2 tiến
 
 Chỗ **nếu không thì**, đặt một khối **nếu … thì … nếu không thì** nữa với **nút xuống của PS2 đang bấm?**:
 
-- chỗ **thì**: cho M1 và M2 **lùi** ở tốc độ 50,
-- chỗ **nếu không thì**: cho M1 và M2 tốc độ **0** để xe dừng.
+- chỗ **thì**: cho M1 và M2 **lùi** ở tốc độ 50%,
+- chỗ **nếu không thì**: cho M1 và M2 tốc độ **0%** để xe dừng.
 
 Giữ nút **▼**.
 

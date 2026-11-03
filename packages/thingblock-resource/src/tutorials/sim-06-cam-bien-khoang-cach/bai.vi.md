@@ -21,7 +21,7 @@ Trong **vòng lặp Arduino**:
 1. Kéo khối **nếu … thì … nếu không thì** (nhóm **Điều khiển**).
 2. Đặt khối **… < …** (nhóm **Các phép toán**) vào ô lục giác, gõ **20** vào ô bên phải.
 3. Đặt khối **cảm biến siêu âm chân TRIG 0 ECHO 4 đọc khoảng cách cm** (nhóm **Ultrasonic**) vào ô bên trái của dấu **<**.
-4. Chỗ **thì** đặt **đặt đèn L1 độ sáng 100**, chỗ **nếu không thì** đặt **đặt đèn L1 độ sáng 0**.
+4. Chỗ **thì** đặt **đặt đèn L1 độ sáng 100%**, chỗ **nếu không thì** đặt **đặt đèn L1 độ sáng 0%**.
 5. Thêm **đợi 0.05 giây** dưới khối **nếu**.
 
 Bấm **Chạy**, rồi kéo thanh **Vật cản cách cảm biến** xuống dưới **20** cm. Đèn L1 phải sáng.

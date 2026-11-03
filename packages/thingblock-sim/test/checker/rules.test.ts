@@ -13,6 +13,7 @@ describe('parseRule', () => {
     ['M2 lùi', { kind: 'motor', target: 'M2', state: 'backward' }],
     ['M4 dừng', { kind: 'motor', target: 'M4', state: 'stop' }],
     ['M1 tốc độ ≥ 50', { kind: 'motorSpeed', target: 'M1', minPercent: 50 }],
+    ['M1 tốc độ ≥ 50%', { kind: 'motorSpeed', target: 'M1', minPercent: 50 }],
     ['M1 tốc độ >= 50', { kind: 'motorSpeed', target: 'M1', minPercent: 50 }],
     ['servo S1 ở 90 độ ± 5', { kind: 'servo', target: 'S1', angle: 90, tolerance: 5 }],
     ['servo S3 ở 45 độ', { kind: 'servo', target: 'S3', angle: 45, tolerance: 5 }],

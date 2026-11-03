@@ -34,16 +34,16 @@ Mọi chương trình ThingBot đều bắt đầu bằng hai khối:
 1. Mở nhóm **Sự kiện**, kéo khối **khi Arduino khởi động** ra vùng lập trình.
 2. Mở nhóm **ThingBot**, kéo khối **khởi động ThingBot** vào trong khối đó.
 
-Giờ thêm khối **đặt đèn L2 độ sáng 100** ngay dưới **khởi động ThingBot**, rồi bấm **Chạy** ở khung Mô phỏng. Đèn L2 sẽ sáng.
+Giờ thêm khối **đặt đèn L2 độ sáng 100%** ngay dưới **khởi động ThingBot**, rồi bấm **Chạy** ở khung Mô phỏng. Đèn L2 sẽ sáng.
 
-> gợi ý: Ô đầu của khối **đặt đèn** chọn đèn **1** hay **2**, ô sau là độ sáng từ 0 đến 100.
+> gợi ý: Ô đầu của khối **đặt đèn** chọn đèn **1** hay **2**, ô sau là độ sáng từ 0% (tắt) đến 100% (sáng nhất).
 > gợi ý: Thiếu khối **khởi động ThingBot** thì chip PCA9685 chưa được bật, đèn không sáng.
 
 kiểm: L2 sáng
 
 ## Thử thách: hai đèn cùng sáng
 
-Thêm một khối **đặt đèn L1 độ sáng 100** nữa để cả L1 và L2 cùng sáng.
+Thêm một khối **đặt đèn L1 độ sáng 100%** nữa để cả L1 và L2 cùng sáng.
 
 kiểm: L1 sáng
 kiểm: L2 sáng

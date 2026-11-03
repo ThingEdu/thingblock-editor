@@ -52,7 +52,7 @@ hiểu:
 | `kiểm: L1 nhấp nháy, chu kỳ 1 giây`         | Đèn chớp đều với chu kỳ này, sai số mặc định 20%        |
 | `kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 10%` | Như trên với sai số tự chọn; chu kỳ tối đa 1,5 giây     |
 | `kiểm: M1 tiến` / `lùi` / `dừng`            | Động cơ M1 (M1 đến M4) quay tiến / lùi / đứng yên       |
-| `kiểm: M1 tốc độ ≥ 50`                      | Tốc độ động cơ từ mức này trở lên (phần trăm)           |
+| `kiểm: M1 tốc độ ≥ 50%`                     | Tốc độ động cơ từ mức này trở lên (phần trăm)           |
 | `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ    |
 | `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                                |
 | `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì               |

@@ -103,7 +103,7 @@ export function parseRule(text: string): Rule {
     const state = m[2] === 'tiến' ? 'forward' : m[2] === 'lùi' ? 'backward' : 'stop'
     return { kind: 'motor', target: upper(m[1]), state }
   }
-  if ((m = new RegExp(String.raw`^(m[1-4]) tốc độ ≥ ${NUMBER}$`).exec(t))) {
+  if ((m = new RegExp(String.raw`^(m[1-4]) tốc độ ≥ ${NUMBER}%?$`).exec(t))) {
     return { kind: 'motorSpeed', target: upper(m[1]), minPercent: num(m[2]) }
   }
   if ((m = new RegExp(String.raw`^servo (s[1-5]) ở ${NUMBER} độ(?: ± ${NUMBER})?$`).exec(t))) {
@@ -157,7 +157,7 @@ export function parseRule(text: string): Rule {
   throw new RuleSyntaxError(
     text,
     'các dạng được hiểu: "L1 sáng/tắt", "còi kêu/tắt", "L1 nhấp nháy, chu kỳ X giây ± Y%", ' +
-      '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N", "servo S1 ở G độ ± D", "servo S1 quét từ A đến B độ", ' +
+      '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N%", "servo S1 ở G độ ± D", "servo S1 quét từ A đến B độ", ' +
       '\'OLED hiện "…"\', \'OLED hiện đúng "…"\', \'OLED hiện "…" ở y N cỡ 12x16\', ' +
       '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên"',
   )

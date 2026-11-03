@@ -20,7 +20,7 @@ Trong **vòng lặp Arduino**:
 
 1. Kéo **nếu … thì … nếu không thì**.
 2. Ô lục giác: **cảm biến siêu âm chân TRIG 0 ECHO 4 đọc khoảng cách cm** **<** **25**.
-3. Chỗ **nếu không thì**: **động cơ M1 chạy tiến tốc độ 50** và **động cơ M2 chạy tiến tốc độ 50**.
+3. Chỗ **nếu không thì**: **động cơ M1 chạy tiến tốc độ 50%** và **động cơ M2 chạy tiến tốc độ 50%**.
 4. Thêm **đợi 0.05 giây** dưới khối **nếu**.
 
 Bấm **Chạy**. Kéo thanh **Vật cản cách cảm biến** lên trên **50** cm: xe đi thẳng.
@@ -31,7 +31,7 @@ kiểm: M2 tiến
 
 ## Gặp vật thì xoay
 
-Chỗ **thì**, cho xe xoay: **động cơ M1 chạy tiến tốc độ 50** và **động cơ M2 chạy lùi tốc độ 50**. Kéo thanh khoảng cách xuống dưới **25** cm.
+Chỗ **thì**, cho xe xoay: **động cơ M1 chạy tiến tốc độ 50%** và **động cơ M2 chạy lùi tốc độ 50%**. Kéo thanh khoảng cách xuống dưới **25** cm.
 
 > gợi ý: Như bài 8: hai bánh quay ngược chiều nhau thì xe xoay tại chỗ.
 
@@ -41,7 +41,7 @@ kiểm: M2 lùi
 
 ## Nhanh hơn thì sao?
 
-Tăng tốc độ lên **80**. Xe nhanh hơn thì cần thấy vật cản từ xa hơn: thử đổi **25** thành **40**. Bước này không chấm.
+Tăng tốc độ lên **80%**. Xe nhanh hơn thì cần thấy vật cản từ xa hơn: thử đổi **25** thành **40**. Bước này không chấm.
 
 ## Thử thách: còi báo
 
