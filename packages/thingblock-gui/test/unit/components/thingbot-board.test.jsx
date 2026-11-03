@@ -22,30 +22,60 @@ const renderBoard = ({pwm = new Array(16).fill(0), pwmHz = 0, oledRows = 64} = {
     </IntlProvider>
 );
 
-test('the OLED header reads GND, VCC, SDA, SCL left to right; the I2C socket GND, 5V, SDA, SCL bottom up', () => {
-    expect(OLED_PINS.map(([module]) => module)).toEqual(['GND', 'VCC', 'SDA', 'SCL']);
-    expect(OLED_PINS.map(([, , board]) => board)).toEqual(['GND', '5V', 'SDA', 'SCL']);
-    const texts = [...renderBoard().container.querySelectorAll('text')];
-    const at = (label, axis) => texts.filter(t => t.textContent === label).map(t => Number(t.getAttribute(axis)));
-    // Socket labels: right-aligned beside the socket (text-anchor end). Module labels: centred on the header.
-    const socket = label => texts.find(t => t.textContent === label && t.getAttribute('text-anchor') === 'end');
-    const socketYs = ['GND', '5V', 'SDA', 'SCL'].map(l => Number(socket(l).getAttribute('y')));
-    expect([...socketYs].sort((a, b) => b - a)).toEqual(socketYs); // bottom up
-    const headerXs = ['VCC', 'SDA', 'SCL'].map(l => Math.max(...at(l, 'x')));
-    expect([...headerXs].sort((a, b) => a - b)).toEqual(headerXs); // left to right
+const pointsOf = path => path.getAttribute('d')
+    .match(/-?[\d.]+,-?[\d.]+/g)
+    .map(xy => xy.split(',').map(Number));
+const labelsOf = (container, port) => [...container.querySelectorAll(`text[data-port="${port}"]`)]
+    .map(t => ({name: t.lastChild.textContent, x: Number(t.getAttribute('x')), y: Number(t.getAttribute('y'))}));
+const namesDown = labels => [...labels].sort((a, b) => a.y - b.y).map(l => l.name);
+const namesAcross = labels => [...labels].sort((a, b) => a.x - b.x).map(l => l.name);
+
+test('the board is labelled like the real silkscreen, top to bottom', () => {
+    const {container} = renderBoard();
+    expect(namesDown(labelsOf(container, 'i2c'))).toEqual(['GND', '5V', 'SDA', 'SCL']);
+    expect(namesDown(labelsOf(container, 'ps2'))).toEqual(['CLK', 'ATT', 'CMD', 'DAT', 'VCC', 'GND']);
+    for (let n = 1; n <= 5; n++) {
+        expect(namesDown(labelsOf(container, `servo${n}`))).toEqual(['GND', '5V', `S${n}`]);
+    }
+    // S5's port sits at the top of the header, S1's at the bottom.
+    const topOf = n => Math.min(...labelsOf(container, `servo${n}`).map(l => l.y));
+    expect([5, 4, 3, 2, 1].map(topOf)).toEqual([5, 4, 3, 2, 1].map(topOf).sort((a, b) => a - b));
+    // The two bottom ports, left to right.
+    expect(namesAcross(labelsOf(container, 'io0'))).toEqual(['GND', '5V', 'IO0', 'IO1']);
+    expect(namesAcross(labelsOf(container, 'io4'))).toEqual(['GND', '5V', 'IO4', 'IO5']);
+    const titles = [...container.querySelectorAll('text[data-port] title')].map(t => t.textContent);
+    expect(titles).toEqual(expect.arrayContaining(['DAT · GPIO7', 'CLK · GPIO6', 'SDA · GPIO8', 'IO5 · GPIO5']));
 });
 
-// The cable is drawn as polylines (the curve's control points sit on the same lines); no two may cross.
+test('the OLED header reads GND, VCC, SDA, SCL left to right and each wire meets its namesake', () => {
+    expect(OLED_PINS.map(([module]) => module)).toEqual(['GND', 'VCC', 'SDA', 'SCL']);
+    expect(OLED_PINS.map(([, , board]) => board)).toEqual(['GND', '5V', 'SDA', 'SCL']);
+    const {container} = renderBoard();
+    const texts = [...container.querySelectorAll('text:not([data-port])')];
+    const headerX = label => Number(texts.find(t => t.textContent === label).getAttribute('x'));
+    const headerXs = ['GND', 'VCC', 'SDA', 'SCL'].map(headerX);
+    expect([...headerXs].sort((a, b) => a - b)).toEqual(headerXs);
+    const socketY = Object.fromEntries(labelsOf(container, 'i2c').map(l => [l.name, l.y]));
+    const paths = [...container.querySelectorAll('path')]
+        .filter(p => OLED_PINS.some(([, color]) => p.getAttribute('stroke') === color));
+    expect(paths).toHaveLength(4);
+    paths.forEach((p, i) => {
+        const pts = pointsOf(p);
+        const [module, , board] = OLED_PINS[i];
+        expect(Math.abs(pts[0][1] - (socketY[board] - 1.5))).toBeLessThan(0.01);
+        expect(Math.abs(pts[pts.length - 1][0] - headerX(module))).toBeLessThan(0.01);
+    });
+});
+
+// The cable is drawn as polylines; no two wires may cross.
 test('the four OLED wires never cross', () => {
     const paths = [...renderBoard().container.querySelectorAll('path')]
         .filter(p => OLED_PINS.some(([, color]) => p.getAttribute('stroke') === color));
     expect(paths).toHaveLength(4);
-    const points = paths.map(p => (p.getAttribute('d').match(/-?[\d.]+,-?[\d.]+/g) || [])
-        .map(xy => xy.split(',').map(Number)));
-    // M start, C c1 c2 end(bend,over), L (px,over), L (px,headerY): segments start→(bend,start.y)→end→…
-    const segments = points.map(([start, , c2, end, l1, l2]) => [
-        [start, [c2[0], start[1]]], [[c2[0], start[1]], end], [end, l1], [l1, l2]
-    ]);
+    const segments = paths.map(p => {
+        const pts = pointsOf(p);
+        return pts.slice(1).map((q, k) => [pts[k], q]);
+    });
     const cross = ([a, b], [c, d]) => {
         const o = (p, q, r) => Math.sign(((q[0] - p[0]) * (r[1] - p[1])) - ((q[1] - p[1]) * (r[0] - p[0])));
         return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;

@@ -110,10 +110,10 @@ const GLASS_Y = OLED_Y + (6.2 * MM);
 const OLED_HEADER_Y = OLED_Y + (1.6 * MM);
 const OLED_PIN_X = i => OLED_X + (OLED_W / 2) + ((i - 1.5) * 2.54 * MM);
 /**
- * The cable, pin by pin: [module label, wire colour, board socket label]. Both connectors read
- * GND · 5V (VCC) · SDA · SCL: the module's header from left to right, the board's I2C socket from
- * the bottom up. A flat cable from a vertical socket to a header it reaches from above can only stay
- * uncrossed with the orders running that way round; the wires go GND→GND, 5V→VCC, SDA→SDA, SCL→SCL.
+ * The cable, pin by pin: [module label, wire colour, board socket label]. The board's I2C socket reads
+ * GND · 5V · SDA · SCL from the top down and the module's header GND · VCC · SDA · SCL from left to
+ * right, as on the real parts. Each wire turns up before the module, the GND wire first, and runs in
+ * over the module's top margin, so it reaches its pin from below and no two wires cross.
  */
 export const OLED_PINS = [
     ['GND', '#1b1b1b', 'GND'],
@@ -124,8 +124,19 @@ export const OLED_PINS = [
 /** The I2C socket on the board's right edge: four pins, top to bottom. */
 const I2C_X = BX + 192;
 const I2C_PIN_Y = i => BY + 106 + ((i + 0.5) * 9);
-/** The socket pin that cable wire `i` (in OLED_PINS order) plugs into: GND is the bottom one. */
-const I2C_WIRE_Y = i => I2C_PIN_Y(OLED_PINS.length - 1 - i);
+
+/**
+ * Every labelled connector pin, top to bottom (left to right for the bottom-edge ports), with the GPIO
+ * it reaches on the Core. These are the silkscreen of the real board; the tests read them back.
+ */
+export const PIN_LABELS = {
+    ps2: [['CLK', 'GPIO6'], ['ATT', 'GPIO10'], ['CMD', 'GPIO2'], ['DAT', 'GPIO7'], ['VCC', null], ['GND', null]],
+    i2c: [['GND', null], ['5V', null], ['SDA', 'GPIO8'], ['SCL', 'GPIO9']],
+    io0: [['GND', null], ['5V', null], ['IO0', 'GPIO0'], ['IO1', 'GPIO1']],
+    io4: [['GND', null], ['5V', null], ['IO4', 'GPIO4'], ['IO5', 'GPIO5']]
+};
+/** One servo port, top to bottom: ground, power, then the signal pin. */
+export const servoPinLabels = n => ['GND', '5V', `S${n}`];
 
 /**
  * Where the display's pixels go, in drawing units, for a panel of `height` rows (64, or 32 for the
@@ -242,6 +253,31 @@ Silk.propTypes = {
     y: PropTypes.number.isRequired
 };
 
+/* A pin's name printed beside it; hovering shows the GPIO it reaches. */
+const PinLabel = ({port, x, y, name, gpio, anchor = 'middle', size = 4.2}) => (
+    <text
+        className={styles.silk}
+        data-port={port}
+        fontSize={size}
+        textAnchor={anchor}
+        x={x}
+        y={y}
+    >
+        {gpio ? <title>{`${name} · ${gpio}`}</title> : null}
+        {name}
+    </text>
+);
+
+PinLabel.propTypes = {
+    anchor: PropTypes.string,
+    gpio: PropTypes.string,
+    name: PropTypes.string.isRequired,
+    port: PropTypes.string.isRequired,
+    size: PropTypes.number,
+    x: PropTypes.number.isRequired,
+    y: PropTypes.number.isRequired
+};
+
 /** The parts that never change, drawn once. */
 const BoardArt = React.memo(() => (
     <g>
@@ -350,15 +386,17 @@ const BoardArt = React.memo(() => (
                 y={HDR_Y + (i * HDR_STEP) - 1.75}
             />
         ))}
-        {[1, 2, 3, 4, 5].map(n => (
-            <Silk
+        {[5, 4, 3, 2, 1].map(n => servoPinLabels(n).map((name, k) => (
+            <PinLabel
                 anchor="start"
-                key={n}
-                size={6}
-                x={HDR_X + 7}
-                y={signalPin(n) + 2}
-            >{`S${n}`}</Silk>
-        ))}
+                key={`${n}-${name}`}
+                name={name}
+                port={`servo${n}`}
+                size={k === 2 ? 5.5 : 4}
+                x={HDR_X + 6}
+                y={signalPin(n) + ((k - 2) * HDR_STEP) + 1.6}
+            />
+        )))}
         {/* ThingBot Core */}
         <rect
             fill="#147a42"
@@ -430,18 +468,31 @@ const BoardArt = React.memo(() => (
             x={BX + 192}
             y={BY + 42}
         >{'PS2'}</Silk>
+        {PIN_LABELS.ps2.map(([name, gpio], i) => (
+            <PinLabel
+                anchor="end"
+                gpio={gpio}
+                key={name}
+                name={name}
+                port="ps2"
+                x={BX + 182}
+                y={BY + 46 + ((i + 0.5) * 52 / 6) + 1.5}
+            />
+        ))}
         <Silk
             x={BX + 192}
             y={BY + 152}
         >{'I2C'}</Silk>
-        {OLED_PINS.map(([, , label], i) => (
-            <Silk
+        {PIN_LABELS.i2c.map(([name, gpio], i) => (
+            <PinLabel
                 anchor="end"
-                key={label}
-                size={4.2}
+                gpio={gpio}
+                key={name}
+                name={name}
+                port="i2c"
                 x={BX + 182}
-                y={I2C_WIRE_Y(i) + 1.5}
-            >{label}</Silk>
+                y={I2C_PIN_Y(i) + 1.5}
+            />
         ))}
         {/* bottom edge: M2 · IO0 · IO4 · M1 */}
         <Socket
@@ -476,7 +527,7 @@ const BoardArt = React.memo(() => (
             x={BX + 152}
             y={BY + H - 30}
         />
-        {[['M2', 45], ['IO0', 82], ['IO4', 128], ['M1', 165]].map(([label, dx]) => (
+        {[['M2', 45], ['M1', 165]].map(([label, dx]) => (
             <Silk
                 key={label}
                 size={6}
@@ -484,6 +535,16 @@ const BoardArt = React.memo(() => (
                 y={BY + H - 34}
             >{label}</Silk>
         ))}
+        {[['io0', BX + 60], ['io4', BX + 106]].map(([port, x]) => PIN_LABELS[port].map(([name, gpio], i) => (
+            <PinLabel
+                gpio={gpio}
+                key={`${port}-${name}`}
+                name={name}
+                port={port}
+                x={x + ((i + 0.5) * 11)}
+                y={BY + H - 33}
+            />
+        )))}
     </g>
 ));
 BoardArt.displayName = 'BoardArt';
@@ -614,25 +675,6 @@ const OledModule = React.memo(({rows}) => {
     const hole = (2.0 * MM);
     return (
         <g>
-            {OLED_PINS.map(([name, color], i) => {
-                const sy = I2C_WIRE_Y(i);
-                const px = OLED_PIN_X(i);
-                // GND leaves the lowest socket pin, turns up nearest the module and runs lowest over
-                // the header, so no two wires cross.
-                const bend = OLED_X - 10 - (i * 3);
-                const over = OLED_HEADER_Y - 14 - (i * 3);
-                return (
-                    <path
-                        d={`M${I2C_X},${sy} C${bend - 20},${sy} ${bend},${sy} ${bend},${over} ` +
-                            `L${px},${over} L${px},${OLED_HEADER_Y}`}
-                        fill="none"
-                        key={name}
-                        stroke={color}
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                    />
-                );
-            })}
             <rect
                 fill="#123f7d"
                 height={OLED_H}
@@ -662,6 +704,25 @@ const OledModule = React.memo(({rows}) => {
                     />
                 )
             )}
+            {OLED_PINS.map(([name, color], i) => {
+                const sy = I2C_PIN_Y(i);
+                const px = OLED_PIN_X(i);
+                // GND leaves the top socket pin and turns up first; each wire then runs in over the
+                // module's top margin a little lower than the one before and rises into its pin.
+                const bend = OLED_X - 16 + (i * 3);
+                const under = OLED_HEADER_Y + 4 + (i * 3);
+                return (
+                    <path
+                        d={`M${I2C_X},${sy} L${bend},${sy} L${bend},${under} ` +
+                            `L${px},${under} L${px},${OLED_HEADER_Y}`}
+                        fill="none"
+                        key={name}
+                        stroke={color}
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                    />
+                );
+            })}
             {OLED_PINS.map(([name], i) => (
                 <g key={name}>
                     <rect
@@ -674,7 +735,7 @@ const OledModule = React.memo(({rows}) => {
                     <Silk
                         size={3.4}
                         x={OLED_PIN_X(i)}
-                        y={OLED_HEADER_Y + 7}
+                        y={OLED_HEADER_Y - 2.6}
                     >{name}</Silk>
                 </g>
             ))}
