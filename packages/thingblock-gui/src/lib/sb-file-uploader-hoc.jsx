@@ -5,8 +5,8 @@ import {defineMessages, injectIntl} from 'react-intl';
 import intlShape from './intlShape';
 import {connect} from 'react-redux';
 import log from '../lib/log';
-import sharedMessages from './shared-messages';
 import {isDesktopApp, pickProjectFile, setCurrentFile, showFileInWindowTitle} from './project-file';
+import {confirmReplaceProject} from './native-dialogs';
 
 import {
     LoadingStates,
@@ -81,13 +81,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
          */
         handleStartPickingDesktopFile () {
             this.removeFileObjects();
-            return pickProjectFile().then(file => {
+            return pickProjectFile().then(async file => {
                 if (!file) return; // cancelled
-                const {intl, isShowingWithoutId, projectChanged, userOwnsProject} = this.props;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                    // eslint-disable-next-line no-alert
-                    if (!confirm(intl.formatMessage(sharedMessages.replaceProjectWarning))) return;
-                }
+                if (!(await this.confirmReplacingProject())) return;
                 this.desktopFileToLoad = file;
                 this.props.requestProjectUpload(this.props.loadingState);
             }, error => {
@@ -102,15 +98,24 @@ const SBFileUploaderHOC = function (WrappedComponent) {
          * @param {{url: string, title: string}} example - where the example's `.tb` is served, and the
          *   project title to show once it loads.
          */
-        handleStartLoadingExample (example) {
+        async handleStartLoadingExample (example) {
             this.removeFileObjects();
-            const {intl, isShowingWithoutId, projectChanged, userOwnsProject} = this.props;
-            if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                // eslint-disable-next-line no-alert
-                if (!confirm(intl.formatMessage(sharedMessages.replaceProjectWarning))) return;
-            }
+            if (!(await this.confirmReplacingProject())) return;
             this.exampleToLoad = example;
             this.props.requestProjectUpload(this.props.loadingState);
+        }
+        /**
+         * If the user owns the project, or has changed it, ask before replacing it. (If they don't own
+         * it and haven't changed it, there is nothing to lose.) Awaited: in the desktop app the
+         * question is a native dialog that answers asynchronously.
+         * @returns {Promise<boolean>} whether the project may be replaced.
+         */
+        confirmReplacingProject () {
+            const {intl, isShowingWithoutId, projectChanged, userOwnsProject} = this.props;
+            if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
+                return confirmReplaceProject(intl);
+            }
+            return Promise.resolve(true);
         }
         // step 2: create a FileReader and an <input> element, and issue a
         // pseudo-click to it. That will open the file chooser dialog.
@@ -133,14 +138,8 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 3: user has picked a file using the file chooser dialog.
         // We don't actually load the file here, we only decide whether to do so.
-        handleChange (e) {
-            const {
-                intl,
-                isShowingWithoutId,
-                loadingState,
-                projectChanged,
-                userOwnsProject
-            } = this.props;
+        async handleChange (e) {
+            const {loadingState} = this.props;
             const thisFileInput = e.target;
             if (thisFileInput.files) { // Don't attempt to load if no file was selected
                 this.fileToUpload = thisFileInput.files[0];
@@ -149,12 +148,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // we must confirm with the user that they really intend to
                 // replace it. (If they don't own the project and haven't
                 // changed it, no need to confirm.)
-                let uploadAllowed = true;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                    uploadAllowed = confirm( // eslint-disable-line no-alert
-                        intl.formatMessage(sharedMessages.replaceProjectWarning)
-                    );
-                }
+                const uploadAllowed = await this.confirmReplacingProject();
                 if (uploadAllowed) {
                     // cues step 4
                     this.props.requestProjectUpload(loadingState);

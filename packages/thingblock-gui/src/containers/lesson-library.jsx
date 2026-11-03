@@ -5,7 +5,7 @@ import {connect} from 'react-redux';
 import LessonLibraryComponent from '../components/lesson-library/lesson-library.jsx';
 import {loadProgress} from '../lib/lesson-progress';
 import {blankLessonProject} from '../lib/lesson-starter';
-import sharedMessages from '../lib/shared-messages';
+import {confirmReplaceProject} from '../lib/native-dialogs';
 import log from '../lib/log.js';
 import {setDevice} from '../reducers/board';
 import {openLesson} from '../reducers/lesson';
@@ -75,11 +75,10 @@ const LessonLibrary = ({projectChanged, vm, onClose, onOpen}) => {
             .catch(() => setError('no-link'));
     }, [base]);
 
-    const handleSelect = useCallback(ma => {
+    const handleSelect = useCallback(async ma => {
         // A lesson starts from its own project, so it replaces the learner's: ask first, as opening a
         // file does, when there are unsaved changes.
-        // eslint-disable-next-line no-alert
-        if (projectChanged && !confirm(intl.formatMessage(sharedMessages.replaceProjectWarning))) return;
+        if (projectChanged && !(await confirmReplaceProject(intl))) return;
         const baseUrl = `${base}/${ma}/`;
         fetchJson(`${baseUrl}bai.${LESSON_LANG}.json`)
             .then(lesson => {

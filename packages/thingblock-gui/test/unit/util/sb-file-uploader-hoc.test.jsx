@@ -125,7 +125,7 @@ describe('SBFileUploaderHOC', () => {
             isLoadingUpload={false}
         />);
 
-        startLoadingExample({url: 'http://host/examples/thingbot/a.tb', title: 'Robot vũ công'});
+        await startLoadingExample({url: 'http://host/examples/thingbot/a.tb', title: 'Robot vũ công'});
         expect(props.requestProjectUpload).toHaveBeenCalled();
 
         rerender(
@@ -143,5 +143,56 @@ describe('SBFileUploaderHOC', () => {
         expect(props.onSetProjectTitle).toHaveBeenCalledWith('Robot vũ công');
         expect(props.onLoadingFinished).toHaveBeenCalledWith(expect.anything(), true);
         expect(props.cancelFileUpload).not.toHaveBeenCalled();
+    });
+
+    describe('in the desktop app, replacing a changed project waits for the native dialog', () => {
+        const renderForExample = () => {
+            let startLoadingExample;
+            const Component = ({onStartLoadingExample}) => {
+                startLoadingExample = onStartLoadingExample;
+                return <div />;
+            };
+            const WrappedComponent = SBFileUploaderHOC(Component);
+            const props = {
+                canSave: false,
+                cancelFileUpload: jest.fn(),
+                projectChanged: true,
+                requestProjectUpload: jest.fn(),
+                store: store,
+                userOwnsProject: false,
+                vm: vm,
+                onLoadingFinished: jest.fn(),
+                onLoadingStarted: jest.fn(),
+                onSetProjectTitle: jest.fn()
+            };
+            renderWithIntl(<WrappedComponent
+                {...props}
+                isLoadingUpload={false}
+            />);
+            return {props, start: example => startLoadingExample(example)};
+        };
+        afterEach(() => {
+            delete window.__TAURI_INTERNALS__;
+        });
+
+        test('Cancel keeps the changed project', async () => {
+            const invoke = jest.fn(() => Promise.resolve(false));
+            window.__TAURI_INTERNALS__ = {invoke};
+            const {props, start} = renderForExample();
+            await start({url: 'http://host/examples/thingbot/a.tb', title: 'A'});
+            expect(invoke).toHaveBeenCalledWith('confirm_dialog', expect.objectContaining({
+                message: 'Replace contents of the current project?',
+                okLabel: 'Replace',
+                cancelLabel: 'Cancel'
+            }));
+            expect(props.requestProjectUpload).not.toHaveBeenCalled();
+        });
+
+        test('Replace loads the example', async () => {
+            window.__TAURI_INTERNALS__ = {invoke: jest.fn(() => Promise.resolve(true))};
+            const {props, start} = renderForExample();
+            await start({url: 'http://host/examples/thingbot/a.tb', title: 'A'});
+            expect(props.requestProjectUpload).toHaveBeenCalled();
+        });
     });
 });

@@ -12,6 +12,9 @@ describe('Menu Bar HOC', () => {
     // The container reads projectChanged from the store, so tests of an unchanged project need one.
     let unchangedStore;
     let Component;
+    // The wrapped component's confirmReadyToReplaceProject: it answers with a Promise, because in the
+    // desktop app the question is a native dialog.
+    let confirmReadyToReplaceProject;
 
     beforeEach(() => {
         store = mockStore({
@@ -30,22 +33,20 @@ describe('Menu Bar HOC', () => {
         unchangedStore = mockStore({scratchGui: {...state.scratchGui, projectChanged: false}});
 
         Component = jest.fn(
-            ({confirmReadyToReplaceProject, shouldSaveBeforeTransition}) => (
-                <>
-                    <div id="confirmReadyToReplaceProject">
-                        {`${confirmReadyToReplaceProject()}`}
-                    </div>
+            props => {
+                confirmReadyToReplaceProject = props.confirmReadyToReplaceProject;
+                return (<>
                     <div id="shouldSaveBeforeTransition">
-                        {`${shouldSaveBeforeTransition()}`}
+                        {`${props.shouldSaveBeforeTransition()}`}
                     </div>
-                </>
-            )
+                </>);
+            }
         );
     });
 
-    test('Logged in user who IS owner and HAS changed project will NOT be prompted to save', () => {
+    test('Logged in user who IS owner and HAS changed project will NOT be prompted to save', async () => {
         const WrappedComponent = MenuBarHOC(Component);
-        const {container} = render(
+        render(
             <WrappedComponent
                 canCreateNew
                 canSave
@@ -56,13 +57,12 @@ describe('Menu Bar HOC', () => {
             />
         );
 
-        const element = container.querySelector('#confirmReadyToReplaceProject');
-        expect(element).toHaveTextContent(/true/i);
+        await expect(confirmReadyToReplaceProject('Replace?')).resolves.toBe(true);
     });
 
-    test('Logged in user who IS owner and has NOT changed project will NOT be prompted to save', () => {
+    test('Logged in user who IS owner and has NOT changed project will NOT be prompted to save', async () => {
         const WrappedComponent = MenuBarHOC(Component);
-        const {container} = render(
+        render(
             <WrappedComponent
                 canCreateNew
                 canSave
@@ -72,13 +72,12 @@ describe('Menu Bar HOC', () => {
             />
         );
 
-        const element = container.querySelector('#confirmReadyToReplaceProject');
-        expect(element).toHaveTextContent(/true/i);
+        await expect(confirmReadyToReplaceProject('Replace?')).resolves.toBe(true);
     });
 
-    test('Logged in user who is NOT owner and HAS changed project will NOT be prompted to save', () => {
+    test('Logged in user who is NOT owner and HAS changed project will NOT be prompted to save', async () => {
         const WrappedComponent = MenuBarHOC(Component);
-        const {container} = render(
+        render(
             <WrappedComponent
                 canCreateNew
                 projectChanged
@@ -88,13 +87,12 @@ describe('Menu Bar HOC', () => {
             />
         );
 
-        const element = container.querySelector('#confirmReadyToReplaceProject');
-        expect(element).toHaveTextContent(/true/i);
+        await expect(confirmReadyToReplaceProject('Replace?')).resolves.toBe(true);
     });
 
-    test('Logged OUT user who HAS changed project WILL be prompted to save', () => {
+    test('Logged OUT user who HAS changed project WILL be prompted to save', async () => {
         const WrappedComponent = MenuBarHOC(Component);
-        const {container} = render(
+        render(
             <WrappedComponent
                 projectChanged
                 canCreateNew={false}
@@ -104,13 +102,12 @@ describe('Menu Bar HOC', () => {
             />
         );
 
-        const element = container.querySelector('#confirmReadyToReplaceProject');
-        expect(element).toHaveTextContent(/false/i);
+        await expect(confirmReadyToReplaceProject('Replace?')).resolves.toBe(false);
     });
 
-    test('Logged OUT user who has NOT changed project WILL NOT be prompted to save', () => {
+    test('Logged OUT user who has NOT changed project WILL NOT be prompted to save', async () => {
         const WrappedComponent = MenuBarHOC(Component);
-        const {container} = render(
+        render(
             <WrappedComponent
                 canCreateNew={false}
                 canSave={false}
@@ -119,8 +116,8 @@ describe('Menu Bar HOC', () => {
                 store={unchangedStore}
             />
         );
-        const element = container.querySelector('#confirmReadyToReplaceProject');
-        expect(element).toHaveTextContent(/true/i);
+
+        await expect(confirmReadyToReplaceProject('Replace?')).resolves.toBe(true);
     });
 
     test('Logged in user who IS owner and HAS changed project SHOULD save before transition to project page', () => {
@@ -179,4 +176,37 @@ describe('Menu Bar HOC', () => {
         expect(element).toHaveTextContent(/false/i);
     });
 
+});
+
+test('the default question passes the message and button labels to the desktop-aware dialog', async () => {
+    const confirm = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    try {
+        const mockStore = configureStore();
+        const store = mockStore({
+            scratchGui: {
+                projectChanged: true,
+                thingbotTelemetrix: {loaded: false, connected: false, connecting: false},
+                vm: {
+                    events: {addListener: () => {}, removeListener: () => {}},
+                    extensionManager: {isExtensionLoaded: () => false}
+                }
+            }
+        });
+        let ask;
+        const Inner = props => {
+            ask = props.confirmReadyToReplaceProject;
+            return null;
+        };
+        const Wrapped = MenuBarHOC(Inner);
+        render(<Wrapped
+            store={store}
+            canCreateNew={false}
+            canSave={false}
+            projectChanged
+        />);
+        await expect(ask('Thay thế?', {okLabel: 'Thay thế', cancelLabel: 'Hủy'})).resolves.toBe(true);
+        expect(confirm).toHaveBeenCalledWith('Thay thế?');
+    } finally {
+        confirm.mockRestore();
+    }
 });

@@ -135,7 +135,7 @@
     "gui.settingsModal.linkTab": "Link",
     "gui.settingsModal.title": "Cài đặt",
     "gui.sharedMessages.loadFromComputerTitle": "Mở từ máy tính",
-    "gui.sharedMessages.replaceProjectWarning": "Thay thế dự án đang mở?",
+    "gui.sharedMessages.replaceProjectWarning": "Thay thế dự án đang mở? Những thay đổi chưa lưu sẽ bị mất.",
     "gui.simPanel.distance": "Vật cản cách cảm biến",
     "gui.simPanel.gamepad": "Tay cầm PS2 (giữ nút để bấm)",
     "gui.simPanel.halted": "Mạch đã dừng: {reason}",
@@ -180,5 +180,7 @@
     "thingbotTelemetrix.servoWrite": "servo [SERVO_ID] góc [ANGLE]",
     "thingbotTelemetrix.setPinMode": "đặt chân [PIN] chế độ [MODE]",
     "thingbotTelemetrix.setupDHT": "khởi động cảm biến [DHT_TYPE] ở chân [PIN]",
-    "thingbotTelemetrix.setupUltrasonic": "khởi động siêu âm chân trig [TRIG] echo [ECHO]"
+    "thingbotTelemetrix.setupUltrasonic": "khởi động siêu âm chân trig [TRIG] echo [ECHO]",
+    "gui.sharedMessages.replaceProjectConfirm": "Thay thế",
+    "gui.sharedMessages.cancel": "Hủy"
 }

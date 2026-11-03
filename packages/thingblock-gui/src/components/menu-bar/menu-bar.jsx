@@ -138,14 +138,19 @@ class MenuBar extends React.Component {
     handleProjectLoaded () {
         showFileInWindowTitle(null);
     }
-    handleClickNew () {
+    async handleClickNew () {
         // if the project is dirty, and user owns the project, we will autosave.
         // but if they are not logged in and can't save, user should consider
         // downloading or logging in first.
         // Note that if user is logged in and editing someone else's project,
         // they'll lose their work.
-        const readyToReplaceProject = this.props.confirmReadyToReplaceProject(
-            this.props.intl.formatMessage(sharedMessages.replaceProjectWarning)
+        const {intl} = this.props;
+        const readyToReplaceProject = await this.props.confirmReadyToReplaceProject(
+            intl.formatMessage(sharedMessages.replaceProjectWarning),
+            {
+                okLabel: intl.formatMessage(sharedMessages.replaceProjectConfirm),
+                cancelLabel: intl.formatMessage(sharedMessages.cancel)
+            }
         );
         if (readyToReplaceProject) {
             this.props.onClickNew(this.props.canSave && this.props.canCreateNew);

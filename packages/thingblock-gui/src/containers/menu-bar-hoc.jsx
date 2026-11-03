@@ -9,6 +9,7 @@ import {
     thingbotDisconnect
 } from '../reducers/thingbot-telemetrix';
 import {openConnectionModal} from '../reducers/modals';
+import {confirmAsync} from '../lib/native-dialogs';
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 
 const THINGBOT_EXTENSION_ID = 'thingbotTelemetrix';
@@ -70,12 +71,17 @@ const MenuBarHOC = function (WrappedComponent) {
             this.props.onThingbotDisconnect();
         }
 
-        confirmReadyToReplaceProject (message) {
-            let readyToReplaceProject = true;
+        /**
+         * Ask before replacing a changed project the user can't save in place.
+         * @param {string} message - the question.
+         * @param {object} [options] - button labels for the desktop dialog, see `confirmAsync`.
+         * @returns {Promise<boolean>} whether the project may be replaced.
+         */
+        confirmReadyToReplaceProject (message, options) {
             if (this.props.projectChanged && !this.props.canCreateNew) {
-                readyToReplaceProject = this.props.confirmWithMessage(message);
+                return Promise.resolve(this.props.confirmWithMessage(message, options));
             }
-            return readyToReplaceProject;
+            return Promise.resolve(true);
         }
 
         shouldSaveBeforeTransition () {
@@ -111,7 +117,8 @@ const MenuBarHOC = function (WrappedComponent) {
     };
 
     MenuBarContainer.defaultProps = {
-        confirmWithMessage: message => (confirm(message)) // eslint-disable-line no-alert
+        // Awaited: in the desktop app the question is a native dialog that answers asynchronously.
+        confirmWithMessage: (message, options) => confirmAsync(message, options)
     };
 
     const mapStateToProps = state => ({
