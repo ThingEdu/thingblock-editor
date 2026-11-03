@@ -22,6 +22,9 @@ import { registerSimGenerators as registerOled } from '../../src/extensions/peri
 import { registerSimGenerators as registerThingBot } from '../../src/extensions/peripheral/thingbot-core/sim'
 
 const TUTORIALS = join(__dirname, '../../src/tutorials')
+const PERIPHERALS = readdirSync(join(__dirname, '../../src/extensions/peripheral'))
+/** Packs the ThingBot board puts in the palette by itself (its device manifest's `extensions`). */
+const BOARD_PACKS = ['thingBotC3', 'ps2']
 const WINDOW_US = 5_000_000
 /** The worker's tick, in milliseconds. */
 const TICK_MS = 16
@@ -87,6 +90,21 @@ describe.each(lessonDirs)('lesson %s', (ma) => {
   it('has at least one graded step and a correct solution', () => {
     expect(graded.length).toBeGreaterThan(0)
     expect(existsSync(fixture('dung.tb')) || graded.every(({ n }) => existsSync(fixture(`dung-${n}.tb`)))).toBe(true)
+  })
+
+  it('declares in thiet-bi every peripheral its solutions use, so their blocks are in the palette', async () => {
+    const used = new Set<string>()
+    for (const name of readdirSync(join(dir, 'kiem-thu')).filter((f) => /^dung.*\.tb$/.test(f))) {
+      const project = await readTb(fixture(name))
+      for (const target of project.targets) {
+        for (const block of Object.values(target.blocks)) {
+          if (Array.isArray(block)) continue
+          const pack = (block as { opcode: string }).opcode.split('_')[0]
+          if (PERIPHERALS.includes(pack) && !BOARD_PACKS.includes(pack)) used.add(pack)
+        }
+      }
+    }
+    expect([...used].filter((pack) => !(lesson.thietBi as string[]).includes(pack))).toEqual([])
   })
 
   it.each(graded.map(({ n }) => n))('step %i passes with the correct solution', async (n) => {

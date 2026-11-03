@@ -1,12 +1,17 @@
 // A lesson is Markdown a teacher writes: front matter, one `##` per step, `> gợi ý:` hints, `kiểm:`
 // rules and an optional `chỉ vào:` tour anchor. The build turns it into JSON the editor renders, and
 // every authoring mistake fails here, not on a learner's screen.
+import { readdirSync } from 'node:fs'
 import { parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
 const GROUPS = ['lam-quen', 'dau-ra', 'dong-co', 'dau-vao']
 const HINT_START = /^>\s*gợi ý:\s*(.+)$/i
 const REQUIRED = ['ma', 'ten', 'nhom', 'thu-tu', 'bo']
+/** Peripheral packs a lesson can name in `thiet-bi:`, by folder name. */
+const PERIPHERALS = readdirSync(new URL('../../src/extensions/peripheral/', import.meta.url), { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name)
 
 export class LessonError extends Error {
   /** @param {{line: number, message: string}[]} problems Every authoring problem found, with its line. */
@@ -87,6 +92,18 @@ export function parseLesson(markdown, ctx) {
   }
   if (meta['bat-dau'] && !ctx.files.includes(meta['bat-dau'])) {
     problems.push({ line: metaLine['bat-dau'], message: `không thấy tệp bat-dau "${meta['bat-dau']}"` })
+  }
+
+  const thietBi = meta['thiet-bi']
+    ? meta['thiet-bi']
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : []
+  for (const id of thietBi) {
+    if (!PERIPHERALS.includes(id)) {
+      problems.push({ line: metaLine['thiet-bi'], message: `thiet-bi "${id}" không thuộc ${PERIPHERALS.join('|')}` })
+    }
   }
 
   for (const key of ['thu-tu', 'thoi-luong']) {
@@ -208,6 +225,7 @@ export function parseLesson(markdown, ctx) {
       thuTu: Number(meta['thu-tu']),
       bo: meta.bo,
       batDau: meta['bat-dau'] ?? null,
+      thietBi,
       thoiLuong: meta['thoi-luong'] ? Number(meta['thoi-luong']) : null,
       lang: ctx.lang,
       steps,

@@ -23,8 +23,9 @@ const LESSON = {ma: 'den-nhap-nhay', ten: 'Đèn nhấp nháy', nhom: 'dau-ra', 
 
 const respond = body => Promise.resolve({ok: true, json: () => Promise.resolve(body)});
 
-const renderLibrary = root => {
-    const store = configureStore()({scratchGui: {vm: {devices: {getTutorialsOrigin: () => (root ? `${root}/tutorials` : null)}}}, locales: {isRtl: false}});
+const renderLibrary = (root, addPeripheral = jest.fn(() => Promise.resolve())) => {
+    const devices = {getTutorialsOrigin: () => (root ? `${root}/tutorials` : null), addPeripheral};
+    const store = configureStore()({scratchGui: {vm: {devices}}, locales: {isRtl: false}});
     const view = renderWithIntl(
         <Provider store={store}>
             <LessonLibrary />
@@ -92,4 +93,20 @@ test('a boardless lesson opens without selecting a device', async () => {
     expect(store.getActions().map(action => action.type)).not.toContain('scratch-gui/board/SET_DEVICE');
     expect(open.type).toBe('scratch-gui/lesson/OPEN');
     expect(close.type).toMatch(/CLOSE_MODAL/);
+});
+
+test('opening a lesson adds the peripherals it needs, after selecting its board', async () => {
+    const withOled = {...LESSON, thietBi: ['oled']};
+    global.fetch = jest.fn(url => respond(url.endsWith('index.json') ? INDEX : withOled));
+    const seen = {};
+    const addPeripheral = jest.fn(() => {
+        expect(seen.store.getActions().map(a => a.type)).toContain('scratch-gui/board/SET_DEVICE');
+        return Promise.resolve();
+    });
+    const view = renderLibrary(ROOT, addPeripheral);
+    seen.store = view.store;
+    await waitFor(() => expect(view.getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(view.container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(addPeripheral).toHaveBeenCalledWith('oled'));
+    expect(addPeripheral).toHaveBeenCalledTimes(1);
 });

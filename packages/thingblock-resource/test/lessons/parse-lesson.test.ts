@@ -47,6 +47,7 @@ Chúc mừng!
       thuTu: 2,
       bo: 'thingbot',
       batDau: null,
+      thietBi: [],
       thoiLuong: 10,
       lang: 'vi',
     })
@@ -87,7 +88,13 @@ Chúc mừng!
     expect(() => parseLesson(`${FRONT}\n## B\nchỉ vào: nut-bay\n`, ctx)).toThrow(LessonError)
   })
 
+  it('reads the peripherals the lesson needs, for the editor to add when it opens', () => {
+    const md = `${FRONT.replace('bo: thingbot', 'bo: thingbot\nthiet-bi: oled, ultrasonic')}\n## B\n`
+    expect(parseLesson(md, ctx).lesson.thietBi).toEqual(['oled', 'ultrasonic'])
+  })
+
   it.each([
+    ['unknown thiet-bi', FRONT.replace('bo: thingbot', 'bo: thingbot\nthiet-bi: man-hinh'), /man-hinh/],
     ['missing ten', FRONT.replace('ten: Đèn nhấp nháy\n', ''), /ten/],
     ['ma differs from folder', FRONT.replace('ma: den-nhap-nhay', 'ma: khac'), /thư mục/],
     ['bad nhom', FRONT.replace('nhom: dau-ra', 'nhom: xyz'), /nhom/],

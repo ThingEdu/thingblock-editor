@@ -4,6 +4,7 @@ ten: Màn hình OLED chào em
 nhom: dau-ra
 thu-tu: 3
 bo: thingbot
+thiet-bi: oled
 thoi-luong: 15
 ---
 
@@ -17,7 +18,7 @@ Bấm **Next** để bắt đầu.
 
 ## Viết dòng đầu tiên
 
-Màn hình cần ba khối theo đúng thứ tự, đều nằm trong nhóm **OLED**:
+Màn hình cần ba khối theo đúng thứ tự, đều nằm trong nhóm **OLED**. Mở bài này là nhóm **OLED** đã có sẵn trong bảng khối; nếu chưa thấy, bấm **Add Peripheral** (góc dưới bên trái) rồi chọn **OLED**.
 
 1. **init oled width 128 height 64 I2C address 0x3c chip SSD1306** để khởi động màn hình.
 2. **oled print Xin chao** để viết chữ vào bộ nhớ.

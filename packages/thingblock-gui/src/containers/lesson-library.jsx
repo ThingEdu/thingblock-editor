@@ -4,6 +4,7 @@ import {FormattedMessage} from 'react-intl';
 import {connect} from 'react-redux';
 import LessonLibraryComponent from '../components/lesson-library/lesson-library.jsx';
 import {loadProgress} from '../lib/lesson-progress';
+import log from '../lib/log.js';
 import {setDevice} from '../reducers/board';
 import {openLesson} from '../reducers/lesson';
 import {closeTipsLibrary} from '../reducers/modals';
@@ -67,9 +68,16 @@ const LessonLibrary = ({vm, onClose, onOpen}) => {
     const handleSelect = useCallback(ma => {
         const baseUrl = `${base}/${ma}/`;
         fetchJson(`${baseUrl}bai.${LESSON_LANG}.json`)
-            .then(lesson => onOpen({...lesson, baseUrl}, loadProgress(ma)))
+            .then(lesson => {
+                onOpen({...lesson, baseUrl}, loadProgress(ma));
+                // After the board is selected: a lesson's peripherals (the OLED, say) join the palette
+                // without the learner having to find Add Peripheral.
+                for (const id of lesson.thietBi || []) {
+                    vm.devices.addPeripheral(id).catch(e => log.warn(`Lesson ${ma}: cannot add "${id}"`, e));
+                }
+            })
             .catch(() => setError('no-link'));
-    }, [base, onOpen]);
+    }, [base, onOpen, vm]);
 
     const lessons = index ? index.lessons : [];
     const groups = GROUP_ORDER
@@ -95,7 +103,10 @@ const LessonLibrary = ({vm, onClose, onOpen}) => {
 
 LessonLibrary.propTypes = {
     vm: PropTypes.shape({
-        devices: PropTypes.shape({getTutorialsOrigin: PropTypes.func.isRequired}).isRequired
+        devices: PropTypes.shape({
+            addPeripheral: PropTypes.func.isRequired,
+            getTutorialsOrigin: PropTypes.func.isRequired
+        }).isRequired
     }).isRequired,
     onClose: PropTypes.func.isRequired,
     onOpen: PropTypes.func.isRequired

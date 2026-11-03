@@ -22,6 +22,9 @@ thoi-luong: 10
 - `thu-tu`: số thứ tự trong nhóm, phải là số. Hai bài cùng `nhom` không được trùng `thu-tu`.
 - `bo`: bo mạch của bài (ví dụ `thingbot`).
 - `thoi-luong`: số phút ước tính, phải là số.
+- `thiet-bi` (không bắt buộc): các thiết bị ngoài bài cần, cách nhau dấu phẩy, viết bằng tên thư mục trong
+  `src/extensions/peripheral/` (ví dụ `thiet-bi: oled`). Mở bài là editor tự thêm các thiết bị này vào bảng khối,
+  học sinh không phải tự tìm **Add Peripheral**.
 
 ## Các bước
 
