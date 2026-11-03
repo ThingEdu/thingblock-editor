@@ -71,6 +71,17 @@ describe('PCA9685 (Adafruit_PWMServoDriver)', () => {
     pwm.setPWMFreq(50)
     expect(pwm.prescale).toBe(131)
   })
+
+  it('reports the frequency the prescaler really gives: the pitch a buzzer note sounds at', () => {
+    const { $ } = createBoard()
+    const pwm = $.hw.Adafruit_PWMServoDriver()
+    expect(pwm.frequency).toBe(0)
+    pwm.setOscillatorFrequency(27_000_000)
+    pwm.setPWMFreq(440)
+    // prescale = round(27 MHz / (440 × 4096)) - 1 = 14, so the chip plays 27e6 / (4096 × 15) ≈ 439.5 Hz.
+    expect(pwm.prescale).toBe(14)
+    expect(pwm.frequency).toBeCloseTo(439.45, 1)
+  })
 })
 
 describe('SSD1306 (Adafruit_SSD1306 on Adafruit_GFX)', () => {

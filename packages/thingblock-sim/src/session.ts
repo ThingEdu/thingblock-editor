@@ -19,6 +19,8 @@ export interface Snapshot {
   error: string | undefined
   /** PCA9685 duty per channel, out of 4096. */
   pwm: number[]
+  /** PCA9685 PWM frequency in Hz (the pitch of the buzzer on channel 14), 0 before it is set. */
+  pwmHz: number
   /** The OLED's shown frame (page layout), or null when the program has no display. */
   oled: { width: number; height: number; frame: Uint8Array } | null
   /** The input modules the program declares, whose rig controls the panel shows. */
@@ -126,6 +128,7 @@ export class Session {
       block: this.runner.currentBlock,
       error: this.runner.error,
       pwm: pwm ? [...pwm.duty] : new Array<number>(16).fill(0),
+      pwmHz: pwm ? pwm.frequency : 0,
       oled: oled ? { width: oled.width, height: oled.height, frame: oled.getShownFrame() } : null,
       inputs: { ultrasonic: Boolean(ultrasonic), ps2: Boolean(ps2) },
       serial,

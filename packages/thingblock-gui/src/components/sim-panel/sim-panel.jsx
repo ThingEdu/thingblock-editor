@@ -52,6 +52,26 @@ const messages = defineMessages({
         defaultMessage: 'Restart the virtual board from power-on',
         description: 'Tooltip of the button that restarts the virtual board'
     },
+    mute: {
+        id: 'gui.simPanel.mute',
+        defaultMessage: 'Mute',
+        description: 'Button that silences the virtual buzzer'
+    },
+    muteTip: {
+        id: 'gui.simPanel.muteTip',
+        defaultMessage: 'Turn off the buzzer\'s sound on the computer',
+        description: 'Tooltip of the button that silences the virtual buzzer'
+    },
+    unmute: {
+        id: 'gui.simPanel.unmute',
+        defaultMessage: 'Sound',
+        description: 'Button that turns the virtual buzzer\'s sound back on'
+    },
+    unmuteTip: {
+        id: 'gui.simPanel.unmuteTip',
+        defaultMessage: 'Play the buzzer\'s notes on the computer\'s speakers',
+        description: 'Tooltip of the button that turns the virtual buzzer\'s sound back on'
+    },
     speedTip: {
         id: 'gui.simPanel.speedTip',
         defaultMessage: 'Simulation speed',
@@ -104,6 +124,31 @@ const SPEEDS = [1, 10, 100];
 /* Control icons, 24-unit boxes drawn in the button's text colour. */
 const ICONS = {
     run: <path d="M7 4.5v15l12.5-7.5z" />,
+    // a speaker, with sound waves or crossed out
+    sound: (
+        <React.Fragment>
+            <path d="M4 9h4l5-4.5v15L8 15H4z" />
+            <path
+                d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.6 8.6 0 0 1 0 12"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2"
+            />
+        </React.Fragment>
+    ),
+    muted: (
+        <React.Fragment>
+            <path d="M4 9h4l5-4.5v15L8 15H4z" />
+            <path
+                d="M16 9l5 6M21 9l-5 6"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2"
+            />
+        </React.Fragment>
+    ),
     pause: (
         <React.Fragment>
             <rect
@@ -296,6 +341,8 @@ const overlayStyle = (box, extent) => ({
 
 const SimPanel = ({
     distance,
+    muted,
+    onToggleMute = () => {},
     restarted,
     runError,
     roomy,
@@ -388,6 +435,12 @@ const SimPanel = ({
                     label={intl.formatMessage(messages.reset)}
                     tip={intl.formatMessage(messages.resetTip)}
                     onClick={onReset}
+                />
+                <ControlButton
+                    icon={muted ? 'muted' : 'sound'}
+                    label={intl.formatMessage(muted ? messages.unmute : messages.mute)}
+                    tip={intl.formatMessage(muted ? messages.unmuteTip : messages.muteTip)}
+                    onClick={onToggleMute}
                 />
                 <select
                     aria-label={intl.formatMessage(messages.speedTip)}
@@ -501,6 +554,8 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    muted: PropTypes.bool,
+    onToggleMute: PropTypes.func,
     restarted: PropTypes.bool,
     roomy: PropTypes.bool,
     runError: PropTypes.string,

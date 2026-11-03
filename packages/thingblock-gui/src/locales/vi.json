@@ -182,5 +182,9 @@
     "thingbotTelemetrix.setupDHT": "khởi động cảm biến [DHT_TYPE] ở chân [PIN]",
     "thingbotTelemetrix.setupUltrasonic": "khởi động siêu âm chân trig [TRIG] echo [ECHO]",
     "gui.sharedMessages.replaceProjectConfirm": "Thay thế",
-    "gui.sharedMessages.cancel": "Hủy"
+    "gui.sharedMessages.cancel": "Hủy",
+    "gui.simPanel.mute": "Tắt tiếng",
+    "gui.simPanel.muteTip": "Tắt tiếng còi trên loa máy tính",
+    "gui.simPanel.unmute": "Bật tiếng",
+    "gui.simPanel.unmuteTip": "Phát nốt nhạc của còi ra loa máy tính"
 }

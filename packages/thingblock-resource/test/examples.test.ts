@@ -144,9 +144,9 @@ const loadProject = async (file: string): Promise<Project> => {
 }
 
 describe('bundled examples', () => {
-  it('lists 30 examples with unique ids, each with a file and a known group', () => {
-    expect(index.examples).toHaveLength(30)
-    expect(new Set(index.examples.map((e) => e.id)).size).toBe(30)
+  it('lists 36 examples with unique ids, each with a file and a known group', () => {
+    expect(index.examples).toHaveLength(36)
+    expect(new Set(index.examples.map((e) => e.id)).size).toBe(36)
     for (const example of index.examples) {
       expect(index.groups).toContain(example.group)
       expect(existsSync(join(EXAMPLES_DIR, example.file))).toBe(true)
@@ -221,7 +221,7 @@ describe('bundled examples', () => {
   it('copies every example into the served pack with one merged index', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
     const merged = copyExamples(join(__dirname, '..', 'src', 'examples'), out)
-    expect(merged.examples).toHaveLength(30)
+    expect(merged.examples).toHaveLength(36)
     for (const example of merged.examples as Example[]) {
       expect(example.file.startsWith('thingbot/')).toBe(true)
       expect(existsSync(join(out, example.file))).toBe(true)

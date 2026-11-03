@@ -1,5 +1,5 @@
 {
-  "groups": ["K12 cơ bản", "Mô phỏng ThingBot Sim", "FanRoc"],
+  "groups": ["K12 cơ bản", "Âm nhạc", "Mô phỏng ThingBot Sim", "FanRoc"],
   "examples": [
     {
       "id": "k12-01-den-hoi-trang-ram",
@@ -244,6 +244,78 @@
         "S1 tay nâng, S2 kẹp, S3 cửa xả"
       ],
       "source": "K7-M9 (#69) Cánh tay robot nhà máy, bản thi đấu FanRoc"
+    },
+    {
+      "id": "am-nhac-kia-con-buom-vang",
+      "file": "am-nhac-kia-con-buom-vang.tb",
+      "title": "Kìa con bướm vàng",
+      "group": "Âm nhạc",
+      "level": 1,
+      "description": "Bài hát thiếu nhi quen thuộc: mỗi câu nhạc lặp lại hai lần, rất dễ nhớ.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "Giai điệu dân gian Pháp \"Frère Jacques\""
+    },
+    {
+      "id": "am-nhac-twinkle",
+      "file": "am-nhac-twinkle.tb",
+      "title": "Ngôi sao lấp lánh (Twinkle Twinkle Little Star)",
+      "group": "Âm nhạc",
+      "level": 1,
+      "description": "Giai điệu đi lên rồi đi xuống từng bậc, hợp để học tên các nốt Do Re Mi.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "Giai điệu dân gian Pháp \"Ah! vous dirai-je, maman\""
+    },
+    {
+      "id": "am-nhac-happy-birthday",
+      "file": "am-nhac-happy-birthday.tb",
+      "title": "Chúc mừng sinh nhật (Happy Birthday)",
+      "group": "Âm nhạc",
+      "level": 1,
+      "description": "Nhạc chúc mừng sinh nhật; có nốt ngắn 0,25 phách và nốt dài 2 phách.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "Giai điệu \"Good Morning to All\" (Mildred và Patty Hill, 1893)"
+    },
+    {
+      "id": "am-nhac-baby-shark",
+      "file": "am-nhac-baby-shark.tb",
+      "title": "Cá mập con (Baby Shark)",
+      "group": "Âm nhạc",
+      "level": 1,
+      "description": "Một câu nhạc lặp ba lần rồi kết, nhiều nốt Sol đi liền nhau.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "Bài hát truyền thống (giai điệu dân gian, không phải bản thu âm nào)"
+    },
+    {
+      "id": "am-nhac-jingle-bells",
+      "file": "am-nhac-jingle-bells.tb",
+      "title": "Tiếng chuông ngân (Jingle Bells)",
+      "group": "Âm nhạc",
+      "level": 2,
+      "description": "Điệp khúc Jingle Bells; có nốt chấm dôi 1,5 phách và nốt móc đơn 0,5 phách.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "James Lord Pierpont, 1857"
+    },
+    {
+      "id": "am-nhac-ode-to-joy",
+      "file": "am-nhac-ode-to-joy.tb",
+      "title": "Khúc hoan ca (Ode to Joy)",
+      "group": "Âm nhạc",
+      "level": 2,
+      "description": "Giai điệu đi từng bậc liền nhau; hai câu giống nhau, chỉ khác nốt kết.",
+      "device": "thingbot",
+      "peripherals": [],
+      "hardware": ["Còi trên mạch"],
+      "source": "Ludwig van Beethoven, Giao hưởng số 9 (1824)"
     },
     {
       "id": "sim-01-lam-quen-thingbot",

@@ -5,6 +5,7 @@ import {connect} from 'react-redux';
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
 import {flushGeneratedCode} from '../lib/code-flush';
 import {getSimClient} from '../lib/sim/sim-client';
+import {BuzzerAudio, buzzerPitch} from '../lib/sim/buzzer-audio';
 import {setSimHighlight, setSimLoadedCode} from '../reducers/code';
 
 /** Serial text kept in the panel; older output scrolls away. */
@@ -14,6 +15,22 @@ const DISTANCE_INPUT = 'ultrasonic';
 const DEFAULT_DISTANCE_CM = 100;
 /** Rig input of a gamepad button: 1 while held. */
 const ps2Input = name => `ps2:${name}`;
+/** Where the panel remembers that the learner muted the buzzer. */
+const MUTED_KEY = 'thingblock.sim.muted';
+const readMuted = () => {
+    try {
+        return window.localStorage.getItem(MUTED_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+};
+const writeMuted = muted => {
+    try {
+        window.localStorage.setItem(MUTED_KEY, muted ? '1' : '0');
+    } catch (e) {
+        // storage blocked: the choice lasts this session only
+    }
+};
 /** The simulator code builds a display with this constructor when the program uses the OLED. */
 const OLED_CONSTRUCTOR = /\bAdafruit_SSD1306\b/;
 
@@ -39,6 +56,24 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
     const [workerError, setWorkerError] = useState(null);
     // The worker stopped answering and was replaced: the program has to be loaded again.
     const [restarted, setRestarted] = useState(false);
+    const [muted, setMuted] = useState(readMuted);
+    const audioRef = useRef(null);
+    if (!audioRef.current) audioRef.current = new BuzzerAudio();
+
+    // The buzzer sounds while the program runs at normal speed; pausing, resetting or speeding up
+    // silences it, and so does closing the panel.
+    useEffect(() => {
+        audioRef.current.setMuted(muted);
+        audioRef.current.play(speed === 1 ? buzzerPitch(snapshot) : 0);
+    }, [snapshot, speed, muted]);
+    useEffect(() => () => audioRef.current.close(), []);
+
+    const handleToggleMute = useCallback(() => {
+        setMuted(m => {
+            writeMuted(!m);
+            return !m;
+        });
+    }, []);
 
     // The simulator worker is shared with other panels and outlives this one, so on unmount the panel
     // stops its session instead of terminating the worker.
@@ -152,6 +187,7 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
     return (
         <SimPanelComponent
             distance={distance}
+            muted={muted}
             problems={simDiagnostics}
             restarted={restarted}
             runError={workerError}
@@ -171,6 +207,7 @@ const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
             onSpeedChange={handleSpeedChange}
             onStep={handleStep}
             onSwitchChange={handleSwitchChange}
+            onToggleMute={handleToggleMute}
         />
     );
 };

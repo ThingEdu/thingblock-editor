@@ -5,7 +5,13 @@ jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
 }));
 jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
     /* eslint-disable react/jsx-no-bind -- a stand-in panel: one button per control the tests press */
-    const MockSimPanel = ({onRun, onReset, onDistanceChange, onPs2Change, usesOled, restarted, runError}) => (<div>
+    const MockSimPanel = ({
+        onRun, onReset, onDistanceChange, onPs2Change, onToggleMute, muted, usesOled, restarted, runError
+    }) => (<div>
+        <button
+            type="button"
+            onClick={onToggleMute}
+        >{muted ? 'Unmute' : 'Mute'}</button>
         <span>{usesOled ? 'with display' : 'no display'}</span>
         <span>{restarted ? 'restarted' : 'live'}</span>
         <span>{runError || 'no run error'}</span>
@@ -166,4 +172,64 @@ test('a run error is passed on separately from the code problems', () => {
         worker.onmessage({data: {type: 'error', message: 'Unexpected token'}});
     });
     expect(getByText('Unexpected token')).toBeTruthy();
+});
+
+describe('the buzzer plays through the speakers', () => {
+    let gain;
+    let frequency;
+    beforeEach(() => {
+        gain = 0;
+        frequency = 0;
+        window.AudioContext = class {
+            constructor () {
+                this.currentTime = 0;
+                this.state = 'running';
+            }
+            createGain () {
+                return {gain: {setTargetAtTime: v => {
+                    gain = v;
+                }}, connect: () => {}};
+            }
+            createOscillator () {
+                return {frequency: {setTargetAtTime: v => {
+                    frequency = v;
+                }}, connect: () => {}, start: () => {}};
+            }
+            close () {
+                return Promise.resolve();
+            }
+        };
+        window.localStorage.removeItem('thingblock.sim.muted');
+    });
+    afterEach(() => {
+        delete window.AudioContext;
+    });
+
+    const buzzer = (running, duty, hz) => {
+        const pwm = new Array(16).fill(0);
+        pwm[14] = duty;
+        return {type: 'snapshot', snapshot: {running, pwm, pwmHz: hz, serial: ''}};
+    };
+
+    test('a note sounds at its pitch, stops when the program pauses, and Mute silences it', () => {
+        let worker;
+        setWorkerFactory(() => (worker = new FakeWorker()));
+        const store = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
+        const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+        fireEvent.click(getByText('Run'));
+        act(() => worker.onmessage({data: buzzer(true, 2048, 523.25)}));
+        expect(frequency).toBe(523.25);
+        expect(gain).toBeGreaterThan(0);
+        act(() => worker.onmessage({data: buzzer(false, 2048, 523.25)}));
+        expect(gain).toBe(0);
+
+        act(() => worker.onmessage({data: buzzer(true, 2048, 440)}));
+        expect(gain).toBeGreaterThan(0);
+        fireEvent.click(getByText('Mute'));
+        expect(gain).toBe(0);
+        expect(window.localStorage.getItem('thingblock.sim.muted')).toBe('1');
+        act(() => worker.onmessage({data: buzzer(true, 2048, 660)}));
+        expect(gain).toBe(0);
+        expect(getByText('Unmute')).toBeTruthy();
+    });
 });

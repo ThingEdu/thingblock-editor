@@ -2,13 +2,14 @@
 //
 //   node scripts/examples/build-examples.mjs
 //
-// The K12 and FanRoc programs live in lessons-k12.mjs. The ThingBot Sim programs are the reference
+// The K12 and FanRoc programs live in lessons-k12.mjs, the music ones in music.mjs. The ThingBot Sim programs are the reference
 // solutions (`example`) of the ten thingbot-sim lessons, captured in sim-lessons.json.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as prettier from 'prettier'
 import { K12_LESSONS } from './lessons-k12.mjs'
+import { MUSIC_LESSONS } from './music.mjs'
 import { toProject, toTb } from './tb-builder.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -101,7 +102,7 @@ rmSync(OUT, { recursive: true, force: true })
 mkdirSync(OUT, { recursive: true })
 
 const examples = []
-for (const lesson of [...K12_LESSONS, ...simExamples]) {
+for (const lesson of [...K12_LESSONS, ...MUSIC_LESSONS, ...simExamples]) {
   const project = toProject(lesson)
   const file = `${lesson.id}.tb`
   writeFileSync(join(OUT, file), await toTb(project))
@@ -119,7 +120,7 @@ for (const lesson of [...K12_LESSONS, ...simExamples]) {
   })
 }
 
-const index = { groups: ['K12 cơ bản', SIM, 'FanRoc'], examples }
+const index = { groups: ['K12 cơ bản', 'Âm nhạc', SIM, 'FanRoc'], examples }
 // Format with the package's Prettier config so the generated index passes `npm run lint` as written.
 const prettierOptions = await prettier.resolveConfig(join(OUT, 'index.json'))
 writeFileSync(
