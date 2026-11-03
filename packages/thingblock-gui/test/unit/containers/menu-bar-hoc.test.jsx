@@ -9,14 +9,25 @@ import '@testing-library/jest-dom';
 describe('Menu Bar HOC', () => {
     const mockStore = configureStore();
     let store;
+    // The container reads projectChanged from the store, so tests of an unchanged project need one.
+    let unchangedStore;
     let Component;
 
     beforeEach(() => {
         store = mockStore({
             scratchGui: {
-                projectChanged: true
+                projectChanged: true,
+                thingbotTelemetrix: {loaded: false, connected: false, connecting: false},
+                // The container listens for the ThingBot extension's connection events.
+                vm: {
+                    events: {addListener: () => {}, removeListener: () => {}},
+                    extensionManager: {isExtensionLoaded: () => false}
+                }
             }
         });
+
+        const state = store.getState();
+        unchangedStore = mockStore({scratchGui: {...state.scratchGui, projectChanged: false}});
 
         Component = jest.fn(
             ({confirmReadyToReplaceProject, shouldSaveBeforeTransition}) => (
@@ -57,7 +68,7 @@ describe('Menu Bar HOC', () => {
                 canSave
                 confirmWithMessage={() => (false)} // eslint-disable-line react/jsx-no-bind
                 projectChanged={false}
-                store={store}
+                store={unchangedStore}
             />
         );
 
@@ -105,7 +116,7 @@ describe('Menu Bar HOC', () => {
                 canSave={false}
                 confirmWithMessage={() => (false)} // eslint-disable-line react/jsx-no-bind
                 projectChanged={false}
-                store={store}
+                store={unchangedStore}
             />
         );
         const element = container.querySelector('#confirmReadyToReplaceProject');
@@ -132,7 +143,7 @@ describe('Menu Bar HOC', () => {
             <WrappedComponent
                 canSave
                 projectChanged={false}
-                store={store}
+                store={unchangedStore}
             />
         );
 
@@ -160,7 +171,7 @@ describe('Menu Bar HOC', () => {
             <WrappedComponent
                 canSave={false}
                 projectChanged={false}
-                store={store}
+                store={unchangedStore}
             />
         );
 
