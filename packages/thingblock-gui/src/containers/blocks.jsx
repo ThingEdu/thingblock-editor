@@ -553,6 +553,11 @@ class Blocks extends React.Component {
             this.ScratchBlocks.Events.enable();
         }
 
+        // The load ran with events off, so the change listener never saw it: regenerate now, or the code
+        // view and Upload keep the previous project's code until the next edit.
+        this.updateGeneratedCodeDebounced.cancel();
+        this.updateGeneratedCode();
+
         if (editingTarget && this.props.workspaceMetrics.targets[editingTarget.id]) {
             const {scrollX, scrollY, scale} = this.props.workspaceMetrics.targets[editingTarget.id];
             this.workspace.scrollX = scrollX;

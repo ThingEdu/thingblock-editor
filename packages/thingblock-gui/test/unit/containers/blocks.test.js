@@ -9,6 +9,8 @@ describe('Blocks container onWorkspaceUpdate', () => {
             getToolboxXML: jest.fn().mockReturnValue(null),
             onWorkspaceMetricsChange: jest.fn(),
             toolboxUpdateChangeListener: jest.fn(),
+            updateGeneratedCode: jest.fn(),
+            updateGeneratedCodeDebounced: {cancel: jest.fn()},
             props: {
                 vm: {workspace: {editingTarget: null}},
                 workspaceMetrics: {targets: {}},
@@ -61,5 +63,18 @@ describe('Blocks container onWorkspaceUpdate', () => {
 
         expect(instance.ScratchBlocks.Events.disable).toHaveBeenCalled();
         expect(instance.ScratchBlocks.Events.enable).toHaveBeenCalled();
+    });
+
+    test('regenerates the code for the loaded blocks', () => {
+        // Blockly events are off while the project loads, so the change listener never sees it; the
+        // code view (and Upload, which sends that code) would otherwise keep the previous project.
+        instance.ScratchBlocks.clearWorkspaceAndLoadFromXml.mockImplementation(() => {
+            expect(instance.updateGeneratedCode).not.toHaveBeenCalled();
+        });
+
+        Blocks.prototype.onWorkspaceUpdate.call(instance, {xml: '<xml/>'});
+
+        expect(instance.updateGeneratedCodeDebounced.cancel).toHaveBeenCalled();
+        expect(instance.updateGeneratedCode).toHaveBeenCalledTimes(1);
     });
 });
