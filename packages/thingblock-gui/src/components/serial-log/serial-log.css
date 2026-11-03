@@ -4,7 +4,10 @@
 .serial-log {
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
+    /* On a short window the monitor gives way first (down to its header and input row), so the
+       simulator and the code view above it stay usable. */
+    flex-shrink: 3;
+    min-height: 5.5rem;
     margin-top: $space;
     background-color: $ui-white;
     border-radius: $space;
