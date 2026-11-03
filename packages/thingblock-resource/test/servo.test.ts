@@ -55,7 +55,9 @@ describe('servo generator', () => {
     const code = gen.forBlock.servo_setangle({ values: { PIN: '9', ANGLE: '90' } })
 
     expect(code).toBe('servo_9.write(90);\n')
-    expect(gen.includes.get('servo')).toBe('#include <Servo.h>')
+    expect(gen.includes.get('servo')).toBe(
+      '#if defined(ARDUINO_ARCH_ESP32)\n#include <ESP32Servo.h>\n#else\n#include <Servo.h>\n#endif',
+    )
     expect(gen.globals.get('servo_9')).toBe('Servo servo_9;')
     expect(gen.setups.get('servo_9_attach')).toBe('servo_9.attach(9);')
   })
@@ -397,7 +399,7 @@ describe('manifests', () => {
     expect(servoManifest.id).toBe('servo')
     expect(servoManifest.blocks).toBe('./blocks.js')
     expect(servoManifest.generator).toBe('./generator.js')
-    expect(servoManifest.libs).toEqual([{ path: 'libs/Servo' }])
+    expect(servoManifest.libs).toEqual([{ path: 'libs/Servo' }, { path: 'libs/ESP32Servo' }])
   })
 
   it('servo carries the library-card icon and localized description', () => {
