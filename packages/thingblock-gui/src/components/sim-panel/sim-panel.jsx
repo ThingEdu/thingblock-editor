@@ -32,6 +32,31 @@ const messages = defineMessages({
         defaultMessage: 'Reset',
         description: 'Button that restarts the virtual board from power-on'
     },
+    runTip: {
+        id: 'gui.simPanel.runTip',
+        defaultMessage: 'Run the program on the virtual board',
+        description: 'Tooltip of the button that runs the program on the virtual board'
+    },
+    pauseTip: {
+        id: 'gui.simPanel.pauseTip',
+        defaultMessage: 'Pause the program; Step then runs one block at a time',
+        description: 'Tooltip of the button that pauses the program on the virtual board'
+    },
+    stepTip: {
+        id: 'gui.simPanel.stepTip',
+        defaultMessage: 'Run one block and stop',
+        description: 'Tooltip of the button that runs one block of the program on the virtual board'
+    },
+    resetTip: {
+        id: 'gui.simPanel.resetTip',
+        defaultMessage: 'Restart the virtual board from power-on',
+        description: 'Tooltip of the button that restarts the virtual board'
+    },
+    speedTip: {
+        id: 'gui.simPanel.speedTip',
+        defaultMessage: 'Simulation speed',
+        description: 'Tooltip of the dropdown that sets how fast the virtual board runs'
+    },
     switchLabel: {
         id: 'gui.simPanel.switch',
         defaultMessage: 'SW (hold)',
@@ -70,6 +95,99 @@ const messages = defineMessages({
 });
 
 const SPEEDS = [1, 10, 100];
+
+/* Control icons, 24-unit boxes drawn in the button's text colour. */
+const ICONS = {
+    run: <path d="M7 4.5v15l12.5-7.5z" />,
+    pause: (
+        <React.Fragment>
+            <rect
+                height="15"
+                rx="1.2"
+                width="4.5"
+                x="5.5"
+                y="4.5"
+            />
+            <rect
+                height="15"
+                rx="1.2"
+                width="4.5"
+                x="14"
+                y="4.5"
+            />
+        </React.Fragment>
+    ),
+    // step over: an arc hopping to the right onto a dot
+    step: (
+        <React.Fragment>
+            <path
+                d="M4 14a8 8 0 0 1 15.2-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2.4"
+            />
+            <path d="M20.8 5.6l.2 6.2-6-1.4z" />
+            <circle
+                cx="12"
+                cy="19"
+                r="2.6"
+            />
+        </React.Fragment>
+    ),
+    reset: (
+        <React.Fragment>
+            <path
+                d="M5.5 12a6.5 6.5 0 1 0 2-4.7"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2.4"
+            />
+            <path d="M4 3.5v6h6z" />
+        </React.Fragment>
+    )
+};
+
+/**
+ * A simulator control: an icon with its label, and a tooltip saying what it does.
+ * @param {object} props Component props.
+ * @param {string} props.icon Which icon, a key of `ICONS`.
+ * @param {string} props.label The visible label.
+ * @param {string} props.tip The tooltip.
+ * @param {boolean} props.primary Whether it is the main action, drawn filled.
+ * @param {boolean} props.disabled Whether it can be pressed.
+ * @param {Function} props.onClick Called on press.
+ * @returns {React.ReactElement} The button.
+ */
+const ControlButton = ({icon, label, tip, primary, disabled, onClick}) => (
+    <button
+        aria-label={label}
+        className={classNames(styles.button, {[styles.primary]: primary})}
+        data-variant={primary ? 'primary' : 'secondary'}
+        disabled={disabled}
+        title={tip}
+        type="button"
+        onClick={onClick}
+    >
+        <svg
+            aria-hidden="true"
+            className={styles.icon}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+        >{ICONS[icon]}</svg>
+        <span className={styles.buttonLabel}>{label}</span>
+    </button>
+);
+
+ControlButton.propTypes = {
+    disabled: PropTypes.bool,
+    icon: PropTypes.oneOf(Object.keys(ICONS)).isRequired,
+    label: PropTypes.string.isRequired,
+    onClick: PropTypes.func.isRequired,
+    primary: PropTypes.bool,
+    tip: PropTypes.string.isRequired
+};
 const DISTANCE_MIN_CM = 2;
 const DISTANCE_MAX_CM = 400;
 
@@ -173,6 +291,7 @@ const overlayStyle = (box, extent) => ({
 
 const SimPanel = ({
     distance,
+    roomy,
     usesOled,
     ps2Held,
     onDistanceChange,
@@ -222,33 +341,48 @@ const SimPanel = ({
     const inputs = (snapshot && snapshot.inputs) || {};
 
     return (
-        <div className={styles.simPanel}>
+        <div
+            className={classNames(styles.simPanel, {[styles.roomy]: roomy})}
+            data-roomy={Boolean(roomy)}
+        >
             <div className={styles.header}>
                 <span className={styles.title}>{intl.formatMessage(messages.title)}</span>
                 {running ? (
-                    <button
-                        className={styles.button}
+                    <ControlButton
+                        primary
+                        icon="pause"
+                        label={intl.formatMessage(messages.pause)}
+                        tip={intl.formatMessage(messages.pauseTip)}
                         onClick={onPause}
-                    >{intl.formatMessage(messages.pause)}</button>
+                    />
                 ) : (
-                    <button
-                        className={styles.button}
+                    <ControlButton
+                        primary
                         disabled={blocked}
+                        icon="run"
+                        label={intl.formatMessage(messages.run)}
+                        tip={intl.formatMessage(messages.runTip)}
                         onClick={onRun}
-                    >{intl.formatMessage(messages.run)}</button>
+                    />
                 )}
-                <button
-                    className={styles.button}
+                <ControlButton
                     disabled={blocked || running}
+                    icon="step"
+                    label={intl.formatMessage(messages.step)}
+                    tip={intl.formatMessage(messages.stepTip)}
                     onClick={onStep}
-                >{intl.formatMessage(messages.step)}</button>
-                <button
-                    className={styles.button}
+                />
+                <ControlButton
                     disabled={blocked}
+                    icon="reset"
+                    label={intl.formatMessage(messages.reset)}
+                    tip={intl.formatMessage(messages.resetTip)}
                     onClick={onReset}
-                >{intl.formatMessage(messages.reset)}</button>
+                />
                 <select
+                    aria-label={intl.formatMessage(messages.speedTip)}
                     className={styles.speed}
+                    title={intl.formatMessage(messages.speedTip)}
                     value={speed}
                     onChange={handleSpeedChange}
                 >
@@ -354,6 +488,7 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    roomy: PropTypes.bool,
     usesOled: PropTypes.bool,
     distance: PropTypes.number.isRequired,
     ps2Held: PropTypes.objectOf(PropTypes.bool).isRequired,

@@ -19,6 +19,7 @@
 }
 
 .header {
+    container: sim-header / inline-size;
     height: $stage-menu-height;
     color: $text-primary;
     font-size: 0.75rem;
@@ -36,18 +37,54 @@
 }
 
 .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 1.625rem;
     font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
+    font-weight: 600;
+    padding: 0 0.5rem;
+    border-radius: 0.375rem;
     border: 1px solid $ui-black-transparent;
     background: $ui-white;
     color: $text-primary;
     cursor: pointer;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.button:hover:not(:disabled) {
+    background: $ui-secondary;
+    color: $motion-tertiary;
+}
+
+/* Run / Pause: the main action, filled like the Upload button. */
+.primary {
+    background: $ui-green-2;
+    border-color: $ui-green;
+    color: $ui-white;
+}
+
+.primary:hover:not(:disabled) {
+    background: $ui-green;
+    color: $ui-white;
 }
 
 .button:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: default;
+}
+
+.icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+}
+
+/* A narrow panel keeps the icons and tooltips and drops the words. */
+@container sim-header (max-width: 22rem) {
+    .button-label {
+        display: none;
+    }
 }
 
 .speed {
@@ -75,6 +112,15 @@
     /* As wide as the panel allows, but no taller than a third of the window, so on a short screen
        the whole board stays in view instead of scrolling. `--aspect` is the drawing's width / height. */
     width: min(100%, 480px, calc(34vh * var(--aspect, 1)));
+}
+
+/* With the code pane folded away the simulator takes the freed height, and the board grows into it. */
+.roomy {
+    flex: 1 1 auto;
+}
+
+.roomy .drawing {
+    width: min(100%, 560px, calc(55vh * var(--aspect, 1)));
 }
 
 .board {

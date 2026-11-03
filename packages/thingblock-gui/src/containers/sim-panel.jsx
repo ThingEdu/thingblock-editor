@@ -28,7 +28,7 @@ const OLED_CONSTRUCTOR = /\bAdafruit_SSD1306\b/;
  * @param {Function} props.onLoaded Called with the code loaded into the worker, or null once it is stopped.
  * @returns {React.ReactElement} The simulator panel.
  */
-const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
+const SimPanel = ({roomy, simCode, simDiagnostics, onHighlight, onLoaded}) => {
     const loadedRef = useRef(null);
     const [snapshot, setSnapshot] = useState(null);
     const [serial, setSerial] = useState('');
@@ -151,6 +151,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
             snapshot={snapshot}
             stale={stale}
             speed={speed}
+            roomy={roomy}
             usesOled={OLED_CONSTRUCTOR.test(simCode)}
             switchPressed={switchPressed}
             onDistanceChange={handleDistanceChange}
@@ -166,6 +167,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
 };
 
 SimPanel.propTypes = {
+    roomy: PropTypes.bool,
     simCode: PropTypes.string.isRequired,
     simDiagnostics: PropTypes.arrayOf(PropTypes.shape({message: PropTypes.string})).isRequired,
     onHighlight: PropTypes.func.isRequired,

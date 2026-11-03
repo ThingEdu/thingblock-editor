@@ -27,6 +27,30 @@
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+/* Closed, the pane is only its header, like a collapsed VS Code side bar section. */
+.collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.collapsed .header {
+    border-bottom: none;
+    border-radius: $space;
+}
+
+.toggle {
+    width: 100%;
+    gap: 0.375rem;
+    background: $ui-white;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.toggle:hover {
+    background: $ui-secondary;
+}
+
 .content {
     flex: 1;
     overflow: auto;

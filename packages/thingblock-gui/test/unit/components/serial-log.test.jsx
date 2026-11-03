@@ -26,6 +26,42 @@ describe('SerialLog', () => {
         expect(onClear).toHaveBeenCalledTimes(1);
     });
 
+    describe('collapsing', () => {
+        test('folded, it shows only its header; the header toggles it', () => {
+            const onToggle = jest.fn();
+            renderSerialLog({collapsed: true, onToggle});
+
+            expect(screen.queryByPlaceholderText('Send message...')).not.toBeInTheDocument();
+            expect(screen.queryByText('first message')).not.toBeInTheDocument();
+            const header = screen.getByRole('button', {name: /Monitor/});
+            expect(header).toHaveAttribute('aria-expanded', 'false');
+            fireEvent.click(header);
+            expect(onToggle).toHaveBeenCalledTimes(1);
+        });
+
+        test('open, it shows the log and the input', () => {
+            renderSerialLog({collapsed: false, onToggle: jest.fn()});
+
+            expect(screen.getByRole('button', {name: /Monitor/})).toHaveAttribute('aria-expanded', 'true');
+            expect(screen.getByText('first message')).toBeInTheDocument();
+            expect(screen.getByPlaceholderText('Send message...')).toBeInTheDocument();
+        });
+
+        test('a program asking for an answer opens it even when folded', () => {
+            renderSerialLog({collapsed: true, onToggle: jest.fn(), prompt: 'Tên em?'});
+
+            expect(screen.getByText('Tên em?')).toBeInTheDocument();
+            expect(screen.getByPlaceholderText('Type your answer...')).toBeInTheDocument();
+        });
+
+        test('in host mode (fill) it never folds', () => {
+            renderSerialLog({collapsed: true, onToggle: jest.fn(), fill: true});
+
+            expect(screen.getByPlaceholderText('Send message...')).toBeInTheDocument();
+            expect(screen.queryByRole('button', {name: /Monitor/})).not.toBeInTheDocument();
+        });
+    });
+
     describe('auto-scroll', () => {
         // jsdom has no layout, so the scrollable element's geometry must be stubbed.
         const stubGeometry = (el, {scrollHeight, scrollTop, clientHeight}) => {
@@ -104,7 +140,7 @@ describe('SerialLog', () => {
             expect(onSend).not.toHaveBeenCalled();
         });
 
-        test('does not render a collapse control', () => {
+        test('does not render a collapse control without onToggle', () => {
             renderSerialLog({});
 
             expect(screen.queryByRole('button', {name: 'Collapse monitor'})).not.toBeInTheDocument();

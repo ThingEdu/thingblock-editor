@@ -116,3 +116,46 @@ test('the display is drawn to the board\'s scale: a 0.96" module, its pixels ove
     expect(parseFloat(canvas.style.width)).toBeCloseTo((active.width / extent.width) * 100, 3);
     expect(parseFloat(canvas.style.left)).toBeCloseTo((active.x / extent.width) * 100, 3);
 });
+
+test('the controls carry icons, labels and tooltips; Run is the filled main action', () => {
+    const {getByRole} = renderPanel(<SimPanel
+        {...props}
+        snapshot={null}
+    />);
+    for (const [name, tip] of [
+        ['Run', 'Run the program on the virtual board'],
+        ['Step', 'Run one block and stop'],
+        ['Reset', 'Restart the virtual board from power-on']
+    ]) {
+        const button = getByRole('button', {name});
+        expect(button.getAttribute('title')).toBe(tip);
+        expect(button.querySelector('svg')).not.toBeNull();
+    }
+    expect(getByRole('button', {name: 'Run'}).dataset.variant).toBe('primary');
+    expect(getByRole('button', {name: 'Step'}).dataset.variant).toBe('secondary');
+});
+
+test('while running, the main action is Pause', () => {
+    const {getByRole, queryByRole} = renderPanel(<SimPanel
+        {...props}
+        snapshot={{t: 0, running: true, pwm: [], oled: null}}
+    />);
+    expect(getByRole('button', {name: 'Pause'}).dataset.variant).toBe('primary');
+    expect(queryByRole('button', {name: 'Run'})).toBeNull();
+    expect(getByRole('button', {name: 'Step'}).disabled).toBe(true);
+});
+
+test('with the code pane folded the panel takes the freed room', () => {
+    const {container, rerender} = renderPanel(<SimPanel
+        {...props}
+        roomy
+        snapshot={null}
+    />);
+    expect(container.firstChild.dataset.roomy).toBe('true');
+    rerender(<SimPanel
+        {...props}
+        roomy={false}
+        snapshot={null}
+    />);
+    expect(container.firstChild.dataset.roomy).toBe('false');
+});

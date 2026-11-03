@@ -12,6 +12,7 @@ import VM from '@thingblock/thingblock-vm';
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
 import SimPanel from '../../containers/sim-panel.jsx';
+import {usePaneCollapsed} from '../../lib/pane-collapse';
 import SerialLog from '../serial-log/serial-log.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
 import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
@@ -192,6 +193,10 @@ const GUIComponent = props => {
         return next.length > MAX_MONITOR_LOGS ? next.slice(next.length - MAX_MONITOR_LOGS) : next;
     };
     const [monitorPrompt, setMonitorPrompt] = useState(null);
+    // The code and monitor panes start folded to their headers, like VS Code side bar sections, so
+    // the simulator gets the room; each remembers whether the learner opened it.
+    const [codeCollapsed, toggleCode] = usePaneCollapsed('code', true);
+    const [serialCollapsed, toggleSerial] = usePaneCollapsed('serial', true);
     // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.link.setMonitorBaud.
     const [baudRate, setBaudRate] = useState(115200);
     // Holds the partial trailing line between serial chunks; serial frames are not line-aligned.
@@ -493,11 +498,13 @@ const GUIComponent = props => {
                         >
                             <DeviceControls />
                             <PlatformInstallModal />
-                            {selectedDeviceId && <SimPanel />}
+                            {selectedDeviceId && <SimPanel roomy={codeCollapsed} />}
                             {selectedDeviceId && (
                                 <CodeView
                                     code={generatedCode}
+                                    collapsed={codeCollapsed}
                                     language={prismLanguage}
+                                    onToggle={toggleCode}
                                 />
                             )}
                             <SerialLog
@@ -509,6 +516,8 @@ const GUIComponent = props => {
                                 onClear={handleClearMonitor}
                                 onSend={handleMonitorSend}
                                 prompt={monitorPrompt}
+                                collapsed={serialCollapsed}
+                                onToggle={toggleSerial}
                             />
                         </Box>
                     </Box>
