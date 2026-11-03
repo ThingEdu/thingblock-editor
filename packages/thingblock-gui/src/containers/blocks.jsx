@@ -37,6 +37,7 @@ import {updateMetrics} from '../reducers/workspace-metrics';
 import {isTimeTravel2020} from '../reducers/time-travel';
 import {setGeneratedCode, setSimCode} from '../reducers/code';
 import {registerCodeFlush} from '../lib/code-flush';
+import {savePreference} from '../lib/user-preferences';
 
 
 const addFunctionListener = (object, property, callback) => {
@@ -223,6 +224,8 @@ class Blocks extends React.Component {
         // Rebuild the toolbox when board selection changes, since board mode gates which
         // blocks and extension categories appear in the palette.
         if (prevProps.selectedDeviceId !== this.props.selectedDeviceId) {
+            // Remembered per machine, so the next new project opens on the same board.
+            savePreference('device', this.props.selectedDeviceId);
             this.activateSelectedDevice();
         }
 

@@ -3,6 +3,7 @@
     "gui.exampleLibrary.groupK12": "K12 cơ bản",
     "gui.exampleLibrary.groupSim": "Mô phỏng ThingBot Sim",
     "gui.exampleLibrary.title": "Ví dụ",
+    "gui.gui.defaultProjectTitle": "Dự án ThingBlock",
     "gui.menuBar.examples": "Ví dụ...",
     "gui.projectLoader.exampleLoadError": "Không mở được dự án ví dụ.",
     "gui.simPanel.distance": "Vật cản cách cảm biến",
