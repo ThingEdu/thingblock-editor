@@ -101,6 +101,8 @@ export const createBoard = () => {
     $,
     setInput: (key: string, value: number): void => {
       inputs.set(key, value)
+      // Logged so the lesson checker sees what the learner set on the rig.
+      log.record('input', key, value)
     },
   }
 }

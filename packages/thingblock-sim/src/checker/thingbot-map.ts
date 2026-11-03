@@ -16,6 +16,23 @@ export const MOTOR_CHANNELS: Record<MotorName, { a: number; b: number }> = {
 export const SERVO_CHANNEL: Record<ServoName, number> = { S1: 12, S2: 11, S3: 10, S4: 9, S5: 8 }
 export const SERVO_PULSE = { min: 102, max: 512 }
 export const SWITCH_GPIO = 3
+/** How the simulator's PS2 pad labels each button, for the learner's messages. */
+export const PS2_SYMBOL: Record<string, string> = {
+  PSB_PAD_UP: '▲',
+  PSB_PAD_DOWN: '▼',
+  PSB_PAD_LEFT: '◀',
+  PSB_PAD_RIGHT: '▶',
+  PSB_TRIANGLE: '△',
+  PSB_CIRCLE: '○',
+  PSB_CROSS: '✕',
+  PSB_SQUARE: '□',
+  PSB_L1: 'L1',
+  PSB_L2: 'L2',
+  PSB_R1: 'R1',
+  PSB_R2: 'R2',
+  PSB_SELECT: 'SELECT',
+  PSB_START: 'START',
+}
 
 /**
  * The angle `servoSetAngle(ch, deg)` encoded as this duty, inverting its `map(deg, 0, 180, min, max)`.
