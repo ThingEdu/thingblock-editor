@@ -200,6 +200,8 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
     const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
     registerServoAngleHelpers()
+    // Step started motions from every loop() pass, so the servo moves without a wait block.
+    generator.loopHooks.set('servo_tick', 'servoTickAll();')
     return `servoStart(SERVO_${servo}, ${angle}, ${seconds});\n`
   }
 

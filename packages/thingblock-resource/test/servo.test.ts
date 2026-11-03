@@ -20,6 +20,7 @@ const makeGenerator = () => ({
   includes: new Map<string, string>(),
   globals: new Map<string, string>(),
   setups: new Map<string, string>(),
+  loopHooks: new Map<string, string>(),
   valueToCode: (block: { values: Record<string, string> }, name: string) => block.values[name] ?? '',
 })
 

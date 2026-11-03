@@ -278,6 +278,28 @@ function connectNext(parent: Blockly.Block, child: Blockly.Block): void {
 }
 
 describe('ArduinoGenerator', () => {
+  it('runs loop hooks at the top of loop(), even with no loop stack, and forgets them per generation', () => {
+    const begin = workspace.newBlock('event_whenarduinobegin')
+    const wait = workspace.newBlock('control_wait')
+    connectValue(wait, 'DURATION', num(1))
+    connectNext(begin, wait)
+    const original = arduinoGenerator.forBlock.control_wait
+    arduinoGenerator.forBlock.control_wait = (block, gen) => {
+      arduinoGenerator.loopHooks.set('tick', 'tick();')
+      return original.call(arduinoGenerator, block, gen)
+    }
+    try {
+      expect(arduinoGenerator.workspaceToCode(workspace)).toBe(
+        'void setup() {\n  delay(1 * 1000);\n}\n\nvoid loop() {\n  tick();\n}\n',
+      )
+    } finally {
+      arduinoGenerator.forBlock.control_wait = original
+    }
+    expect(arduinoGenerator.workspaceToCode(workspace)).toBe(
+      'void setup() {\n  delay(1 * 1000);\n}\n\nvoid loop() {\n}\n',
+    )
+  })
+
   it('emits empty setup() and loop() for an empty workspace', () => {
     expect(arduinoGenerator.workspaceToCode(workspace)).toBe('void setup() {\n}\n\nvoid loop() {\n}\n')
   })

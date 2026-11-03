@@ -57,6 +57,8 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
   readonly globals = new Map<string, string>()
   /** Statements to run once in `setup()`, keyed so duplicates collapse. */
   readonly setups = new Map<string, string>()
+  /** Statements to run at the top of every `loop()` pass (e.g. stepping timed motions), keyed so duplicates collapse. */
+  readonly loopHooks = new Map<string, string>()
   /** Source of unique loop-counter names within a single generation pass. */
   private repeatCount = 0
 
@@ -122,6 +124,7 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
     this.includes.clear()
     this.globals.clear()
     this.setups.clear()
+    this.loopHooks.clear()
     this.repeatCount = 0
 
     if (!this.nameDB_) this.nameDB_ = new Blockly.Names(this.RESERVED_WORDS_)
@@ -215,7 +218,8 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
     // already indented by `statementToCode`, so per-line prefixing composes.
     const setupBody = [...this.setups.values(), setupCode].filter((line) => line.length > 0).join('\n')
     sections.push(`void setup() {\n${setupBody ? `${this.prefixLines(setupBody, this.INDENT)}\n` : ''}}`)
-    sections.push(`void loop() {\n${loopCode ? `${this.prefixLines(loopCode, this.INDENT)}\n` : ''}}`)
+    const loopBody = [...this.loopHooks.values(), loopCode].filter((line) => line.length > 0).join('\n')
+    sections.push(`void loop() {\n${loopBody ? `${this.prefixLines(loopBody, this.INDENT)}\n` : ''}}`)
 
     return `${sections.join('\n\n')}\n`
   }

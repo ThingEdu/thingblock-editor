@@ -151,9 +151,9 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
           { type: 'input_value', name: 'ANGLE', check: 'Number' },
           { type: 'input_value', name: 'SECONDS', check: 'Number' },
         ],
-        // Generated code only advances started motions inside `servoWaitAll()`, so say so where a
-        // learner who forgot the wait block would look.
-        tooltip: 'Sets the motion up; the servo moves while a "wait for servos" block runs.',
+        // Started motions advance at the top of every loop() pass (and inside "wait for servos"), so
+        // the program carries on while the servo moves.
+        tooltip: 'Starts the motion in the background; use "wait for servos" to wait until it ends.',
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
       })

@@ -160,6 +160,8 @@ export const registerSimGenerators: RegisterSimGenerators = (generator, Order) =
     registerServoAngleHelpers()
     const angle = generator.inputAs(block, 'ANGLE', 'int', '90')
     const seconds = generator.inputAs(block, 'SECONDS', 'float', '1')
+    // As generator.ts: started motions advance at the top of every loop() pass.
+    generator.loopHooks.set('servo_tick', 'servoTickAll();')
     return `servoStart(${servoChannel(block)}, ${angle}, ${seconds});`
   }
 

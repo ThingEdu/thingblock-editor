@@ -57,6 +57,8 @@ export class SimGenerator extends Blockly.CodeGenerator {
   readonly globals = new Map<string, string>()
   /** Statements to run once at the top of `setup()`, keyed so duplicates collapse. */
   readonly setups = new Map<string, string>()
+  /** Statements to run at the top of every `loop()` pass (e.g. stepping timed motions), keyed so duplicates collapse. */
+  readonly loopHooks = new Map<string, string>()
   /** Reporter types, one function per block type, as `forBlock` holds one per block's code. */
   readonly typeFor: Record<string, (block: Block, generator: SimGenerator) => CType> = {}
   /** Build errors found in the last pass. */
@@ -207,6 +209,7 @@ export class SimGenerator extends Blockly.CodeGenerator {
     super.init(workspace)
     this.globals.clear()
     this.setups.clear()
+    this.loopHooks.clear()
     this.diagnostics.length = 0
     this.repeatCount = 0
     if (!this.nameDB_) this.nameDB_ = new Blockly.Names(this.RESERVED_WORDS_)
@@ -241,10 +244,11 @@ export class SimGenerator extends Blockly.CodeGenerator {
     }
 
     const setupBody = [...this.setups.values(), setupCode].filter((line) => line.length > 0).join('\n')
+    const loopBody = [...this.loopHooks.values(), loopCode].filter((line) => line.length > 0).join('\n')
     const sections = [
       ...this.globals.values(),
       `function* setup() {\n${setupBody ? `${this.prefixLines(setupBody, this.INDENT)}\n` : ''}}`,
-      `function* loop() {\n${loopCode ? `${this.prefixLines(loopCode, this.INDENT)}\n` : ''}}`,
+      `function* loop() {\n${loopBody ? `${this.prefixLines(loopBody, this.INDENT)}\n` : ''}}`,
       'return { setup, loop };',
     ]
     return `${sections.join('\n\n')}\n`
