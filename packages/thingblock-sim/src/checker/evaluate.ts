@@ -3,9 +3,18 @@
  * Grade lesson rules against what the virtual hardware logged. Messages are for the learner: they say
  * what the board did, never "wrong".
  */
+import { DEFAULT_DISTANCE_CM, DISTANCE_INPUT, ps2Input } from '../hal/sensors'
 import type { LogEntry } from '../runtime'
-import type { LightName, MotorName, Rule } from './rules'
-import { BUZZER_CHANNEL, dutyToAngle, LIGHT_CHANNEL, MOTOR_CHANNELS, SERVO_CHANNEL } from './thingbot-map'
+import type { DistanceOp, LightName, MotorName, Rule, ServoName } from './rules'
+import {
+  BUZZER_CHANNEL,
+  dutyToAngle,
+  LIGHT_CHANNEL,
+  MOTOR_CHANNELS,
+  PS2_SYMBOL,
+  SERVO_CHANNEL,
+  SWITCH_GPIO,
+} from './thingbot-map'
 
 export interface RuleResult {
   ok: boolean
@@ -138,6 +147,62 @@ const checkOled = (text: string, exact: boolean, log: readonly LogEntry[]): Rule
   return hit ? PASS : fail(`Màn hình chưa hiện chữ "${text}".`)
 }
 
+const checkServoSweep = (
+  target: ServoName,
+  from: number,
+  to: number,
+  tolerance: number,
+  log: readonly LogEntry[],
+): RuleResult => {
+  const angles = dutyHistory(log, SERVO_CHANNEL[target]).map((e) => dutyToAngle(e.duty))
+  if (!angles.length) return fail(`Servo ${target} chưa được đặt góc.`)
+  const low = Math.min(...angles)
+  const high = Math.max(...angles)
+  if (low <= from + tolerance && high >= to - tolerance) return PASS
+  return fail(`Servo ${target} mới quay trong khoảng ${low} đến ${high} độ. Bài cần quét từ ${from} đến ${to} độ.`)
+}
+
+/**
+ * The last value the rig drove onto an input (the learner's switch, slider or pad).
+ * @param log The session's event log.
+ * @param key The input, e.g. `gpio3` or `ultrasonic`.
+ * @returns Its last value, undefined if the rig never set it.
+ */
+const lastInput = (log: readonly LogEntry[], key: string): number | undefined => {
+  let value: number | undefined
+  for (const e of log) if (e.dev === 'input' && e.key === key) value = Number(e.value)
+  return value
+}
+
+const checkSwitch = (held: boolean, log: readonly LogEntry[]): RuleResult => {
+  // Active low, and pulled up while nobody touches it.
+  const pressed = (lastInput(log, `gpio${SWITCH_GPIO}`) ?? 1) === 0
+  if (pressed === held) return PASS
+  return held ? fail('Em hãy giữ nút SW trên mạch ảo.') : fail('Em hãy nhả nút SW ra.')
+}
+
+const DISTANCE_TEST: Record<DistanceOp, (seen: number, cm: number) => boolean> = {
+  '<': (seen, cm) => seen < cm,
+  '≤': (seen, cm) => seen <= cm,
+  '>': (seen, cm) => seen > cm,
+  '≥': (seen, cm) => seen >= cm,
+}
+
+const checkDistance = (op: DistanceOp, cm: number, log: readonly LogEntry[]): RuleResult => {
+  const seen = lastInput(log, DISTANCE_INPUT) ?? DEFAULT_DISTANCE_CM
+  if (DISTANCE_TEST[op](seen, cm)) return PASS
+  const near = op === '<' || op === '≤'
+  return fail(
+    `Vật đang cách cảm biến ${seen} cm. Bước này cần vật ${near ? 'gần' : 'xa'} hơn ${cm} cm: ` +
+      `kéo thanh khoảng cách ${near ? 'xuống' : 'lên'}.`,
+  )
+}
+
+const checkPs2 = (button: string, log: readonly LogEntry[]): RuleResult =>
+  (lastInput(log, ps2Input(button)) ?? 0) !== 0
+    ? PASS
+    : fail(`Em hãy giữ nút ${PS2_SYMBOL[button] ?? button} trên tay cầm PS2 ảo.`)
+
 export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[]): RuleResult[] {
   return rules.map((rule) => {
     switch (rule.kind) {
@@ -155,6 +220,14 @@ export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[
         return checkServo(rule.target, rule.angle, rule.tolerance, log)
       case 'oled':
         return checkOled(rule.text, rule.exact, log)
+      case 'servoSweep':
+        return checkServoSweep(rule.target, rule.from, rule.to, rule.tolerance, log)
+      case 'switch':
+        return checkSwitch(rule.held, log)
+      case 'distance':
+        return checkDistance(rule.op, rule.cm, log)
+      case 'ps2':
+        return checkPs2(rule.button, log)
     }
   })
 }

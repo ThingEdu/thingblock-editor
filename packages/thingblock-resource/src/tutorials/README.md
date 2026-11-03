@@ -45,17 +45,27 @@ Dòng `kiểm: ...` đặt một luật mà mạch ảo phải thoả để bư�
 (phải thoả tất cả). Bước không có `kiểm:` thì không chấm. Chữ hoa, chữ thường không phân biệt. Các dạng được
 hiểu:
 
-| Viết                                        | Nghĩa                                                |
-| ------------------------------------------- | ---------------------------------------------------- |
-| `kiểm: L1 sáng` / `L2 tắt`                  | Đèn L1 hoặc L2 đang sáng / tắt                       |
-| `kiểm: còi kêu` / `còi tắt`                 | Còi đang kêu / tắt                                   |
-| `kiểm: L1 nhấp nháy, chu kỳ 1 giây`         | Đèn chớp đều với chu kỳ này, sai số mặc định 20%     |
-| `kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 10%` | Như trên với sai số tự chọn; chu kỳ tối đa 1,5 giây  |
-| `kiểm: M1 tiến` / `lùi` / `dừng`            | Động cơ M1 (M1 đến M4) quay tiến / lùi / đứng yên    |
-| `kiểm: M1 tốc độ ≥ 50`                      | Tốc độ động cơ từ mức này trở lên (phần trăm)        |
-| `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ |
-| `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                             |
-| `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì            |
+| Viết                                        | Nghĩa                                                   |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `kiểm: L1 sáng` / `L2 tắt`                  | Đèn L1 hoặc L2 đang sáng / tắt                          |
+| `kiểm: còi kêu` / `còi tắt`                 | Còi đang kêu / tắt                                      |
+| `kiểm: L1 nhấp nháy, chu kỳ 1 giây`         | Đèn chớp đều với chu kỳ này, sai số mặc định 20%        |
+| `kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 10%` | Như trên với sai số tự chọn; chu kỳ tối đa 1,5 giây     |
+| `kiểm: M1 tiến` / `lùi` / `dừng`            | Động cơ M1 (M1 đến M4) quay tiến / lùi / đứng yên       |
+| `kiểm: M1 tốc độ ≥ 50`                      | Tốc độ động cơ từ mức này trở lên (phần trăm)           |
+| `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ    |
+| `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                                |
+| `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì               |
+| `kiểm: servo S1 quét từ 0 đến 180 độ`       | Servo đã đi tới gần cả hai góc; sai số mặc định 5 độ    |
+| `kiểm: giữ nút SW` / `nhả nút SW`           | Học sinh đang giữ / đã nhả nút SW trên mạch ảo          |
+| `kiểm: khoảng cách < 20 cm`                 | Thanh khoảng cách đang ở dưới 20 cm (`≤ > ≥` cũng được) |
+| `kiểm: giữ nút PS2 lên`                     | Học sinh đang giữ nút ▲ trên tay cầm PS2 ảo             |
+
+Ba luật cuối là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật
+đầu ra trong cùng bước, ví dụ `giữ nút SW` và `L1 sáng`: bước đạt khi cả hai cùng đúng một lúc. Khi chạy
+`kiem-thu/`, bộ kiểm thử tự đặt mạch ảo cho các luật này (giữ nút, kéo thanh khoảng cách) trước khi chấm. Nút
+PS2 viết bằng tên (`lên`, `xuống`, `trái`, `phải`, `tam giác`, `tròn`, `nhân`, `vuông`, `L1`, `L2`, `R1`, `R2`,
+`select`, `start`) hoặc ký hiệu trên tay cầm ảo (`▲ ▼ ◀ ▶ △ ○ ✕ □`).
 
 Số thập phân viết bằng dấu phẩy hoặc dấu chấm đều được. Gõ sai dạng luật thì `npm run build` dừng và báo
 `tệp:dòng`.

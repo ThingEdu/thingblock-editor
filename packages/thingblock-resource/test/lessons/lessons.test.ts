@@ -1,9 +1,11 @@
+/// <reference types="vite/client" />
 // Imports scratch-blocks source, whose `Order` enum is not erasable syntax, so the package's tsc excludes this
 // file; it only runs under vitest, which strips types without checking them.
 /**
  * Every shipped lesson proves itself: its `kiem-thu/dung*.tb` passes each graded step and each
  * `sai-<n>.tb` fails step n, graded as the editor grades a learner: the rules are checked after every
- * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time.
+ * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time. A step
+ * with input rules runs with the rig set the way the step tells the learner to set it.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -13,13 +15,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Order } from '../../../thingblock-blocks/src/generators/arduino/order'
 import { SimGenerator } from '../../../thingblock-blocks/src/generators/sim'
 import type { RuleResult } from '../../../thingblock-sim/src/checker/evaluate'
+import { inputsFor } from '../../../thingblock-sim/src/checker/inputs'
 import type { Rule } from '../../../thingblock-sim/src/checker/rules'
 import { Watcher, type CheckReport } from '../../../thingblock-sim/src/checker/watch'
 import { loadProject, type Sb3Project } from '../../../thingblock-sim/src/headless'
 import { Session } from '../../../thingblock-sim/src/session'
 import { parseLesson } from '../../scripts/lessons/parse-lesson.mjs'
-import { registerSimGenerators as registerOled } from '../../src/extensions/peripheral/oled/sim'
-import { registerSimGenerators as registerThingBot } from '../../src/extensions/peripheral/thingbot-core/sim'
+import type { RegisterSimGenerators } from '../../src/shared/types'
 
 const TUTORIALS = join(__dirname, '../../src/tutorials')
 const PERIPHERALS = readdirSync(join(__dirname, '../../src/extensions/peripheral'))
@@ -29,11 +31,15 @@ const WINDOW_US = 5_000_000
 /** The worker's tick, in milliseconds. */
 const TICK_MS = 16
 
+const simPacks = import.meta.glob<{ registerSimGenerators: RegisterSimGenerators }>(
+  '../../src/extensions/peripheral/*/sim.ts',
+  { eager: true },
+)
+
 let generator: SimGenerator
 beforeEach(() => {
   generator = new SimGenerator()
-  registerThingBot(generator as never, Order)
-  registerOled(generator as never, Order)
+  for (const pack of Object.values(simPacks)) pack.registerSimGenerators(generator as never, Order)
 })
 
 const readTb = async (path: string): Promise<Sb3Project> => {
@@ -56,6 +62,8 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   expect(generator.diagnostics, `${tb} dùng khối chưa mô phỏng`).toEqual([])
   // A fixed clock keeps every tick within its real-time budget, so each one advances the full 16 ms.
   const session = new Session(code, { now: () => 0 })
+  // Set the rig as the step asks the learner to ("giữ nút SW", "khoảng cách < 20 cm"…).
+  for (const [key, value] of Object.entries(inputsFor(rules))) session.setInput(key, value)
   const watcher = new Watcher()
   watcher.set(rules)
   const allOk = (r: CheckReport | null) => r?.results.every((x) => x.ok) ?? false

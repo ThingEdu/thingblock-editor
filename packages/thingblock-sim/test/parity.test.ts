@@ -37,11 +37,12 @@ beforeAll(() => {
 })
 
 /**
- * The entries both builds produce: device state and serial text, not the simulator-only text record.
+ * The entries both builds produce: device state and serial text, not the simulator-only text record or
+ * the rig inputs the simulator logs for the lesson checker.
  * @param log The log to filter.
  * @returns The entries to compare.
  */
-const comparable = (log: LogEntry[]) => log.filter((e) => e.dev !== 'serial' && e.key !== 'text')
+const comparable = (log: LogEntry[]) => log.filter((e) => e.dev !== 'serial' && e.dev !== 'input' && e.key !== 'text')
 const serialText = (log: LogEntry[]) =>
   log
     .filter((e) => e.dev === 'serial')
