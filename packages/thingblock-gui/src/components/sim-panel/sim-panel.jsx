@@ -139,6 +139,8 @@ const paintFrame = (canvas, oled) => {
     context.putImageData(image, 0, 0);
 };
 
+const BLANK_OLED = {width: 128, height: 64, frame: new Uint8Array(128 * 8)};
+
 const formatTime = us => {
     const ms = Math.floor(us / 1000);
     const minutes = Math.floor(ms / 60000);
@@ -170,7 +172,10 @@ const SimPanel = ({
     const blocked = problems.length > 0;
 
     useEffect(() => {
-        if (canvasRef.current && snapshot && snapshot.oled) paintFrame(canvasRef.current, snapshot.oled);
+        if (!canvasRef.current) return;
+        // A program without a display, or a reset before the next run, sends no OLED state: paint the
+        // screen dark rather than keep the last program's frame.
+        paintFrame(canvasRef.current, (snapshot && snapshot.oled) || BLANK_OLED);
     }, [snapshot]);
 
     const pwm = snapshot ? snapshot.pwm : [];
