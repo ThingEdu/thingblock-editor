@@ -54,6 +54,11 @@ export default defineConfig({
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,
     },
-    rolldownOptions: { external },
+    rolldownOptions: {
+      external,
+      // Code shared between packs (e.g. shared/localize) must land inside the shipped root, or the
+      // relative import from a pack points outside --resource-root on an installed app.
+      output: { chunkFileNames: `${PACK_ROOT}/shared/[name]-[hash].js` },
+    },
   },
 })
