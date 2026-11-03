@@ -798,9 +798,10 @@ const ThingBotBoard = ({pwm, pwmHz, oledRows, switchLabel, switchPressed, onPres
                 )}
                 {buzzing && pwmHz > 0 && (
                     <Silk
+                        anchor="start"
                         size={6}
-                        x={BX + 140}
-                        y={BY + 177}
+                        x={BX + 166}
+                        y={BY + 152}
                     >{`${Math.round(pwmHz)} Hz`}</Silk>
                 )}
             </g>
