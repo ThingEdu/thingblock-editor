@@ -3,7 +3,9 @@
  * sample, and reporters for the latched acceleration, rotation, and temperature.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 const COLOUR = '#0066CC'
 const SECONDARY_COLOUR = '#005AB5'
@@ -14,7 +16,7 @@ const AXIS_OPTIONS: [string, string][] = [
   ['z', 'z'],
 ]
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.mpu6050_init = {
     init(this: Block) {
       this.jsonInit({
@@ -107,3 +109,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

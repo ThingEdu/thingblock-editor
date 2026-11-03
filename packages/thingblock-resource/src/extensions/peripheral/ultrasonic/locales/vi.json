@@ -1,0 +1,5 @@
+{
+  "ultrasonic_readDistance": {
+    "message0": "cảm biến siêu âm chân TRIG %1 ECHO %2 đọc khoảng cách %3"
+  }
+}

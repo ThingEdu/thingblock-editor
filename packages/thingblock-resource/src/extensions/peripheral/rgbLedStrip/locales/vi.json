@@ -1,0 +1,23 @@
+{
+  "rgbLedStrip_init": {
+    "message0": "khởi động dải đèn RGB dài %1 chân %2"
+  },
+  "rgbLedStrip_setPixelColor": {
+    "message0": "đèn RGB đặt bóng %1 màu %2"
+  },
+  "rgbLedStrip_fill": {
+    "message0": "đèn RGB tô từ bóng %1 số bóng %2 màu %3"
+  },
+  "rgbLedStrip_color": {
+    "message0": "màu RGB đỏ %1 lục %2 lam %3"
+  },
+  "rgbLedStrip_setBrightness": {
+    "message0": "đặt độ sáng đèn RGB %1"
+  },
+  "rgbLedStrip_clear": {
+    "message0": "tắt mọi đèn RGB"
+  },
+  "rgbLedStrip_show": {
+    "message0": "hiện lên dải đèn RGB"
+  }
+}

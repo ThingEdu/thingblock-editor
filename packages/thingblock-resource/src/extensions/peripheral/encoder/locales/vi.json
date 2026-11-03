@@ -1,0 +1,14 @@
+{
+  "encoder_init": {
+    "message0": "khởi động encoder chân A %1 chân B %2 chân nút %3"
+  },
+  "encoder_readPosition": {
+    "message0": "vị trí encoder"
+  },
+  "encoder_resetPosition": {
+    "message0": "đặt lại vị trí encoder"
+  },
+  "encoder_isPressed": {
+    "message0": "nút encoder đang bấm?"
+  }
+}

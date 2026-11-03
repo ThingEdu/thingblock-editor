@@ -1,0 +1,54 @@
+{
+  "thingBotC3_init": {
+    "message0": "khởi động ThingBot"
+  },
+  "thingBotC3_setMotor": {
+    "message0": "động cơ %1 chạy %2 tốc độ %3",
+    "options": {
+      "DIRECTION": {
+        "forward": "tiến",
+        "backward": "lùi"
+      }
+    }
+  },
+  "thingBotC3_setServo": {
+    "message0": "đặt servo %1 xung %2"
+  },
+  "thingBotC3_setServoAngle": {
+    "message0": "đặt servo %1 góc %2 độ"
+  },
+  "thingBotC3_moveServoAngle": {
+    "message0": "quay servo %1 tới góc %2 độ trong %3 giây"
+  },
+  "thingBotC3_startServoAngle": {
+    "message0": "bắt đầu quay servo %1 tới góc %2 độ trong %3 giây",
+    "tooltip": "Servo quay trong nền, chương trình chạy tiếp; dùng khối \"chờ các servo quay xong\" để chờ quay xong."
+  },
+  "thingBotC3_waitServos": {
+    "message0": "chờ các servo quay xong"
+  },
+  "thingBotC3_releaseServo": {
+    "message0": "thả lỏng servo %1"
+  },
+  "thingBotC3_buzzer": {
+    "message0": "đặt còi xung %1"
+  },
+  "thingBotC3_setTempo": {
+    "message0": "đặt nhịp %1 BPM"
+  },
+  "thingBotC3_playNote": {
+    "message0": "chơi nốt %1 quãng %2 trong %3 phách"
+  },
+  "thingBotC3_rest": {
+    "message0": "nghỉ %1 phách"
+  },
+  "thingBotC3_setLed": {
+    "message0": "đặt đèn %1 độ sáng %2"
+  },
+  "thingBotC3_initPS2": {
+    "message0": "khởi động tay cầm PS2 trên ThingBot"
+  },
+  "thingBotC3_switch": {
+    "message0": "đọc nút SW"
+  }
+}

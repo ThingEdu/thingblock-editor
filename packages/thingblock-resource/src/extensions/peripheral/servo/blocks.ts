@@ -3,12 +3,14 @@
  * shapes live in the same instance the workspace uses.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 // Number inputs also take variable reporters, whose output scratch-blocks types as String.
 const NUMBER_INPUT = ['Number', 'String']
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.servo_setangle = {
     init(this: Block) {
       this.jsonInit({
@@ -23,3 +25,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

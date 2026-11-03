@@ -1,0 +1,17 @@
+{
+  "mpu6050_init": {
+    "message0": "khởi động mpu6050 dải gia tốc %1 dải con quay %2 băng thông lọc %3"
+  },
+  "mpu6050_readData": {
+    "message0": "mpu6050 đọc dữ liệu"
+  },
+  "mpu6050_acceleration": {
+    "message0": "mpu6050 gia tốc trục %1 (m/s^2)"
+  },
+  "mpu6050_gyro": {
+    "message0": "mpu6050 tốc độ quay trục %1 (rad/s)"
+  },
+  "mpu6050_temperature": {
+    "message0": "mpu6050 nhiệt độ (℃)"
+  }
+}

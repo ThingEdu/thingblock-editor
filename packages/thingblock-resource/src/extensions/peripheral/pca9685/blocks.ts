@@ -7,7 +7,9 @@
  * already carry Arduino codegen.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 // Number inputs also take variable reporters, whose output scratch-blocks types as String.
 const NUMBER_INPUT = ['Number', 'String']
@@ -17,7 +19,7 @@ const SECONDARY_COLOUR = '#8F4586'
 
 const CHANNEL_OPTIONS: [string, string][] = Array.from({ length: 16 }, (_, i) => [String(i), String(i)])
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.pca9685_init = {
     init(this: Block) {
       this.jsonInit({
@@ -107,3 +109,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })
