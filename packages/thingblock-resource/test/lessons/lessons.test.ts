@@ -104,7 +104,7 @@ describe.each(lessonDirs)('lesson %s', (ma) => {
         }
       }
     }
-    expect([...used].filter((pack) => !(lesson.thietBi as string[]).includes(pack))).toEqual([])
+    expect([...used].filter((pack) => !lesson.thietBi.includes(pack))).toEqual([])
   })
 
   it.each(graded.map(({ n }) => n))('step %i passes with the correct solution', async (n) => {
