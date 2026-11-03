@@ -2,19 +2,18 @@ import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
-import {projectTitleInitialState} from '../reducers/project-title';
-import downloadBlob from '../lib/download-blob';
+import saveProject from '../lib/save-project';
 /**
  * Project saver component passes a downloadProject function to its child.
  * It expects this child to be a function with the signature
- *     function (downloadProject, props) {}
- * The component can then be used to attach project saving functionality
+ *     function (className, downloadProject, saveProjectAs) {}
+ * `downloadProject` saves to the project's file (asking where the first time), `saveProjectAs`
+ * always asks. The component can then be used to attach project saving functionality
  * to any other component:
  *
- * <SB3Downloader>{(downloadProject, props) => (
+ * <SB3Downloader>{(className, downloadProject) => (
  *     <MyCoolComponent
  *         onClick={downloadProject}
- *         {...props}
  *     />
  * )}</SB3Downloader>
  */
@@ -22,16 +21,28 @@ class SB3Downloader extends React.Component {
     constructor (props) {
         super(props);
         bindAll(this, [
-            'downloadProject'
+            'downloadProject',
+            'saveProjectAs'
         ]);
     }
-    downloadProject () {
-        this.props.saveProjectSb3().then(content => {
-            if (this.props.onSaveFinished) {
+    save (saveAs) {
+        return saveProject({
+            saveProjectSb3: this.props.saveProjectSb3,
+            projectTitle: this.props.projectTitle,
+            dispatch: this.props.dispatch,
+            saveAs
+        }).then(saved => {
+            if (saved && this.props.onSaveFinished) {
                 this.props.onSaveFinished();
             }
-            downloadBlob(this.props.projectFilename, content);
+            return saved;
         });
+    }
+    downloadProject () {
+        return this.save(false);
+    }
+    saveProjectAs () {
+        return this.save(true);
     }
     render () {
         const {
@@ -39,24 +50,18 @@ class SB3Downloader extends React.Component {
         } = this.props;
         return children(
             this.props.className,
-            this.downloadProject
+            this.downloadProject,
+            this.saveProjectAs
         );
     }
 }
 
-const getProjectFilename = (curTitle, defaultTitle) => {
-    let filenameTitle = curTitle;
-    if (!filenameTitle || filenameTitle.length === 0) {
-        filenameTitle = defaultTitle;
-    }
-    return `${filenameTitle.substring(0, 100)}.tb`;
-};
-
 SB3Downloader.propTypes = {
     children: PropTypes.func,
     className: PropTypes.string,
+    dispatch: PropTypes.func,
     onSaveFinished: PropTypes.func,
-    projectFilename: PropTypes.string,
+    projectTitle: PropTypes.string,
     saveProjectSb3: PropTypes.func
 };
 SB3Downloader.defaultProps = {
@@ -65,10 +70,10 @@ SB3Downloader.defaultProps = {
 
 const mapStateToProps = state => ({
     saveProjectSb3: state.scratchGui.vm.project.saveSb3.bind(state.scratchGui.vm.project),
-    projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState)
+    projectTitle: state.scratchGui.projectTitle
 });
 
 export default connect(
     mapStateToProps,
-    () => ({}) // omit dispatch prop
+    dispatch => ({dispatch})
 )(SB3Downloader);

@@ -54,6 +54,8 @@ import {
 } from '../../reducers/menus';
 
 import collectMetadata from '../../lib/collect-metadata';
+import saveProject from '../../lib/save-project';
+import {showFileInWindowTitle, trackProjectLoads} from '../../lib/project-file';
 import {PLATFORM} from '../../lib/platform';
 
 import styles from './menu-bar.css';
@@ -111,6 +113,7 @@ class MenuBar extends React.Component {
             'handleClickShare',
             'handleSetMode',
             'handleKeyPress',
+            'handleProjectLoaded',
             'handleRestoreOption',
             'getSaveToComputerHandler',
             'restoreOptionMessage'
@@ -118,9 +121,22 @@ class MenuBar extends React.Component {
     }
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyPress);
+        // Every project load (New, an example, a lesson, a file) forgets which file the previous
+        // project was saved in, so Ctrl+S never overwrites another project's file.
+        if (this.props.vm && this.props.vm.events) {
+            this.stopTrackingProjectLoads = trackProjectLoads(this.props.vm.events);
+            this.props.vm.events.on('PROJECT_LOADED', this.handleProjectLoaded);
+        }
     }
     componentWillUnmount () {
         document.removeEventListener('keydown', this.handleKeyPress);
+        if (this.stopTrackingProjectLoads) this.stopTrackingProjectLoads();
+        if (this.props.vm && this.props.vm.events) {
+            this.props.vm.events.removeListener('PROJECT_LOADED', this.handleProjectLoaded);
+        }
+    }
+    handleProjectLoaded () {
+        showFileInWindowTitle(null);
     }
     handleClickNew () {
         // if the project is dirty, and user owns the project, we will autosave.
@@ -183,9 +199,19 @@ class MenuBar extends React.Component {
     }
     handleKeyPress (event) {
         const modifier = bowser.mac ? event.metaKey : event.ctrlKey;
-        if (modifier && event.key === 's') {
-            this.props.onClickSave();
+        if (modifier && event.key && event.key.toLowerCase() === 's') {
             event.preventDefault();
+            if (this.props.canSave) {
+                this.props.onClickSave();
+            } else {
+                // Offline (the desktop app, the local editor): save to the project's file,
+                // asking where the first time; Shift turns it into "Save as".
+                this.props.onSaveToFile({
+                    saveProjectSb3: () => this.props.vm.project.saveSb3(),
+                    projectTitle: this.props.projectTitle,
+                    saveAs: event.shiftKey
+                });
+            }
         }
     }
     getSaveToComputerHandler (downloadProjectCallback) {
@@ -580,6 +606,7 @@ MenuBar.propTypes = {
     onClickNew: PropTypes.func,
     onClickRemix: PropTypes.func,
     onClickSave: PropTypes.func,
+    onSaveToFile: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onLogOut: PropTypes.func,
     onOpenRegistration: PropTypes.func,
@@ -670,6 +697,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
     onClickNew: needSave => dispatch(requestNewProject(needSave)),
     onClickLogin: ownProps.onClickLogin ?? (() => dispatch(openLoginMenu())),
     onClickSave: () => dispatch(manualUpdateProject()),
+    onSaveToFile: options => saveProject({...options, dispatch}),
     onClickRemix: () => dispatch(remixProject()),
     onRequestCloseLogin: () => dispatch(closeLoginMenu()),
     onSeeCommunity: ownProps.onSeeCommunity ?? (() => dispatch(setPlayer(true))),

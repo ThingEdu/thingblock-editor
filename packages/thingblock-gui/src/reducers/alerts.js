@@ -57,10 +57,15 @@ const reducer = function (state, action) {
                 if (action.data && action.data.message) {
                     newAlert.message = action.data.message;
                 }
+                // An alert whose text depends on the moment (e.g. the path a project was saved to)
+                // defines its content as a function of the data it was shown with.
+                const content = typeof alertData.content === 'function' ?
+                    alertData.content(action.data || {}) :
+                    alertData.content;
 
                 newAlert.alertType = alertData.alertType || AlertTypes.STANDARD;
                 newAlert.closeButton = alertData.closeButton;
-                newAlert.content = alertData.content;
+                newAlert.content = content;
                 newAlert.iconURL = alertData.iconURL;
                 newAlert.iconSpinner = alertData.iconSpinner;
                 newAlert.level = alertData.level;
@@ -162,12 +167,14 @@ const closeAlertWithId = function (alertId) {
 /**
  * Action creator to show an alert with the given alertId.
  * @param {string} alertId - id string of the alert to show
+ * @param {object} [data] - data for alerts whose content is a function of it
  * @returns {object} - an object to be passed to the reducer.
  */
-const showStandardAlert = function (alertId) {
+const showStandardAlert = function (alertId, data) {
     return {
         type: SHOW_ALERT,
-        alertId
+        alertId,
+        data
     };
 };
 
@@ -190,11 +197,12 @@ const showExtensionAlert = function (data) {
  * timeout to make it close/go away.
  * @param {object} dispatch - dispatch function
  * @param {string} alertId - the ID of the alert
+ * @param {object} [data] - data for alerts whose content is a function of it
  */
-const showAlertWithTimeout = function (dispatch, alertId) {
+const showAlertWithTimeout = function (dispatch, alertId, data) {
     const alertData = alertsData.find(thisAlertData => thisAlertData.alertId === alertId);
     if (alertData) {
-        dispatch(showStandardAlert(alertId));
+        dispatch(showStandardAlert(alertId, data));
         if (alertData.maxDisplaySecs) {
             setTimeout(() => {
                 dispatch(closeAlertsWithId(alertId));

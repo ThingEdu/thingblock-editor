@@ -6,6 +6,7 @@ import intlShape from './intlShape';
 import {connect} from 'react-redux';
 import log from '../lib/log';
 import sharedMessages from './shared-messages';
+import {isDesktopApp, pickProjectFile, setCurrentFile, showFileInWindowTitle} from './project-file';
 
 import {
     LoadingStates,
@@ -52,6 +53,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 'handleFinishedLoadingUpload',
                 'handleStartSelectingFileUpload',
                 'handleStartLoadingExample',
+                'handleStartPickingDesktopFile',
                 'handleChange',
                 'loadProjectData',
                 'onload',
@@ -68,7 +70,30 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 1: this is where the upload process begins
         handleStartSelectingFileUpload () {
+            if (isDesktopApp()) return this.handleStartPickingDesktopFile();
             this.createFileObjects(); // go to step 2
+        }
+        /**
+         * Desktop app: pick the project with the native Open dialog instead of an <input>, so the
+         * editor knows the file's path and "Lưu" (Ctrl+S) can write back to it. Then load it through
+         * the same steps as a file chosen in the browser.
+         * @returns {Promise} settles once the dialog has been answered.
+         */
+        handleStartPickingDesktopFile () {
+            this.removeFileObjects();
+            return pickProjectFile().then(file => {
+                if (!file) return; // cancelled
+                const {intl, isShowingWithoutId, projectChanged, userOwnsProject} = this.props;
+                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
+                    // eslint-disable-next-line no-alert
+                    if (!confirm(intl.formatMessage(sharedMessages.replaceProjectWarning))) return;
+                }
+                this.desktopFileToLoad = file;
+                this.props.requestProjectUpload(this.props.loadingState);
+            }, error => {
+                log.warn(error);
+                alert(this.props.intl.formatMessage(messages.loadError)); // eslint-disable-line no-alert
+            });
         }
         /**
          * Open a bundled example project through the same steps as a file chosen from the computer:
@@ -144,7 +169,16 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 5: called from componentDidUpdate when project state shows
         // that project data has finished "uploading" into the browser
         handleFinishedLoadingUpload () {
-            if (this.exampleToLoad) {
+            if (this.desktopFileToLoad) {
+                const file = this.desktopFileToLoad;
+                this.desktopFileToLoad = null;
+                this.loadProjectData(file.data, getProjectTitleFromFilename(file.name), messages.loadError)
+                    .then(loaded => {
+                        if (!loaded) return;
+                        setCurrentFile(file);
+                        showFileInWindowTitle(file.name);
+                    });
+            } else if (this.exampleToLoad) {
                 const {url, title} = this.exampleToLoad;
                 this.exampleToLoad = null;
                 fetch(url)
@@ -185,11 +219,12 @@ const SBFileUploaderHOC = function (WrappedComponent) {
          * @param {ArrayBuffer} data - the `.tb` file contents.
          * @param {?string} title - the project title to set on success, if any.
          * @param {object} errorMessage - the message to alert on failure.
+         * @returns {Promise<boolean>} whether the project loaded.
          */
         loadProjectData (data, title, errorMessage) {
             this.props.onLoadingStarted();
             let loadingSuccess = false;
-            this.props.vm.project.load(data)
+            return this.props.vm.project.load(data)
                 .then(() => {
                     if (title) this.props.onSetProjectTitle(title);
                     loadingSuccess = true;
@@ -203,6 +238,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                     // go back to step 7: whether project loading succeeded
                     // or failed, reset file objects
                     this.removeFileObjects();
+                    return loadingSuccess;
                 });
         }
         // step 7: remove the <input> element from the DOM and clear reader and

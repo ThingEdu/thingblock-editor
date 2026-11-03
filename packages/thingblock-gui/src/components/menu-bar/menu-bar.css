@@ -251,3 +251,14 @@
         margin-right: 0;
     }
 }
+
+.menu-shortcut {
+    margin-inline-start: 1.5rem;
+    float: right;
+    opacity: 0.6;
+    font-size: 0.75rem;
+}
+
+[dir="rtl"] .menu-shortcut {
+    float: left;
+}

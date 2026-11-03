@@ -14,6 +14,8 @@ import useMenuNavigation from '../../hooks/use-menu-navigation';
 
 import sharedMessages from '../../lib/shared-messages';
 
+const saveShortcut = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘S' : 'Ctrl+S';
+
 import {saveProjectAsCopy} from '../../reducers/project-state';
 import {openExampleLibrary} from '../../reducers/modals';
 
@@ -159,19 +161,34 @@ const FileMenu = ({
                     >
                         {intl.formatMessage(sharedMessages.loadFromComputerTitle)}
                     </MenuItem>
-                    <SB3Downloader>{(className, downloadProjectCallback) => (
-                        <MenuItem
-                            className={className}
-                            onClick={getSaveToComputerHandler(downloadProjectCallback)}
-                            isDataMenuItem
-                            onParentKeyDown={handleKeyDownOpenMenu}
-                        >
-                            <FormattedMessage
-                                defaultMessage="Save to your computer"
-                                description="Menu bar item for downloading a project to your computer" // eslint-disable-line @stylistic/max-len
-                                id="gui.menuBar.downloadToComputer"
-                            />
-                        </MenuItem>
+                    <SB3Downloader>{(className, downloadProjectCallback, saveProjectAsCallback) => (
+                        <React.Fragment>
+                            <MenuItem
+                                className={className}
+                                onClick={getSaveToComputerHandler(downloadProjectCallback)}
+                                isDataMenuItem
+                                onParentKeyDown={handleKeyDownOpenMenu}
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Save"
+                                    description="Menu bar item for saving the project to its file on the computer (asks where the first time)" // eslint-disable-line @stylistic/max-len
+                                    id="gui.menuBar.saveToFile"
+                                />
+                                <span className={styles.menuShortcut}>{saveShortcut}</span>
+                            </MenuItem>
+                            <MenuItem
+                                className={className}
+                                onClick={getSaveToComputerHandler(saveProjectAsCallback)}
+                                isDataMenuItem
+                                onParentKeyDown={handleKeyDownOpenMenu}
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Save as…"
+                                    description="Menu bar item for saving the project to a new file chosen on the computer" // eslint-disable-line @stylistic/max-len
+                                    id="gui.menuBar.saveToFileAs"
+                                />
+                            </MenuItem>
+                        </React.Fragment>
                     )}</SB3Downloader>
                 </MenuSection>
             </MenuBarMenu>
