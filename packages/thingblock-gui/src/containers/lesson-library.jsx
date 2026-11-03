@@ -1,13 +1,17 @@
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {connect} from 'react-redux';
 import LessonLibraryComponent from '../components/lesson-library/lesson-library.jsx';
 import {loadProgress} from '../lib/lesson-progress';
+import {blankLessonProject} from '../lib/lesson-starter';
+import sharedMessages from '../lib/shared-messages';
 import log from '../lib/log.js';
 import {setDevice} from '../reducers/board';
 import {openLesson} from '../reducers/lesson';
 import {closeTipsLibrary} from '../reducers/modals';
+import {setProjectUnchanged} from '../reducers/project-changed';
+import {setProjectTitle} from '../reducers/project-title';
 
 // Lessons are written in Vietnamese only for now.
 const LESSON_LANG = 'vi';
@@ -49,7 +53,13 @@ const fetchJson = url => fetch(url).then(response => {
     return response.json();
 });
 
-const LessonLibrary = ({vm, onClose, onOpen}) => {
+const fetchBytes = url => fetch(url).then(response => {
+    if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+    return response.arrayBuffer();
+});
+
+const LessonLibrary = ({projectChanged, vm, onClose, onOpen}) => {
+    const intl = useIntl();
     const [index, setIndex] = useState(null);
     const [error, setError] = useState(null);
     const base = vm.devices.getTutorialsOrigin();
@@ -66,8 +76,22 @@ const LessonLibrary = ({vm, onClose, onOpen}) => {
     }, [base]);
 
     const handleSelect = useCallback(ma => {
+        // A lesson starts from its own project, so it replaces the learner's: ask first, as opening a
+        // file does, when there are unsaved changes.
+        // eslint-disable-next-line no-alert
+        if (projectChanged && !confirm(intl.formatMessage(sharedMessages.replaceProjectWarning))) return;
         const baseUrl = `${base}/${ma}/`;
         fetchJson(`${baseUrl}bai.${LESSON_LANG}.json`)
+            .then(lesson => {
+                // The lesson's starting project, or a blank one on its board with its devices: never
+                // the blocks of whatever was open before.
+                const starter = lesson.batDau ?
+                    fetchBytes(`${baseUrl}${lesson.batDau}`) :
+                    Promise.resolve(blankLessonProject(lesson));
+                return starter
+                    .then(project => vm.project.load(project))
+                    .then(() => lesson);
+            })
             .then(lesson => {
                 onOpen({...lesson, baseUrl}, loadProgress(ma));
                 // After the board is selected: a lesson's peripherals (the OLED, say) join the palette
@@ -76,8 +100,11 @@ const LessonLibrary = ({vm, onClose, onOpen}) => {
                     vm.devices.addPeripheral(id).catch(e => log.warn(`Lesson ${ma}: cannot add "${id}"`, e));
                 }
             })
-            .catch(() => setError('no-link'));
-    }, [base, onOpen, vm]);
+            .catch(e => {
+                log.warn(`Lesson ${ma}: cannot open`, e);
+                setError('no-link');
+            });
+    }, [base, intl, onOpen, projectChanged, vm]);
 
     const lessons = index ? index.lessons : [];
     const groups = GROUP_ORDER
@@ -102,10 +129,14 @@ const LessonLibrary = ({vm, onClose, onOpen}) => {
 };
 
 LessonLibrary.propTypes = {
+    projectChanged: PropTypes.bool,
     vm: PropTypes.shape({
         devices: PropTypes.shape({
             addPeripheral: PropTypes.func.isRequired,
             getTutorialsOrigin: PropTypes.func.isRequired
+        }).isRequired,
+        project: PropTypes.shape({
+            load: PropTypes.func.isRequired
         }).isRequired
     }).isRequired,
     onClose: PropTypes.func.isRequired,
@@ -113,12 +144,16 @@ LessonLibrary.propTypes = {
 };
 
 const mapStateToProps = state => ({
+    projectChanged: state.scratchGui.projectChanged,
     vm: state.scratchGui.vm
 });
 
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeTipsLibrary()),
     onOpen: (lesson, progress) => {
+        // The lesson's project has just replaced the old one: nothing is unsaved yet.
+        dispatch(setProjectUnchanged());
+        dispatch(setProjectTitle(lesson.ten));
         // `bo: khong` lessons teach choosing the board, so they open without selecting one.
         if (lesson.bo && lesson.bo !== 'khong') dispatch(setDevice(lesson.bo));
         dispatch(openLesson(lesson, progress));

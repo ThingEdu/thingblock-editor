@@ -23,15 +23,19 @@ const LESSON = {ma: 'den-nhap-nhay', ten: 'Đèn nhấp nháy', nhom: 'dau-ra', 
 
 const respond = body => Promise.resolve({ok: true, json: () => Promise.resolve(body)});
 
-const renderLibrary = (root, addPeripheral = jest.fn(() => Promise.resolve())) => {
+const renderLibrary = (root, addPeripheral = jest.fn(() => Promise.resolve()), {projectChanged = false} = {}) => {
     const devices = {getTutorialsOrigin: () => (root ? `${root}/tutorials` : null), addPeripheral};
-    const store = configureStore()({scratchGui: {vm: {devices}}, locales: {isRtl: false}});
+    const project = {load: jest.fn(() => Promise.resolve())};
+    const store = configureStore()({
+        scratchGui: {vm: {devices, project}, projectChanged},
+        locales: {isRtl: false}
+    });
     const view = renderWithIntl(
         <Provider store={store}>
             <LessonLibrary />
         </Provider>
     );
-    return {store, ...view};
+    return {store, project, ...view};
 };
 
 beforeEach(() => {
@@ -58,9 +62,11 @@ test('opening a lesson selects its board, opens it with saved progress and close
     const {container, getByText, store} = renderLibrary(ROOT);
     await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
     fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
-    await waitFor(() => expect(store.getActions()).toHaveLength(3));
+    await waitFor(() => expect(store.getActions()).toHaveLength(5));
     expect(global.fetch).toHaveBeenCalledWith(`${ROOT}/tutorials/den-nhap-nhay/bai.vi.json`);
-    const [device, open, close] = store.getActions();
+    const [unchanged, title, device, open, close] = store.getActions();
+    expect(unchanged).toEqual({type: 'scratch-gui/project-changed/SET_PROJECT_CHANGED', changed: false});
+    expect(title.title).toBe('Đèn nhấp nháy');
     expect(device.deviceId).toBe('thingbot');
     expect(open.lesson).toEqual({...LESSON, baseUrl: `${ROOT}/tutorials/den-nhap-nhay/`});
     expect(open.progress).toEqual({stepIndex: 2, passedSteps: [1]});
@@ -87,8 +93,8 @@ test('a boardless lesson opens without selecting a device', async () => {
     const {container, getByText, store} = renderLibrary(ROOT);
     await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
     fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
-    await waitFor(() => expect(store.getActions()).toHaveLength(2));
-    const [open, close] = store.getActions();
+    await waitFor(() => expect(store.getActions()).toHaveLength(4));
+    const [, , open, close] = store.getActions();
     expect(open.lesson.bo).toBe('khong');
     expect(store.getActions().map(action => action.type)).not.toContain('scratch-gui/board/SET_DEVICE');
     expect(open.type).toBe('scratch-gui/lesson/OPEN');
@@ -109,4 +115,50 @@ test('opening a lesson adds the peripherals it needs, after selecting its board'
     fireEvent.click(view.container.querySelector('[data-lesson="den-nhap-nhay"]'));
     await waitFor(() => expect(addPeripheral).toHaveBeenCalledWith('oled'));
     expect(addPeripheral).toHaveBeenCalledTimes(1);
+});
+
+test('opening a lesson starts a blank project on its board, instead of keeping the previous blocks', async () => {
+    const withOled = {...LESSON, thietBi: ['oled']};
+    global.fetch = jest.fn(url => respond(url.endsWith('index.json') ? INDEX : withOled));
+    const {container, getByText, project, store} = renderLibrary(ROOT);
+    await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(store.getActions().map(a => a.type)).toContain('scratch-gui/lesson/OPEN'));
+    expect(project.load).toHaveBeenCalledTimes(1);
+    const loaded = project.load.mock.calls[0][0];
+    expect(loaded.board).toEqual({device: 'thingbot', peripherals: ['oled']});
+    for (const target of loaded.targets) {
+        expect(target.costumes.length).toBeGreaterThan(0);
+        expect(target.blocks).toEqual({});
+    }
+});
+
+test('a lesson with a starting project opens that project', async () => {
+    const starting = {...LESSON, batDau: 'bat-dau.tb'};
+    const bytes = new ArrayBuffer(4);
+    global.fetch = jest.fn(url => {
+        if (url.endsWith('index.json')) return respond(INDEX);
+        if (url.endsWith('bat-dau.tb')) return Promise.resolve({ok: true, arrayBuffer: () => Promise.resolve(bytes)});
+        return respond(starting);
+    });
+    const {container, getByText, project, store} = renderLibrary(ROOT);
+    await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(store.getActions().map(a => a.type)).toContain('scratch-gui/lesson/OPEN'));
+    expect(global.fetch).toHaveBeenCalledWith(`${ROOT}/tutorials/den-nhap-nhay/bat-dau.tb`);
+    expect(project.load).toHaveBeenCalledWith(bytes);
+});
+
+test('a changed project is only replaced when the learner confirms', async () => {
+    const confirm = jest.spyOn(window, 'confirm').mockReturnValue(false);
+    try {
+        const {container, getByText, project, store} = renderLibrary(ROOT, jest.fn(() => Promise.resolve()), {projectChanged: true});
+        await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+        fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+        await waitFor(() => expect(confirm).toHaveBeenCalledWith('Replace contents of the current project?'));
+        expect(project.load).not.toHaveBeenCalled();
+        expect(store.getActions()).toEqual([]);
+    } finally {
+        confirm.mockRestore();
+    }
 });
