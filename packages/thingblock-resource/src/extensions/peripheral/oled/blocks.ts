@@ -9,6 +9,9 @@
 import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
+
 const COLOUR = '#C0C0C0'
 const SECONDARY_COLOUR = '#A9A9A9'
 
@@ -38,7 +41,7 @@ const colourField = (name = 'COLOUR', options = DRAW_COLOURS) => ({
 const numberInput = (name: string) => ({
   type: 'input_value' as const,
   name,
-  check: 'Number',
+  check: NUMBER_INPUT,
 })
 
 export const registerBlocks: RegisterBlocks = (Blockly) => {

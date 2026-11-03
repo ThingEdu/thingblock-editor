@@ -6,6 +6,9 @@
 import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
+
 const COLOUR = '#7700FF'
 const SECONDARY_COLOUR = '#4400B3'
 
@@ -24,7 +27,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'init rgb led strip length %1 pin %2',
-        args0: [{ type: 'input_value', name: 'LEN', check: 'Number' }, pinField('PIN', 2)],
+        args0: [{ type: 'input_value', name: 'LEN', check: NUMBER_INPUT }, pinField('PIN', 2)],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],
@@ -37,7 +40,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
       this.jsonInit({
         message0: 'rgb led set pixel %1 color %2',
         args0: [
-          { type: 'input_value', name: 'NO', check: 'Number' },
+          { type: 'input_value', name: 'NO', check: NUMBER_INPUT },
           { type: 'input_value', name: 'COLOR' },
         ],
         colour: COLOUR,
@@ -52,8 +55,8 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
       this.jsonInit({
         message0: 'rgb led fill from pixel %1 count %2 with color %3',
         args0: [
-          { type: 'input_value', name: 'FIRST', check: 'Number' },
-          { type: 'input_value', name: 'COUNT', check: 'Number' },
+          { type: 'input_value', name: 'FIRST', check: NUMBER_INPUT },
+          { type: 'input_value', name: 'COUNT', check: NUMBER_INPUT },
           { type: 'input_value', name: 'COLOR' },
         ],
         colour: COLOUR,
@@ -68,9 +71,9 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
       this.jsonInit({
         message0: 'rgb led strip color R %1 G %2 B %3',
         args0: [
-          { type: 'input_value', name: 'R', check: 'Number' },
-          { type: 'input_value', name: 'G', check: 'Number' },
-          { type: 'input_value', name: 'B', check: 'Number' },
+          { type: 'input_value', name: 'R', check: NUMBER_INPUT },
+          { type: 'input_value', name: 'G', check: NUMBER_INPUT },
+          { type: 'input_value', name: 'B', check: NUMBER_INPUT },
         ],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
@@ -83,7 +86,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'set rgb led brightness %1',
-        args0: [{ type: 'input_value', name: 'BRT', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'BRT', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],

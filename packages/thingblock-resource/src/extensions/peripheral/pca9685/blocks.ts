@@ -9,6 +9,9 @@
 import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
+
 const COLOUR = '#9F4D95'
 const SECONDARY_COLOUR = '#8F4586'
 
@@ -19,7 +22,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'init pca9685 iic address %1',
-        args0: [{ type: 'input_value', name: 'ADDR', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'ADDR', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],
@@ -44,7 +47,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
         message0: 'pca9685 set channel %1 servo angle %2',
         args0: [
           { type: 'field_dropdown', name: 'CH', options: CHANNEL_OPTIONS },
-          { type: 'input_value', name: 'ANGLE', check: 'Number' },
+          { type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT },
         ],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
@@ -57,7 +60,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'pca9685 set all servo angle %1',
-        args0: [{ type: 'input_value', name: 'ANGLE', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],
@@ -69,7 +72,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'pca9685 set pwm frequency %1',
-        args0: [{ type: 'input_value', name: 'FREQ', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'FREQ', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],
@@ -83,7 +86,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
         message0: 'pca9685 set channel %1 pwm value %2',
         args0: [
           { type: 'field_dropdown', name: 'CH', options: CHANNEL_OPTIONS },
-          { type: 'input_value', name: 'VALUE', check: 'Number' },
+          { type: 'input_value', name: 'VALUE', check: NUMBER_INPUT },
         ],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
@@ -96,7 +99,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'pca9685 set all channel pwm value %1',
-        args0: [{ type: 'input_value', name: 'VALUE', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'VALUE', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['shape_statement'],

@@ -4,6 +4,9 @@
 import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterBlocks } from '../../../shared/types'
 
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
+
 const CORE_COLOUR = '#009933'
 const ACTUATOR_COLOUR = '#cc0000'
 const ELECTRONIC_COLOUR = '#6600ff'
@@ -84,7 +87,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
               ['backward', 'backward'],
             ],
           },
-          { type: 'input_value', name: 'SPEED', check: 'Number' },
+          { type: 'input_value', name: 'SPEED', check: NUMBER_INPUT },
         ],
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
@@ -108,7 +111,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
               ['S5', '5'],
             ],
           },
-          { type: 'input_value', name: 'PULSE', check: 'Number' },
+          { type: 'input_value', name: 'PULSE', check: NUMBER_INPUT },
         ],
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
@@ -120,7 +123,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'set servo %1 to angle %2 degrees',
-        args0: [servoField(), { type: 'input_value', name: 'ANGLE', check: 'Number' }],
+        args0: [servoField(), { type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT }],
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
       })
@@ -133,8 +136,8 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
         message0: 'move servo %1 to angle %2 degrees over %3 seconds',
         args0: [
           servoField(),
-          { type: 'input_value', name: 'ANGLE', check: 'Number' },
-          { type: 'input_value', name: 'SECONDS', check: 'Number' },
+          { type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT },
+          { type: 'input_value', name: 'SECONDS', check: NUMBER_INPUT },
         ],
         colour: ACTUATOR_COLOUR,
         extensions: ['shape_statement'],
@@ -148,8 +151,8 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
         message0: 'start servo %1 to angle %2 degrees over %3 seconds',
         args0: [
           servoField(),
-          { type: 'input_value', name: 'ANGLE', check: 'Number' },
-          { type: 'input_value', name: 'SECONDS', check: 'Number' },
+          { type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT },
+          { type: 'input_value', name: 'SECONDS', check: NUMBER_INPUT },
         ],
         // Started motions advance at the top of every loop() pass (and inside "wait for servos"), so
         // the program carries on while the servo moves.
@@ -185,7 +188,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'set buzzer to %1 pulse',
-        args0: [{ type: 'input_value', name: 'SOUND', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'SOUND', check: NUMBER_INPUT }],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
       })
@@ -196,7 +199,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'set tempo to %1 BPM',
-        args0: [{ type: 'input_value', name: 'TEMPO', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'TEMPO', check: NUMBER_INPUT }],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
       })
@@ -210,7 +213,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
         args0: [
           { type: 'field_dropdown', name: 'NOTE', options: NOTE_OPTIONS },
           { type: 'field_dropdown', name: 'OCTAVE', options: OCTAVE_OPTIONS },
-          { type: 'input_value', name: 'BEATS', check: 'Number' },
+          { type: 'input_value', name: 'BEATS', check: NUMBER_INPUT },
         ],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
@@ -222,7 +225,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'rest for %1 beats',
-        args0: [{ type: 'input_value', name: 'BEATS', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'BEATS', check: NUMBER_INPUT }],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
       })
@@ -242,7 +245,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
               ['2', 'LED_2'],
             ],
           },
-          { type: 'input_value', name: 'BRIGHTNESS', check: 'Number' },
+          { type: 'input_value', name: 'BRIGHTNESS', check: NUMBER_INPUT },
         ],
         colour: ELECTRONIC_COLOUR,
         extensions: ['shape_statement'],
