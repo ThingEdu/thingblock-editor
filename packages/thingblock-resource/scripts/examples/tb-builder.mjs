@@ -198,14 +198,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
     add(stack, null, pos, { x: pos.x, y: pos.y })
   })
 
-  const opcodes = new Set(Object.values(blocks).map((b) => b.opcode))
-  const extensions = []
-  for (const opcode of opcodes) {
-    const prefix = opcode.split('_')[0]
-    if (!CORE_PREFIXES.has(prefix) && !extensions.includes(prefix)) extensions.push(prefix)
-  }
-  const auto = DEVICE_AUTO_PERIPHERALS[device] ?? []
-  const peripherals = extensions.filter((e) => !auto.includes(e))
+  const { extensions, peripherals } = packsOf(Object.values(blocks), device)
 
   const stageVariables = {}
   const variableTypes = {}
@@ -261,6 +254,89 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
     extensions,
     meta: { semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-resource/scripts/examples' },
     board: { device, peripherals },
+  }
+}
+
+/**
+ * The packs a set of blocks needs: every non-core opcode prefix, and of those the ones the board does
+ * not add by itself.
+ * @param {{opcode: string}[]} blocks Every block in the project, from all targets.
+ * @param {string} device The board id.
+ * @returns {{extensions: string[], peripherals: string[]}} The project's `extensions` and `board.peripherals`.
+ */
+export function packsOf(blocks, device) {
+  const extensions = []
+  for (const { opcode } of blocks) {
+    const prefix = opcode.split('_')[0]
+    if (!CORE_PREFIXES.has(prefix) && !extensions.includes(prefix)) extensions.push(prefix)
+  }
+  const auto = DEVICE_AUTO_PERIPHERALS[device] ?? []
+  return { extensions, peripherals: extensions.filter((e) => !auto.includes(e)) }
+}
+
+/**
+ * Fill in what a hand-written, blocks-only `project.json` leaves out so the editor opens it like one of
+ * its own saves: the target fields the validator requires, the placeholder costume, `extensions` and
+ * `board`. Fields already present are kept.
+ * @param {object} project A project.json object, possibly minimal.
+ * @param {string} device The board id the project targets.
+ * @param {string[]} [extraPeripherals] Packs to add to `board.peripherals` even when no block uses them.
+ * @returns {object} A complete project.json object.
+ */
+export function completeProject(project, device = 'thingbot', extraPeripherals = []) {
+  const stage = {
+    isStage: true,
+    name: 'Stage',
+    variables: {},
+    lists: {},
+    broadcasts: {},
+    blocks: {},
+    comments: {},
+    currentCostume: 0,
+    costumes: [],
+    sounds: [],
+    volume: 100,
+    layerOrder: 0,
+    tempo: 60,
+    videoTransparency: 50,
+    videoState: 'on',
+    textToSpeechLanguage: null,
+  }
+  const sprite = (layerOrder) => ({
+    isStage: false,
+    name: 'Sprite1',
+    variables: {},
+    lists: {},
+    broadcasts: {},
+    blocks: {},
+    comments: {},
+    currentCostume: 0,
+    costumes: [],
+    sounds: [],
+    volume: 100,
+    layerOrder,
+    visible: true,
+    x: 0,
+    y: 0,
+    size: 100,
+    direction: 90,
+    draggable: false,
+    rotationStyle: 'all around',
+  })
+  const targets = project.targets.map((target, i) => {
+    const full = { ...(target.isStage ? stage : sprite(i)), ...target }
+    if (!full.costumes.length) full.costumes = [COSTUME]
+    return full
+  })
+  const blocks = targets.flatMap((t) => Object.values(t.blocks).filter((b) => b && typeof b === 'object' && b.opcode))
+  const { extensions, peripherals } = packsOf(blocks, device)
+  return {
+    ...project,
+    targets,
+    monitors: project.monitors ?? [],
+    extensions: project.extensions ?? extensions,
+    meta: project.meta ?? { semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-resource/scripts/lessons' },
+    board: project.board ?? { device, peripherals: [...new Set([...peripherals, ...extraPeripherals])] },
   }
 }
 

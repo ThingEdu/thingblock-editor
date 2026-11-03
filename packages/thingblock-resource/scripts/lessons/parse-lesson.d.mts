@@ -29,6 +29,8 @@ export interface Lesson {
   thuTu: number
   bo: string
   batDau: string | null
+  /** Extra packs the editor adds when the lesson opens (`thiet-bi:`). */
+  thietBi: string[]
   thoiLuong: number | null
   lang: string
   steps: Step[]
