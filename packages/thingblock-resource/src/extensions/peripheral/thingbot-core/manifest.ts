@@ -12,6 +12,7 @@ const manifest: PeripheralManifest = {
   hidden: true,
   blocks: './blocks.js',
   generator: './generator.js',
+  sim: './sim.js',
   toolbox: './toolbox.js',
   libs: [{ path: 'libs/Adafruit_PWM_Servo_Driver_Library' }, { path: 'libs/Adafruit_BusIO' }],
 }

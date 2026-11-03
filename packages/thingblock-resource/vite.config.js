@@ -7,7 +7,7 @@ import { defineConfig } from 'vite'
 const PACK_ROOT = 'thingblock-resource'
 const EXTENSIONS_DIR = join('src', 'extensions')
 const PACK_GROUPS = ['devices', 'peripheral']
-const ENTRY_MODULES = ['manifest', 'blocks', 'generator', 'toolbox']
+const ENTRY_MODULES = ['manifest', 'blocks', 'generator', 'sim', 'toolbox']
 
 /**
  * Discover each pack under src/extensions/{devices,peripheral}/<id>/ and map its present entry modules

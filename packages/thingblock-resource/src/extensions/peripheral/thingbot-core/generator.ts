@@ -28,7 +28,7 @@ const SEMITONES: Record<string, number> = {
  * @param octave The octave number, e.g. `4`.
  * @returns The frequency in Hz.
  */
-const noteFrequency = (note: string, octave: string): number => {
+export const noteFrequency = (note: string, octave: string): number => {
   const midi = (Number(octave) + 1) * 12 + (SEMITONES[note] ?? 0)
   return Math.round(440 * Math.pow(2, (midi - 69) / 12))
 }

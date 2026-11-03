@@ -381,3 +381,13 @@ test('flashFirmware rejects an unknown image id', async t => {
     );
     t.end();
 });
+
+test('getTutorialsOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:3030/resources/tutorials', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:8080/resources/tutorials', 'cloud mode');
+
+    t.end();
+});

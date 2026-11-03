@@ -11,6 +11,7 @@ import VM from '@thingblock/thingblock-vm';
 
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
+import SimPanel from '../../containers/sim-panel.jsx';
 import SerialLog from '../serial-log/serial-log.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
 import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
@@ -19,8 +20,8 @@ import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
-import TipsLibrary from '../../containers/tips-library.jsx';
-import Cards from '../../containers/cards.jsx';
+import LessonLibrary from '../../containers/lesson-library.jsx';
+import LessonPanel from '../../containers/lesson-panel.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -44,6 +45,9 @@ import {setTheme} from '../../reducers/settings.js';
 import {PLATFORM} from '../../lib/platform.js';
 import {MenuRefProvider} from '../../contexts/menu-ref-context.jsx';
 import {ModalFocusProvider} from '../../contexts/modal-focus-context.jsx';
+
+/** Widest the device panel starts while a lesson is open, so the workspace keeps room beside the lesson. */
+const LESSON_DEVICE_PANEL_WIDTH = 380;
 
 const ariaMessages = defineMessages({
     menuBar: {
@@ -91,7 +95,6 @@ const GUIComponent = props => {
         basePath,
         blocksId,
         blocksTabVisible,
-        cardsVisible,
         canChangeLanguage,
         canChangeColorMode,
         canChangeTheme,
@@ -106,7 +109,6 @@ const GUIComponent = props => {
         connectionModalVisible,
         debugModalVisible,
         onDebugModalClose,
-        onTutorialSelect,
         enableCommunity,
         hasActiveMembership,
         isCreating,
@@ -116,6 +118,7 @@ const GUIComponent = props => {
         isShared,
         isTelemetryEnabled,
         isTotallyNormal,
+        lessonOpen,
         loading,
         logo,
         menuBarHidden,
@@ -154,7 +157,6 @@ const GUIComponent = props => {
         useExternalPeripheralList,
         username,
         userOwnsProject,
-        hideTutorialProjects,
         vm,
         ...componentProps
     } = omit(props, 'dispatch', 'setPlatform');
@@ -237,6 +239,19 @@ const GUIComponent = props => {
         window.dispatchEvent(new Event('resize'));
     }, [devicePanelWidth]);
 
+    // The lesson column takes room from the workspace, so the device panel narrows while a lesson is open
+    // and goes back to the width it had when the lesson closes.
+    const widthBeforeLesson = useRef(null);
+    useEffect(() => {
+        if (lessonOpen) {
+            widthBeforeLesson.current = devicePanelWidth;
+            setDevicePanelWidth(Math.min(devicePanelWidth, LESSON_DEVICE_PANEL_WIDTH));
+        } else if (widthBeforeLesson.current !== null) {
+            setDevicePanelWidth(widthBeforeLesson.current);
+            widthBeforeLesson.current = null;
+        }
+    }, [lessonOpen]);
+
     const handleClearMonitor = useCallback(() => {
         setSerialLogs([]);
     }, []);
@@ -287,6 +302,7 @@ const GUIComponent = props => {
 
     return (<MediaQuery minWidth={layout.fullSizeMinWidth}>{isFullSize => {
         const stageSize = resolveStageSize(stageSizeMode, isFullSize);
+        const blocksMedia = `${basePath}static/${colorModeMap[colorMode].blocksMediaFolder}/`;
         const boxStyles = classNames(styles.bodyWrapper, {
             [styles.bodyWrapperWithoutMenuBar]: menuBarHidden
         });
@@ -315,18 +331,10 @@ const GUIComponent = props => {
                     {isCreating ? (
                         <Loader messageId="gui.loader.creating" />
                     ) : null}
-                    {tipsLibraryVisible ? (
-                        <TipsLibrary
-                            hideTutorialProjects={hideTutorialProjects}
-                            onTutorialSelect={onTutorialSelect}
-                        />
-                    ) : null}
+                    {tipsLibraryVisible ? <LessonLibrary /> : null}
                     <BoardLibrary />
                     {onStartLoadingExample ? <ExampleLibrary onSelectExample={onStartLoadingExample} /> : null}
                     <PeripheralLibrary />
-                    {cardsVisible ? (
-                        <Cards />
-                    ) : null}
                     {alertsVisible ? (
                         <Alerts className={styles.alertsContainer} />
                     ) : null}
@@ -447,26 +455,27 @@ const GUIComponent = props => {
                                         aria-label={intl.formatMessage(ariaMessages.codePanel)}
                                         element="section"
                                     >
-                                        <Blocks
-                                            key={`${blocksId}/${colorMode}/${theme}`}
-                                            grow={1}
-                                            isVisible={blocksTabVisible}
-                                            options={{
-                                                media: `${basePath}static/${colorModeMap[colorMode].blocksMediaFolder}/`
-                                            }}
-                                            stageSize={stageSize}
-                                            theme={theme}
-                                            vm={vm}
-                                            colorMode={colorMode}
-                                        />
+                                        {lessonOpen && <LessonPanel />}
+                                        <div className={styles.blocksArea}>
+                                            <Blocks
+                                                key={`${blocksId}/${colorMode}/${theme}`}
+                                                grow={1}
+                                                isVisible={blocksTabVisible}
+                                                options={{media: blocksMedia}}
+                                                stageSize={stageSize}
+                                                theme={theme}
+                                                vm={vm}
+                                                colorMode={colorMode}
+                                            />
+                                            <ExtensionsButton
+                                                boardMode={Boolean(selectedDeviceId)}
+                                                intl={intl}
+                                                onExtensionButtonClick={
+                                                    selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
+                                                }
+                                            />
+                                        </div>
                                     </Box>
-                                    <ExtensionsButton
-                                        boardMode={Boolean(selectedDeviceId)}
-                                        intl={intl}
-                                        onExtensionButtonClick={
-                                            selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
-                                        }
-                                    />
                                 </TabPanel>
                             </Tabs>
                         </Box>
@@ -484,6 +493,7 @@ const GUIComponent = props => {
                         >
                             <DeviceControls />
                             <PlatformInstallModal />
+                            {selectedDeviceId && <SimPanel />}
                             {selectedDeviceId && (
                                 <CodeView
                                     code={generatedCode}
@@ -533,12 +543,10 @@ GUIComponent.propTypes = {
     canRemix: PropTypes.bool,
     canSave: PropTypes.bool,
     canShare: PropTypes.bool,
-    cardsVisible: PropTypes.bool,
     children: PropTypes.node,
     debugModalVisible: PropTypes.bool,
     hasActiveMembership: PropTypes.bool,
     onDebugModalClose: PropTypes.func,
-    onTutorialSelect: PropTypes.func,
     enableCommunity: PropTypes.bool,
     isCreating: PropTypes.bool,
     isFetchingUserData: PropTypes.bool,
@@ -546,6 +554,7 @@ GUIComponent.propTypes = {
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
     isTotallyNormal: PropTypes.bool,
+    lessonOpen: PropTypes.bool,
     loading: PropTypes.bool,
     logo: PropTypes.string,
     menuBarHidden: PropTypes.bool,
@@ -585,7 +594,6 @@ GUIComponent.propTypes = {
     useExternalPeripheralList: PropTypes.bool, // true for CDM, false for normal Scratch Link
     username: PropTypes.string,
     userOwnsProject: PropTypes.bool,
-    hideTutorialProjects: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
