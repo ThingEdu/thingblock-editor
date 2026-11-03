@@ -203,6 +203,34 @@ export const registerSimGenerators: RegisterSimGenerators = (generator, Order) =
     return `pwm.setPin(${led}, mapToPulse(${brightness}));`
   }
 
+  // C++: the bounded `config_gamepad` retry of `generator.ts`. The virtual controller answers the first
+  // try, after its one-second wait, as a connected receiver does.
+  generator.forBlock.thingBotC3_initPS2 = () => {
+    generator.globals.set('ps2x_instance', 'const ps2x = $.hw.PS2X();')
+    generator.globals.set(
+      'thingbot_ps2_pins',
+      [
+        'const PS2_DAT = 7, PS2_CMD = 2, PS2_SEL = 10, PS2_CLK = 6, PS2_MAX_TRIES = 10;',
+        'const pressures = false, rumble = false;',
+      ].join('\n'),
+    )
+    generator.globals.set('thingbot_ps2_config', 'let error = 1;\nlet tryNum = 1;')
+    return [
+      'while (error != 0 && tryNum <= PS2_MAX_TRIES) {',
+      '  yield $.delay(1000);',
+      '  error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, pressures, rumble);',
+      '  $.Serial.print("#try config ");',
+      '  $.Serial.println($.printInt(tryNum));',
+      '  tryNum++;',
+      '}',
+      'if (error != 0) {',
+      '  $.Serial.print("PS2 controller not found, error ");',
+      '  $.Serial.print($.printInt(error));',
+      '  $.Serial.println("; continuing without it");',
+      '}',
+    ].join('\n')
+  }
+
   generator.forBlock.thingBotC3_switch = () => {
     registerBoardHardware()
     return ['!$.digitalRead(SW)', Order.ATOMIC]

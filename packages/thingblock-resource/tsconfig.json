@@ -23,5 +23,5 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src", "test"],
-  "exclude": ["test/lessons/lessons.test.ts"]
+  "exclude": ["test/lessons/lessons.test.ts", "test/sim/examples.test.ts"]
 }
