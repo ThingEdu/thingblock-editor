@@ -5,7 +5,8 @@ jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
 }));
 jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
     /* eslint-disable react/jsx-no-bind -- a stand-in panel: one button per control the tests press */
-    const MockSimPanel = ({onRun, onReset, onDistanceChange, onPs2Change}) => (<div>
+    const MockSimPanel = ({onRun, onReset, onDistanceChange, onPs2Change, usesOled}) => (<div>
+        <span>{usesOled ? 'with display' : 'no display'}</span>
         <button
             type="button"
             onClick={onReset}
@@ -105,4 +106,17 @@ test('Run and Reset load the code an edit just produced, not the debounced older
     } finally {
         unregister();
     }
+});
+
+test('tells the panel the program uses a display when its code builds one', () => {
+    const withOled = configureStore()({scratchGui: {code: {
+        simCode: 'const oled = $.hw.Adafruit_SSD1306(128, 64);',
+        simDiagnostics: []
+    }}});
+    const {getByText, unmount} = render(<Provider store={withOled}><SimPanel /></Provider>);
+    expect(getByText('with display')).toBeTruthy();
+    unmount();
+    const without = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
+    const second = render(<Provider store={without}><SimPanel /></Provider>);
+    expect(second.getByText('no display')).toBeTruthy();
 });

@@ -14,6 +14,8 @@ const DISTANCE_INPUT = 'ultrasonic';
 const DEFAULT_DISTANCE_CM = 100;
 /** Rig input of a gamepad button: 1 while held. */
 const ps2Input = name => `ps2:${name}`;
+/** The simulator code builds a display with this constructor when the program uses the OLED. */
+const OLED_CONSTRUCTOR = /\bAdafruit_SSD1306\b/;
 
 /**
  * Runs the generated simulator program in a Web Worker and shows the virtual ThingBot. The program is
@@ -149,6 +151,7 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
             snapshot={snapshot}
             stale={stale}
             speed={speed}
+            usesOled={OLED_CONSTRUCTOR.test(simCode)}
             switchPressed={switchPressed}
             onDistanceChange={handleDistanceChange}
             onPause={handlePause}

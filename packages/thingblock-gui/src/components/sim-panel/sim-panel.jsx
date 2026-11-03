@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
 import styles from './sim-panel.css';
-import ThingBotBoard from './thingbot-board.jsx';
+import ThingBotBoard, {boardExtent, oledActiveArea} from './thingbot-board.jsx';
 
 const messages = defineMessages({
     title: {
@@ -51,6 +51,16 @@ const messages = defineMessages({
         id: 'gui.simPanel.distance',
         defaultMessage: 'Obstacle distance',
         description: 'Label of the slider that sets how far an obstacle is from the virtual distance sensor'
+    },
+    zoomOled: {
+        id: 'gui.simPanel.zoomOled',
+        defaultMessage: 'Zoom the display',
+        description: 'Button that shows the virtual OLED display enlarged under the board'
+    },
+    unzoomOled: {
+        id: 'gui.simPanel.unzoomOled',
+        defaultMessage: 'Hide the zoomed display',
+        description: 'Button that hides the enlarged copy of the virtual OLED display'
     },
     gamepad: {
         id: 'gui.simPanel.gamepad',
@@ -148,8 +158,22 @@ const formatTime = us => {
     return `${minutes}:${seconds.padStart(6, '0')}`;
 };
 
+/**
+ * Place a box given in drawing units over the board drawing, as percentages of the drawing's extent.
+ * @param {{x: number, y: number, width: number, height: number}} box The box in drawing units.
+ * @param {{width: number, height: number}} extent The drawing's viewBox size.
+ * @returns {object} The CSS position.
+ */
+const overlayStyle = (box, extent) => ({
+    left: `${(box.x / extent.width) * 100}%`,
+    top: `${(box.y / extent.height) * 100}%`,
+    width: `${(box.width / extent.width) * 100}%`,
+    height: `${(box.height / extent.height) * 100}%`
+});
+
 const SimPanel = ({
     distance,
+    usesOled,
     ps2Held,
     onDistanceChange,
     onPs2Change,
@@ -168,15 +192,27 @@ const SimPanel = ({
 }) => {
     const intl = useIntl();
     const canvasRef = useRef(null);
+    const zoomRef = useRef(null);
+    const [zoomed, setZoomed] = useState(false);
+    const toggleZoom = useCallback(() => setZoomed(z => !z), []);
     const running = Boolean(snapshot && snapshot.running);
     const blocked = problems.length > 0;
 
+    const oled = (snapshot && snapshot.oled) || null;
+    // The display is drawn while the program uses one: from its code before the first run, and from
+    // the running board after.
+    const showOled = Boolean(usesOled || oled);
+    const rows = oled ? oled.height : BLANK_OLED.height;
+    const extent = boardExtent(showOled);
+    const aspect = extent.width / extent.height;
+
     useEffect(() => {
-        if (!canvasRef.current) return;
-        // A program without a display, or a reset before the next run, sends no OLED state: paint the
-        // screen dark rather than keep the last program's frame.
-        paintFrame(canvasRef.current, (snapshot && snapshot.oled) || BLANK_OLED);
-    }, [snapshot]);
+        // A reset before the next run sends no OLED state: paint the screen dark rather than keep the
+        // last program's frame.
+        for (const canvas of [canvasRef.current, zoomRef.current]) {
+            if (canvas) paintFrame(canvas, oled || BLANK_OLED);
+        }
+    }, [snapshot, showOled, zoomed]);
 
     const pwm = snapshot ? snapshot.pwm : [];
     const press = useCallback(() => onSwitchChange(true), [onSwitchChange]);
@@ -232,20 +268,48 @@ const SimPanel = ({
                     >{problem.message}</div>
                 ))}
                 <div className={styles.rig}>
-                    <canvas
-                        ref={canvasRef}
-                        className={styles.oled}
-                        width={128}
-                        height={64}
-                    />
-                    <ThingBotBoard
-                        pwm={pwm}
-                        switchLabel={intl.formatMessage(messages.switchLabel)}
-                        switchPressed={switchPressed}
-                        onPress={press}
-                        onRelease={release}
-                    />
+                    <div
+                        className={styles.drawing}
+                        style={{'--aspect': aspect}}
+                    >
+                        <ThingBotBoard
+                            oledRows={showOled ? rows : null}
+                            pwm={pwm}
+                            switchLabel={intl.formatMessage(messages.switchLabel)}
+                            switchPressed={switchPressed}
+                            onPress={press}
+                            onRelease={release}
+                        />
+                        {showOled && (
+                            <canvas
+                                ref={canvasRef}
+                                className={styles.oled}
+                                height={rows}
+                                style={overlayStyle(oledActiveArea(rows), boardExtent(true))}
+                                width={128}
+                            />
+                        )}
+                    </div>
                 </div>
+                {showOled && (
+                    <div className={styles.zoomRow}>
+                        <button
+                            aria-pressed={zoomed}
+                            className={styles.button}
+                            type="button"
+                            onClick={toggleZoom}
+                        >{intl.formatMessage(zoomed ? messages.unzoomOled : messages.zoomOled)}</button>
+                        {zoomed && (
+                            <canvas
+                                ref={zoomRef}
+                                className={styles.oledZoom}
+                                height={rows}
+                                style={{aspectRatio: `128 / ${rows}`}}
+                                width={128}
+                            />
+                        )}
+                    </div>
+                )}
                 {inputs.ultrasonic && (
                     <label className={styles.control}>
                         <span>{intl.formatMessage(messages.distance)}</span>
@@ -290,6 +354,7 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    usesOled: PropTypes.bool,
     distance: PropTypes.number.isRequired,
     ps2Held: PropTypes.objectOf(PropTypes.bool).isRequired,
     onDistanceChange: PropTypes.func.isRequired,

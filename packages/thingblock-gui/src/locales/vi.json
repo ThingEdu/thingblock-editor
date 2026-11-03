@@ -143,6 +143,8 @@
     "gui.simPanel.step": "Từng bước",
     "gui.simPanel.switch": "SW (giữ)",
     "gui.simPanel.title": "Mô phỏng",
+    "gui.simPanel.unzoomOled": "Thu nhỏ màn hình",
+    "gui.simPanel.zoomOled": "Phóng to màn hình",
     "gui.sliderPrompt.ok": "Đồng ý",
     "gui.theme.dark": "Tối",
     "gui.theme.default": "Gốc",

@@ -29,6 +29,59 @@ const HDR_Y = BY + 44;
 const HDR_STEP = 10.5;
 const signalPin = n => HDR_Y + ((14 - ((n - 1) * 3)) * HDR_STEP);
 
+/**
+ * Drawing units per millimetre. Nothing documents the ThingBot's PCB outline, so the scale comes from
+ * the servo header: its pins sit on the standard 2.54 mm pitch, `HDR_STEP` apart in the drawing.
+ */
+export const MM = HDR_STEP / 2.54;
+
+/**
+ * A 0.96" 128×64 I2C OLED module (SSD1306 class) at the board's scale: a 27.3 × 27.8 mm blue PCB, its
+ * 4-pin header (GND · VCC · SCL · SDA, 2.54 mm pitch) on the top edge, a 26.7 × 19.26 mm glass whose
+ * active area is 21.744 × 10.864 mm. It hangs off the I2C socket on a 4-wire cable, as in the kit.
+ */
+const OLED_W = 27.3 * MM;
+const OLED_H = 27.8 * MM;
+const OLED_X = BX + W + 52;
+const OLED_Y = BY + 92;
+const GLASS_W = 26.7 * MM;
+const GLASS_H = 19.26 * MM;
+const GLASS_X = OLED_X + ((OLED_W - GLASS_W) / 2);
+const GLASS_Y = OLED_Y + (6.2 * MM);
+const OLED_HEADER_Y = OLED_Y + (1.6 * MM);
+const OLED_PIN_X = i => OLED_X + (OLED_W / 2) + ((i - 1.5) * 2.54 * MM);
+const OLED_PINS = [['GND', '#1b1b1b'], ['VCC', '#d62d20'], ['SCL', '#f2c230'], ['SDA', '#2f7bd6']];
+/** The I2C socket on the board's right edge: four pins, top to bottom. */
+const I2C_X = BX + 192;
+const I2C_PIN_Y = i => BY + 106 + ((i + 0.5) * 9);
+
+/**
+ * Where the display's pixels go, in drawing units, for a panel of `height` rows (64, or 32 for the
+ * 0.91" glass, which keeps the same width).
+ * @param {number} height The panel's rows.
+ * @returns {{x: number, y: number, width: number, height: number}} The active area.
+ */
+export const oledActiveArea = height => {
+    const width = 21.744 * MM;
+    const rows = (height === 32 ? 5.584 : 10.864) * MM;
+    return {
+        x: GLASS_X + ((GLASS_W - width) / 2),
+        y: GLASS_Y + (1.9 * MM),
+        width,
+        height: rows
+    };
+};
+
+/**
+ * The drawing's extent: the board with its wheels, widened to the right when the display is plugged in.
+ * @param {boolean} withOled Whether the display module is drawn.
+ * @returns {{width: number, height: number}} The viewBox size.
+ */
+export const boardExtent = withOled => ({
+    width: withOled ? OLED_X + OLED_W + 6 : BX + W + 48,
+    height: BY + H + 24
+});
+
 /** Where each motor's wheel sits: next to its port, M3 and M4 on top, M2 and M1 below. */
 const WHEELS = [
     {x: BX + W + 24, y: BY + H - 12},
@@ -462,18 +515,118 @@ Wheel.propTypes = {
     n: PropTypes.number.isRequired
 };
 
-const ThingBotBoard = ({pwm, switchLabel, switchPressed, onPress, onRelease}) => {
+/** The display module and its cable; the pixels are painted over the active area by the panel. */
+const OledModule = React.memo(({rows}) => {
+    const active = oledActiveArea(rows);
+    const hole = (2.0 * MM);
+    return (
+        <g>
+            {OLED_PINS.map(([name, color], i) => {
+                const sy = I2C_PIN_Y(i);
+                const px = OLED_PIN_X(i);
+                const bend = OLED_X - 10 + (i * 3);
+                const over = OLED_HEADER_Y - 14 - (i * 3);
+                return (
+                    <path
+                        d={`M${I2C_X},${sy} C${bend - 20},${sy} ${bend},${sy} ${bend},${over} ` +
+                            `L${px},${over} L${px},${OLED_HEADER_Y}`}
+                        fill="none"
+                        key={name}
+                        stroke={color}
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                    />
+                );
+            })}
+            <rect
+                fill="#123f7d"
+                height={OLED_H}
+                rx={1.2 * MM}
+                width={OLED_W}
+                x={OLED_X}
+                y={OLED_Y + 3}
+            />
+            <rect
+                fill="#1f5fbf"
+                height={OLED_H}
+                rx={1.2 * MM}
+                width={OLED_W}
+                x={OLED_X}
+                y={OLED_Y}
+            />
+            {[[hole, hole], [OLED_W - hole, hole], [hole, OLED_H - hole], [OLED_W - hole, OLED_H - hole]].map(
+                ([dx, dy]) => (
+                    <circle
+                        cx={OLED_X + dx}
+                        cy={OLED_Y + dy}
+                        fill="#ffffff"
+                        key={`${dx},${dy}`}
+                        r={1.0 * MM}
+                        stroke="#d7b25a"
+                        strokeWidth={1.5}
+                    />
+                )
+            )}
+            {OLED_PINS.map(([name], i) => (
+                <g key={name}>
+                    <rect
+                        fill="#c9a447"
+                        height={3.5}
+                        width={3.5}
+                        x={OLED_PIN_X(i) - 1.75}
+                        y={OLED_HEADER_Y - 1.75}
+                    />
+                    <Silk
+                        size={3.4}
+                        x={OLED_PIN_X(i)}
+                        y={OLED_HEADER_Y + 7}
+                    >{name}</Silk>
+                </g>
+            ))}
+            <rect
+                fill="#0b0c0e"
+                height={GLASS_H}
+                rx={0.6 * MM}
+                width={GLASS_W}
+                x={GLASS_X}
+                y={GLASS_Y}
+            />
+            <rect
+                fill="#000000"
+                height={active.height}
+                stroke="#1f2328"
+                strokeWidth={0.6}
+                width={active.width}
+                x={active.x}
+                y={active.y}
+            />
+            <Silk
+                size={5}
+                x={OLED_X + (OLED_W / 2)}
+                y={OLED_Y + OLED_H - (1.4 * MM)}
+            >{rows === 32 ? '0.91" OLED 128×32' : '0.96" OLED 128×64'}</Silk>
+        </g>
+    );
+});
+OledModule.displayName = 'OledModule';
+OledModule.propTypes = {
+    rows: PropTypes.number.isRequired
+};
+
+const ThingBotBoard = ({pwm, oledRows, switchLabel, switchPressed, onPress, onRelease}) => {
     const duty = ch => pwm[ch] || 0;
     const buzzing = duty(BUZZER) > 0;
     const l2y = signalPin(1) + 12;
+    const extent = boardExtent(Boolean(oledRows));
     return (
         <svg
             className={styles.board}
             role="img"
             aria-label="ThingBot"
-            viewBox={`0 0 ${BX + W + 48} ${BY + H + 24}`}
+            viewBox={`0 0 ${extent.width} ${extent.height}`}
         >
             <BoardArt />
+            {oledRows ? <OledModule rows={oledRows} /> : null}
             {SERVOS.map((ch, i) => (
                 <Servo
                     duty={duty(ch)}
@@ -572,6 +725,7 @@ const ThingBotBoard = ({pwm, switchLabel, switchPressed, onPress, onRelease}) =>
 
 ThingBotBoard.propTypes = {
     onPress: PropTypes.func.isRequired,
+    oledRows: PropTypes.number,
     onRelease: PropTypes.func.isRequired,
     pwm: PropTypes.arrayOf(PropTypes.number).isRequired,
     switchLabel: PropTypes.string.isRequired,
