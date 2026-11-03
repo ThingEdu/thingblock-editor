@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
@@ -45,10 +46,77 @@ const messages = defineMessages({
         id: 'gui.simPanel.halted',
         defaultMessage: 'The board stopped: {reason}',
         description: 'Shown when the virtual board resets on an error, such as dividing by zero'
+    },
+    distance: {
+        id: 'gui.simPanel.distance',
+        defaultMessage: 'Obstacle distance',
+        description: 'Label of the slider that sets how far an obstacle is from the virtual distance sensor'
+    },
+    gamepad: {
+        id: 'gui.simPanel.gamepad',
+        defaultMessage: 'PS2 gamepad (hold a button)',
+        description: 'Label of the virtual PS2 gamepad; a button stays pressed while held'
     }
 });
 
 const SPEEDS = [1, 10, 100];
+const DISTANCE_MIN_CM = 2;
+const DISTANCE_MAX_CM = 400;
+
+/** The gamepad buttons the panel offers, as the PS2 blocks name them, with the mark each shows. */
+const PS2_BUTTONS = [
+    ['PSB_PAD_UP', '▲'],
+    ['PSB_PAD_DOWN', '▼'],
+    ['PSB_PAD_LEFT', '◀'],
+    ['PSB_PAD_RIGHT', '▶'],
+    ['PSB_TRIANGLE', '△'],
+    ['PSB_CIRCLE', '○'],
+    ['PSB_CROSS', '✕'],
+    ['PSB_SQUARE', '□'],
+    ['PSB_L1', 'L1'],
+    ['PSB_L2', 'L2'],
+    ['PSB_R1', 'R1'],
+    ['PSB_R2', 'R2'],
+    ['PSB_SELECT', 'SELECT'],
+    ['PSB_START', 'START']
+];
+
+/**
+ * One gamepad button: pressed while the pointer holds it down.
+ * @param {object} props Component props.
+ * @param {string} props.name The button's PS2 constant.
+ * @param {string} props.mark What the button shows.
+ * @param {boolean} props.held Whether it is pressed now.
+ * @param {Function} props.onChange Called with the name and whether it is now held.
+ * @returns {React.ReactElement} The button.
+ */
+const Ps2Button = ({name, mark, held, onChange}) => {
+    const press = useCallback(e => {
+        e.preventDefault();
+        onChange(name, true);
+    }, [name, onChange]);
+    const release = useCallback(() => {
+        if (held) onChange(name, false);
+    }, [held, name, onChange]);
+    return (
+        <button
+            aria-pressed={held}
+            className={classNames(styles.ps2Button, {[styles.ps2Held]: held})}
+            title={name}
+            type="button"
+            onPointerDown={press}
+            onPointerLeave={release}
+            onPointerUp={release}
+        >{mark}</button>
+    );
+};
+
+Ps2Button.propTypes = {
+    name: PropTypes.string.isRequired,
+    mark: PropTypes.string.isRequired,
+    held: PropTypes.bool.isRequired,
+    onChange: PropTypes.func.isRequired
+};
 
 /**
  * Paint a frame in the SSD1306 page layout (one byte per 8 vertical pixels) onto a canvas.
@@ -79,6 +147,10 @@ const formatTime = us => {
 };
 
 const SimPanel = ({
+    distance,
+    ps2Held,
+    onDistanceChange,
+    onPs2Change,
     snapshot,
     stale,
     problems,
@@ -105,6 +177,8 @@ const SimPanel = ({
     const press = useCallback(() => onSwitchChange(true), [onSwitchChange]);
     const release = useCallback(() => onSwitchChange(false), [onSwitchChange]);
     const handleSpeedChange = useCallback(e => onSpeedChange(Number(e.target.value)), [onSpeedChange]);
+    const handleDistanceChange = useCallback(e => onDistanceChange(Number(e.target.value)), [onDistanceChange]);
+    const inputs = (snapshot && snapshot.inputs) || {};
 
     return (
         <div className={styles.simPanel}>
@@ -145,28 +219,60 @@ const SimPanel = ({
                     ))}
                 </select>
             </div>
-            {problems.map((problem, i) => (
-                <div
-                    className={styles.problem}
-                    key={i}
-                >{problem.message}</div>
-            ))}
-            <div className={styles.rig}>
-                <canvas
-                    ref={canvasRef}
-                    className={styles.oled}
-                    width={128}
-                    height={64}
-                />
-                <ThingBotBoard
-                    pwm={pwm}
-                    switchLabel={intl.formatMessage(messages.switchLabel)}
-                    switchPressed={switchPressed}
-                    onPress={press}
-                    onRelease={release}
-                />
+            <div className={styles.body}>
+                {problems.map((problem, i) => (
+                    <div
+                        className={styles.problem}
+                        key={i}
+                    >{problem.message}</div>
+                ))}
+                <div className={styles.rig}>
+                    <canvas
+                        ref={canvasRef}
+                        className={styles.oled}
+                        width={128}
+                        height={64}
+                    />
+                    <ThingBotBoard
+                        pwm={pwm}
+                        switchLabel={intl.formatMessage(messages.switchLabel)}
+                        switchPressed={switchPressed}
+                        onPress={press}
+                        onRelease={release}
+                    />
+                </div>
+                {inputs.ultrasonic && (
+                    <label className={styles.control}>
+                        <span>{intl.formatMessage(messages.distance)}</span>
+                        <input
+                            className={styles.slider}
+                            max={DISTANCE_MAX_CM}
+                            min={DISTANCE_MIN_CM}
+                            type="range"
+                            value={distance}
+                            onChange={handleDistanceChange}
+                        />
+                        <span className={styles.value}>{`${distance} cm`}</span>
+                    </label>
+                )}
+                {inputs.ps2 && (
+                    <div className={styles.control}>
+                        <span>{intl.formatMessage(messages.gamepad)}</span>
+                        <div className={styles.ps2Pad}>
+                            {PS2_BUTTONS.map(([name, mark]) => (
+                                <Ps2Button
+                                    held={Boolean(ps2Held[name])}
+                                    key={name}
+                                    mark={mark}
+                                    name={name}
+                                    onChange={onPs2Change}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {serial && <pre className={styles.serial}>{serial}</pre>}
             </div>
-            {serial && <pre className={styles.serial}>{serial}</pre>}
             <div className={styles.status}>
                 <span>{snapshot ? formatTime(snapshot.t) : formatTime(0)}</span>
                 {stale && <span>{intl.formatMessage(messages.stale)}</span>}
@@ -179,11 +285,16 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    distance: PropTypes.number.isRequired,
+    ps2Held: PropTypes.objectOf(PropTypes.bool).isRequired,
+    onDistanceChange: PropTypes.func.isRequired,
+    onPs2Change: PropTypes.func.isRequired,
     snapshot: PropTypes.shape({
         t: PropTypes.number,
         running: PropTypes.bool,
         error: PropTypes.string,
         pwm: PropTypes.arrayOf(PropTypes.number),
+        inputs: PropTypes.shape({ultrasonic: PropTypes.bool, ps2: PropTypes.bool}),
         oled: PropTypes.shape({
             width: PropTypes.number,
             height: PropTypes.number,

@@ -8,6 +8,11 @@ import {setSimHighlight, setSimLoadedCode} from '../reducers/code';
 
 /** Serial text kept in the panel; older output scrolls away. */
 const SERIAL_LIMIT = 4000;
+/** Rig input of the distance sensor, in centimetres, and where its slider starts: nothing near. */
+const DISTANCE_INPUT = 'ultrasonic';
+const DEFAULT_DISTANCE_CM = 100;
+/** Rig input of a gamepad button: 1 while held. */
+const ps2Input = name => `ps2:${name}`;
 
 /**
  * Runs the generated simulator program in a Web Worker and shows the virtual ThingBot. The program is
@@ -26,6 +31,8 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
     const [serial, setSerial] = useState('');
     const [speed, setSpeed] = useState(1);
     const [switchPressed, setSwitchPressed] = useState(false);
+    const [distance, setDistance] = useState(DEFAULT_DISTANCE_CM);
+    const [ps2Held, setPs2Held] = useState({});
     const [workerError, setWorkerError] = useState(null);
 
     // The simulator worker is shared with other panels and outlives this one, so on unmount the panel
@@ -74,9 +81,13 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
         onLoaded(simCode);
         post({type: 'speed', speed});
         post({type: 'input', key: 'gpio3', value: switchPressed ? 0 : 1});
+        post({type: 'input', key: DISTANCE_INPUT, value: distance});
+        for (const [name, held] of Object.entries(ps2Held)) {
+            if (held) post({type: 'input', key: ps2Input(name), value: 1});
+        }
         loadedRef.current = simCode;
         setStale(false);
-    }, [post, simCode, speed, switchPressed, onLoaded]);
+    }, [post, simCode, speed, switchPressed, distance, ps2Held, onLoaded]);
 
     const handleRun = useCallback(() => {
         if (loadedRef.current !== simCode || (snapshot && snapshot.phase === 'halted')) load();
@@ -107,17 +118,31 @@ const SimPanel = ({simCode, simDiagnostics, onHighlight, onLoaded}) => {
         post({type: 'input', key: 'gpio3', value: pressed ? 0 : 1});
     }, [post]);
 
+    const handleDistanceChange = useCallback(cm => {
+        setDistance(cm);
+        post({type: 'input', key: DISTANCE_INPUT, value: cm});
+    }, [post]);
+
+    const handlePs2Change = useCallback((name, held) => {
+        setPs2Held(current => ({...current, [name]: held}));
+        post({type: 'input', key: ps2Input(name), value: held ? 1 : 0});
+    }, [post]);
+
     const problems = workerError ? [...simDiagnostics, {message: workerError}] : simDiagnostics;
 
     return (
         <SimPanelComponent
+            distance={distance}
             problems={problems}
+            ps2Held={ps2Held}
             serial={serial}
             snapshot={snapshot}
             stale={stale}
             speed={speed}
             switchPressed={switchPressed}
+            onDistanceChange={handleDistanceChange}
             onPause={handlePause}
+            onPs2Change={handlePs2Change}
             onReset={handleReset}
             onRun={handleRun}
             onSpeedChange={handleSpeedChange}

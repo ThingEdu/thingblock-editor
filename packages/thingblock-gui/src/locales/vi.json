@@ -4,5 +4,15 @@
     "gui.exampleLibrary.groupSim": "Mô phỏng ThingBot Sim",
     "gui.exampleLibrary.title": "Ví dụ",
     "gui.menuBar.examples": "Ví dụ...",
-    "gui.projectLoader.exampleLoadError": "Không mở được dự án ví dụ."
+    "gui.projectLoader.exampleLoadError": "Không mở được dự án ví dụ.",
+    "gui.simPanel.distance": "Vật cản cách cảm biến",
+    "gui.simPanel.gamepad": "Tay cầm PS2 (giữ nút để bấm)",
+    "gui.simPanel.halted": "Mạch đã dừng: {reason}",
+    "gui.simPanel.pause": "Tạm dừng",
+    "gui.simPanel.reset": "Chạy lại",
+    "gui.simPanel.run": "Chạy",
+    "gui.simPanel.stale": "Khối lệnh đã đổi. Bấm Chạy để chạy chương trình mới.",
+    "gui.simPanel.step": "Từng bước",
+    "gui.simPanel.switch": "SW (giữ)",
+    "gui.simPanel.title": "Mô phỏng"
 }
