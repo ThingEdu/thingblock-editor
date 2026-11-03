@@ -11,7 +11,7 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { LogEntry } from '../src/runtime'
 
@@ -148,7 +148,10 @@ function buildObjects(work: string, core: string, flags: string[]): string[] {
     .digest('hex')
     .slice(0, 8)
   return sources.map((file) => {
-    const object = join(work, `${file.replace(/[/\\ ]/g, '_')}.${stamp}.o`)
+    // Named by the base name plus a hash of the full path: the full path itself can push the name
+    // past the 255-character limit when the checkout sits deep in the file system.
+    const pathHash = createHash('sha256').update(file).digest('hex').slice(0, 8)
+    const object = join(work, `${basename(file)}.${pathHash}.${stamp}.o`)
     if (!existsSync(object) || file.startsWith(HOST)) {
       const c = file.endsWith('.c')
       execFileSync(c ? 'cc' : 'c++', [c ? '-std=gnu11' : '-std=gnu++17', ...flags, '-c', file, '-o', object], {
