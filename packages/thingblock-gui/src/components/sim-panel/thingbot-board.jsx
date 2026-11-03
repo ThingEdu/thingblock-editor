@@ -37,7 +37,7 @@ export const MM = HDR_STEP / 2.54;
 
 /**
  * A 0.96" 128×64 I2C OLED module (SSD1306 class) at the board's scale: a 27.3 × 27.8 mm blue PCB, its
- * 4-pin header (GND · VCC · SCL · SDA, 2.54 mm pitch) on the top edge, a 26.7 × 19.26 mm glass whose
+ * 4-pin header (GND · VCC · SDA · SCL, 2.54 mm pitch) on the top edge, a 26.7 × 19.26 mm glass whose
  * active area is 21.744 × 10.864 mm. It hangs off the I2C socket on a 4-wire cable, as in the kit.
  */
 const OLED_W = 27.3 * MM;
@@ -50,10 +50,23 @@ const GLASS_X = OLED_X + ((OLED_W - GLASS_W) / 2);
 const GLASS_Y = OLED_Y + (6.2 * MM);
 const OLED_HEADER_Y = OLED_Y + (1.6 * MM);
 const OLED_PIN_X = i => OLED_X + (OLED_W / 2) + ((i - 1.5) * 2.54 * MM);
-const OLED_PINS = [['GND', '#1b1b1b'], ['VCC', '#d62d20'], ['SCL', '#f2c230'], ['SDA', '#2f7bd6']];
+/**
+ * The cable, pin by pin: [module label, wire colour, board socket label]. Both connectors read
+ * GND · 5V (VCC) · SDA · SCL: the module's header from left to right, the board's I2C socket from
+ * the bottom up. A flat cable from a vertical socket to a header it reaches from above can only stay
+ * uncrossed with the orders running that way round; the wires go GND→GND, 5V→VCC, SDA→SDA, SCL→SCL.
+ */
+export const OLED_PINS = [
+    ['GND', '#1b1b1b', 'GND'],
+    ['VCC', '#d62d20', '5V'],
+    ['SDA', '#2f7bd6', 'SDA'],
+    ['SCL', '#f2c230', 'SCL']
+];
 /** The I2C socket on the board's right edge: four pins, top to bottom. */
 const I2C_X = BX + 192;
 const I2C_PIN_Y = i => BY + 106 + ((i + 0.5) * 9);
+/** The socket pin that cable wire `i` (in OLED_PINS order) plugs into: GND is the bottom one. */
+const I2C_WIRE_Y = i => I2C_PIN_Y(OLED_PINS.length - 1 - i);
 
 /**
  * Where the display's pixels go, in drawing units, for a panel of `height` rows (64, or 32 for the
@@ -362,6 +375,15 @@ const BoardArt = React.memo(() => (
             x={BX + 192}
             y={BY + 152}
         >{'I2C'}</Silk>
+        {OLED_PINS.map(([, , label], i) => (
+            <Silk
+                anchor="end"
+                key={label}
+                size={4.2}
+                x={BX + 182}
+                y={I2C_WIRE_Y(i) + 1.5}
+            >{label}</Silk>
+        ))}
         {/* bottom edge: M2 · IO0 · IO4 · M1 */}
         <Socket
             dark
@@ -522,9 +544,11 @@ const OledModule = React.memo(({rows}) => {
     return (
         <g>
             {OLED_PINS.map(([name, color], i) => {
-                const sy = I2C_PIN_Y(i);
+                const sy = I2C_WIRE_Y(i);
                 const px = OLED_PIN_X(i);
-                const bend = OLED_X - 10 + (i * 3);
+                // GND leaves the lowest socket pin, turns up nearest the module and runs lowest over
+                // the header, so no two wires cross.
+                const bend = OLED_X - 10 - (i * 3);
                 const over = OLED_HEADER_Y - 14 - (i * 3);
                 return (
                     <path
