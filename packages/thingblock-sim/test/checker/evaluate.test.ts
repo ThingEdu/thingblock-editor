@@ -144,6 +144,38 @@ describe('oled rules', () => {
   })
 })
 
+describe('oled placement rules', () => {
+  // The display logs each print with where it started and how big it was drawn.
+  const spans = (...rows: [string, number, number, number][]): LogEntry[] => [
+    { t: 1000, dev: 'oled', key: 'text', value: rows.map((r) => r[0]).join('') },
+    {
+      t: 1000,
+      dev: 'oled',
+      key: 'textAt',
+      value: JSON.stringify(rows.map(([t, x, y, size]) => ({ t, x, y, w: 6 * size, h: 8 * size }))),
+    },
+  ]
+  it('checks the line the text starts on', () => {
+    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chao', 0, 0, 1], ['ThingBot', 0, 16, 1])).ok).toBe(true)
+    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chaoThingBot', 0, 0, 1]))).toEqual({
+      ok: false,
+      message: 'Chữ "ThingBot" chưa nằm ở dòng y = 16. Đặt con trỏ trước khi in.',
+    })
+  })
+  it('checks the text size', () => {
+    expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 2])).ok).toBe(true)
+    expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 1]))).toEqual({
+      ok: false,
+      message: 'Chữ "Xin chao" chưa ở cỡ 12x16.',
+    })
+  })
+  it('fails a placement rule when the text is not on the screen at all', () => {
+    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chao', 0, 0, 1])).message).toBe(
+      'Màn hình chưa hiện chữ "ThingBot".',
+    )
+  })
+})
+
 it('returns one result per rule, in order', () => {
   const results = evaluateLogRules([parseRule('L1 sáng'), parseRule('L2 tắt')], pwmLog([20, 15, 4096]))
   expect(results.map((r) => r.ok)).toEqual([true, true])

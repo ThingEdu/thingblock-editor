@@ -23,6 +23,12 @@ const TEXT_COLOURS: [string, string][] = [
   ['black', 'SSD1306_BLACK'],
 ]
 
+// Black first so a fresh text block draws white on black; a dropdown defaults to its first option.
+const BACKGROUND_COLOURS: [string, string][] = [
+  ['black', 'SSD1306_BLACK'],
+  ['white', 'SSD1306_WHITE'],
+]
+
 const colourField = (name = 'COLOUR', options = DRAW_COLOURS) => ({
   type: 'field_dropdown' as const,
   name,
@@ -184,7 +190,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
             ],
           },
           colourField('COLOUR', TEXT_COLOURS),
-          colourField('BGCOLOR', TEXT_COLOURS),
+          colourField('BGCOLOR', BACKGROUND_COLOURS),
         ],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
@@ -215,8 +221,9 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
             type: 'field_dropdown',
             name: 'EOL',
             options: [
-              ['warp', 'warp'],
-              ['no-warp', 'noWarp'],
+              // The values keep their original spelling so saved projects still load.
+              ['wrap', 'warp'],
+              ['no wrap', 'noWarp'],
             ],
           },
         ],

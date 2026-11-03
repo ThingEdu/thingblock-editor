@@ -45,6 +45,15 @@
         "b2": {
           "topLevel": false,
           "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "oled_clear",
+          "next": "b3",
+          "parent": "b1"
+        },
+        "b3": {
+          "topLevel": false,
+          "shadow": false,
           "inputs": {
             "DATA": [1, [10, "Xin chao"]]
           },
@@ -52,17 +61,30 @@
             "EOL": ["warp", null]
           },
           "opcode": "oled_print",
-          "next": "b3",
-          "parent": "b1"
+          "next": "b4",
+          "parent": "b2"
         },
-        "b3": {
+        "b4": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "DATA": [1, [10, "ThingBot"]]
+          },
+          "fields": {
+            "EOL": ["warp", null]
+          },
+          "opcode": "oled_print",
+          "next": "b5",
+          "parent": "b3"
+        },
+        "b5": {
           "topLevel": false,
           "shadow": false,
           "inputs": {},
           "fields": {},
           "opcode": "oled_refresh",
           "next": null,
-          "parent": "b2"
+          "parent": "b4"
         }
       },
       "currentCostume": 0,

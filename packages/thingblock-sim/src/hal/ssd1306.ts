@@ -60,6 +60,8 @@ export class Ssd1306 {
   private wrap = true
   /** Text printed since the last `clearDisplay()`, for the checker's "the screen says…" rules. */
   private text = ''
+  /** Each print since the last `clearDisplay()`: where it started and its glyph cell, for placement rules. */
+  private spans: { t: string; x: number; y: number; w: number; h: number }[] = []
 
   constructor(width: number, height: number, log: EventLog, bus: I2cBus, name = 'oled') {
     this.width = width
@@ -146,6 +148,7 @@ export class Ssd1306 {
   clearDisplay(): void {
     this.buffer.fill(0)
     this.text = ''
+    this.spans = []
   }
 
   display(): void {
@@ -161,6 +164,7 @@ export class Ssd1306 {
     this.shown = this.buffer.slice()
     this.log.record(this.name, 'frame', hashFrame(this.shown))
     this.log.record(this.name, 'text', this.text)
+    this.log.record(this.name, 'textAt', JSON.stringify(this.spans))
   }
 
   drawPixel(x: number, y: number, colour: number): void {
@@ -264,6 +268,8 @@ export class Ssd1306 {
    * @param text The formatted text.
    */
   print(text: string): void {
+    const t = text.replace(/\r?\n$/, '')
+    if (t) this.spans.push({ t, x: this.cursorX, y: this.cursorY, w: this.textSizeX * 6, h: this.textSizeY * 8 })
     for (const ch of text) {
       const code = ch.codePointAt(0) ?? 0x3f
       this.write(code < 256 ? code : 0x3f)

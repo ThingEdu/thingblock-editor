@@ -14,7 +14,7 @@ export type Rule =
   | { kind: 'motor'; target: MotorName; state: 'forward' | 'backward' | 'stop' }
   | { kind: 'motorSpeed'; target: MotorName; minPercent: number }
   | { kind: 'servo'; target: ServoName; angle: number; tolerance: number }
-  | { kind: 'oled'; text: string; exact: boolean }
+  | { kind: 'oled'; text: string; exact: boolean; y?: number; size?: { w: number; h: number } }
 
 /** Longest blink period the 5 s check window can observe three times (spec §5.3). */
 export const BLINK_MAX_PERIOD_S = 1.5
@@ -82,12 +82,28 @@ export function parseRule(text: string): Rule {
     }
   }
   // The quoted text keeps the author's casing: it is what the learner should see on the screen.
-  if ((m = /^oled\s+hiện\s+(đúng\s+)?"(.+)"$/i.exec(text.normalize('NFC').trim())))
-    return { kind: 'oled', text: m[2], exact: Boolean(m[1]) }
+  // Optional placement after the quote: `ở y 16` (the line the text starts on, in pixels) and
+  // `cỡ 12x16` (the glyph cell the text size block names).
+  if (
+    (m = /^oled\s+hiện\s+(đúng\s+)?"(.+)"(?:\s+ở\s+y\s*=?\s*(\d+))?(?:\s+cỡ\s+(\d+)\s*x\s*(\d+))?$/i.exec(
+      text.normalize('NFC').trim(),
+    ))
+  ) {
+    // Optional groups that did not take part in the match are undefined.
+    const [, exact, quoted, y, w, h] = m as (string | undefined)[]
+    return {
+      kind: 'oled',
+      text: quoted ?? '',
+      exact: Boolean(exact),
+      ...(y === undefined ? {} : { y: Number(y) }),
+      ...(w === undefined ? {} : { size: { w: Number(w), h: Number(h) } }),
+    }
+  }
 
   throw new RuleSyntaxError(
     text,
     'các dạng được hiểu: "L1 sáng/tắt", "còi kêu/tắt", "L1 nhấp nháy, chu kỳ X giây ± Y%", ' +
-      '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N", "servo S1 ở G độ ± D", \'OLED hiện "…"\', \'OLED hiện đúng "…"\'',
+      '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N", "servo S1 ở G độ ± D", \'OLED hiện "…"\', \'OLED hiện đúng "…"\', ' +
+      '\'OLED hiện "…" ở y N cỡ 12x16\'',
   )
 }

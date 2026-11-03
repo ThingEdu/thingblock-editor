@@ -56,6 +56,8 @@ hiểu:
 | `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ |
 | `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                             |
 | `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì            |
+| `kiểm: OLED hiện "ThingBot" ở y 16`         | Chữ này được in bắt đầu từ dòng y = 16               |
+| `kiểm: OLED hiện "Xin chao" cỡ 12x16`       | Chữ này được in ở cỡ 12x16 (khối set oled text size) |
 
 Số thập phân viết bằng dấu phẩy hoặc dấu chấm đều được. Gõ sai dạng luật thì `npm run build` dừng và báo
 `tệp:dòng`.

@@ -121,7 +121,7 @@ describe('SSD1306 (Adafruit_SSD1306 on Adafruit_GFX)', () => {
     expect(oled.getCursorX()).toBe(6)
   })
 
-  it('shows a frame only on display(): logs its hash and text, and charges the transfer', () => {
+  it('shows a frame only on display(): logs its hash, text and text placement, and charges the transfer', () => {
     const { $, clock, log } = createBoard()
     const oled = $.hw.Adafruit_SSD1306(128, 64)
     oled.begin()
@@ -133,8 +133,9 @@ describe('SSD1306 (Adafruit_SSD1306 on Adafruit_GFX)', () => {
     oled.display()
 
     const frame = log.entries.filter((e) => e.dev === 'oled')
-    expect(frame.map((e) => e.key)).toEqual(['frame', 'text'])
+    expect(frame.map((e) => e.key)).toEqual(['frame', 'text', 'textAt'])
     expect(frame[1].value).toBe('Hi')
+    expect(JSON.parse(String(frame[2].value))).toEqual([{ t: 'Hi', x: 0, y: 0, w: 6, h: 8 }])
     // At 400 kHz: the address window (157 us), the column end (67 us), then 1024 bytes as eight
     // transmissions of 127 (2902 us each) and one of 8 (225 us).
     expect(clock.now - before).toBe(157 + 67 + 8 * 2902 + 225)

@@ -129,13 +129,39 @@ const checkServo = (
   return fail(`Servo ${target} đang ở ${seen} độ. Bài cần khoảng ${angle} độ.`)
 }
 
-const checkOled = (text: string, exact: boolean, log: readonly LogEntry[]): RuleResult => {
+interface TextSpan {
+  t: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+const checkOled = (
+  rule: { text: string; exact: boolean; y?: number; size?: { w: number; h: number } },
+  log: readonly LogEntry[],
+): RuleResult => {
   let shown = ''
-  for (const e of log) if (e.dev === 'oled' && e.key === 'text') shown = String(e.value)
-  const hit = exact
-    ? shown.split('\n').some((line) => line.trim() === text.trim())
-    : shown.toLowerCase().includes(text.toLowerCase())
-  return hit ? PASS : fail(`Màn hình chưa hiện chữ "${text}".`)
+  let spans: TextSpan[] = []
+  for (const e of log) {
+    if (e.dev !== 'oled') continue
+    if (e.key === 'text') shown = String(e.value)
+    else if (e.key === 'textAt') spans = JSON.parse(String(e.value)) as TextSpan[]
+  }
+  const { text, exact } = rule
+  const matches = (s: string) =>
+    exact ? s.split('\n').some((line) => line.trim() === text.trim()) : s.toLowerCase().includes(text.toLowerCase())
+  if (!matches(shown)) return fail(`Màn hình chưa hiện chữ "${text}".`)
+  if (rule.y === undefined && !rule.size) return PASS
+  const placed = spans.filter((span) => matches(span.t))
+  if (rule.y !== undefined && !placed.some((span) => span.y === rule.y)) {
+    return fail(`Chữ "${text}" chưa nằm ở dòng y = ${rule.y}. Đặt con trỏ trước khi in.`)
+  }
+  const size = rule.size
+  if (size && !placed.some((span) => span.w === size.w && span.h === size.h)) {
+    return fail(`Chữ "${text}" chưa ở cỡ ${size.w}x${size.h}.`)
+  }
+  return PASS
 }
 
 export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[]): RuleResult[] {
@@ -154,7 +180,7 @@ export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[
       case 'servo':
         return checkServo(rule.target, rule.angle, rule.tolerance, log)
       case 'oled':
-        return checkOled(rule.text, rule.exact, log)
+        return checkOled(rule, log)
     }
   })
 }

@@ -18,6 +18,8 @@ describe('parseRule', () => {
     ['servo S3 ở 45 độ', { kind: 'servo', target: 'S3', angle: 45, tolerance: 5 }],
     ['OLED hiện "Xin chào"', { kind: 'oled', text: 'Xin chào', exact: false }],
     ['OLED hiện đúng "1"', { kind: 'oled', text: '1', exact: true }],
+    ['OLED hiện "ThingBot" ở y 16', { kind: 'oled', text: 'ThingBot', exact: false, y: 16 }],
+    ['OLED hiện "Xin chao" cỡ 12x16', { kind: 'oled', text: 'Xin chao', exact: false, size: { w: 12, h: 16 } }],
   ])('%s', (text, rule) => {
     expect(parseRule(text)).toEqual(rule)
   })

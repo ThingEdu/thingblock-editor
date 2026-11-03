@@ -45,25 +45,22 @@
         "b2": {
           "topLevel": false,
           "shadow": false,
-          "inputs": {
-            "DATA": [1, [10, "Xin chao"]]
-          },
-          "fields": {
-            "EOL": ["warp", null]
-          },
-          "opcode": "oled_print",
+          "inputs": {},
+          "fields": {},
+          "opcode": "oled_clear",
           "next": "b3",
           "parent": "b1"
         },
         "b3": {
           "topLevel": false,
           "shadow": false,
-          "inputs": {
-            "X": [1, [4, "0"]],
-            "Y": [1, [4, "16"]]
+          "inputs": {},
+          "fields": {
+            "SIZE": ["2", null],
+            "COLOUR": ["SSD1306_WHITE", null],
+            "BGCOLOR": ["SSD1306_BLACK", null]
           },
-          "fields": {},
-          "opcode": "oled_setCursor",
+          "opcode": "oled_setText",
           "next": "b4",
           "parent": "b2"
         },
@@ -71,7 +68,7 @@
           "topLevel": false,
           "shadow": false,
           "inputs": {
-            "DATA": [1, [10, "ThingBot"]]
+            "DATA": [1, [10, "Xin chao"]]
           },
           "fields": {
             "EOL": ["warp", null]
@@ -83,11 +80,36 @@
         "b5": {
           "topLevel": false,
           "shadow": false,
+          "inputs": {
+            "X": [1, [4, "0"]],
+            "Y": [1, [4, "16"]]
+          },
+          "fields": {},
+          "opcode": "oled_setCursor",
+          "next": "b6",
+          "parent": "b4"
+        },
+        "b6": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "DATA": [1, [10, "ThingBot"]]
+          },
+          "fields": {
+            "EOL": ["warp", null]
+          },
+          "opcode": "oled_print",
+          "next": "b7",
+          "parent": "b5"
+        },
+        "b7": {
+          "topLevel": false,
+          "shadow": false,
           "inputs": {},
           "fields": {},
           "opcode": "oled_refresh",
           "next": null,
-          "parent": "b4"
+          "parent": "b6"
         }
       },
       "currentCostume": 0,
