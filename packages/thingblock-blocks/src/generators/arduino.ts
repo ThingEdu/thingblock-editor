@@ -12,6 +12,7 @@ import { registerProcedures } from './arduino/procedures'
 import { registerSensing } from './arduino/sensing'
 import { registerValues } from './arduino/values'
 import { variableCppType } from './cpp-types'
+import { procedureArgs } from './procedure-args'
 
 /** Name-database category for custom-block argument reporters. */
 const ARGUMENT_NAME_TYPE = 'ARGUMENT'
@@ -164,18 +165,21 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
 
   /**
    * Emit a `procedures_definition` hat as a file-scope `void` function in the
-   * `globals` bucket. Scratch custom blocks are parameterless in firmware, so
-   * only the name and body are generated.
+   * `globals` bucket, with the custom block's parameters.
    * @param hat The `procedures_definition` top block.
    */
   private emitProcedureDefinition(hat: Block): void {
     const prototype = hat.getInputTargetBlock('custom_block') as { getProcCode?: () => string } | null
     const procCode = prototype?.getProcCode?.() ?? 'custom_block'
     const name = this.getProcedureName(procCode)
+    // Number-or-text parameters are numbers on the board (`float`); boolean ones are `bool`.
+    const params = procedureArgs(prototype as Block | null)
+      .map((arg) => `${arg.boolean ? 'bool' : 'float'} ${this.getArgumentName(arg.name)}`)
+      .join(', ')
     const next = hat.getNextBlock()
     const body = next ? this.blockToCodeString(next) : ''
     const indented = body ? `${this.prefixLines(body, this.INDENT)}\n` : ''
-    this.globals.set(`proc_${name}`, `void ${name}() {\n${indented}}`)
+    this.globals.set(`proc_${name}`, `void ${name}(${params}) {\n${indented}}`)
   }
 
   /**

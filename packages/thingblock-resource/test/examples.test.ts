@@ -79,7 +79,7 @@ const devices = new Map(Object.values(deviceManifests).map((m) => [m.default.id,
 interface JsonArgument {
   type?: string
   name?: string
-  check?: string
+  check?: string | string[]
   options?: string[][]
 }
 
@@ -184,8 +184,8 @@ describe('bundled examples', () => {
             expect(arg, `${block.opcode} has no field ${name}`).toBeDefined()
             if (arg?.options) expect(arg.options.map((o) => o[1])).toContain(value)
           }
-          // The editor refuses a reporter whose output does not match the input's check (a variable,
-          // which outputs a String, cannot sit in a Number input), so the block would load detached.
+          // The editor refuses a reporter whose output does not match the input's check, so the block
+          // would load detached.
           for (const [name, input] of Object.entries(block.inputs)) {
             const check = args.find((a) => a.name === name)?.check
             if (!check) continue
@@ -195,7 +195,7 @@ describe('bundled examples', () => {
                 ? 'String'
                 : 'Number'
               : outputType(blocks[ref as string].opcode)
-            expect(type, `${block.opcode}.${name} holds a ${type} reporter`).toBe(check)
+            expect([check].flat(), `${block.opcode}.${name} holds a ${type} reporter`).toContain(type)
           }
         }
       })

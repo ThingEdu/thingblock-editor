@@ -6,6 +6,7 @@ import * as Blockly from 'blockly/core'
 import type { Block, Workspace } from 'blockly/core'
 import { Order } from './arduino/order'
 import { variableCppType } from './cpp-types'
+import { procedureArgs } from './procedure-args'
 import { registerSimCore } from './sim/core'
 
 /**
@@ -136,6 +137,16 @@ export class SimGenerator extends Blockly.CodeGenerator {
    * @param fallback Code for an empty input.
    * @returns The converted code.
    */
+  /**
+   * The identifier of a custom-block parameter, named as the Arduino generator names it.
+   * @param name The parameter's name.
+   * @returns The JavaScript identifier.
+   */
+  getArgumentName(name: string): string {
+    if (!this.nameDB_) throw new Error('SimGenerator.getArgumentName called outside a generation pass')
+    return this.nameDB_.getName(name, 'ARGUMENT')
+  }
+
   inputAs(block: Block, name: string, to: CType, fallback = '0'): string {
     const { code, type } = this.typedInput(block, name, fallback, to === 'String' || to === 'cstr' ? 'cstr' : 'int')
     return this.convert(block, code, type, to)
@@ -257,10 +268,13 @@ export class SimGenerator extends Blockly.CodeGenerator {
   private emitProcedureDefinition(hat: Block): void {
     const prototype = hat.getInputTargetBlock('custom_block') as { getProcCode?: () => string } | null
     const name = this.getProcedureName(prototype?.getProcCode?.() ?? 'custom_block')
+    const params = procedureArgs(prototype as Block | null)
+      .map((arg) => this.getArgumentName(arg.name))
+      .join(', ')
     const next = hat.getNextBlock()
     const body = next ? this.blockToCodeString(next) : ''
     const indented = body ? `${this.prefixLines(body, this.INDENT)}\n` : ''
-    this.globals.set(`proc_${name}`, `function* ${name}() {\n${indented}}`)
+    this.globals.set(`proc_${name}`, `function* ${name}(${params}) {\n${indented}}`)
   }
 
   /**

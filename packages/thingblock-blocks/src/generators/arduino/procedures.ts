@@ -4,6 +4,7 @@
  */
 import type { Block } from 'blockly/core'
 import type { ArduinoGenerator } from '../arduino'
+import { procedureArgs, textArgumentAsNumber } from '../procedure-args'
 import { Order } from './order'
 
 /** A procedure block exposes its Scratch proccode. */
@@ -20,7 +21,12 @@ interface ProcedureBlock {
 export function registerProcedures(gen: ArduinoGenerator): void {
   gen.forBlock.procedures_call = (block, generator) => {
     const procCode = (block as unknown as ProcedureBlock).getProcCode()
-    return `${generator.getProcedureName(procCode)}();`
+    const args = procedureArgs(block).map(
+      (arg) =>
+        (arg.boolean ? null : textArgumentAsNumber(block, arg.id)) ??
+        (generator.valueToCode(block, arg.id, Order.NONE) || (arg.boolean ? 'false' : '0')),
+    )
+    return `${generator.getProcedureName(procCode)}(${args.join(', ')});`
   }
 
   const argumentReporter = (block: Block, generator: ArduinoGenerator): [string, Order] => [

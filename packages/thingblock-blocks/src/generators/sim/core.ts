@@ -5,6 +5,7 @@
 import type { Block } from 'blockly/core'
 import { Order } from '../arduino/order'
 import { numericText } from '../cpp-types'
+import { procedureArgs, textArgumentAsNumber } from '../procedure-args'
 import { literalType, type CType, type SimGenerator } from '../sim'
 
 const isNumeric = (type: CType): boolean => type !== 'String' && type !== 'cstr'
@@ -269,13 +270,65 @@ export function registerSimCore(gen: SimGenerator): void {
   }
 
   // --- Sensing ----------------------------------------------------------------------------------
-  gen.forBlock.sensing_timer = () => atomic('($.millis() / 1000.0)')
+  // As the Arduino generator: the timer counts from `scratchTimerStart`, which reset timer moves to now.
+  const declareTimerStart = (generator: SimGenerator) =>
+    generator.globals.set('sensing_timer_start', 'let scratchTimerStart = 0;')
+  gen.forBlock.sensing_timer = (_block, generator) => {
+    declareTimerStart(generator)
+    return atomic('(($.millis() - scratchTimerStart) / 1000.0)')
+  }
   t.sensing_timer = () => 'double'
-  gen.forBlock.sensing_resettimer = () => ''
+  gen.forBlock.sensing_resettimer = (_block, generator) => {
+    declareTimerStart(generator)
+    return 'scratchTimerStart = $.millis();'
+  }
+
+  // --- Arduino pins -----------------------------------------------------------------------------
+  // As ../arduino/arduino-api.ts. A pin or level is a value input on some boards' blocks and a field on
+  // others; the menus' C++ names become the core's numbers.
+  const LEVELS: Record<string, string> = { HIGH: '1', LOW: '0' }
+  const MODES: Record<string, string> = { INPUT: '0', OUTPUT: '1', INPUT_PULLUP: '2' }
+  const pinArg = (
+    generator: SimGenerator,
+    block: Block,
+    name: string,
+    fallback: string,
+    names: Record<string, string> = {},
+  ): string => {
+    if (block.getInput(name)) return generator.inputAs(block, name, 'int', fallback)
+    const value = String(block.getFieldValue(name) ?? fallback)
+    if (value in names) return names[value]
+    return numericText(value) ?? fallback
+  }
+  gen.forBlock.arduino_pinMode = (block, generator) =>
+    `$.pinMode(${pinArg(generator, block, 'PIN', '13')}, ${pinArg(generator, block, 'MODE', '1', MODES)});`
+  gen.forBlock.arduino_digitalWrite = (block, generator) =>
+    `$.digitalWrite(${pinArg(generator, block, 'PIN', '13')}, ${pinArg(generator, block, 'LEVEL', '1', LEVELS)});`
+  gen.forBlock.arduino_digitalRead = (block, generator) =>
+    atomic(`$.digitalRead(${pinArg(generator, block, 'PIN', '2')})`)
+  t.arduino_digitalRead = () => 'int'
+  gen.forBlock.arduino_analogRead = (block, generator) =>
+    atomic(`$.analogRead(${pinArg(generator, block, 'PIN', '0')})`)
+  t.arduino_analogRead = () => 'int'
+  gen.forBlock.arduino_delay = (block, generator) => `yield $.delay(${pinArg(generator, block, 'MS', '1000')});`
 
   // --- Procedures -------------------------------------------------------------------------------
   gen.forBlock.procedures_call = (block, generator) => {
     const procCode = (block as unknown as { getProcCode(): string }).getProcCode()
-    return `yield* ${generator.getProcedureName(procCode)}();`
+    // As the Arduino generator: number-or-text parameters are floats, boolean ones bools.
+    const args = procedureArgs(block).map((arg) =>
+      arg.boolean
+        ? block.getInputTargetBlock(arg.id)
+          ? generator.inputAs(block, arg.id, 'bool')
+          : 'false'
+        : (textArgumentAsNumber(block, arg.id) ?? generator.inputAs(block, arg.id, 'float')),
+    )
+    return `yield* ${generator.getProcedureName(procCode)}(${args.join(', ')});`
   }
+  const argumentReporter = (block: Block, generator: SimGenerator): [string, number] =>
+    atomic(generator.getArgumentName(String(block.getFieldValue('VALUE') ?? 'argument')))
+  gen.forBlock.argument_reporter_string_number = argumentReporter
+  t.argument_reporter_string_number = () => 'float'
+  gen.forBlock.argument_reporter_boolean = argumentReporter
+  t.argument_reporter_boolean = () => 'bool'
 }
