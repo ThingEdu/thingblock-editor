@@ -32,7 +32,7 @@ Mỗi dòng `## Tên bước` mở một bước. Bước đầu là lời chào
 `##`; tiêu đề `###` bị báo lỗi. Nội dung bước là Markdown thường: đoạn văn, danh sách, chữ đậm (`**đậm**` hoặc `__đậm__`, như nhau), chữ nghiêng (`*nghiêng*` hoặc `_nghiêng_`, như nhau), ảnh (tệp ảnh
 phải nằm trong thư mục của bài).
 
-Hiện khối chỉ có nhãn tiếng Anh, nên bài gọi khối bằng nhãn đang hiện trên màn hình, in **đậm**.
+Bài gọi khối bằng nhãn tiếng Việt đang hiện trong bảng khối (chọn ngôn ngữ Tiếng Việt), in **đậm**, ví dụ **khi Arduino khởi động**, **đặt đèn L1 độ sáng 100**.
 
 ### Gợi ý
 
