@@ -1,16 +1,25 @@
 import React from 'react';
 import {render} from '@testing-library/react';
+import {IntlProvider} from 'react-intl';
+import viMessages from '../../../src/locales/vi.json';
 import ThingBotBoard, {OLED_PINS} from '../../../src/components/sim-panel/thingbot-board.jsx';
 
-const renderBoard = () => render(
-    <ThingBotBoard
-        oledRows={64}
-        pwm={new Array(16).fill(0)}
-        switchLabel="SW"
-        switchPressed={false}
-        onPress={() => {}}
-        onRelease={() => {}}
-    />
+const noop = () => {};
+const renderBoard = ({pwm = new Array(16).fill(0), pwmHz = 0, oledRows = 64} = {}) => render(
+    <IntlProvider
+        locale="vi"
+        messages={viMessages}
+    >
+        <ThingBotBoard
+            oledRows={oledRows}
+            pwm={pwm}
+            pwmHz={pwmHz}
+            switchLabel="SW"
+            switchPressed={false}
+            onPress={noop}
+            onRelease={noop}
+        />
+    </IntlProvider>
 );
 
 test('the OLED header reads GND, VCC, SDA, SCL left to right; the I2C socket GND, 5V, SDA, SCL bottom up', () => {
@@ -48,4 +57,26 @@ test('the four OLED wires never cross', () => {
             }
         }
     }
+});
+
+test('every part says its state in words with its unit when hovered', () => {
+    const pwm = new Array(16).fill(0);
+    pwm[15] = 4096; // L1 full
+    pwm[13] = 2048; // L2 half
+    pwm[3] = 2048; // M1 channel B: forward at 50 %
+    pwm[14] = 2048; // buzzer
+    pwm[12] = 307; // S1 at 90°
+    const {container} = renderBoard({pwm, pwmHz: 440, oledRows: null});
+    const titles = [...container.querySelectorAll('title')].map(t => t.textContent);
+    expect(titles).toEqual(expect.arrayContaining([
+        'Đèn L1: sáng, độ sáng 100%',
+        'Đèn L2: sáng, độ sáng 50%',
+        'Động cơ M1: tiến, 50% tốc độ',
+        'Động cơ M2: dừng',
+        'Servo S1: góc 90°',
+        'Servo S2: chưa đặt góc',
+        'Còi: đang kêu 440 Hz'
+    ]));
+    const texts = [...container.querySelectorAll('text')].map(t => t.textContent);
+    expect(texts).toEqual(expect.arrayContaining(['L1 100%', 'L2 50%', '440 Hz']));
 });

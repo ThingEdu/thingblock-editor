@@ -26,6 +26,11 @@ const groupMessages = defineMessages({
         description: 'Example library tag: basic lessons from the K1-K12 curriculum',
         id: 'gui.exampleLibrary.groupK12'
     },
+    'Âm nhạc': {
+        defaultMessage: 'Music',
+        description: 'Example library tag: tunes played on the ThingBot buzzer',
+        id: 'gui.exampleLibrary.groupMusic'
+    },
     'Mô phỏng ThingBot Sim': {
         defaultMessage: 'ThingBot Sim lessons',
         description: 'Example library tag: the lessons of the ThingBot simulator',

@@ -121,8 +121,8 @@ const checkMotorSpeed = (target: MotorName, minPercent: number, log: readonly Lo
   const peak = Math.max(0, ...motorStates(target, log).map((s) => s.duty))
   const percent = Math.round((peak / 4095) * 100)
   if (percent >= minPercent) return PASS
-  if (peak === 0) return fail(`Động cơ ${target} chưa chạy. Bài cần ít nhất ${minPercent}%.`)
-  return fail(`Động cơ ${target} chạy mạnh nhất khoảng ${percent}%. Bài cần ít nhất ${minPercent}%.`)
+  if (peak === 0) return fail(`Động cơ ${target} chưa chạy. Bài cần ít nhất ${minPercent}% tốc độ.`)
+  return fail(`Động cơ ${target} chạy nhanh nhất khoảng ${percent}% tốc độ. Bài cần ít nhất ${minPercent}% tốc độ.`)
 }
 
 const checkServo = (
@@ -135,7 +135,7 @@ const checkServo = (
   if (!history.length) return fail(`Servo ${target} chưa được đặt góc.`)
   const seen = dutyToAngle(lastDuty(history))
   if (Math.abs(seen - angle) <= tolerance) return PASS
-  return fail(`Servo ${target} đang ở ${seen} độ. Bài cần khoảng ${angle} độ.`)
+  return fail(`Servo ${target} đang ở góc ${seen}°. Bài cần góc khoảng ${angle}°.`)
 }
 
 interface TextSpan {
@@ -168,7 +168,7 @@ const checkOled = (
   }
   const size = rule.size
   if (size && !placed.some((span) => span.w === size.w && span.h === size.h)) {
-    return fail(`Chữ "${text}" chưa ở cỡ ${size.w}x${size.h}.`)
+    return fail(`Chữ "${text}" chưa ở cỡ chữ ${size.w}×${size.h}.`)
   }
   return PASS
 }
@@ -185,7 +185,7 @@ const checkServoSweep = (
   const low = Math.min(...angles)
   const high = Math.max(...angles)
   if (low <= from + tolerance && high >= to - tolerance) return PASS
-  return fail(`Servo ${target} mới quay trong khoảng ${low} đến ${high} độ. Bài cần quét từ ${from} đến ${to} độ.`)
+  return fail(`Servo ${target} mới quay trong khoảng ${low}° đến ${high}°. Bài cần quét từ ${from}° đến ${to}°.`)
 }
 
 /**

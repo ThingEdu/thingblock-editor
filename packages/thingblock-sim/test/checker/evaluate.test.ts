@@ -109,7 +109,7 @@ describe('motor rules', () => {
     expect(check('M1 tốc độ ≥ 50', pwmLog([10, 2, 2047])).ok).toBe(true)
     expect(check('M1 tốc độ ≥ 50', pwmLog([10, 2, 1000]))).toEqual({
       ok: false,
-      message: 'Động cơ M1 chạy mạnh nhất khoảng 24%. Bài cần ít nhất 50%.',
+      message: 'Động cơ M1 chạy nhanh nhất khoảng 24% tốc độ. Bài cần ít nhất 50% tốc độ.',
     })
   })
 })
@@ -119,7 +119,7 @@ describe('servo rule', () => {
     expect(check('servo S1 ở 90 độ ± 5', pwmLog([10, 12, 307])).ok).toBe(true)
     expect(check('servo S1 ở 90 độ ± 5', pwmLog([10, 12, 204]))).toEqual({
       ok: false,
-      message: 'Servo S1 đang ở 45 độ. Bài cần khoảng 90 độ.',
+      message: 'Servo S1 đang ở góc 45°. Bài cần góc khoảng 90°.',
     })
     expect(check('servo S1 ở 90 độ', [])).toEqual({ ok: false, message: 'Servo S1 chưa được đặt góc.' })
   })
@@ -166,7 +166,7 @@ describe('oled placement rules', () => {
     expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 2])).ok).toBe(true)
     expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 1]))).toEqual({
       ok: false,
-      message: 'Chữ "Xin chao" chưa ở cỡ 12x16.',
+      message: 'Chữ "Xin chao" chưa ở cỡ chữ 12×16.',
     })
   })
   it('fails a placement rule when the text is not on the screen at all', () => {

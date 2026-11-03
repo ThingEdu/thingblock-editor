@@ -186,5 +186,16 @@
     "gui.simPanel.mute": "Tắt tiếng",
     "gui.simPanel.muteTip": "Tắt tiếng còi trên loa máy tính",
     "gui.simPanel.unmute": "Bật tiếng",
-    "gui.simPanel.unmuteTip": "Phát nốt nhạc của còi ra loa máy tính"
+    "gui.simPanel.unmuteTip": "Phát nốt nhạc của còi ra loa máy tính",
+    "gui.exampleLibrary.groupMusic": "Âm nhạc",
+    "gui.simBoard.motorOn": "Động cơ M{n}: {direction}, {percent}% tốc độ",
+    "gui.simBoard.motorOff": "Động cơ M{n}: dừng",
+    "gui.simBoard.forward": "tiến",
+    "gui.simBoard.backward": "lùi",
+    "gui.simBoard.servo": "Servo S{n}: góc {angle}°",
+    "gui.simBoard.servoUnset": "Servo S{n}: chưa đặt góc",
+    "gui.simBoard.ledOn": "Đèn {name}: sáng, độ sáng {percent}%",
+    "gui.simBoard.ledOff": "Đèn {name}: tắt",
+    "gui.simBoard.buzzerOn": "Còi: đang kêu {hz} Hz",
+    "gui.simBoard.buzzerOff": "Còi: tắt"
 }

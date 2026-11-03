@@ -91,7 +91,7 @@ describe('servo sweep rule', () => {
   it('fails and says how far it went', () => {
     expect(check('servo S1 quét từ 0 đến 180 độ', servoLog([0, duty(90)], [1000, duty(180)]))).toEqual({
       ok: false,
-      message: 'Servo S1 mới quay trong khoảng 90 đến 180 độ. Bài cần quét từ 0 đến 180 độ.',
+      message: 'Servo S1 mới quay trong khoảng 90° đến 180°. Bài cần quét từ 0° đến 180°.',
     })
     expect(check('servo S1 quét từ 0 đến 180 độ', [])).toEqual({ ok: false, message: 'Servo S1 chưa được đặt góc.' })
   })

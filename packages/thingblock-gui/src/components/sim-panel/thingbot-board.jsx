@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import {defineMessages, useIntl} from 'react-intl';
 
 import styles from './sim-panel.css';
 
@@ -18,6 +19,64 @@ const MOTORS = [[2, 3], [4, 5], [7, 6], [1, 0]]; // M1 … M4 as [A, B]
 const SERVO_PULSE_MIN = 102;
 const SERVO_PULSE_MAX = 512;
 const FULL = 4096;
+
+
+/** Hover texts that say each part's state in words, with its unit. */
+const messages = defineMessages({
+    motorOn: {
+        id: 'gui.simBoard.motorOn',
+        defaultMessage: 'Motor M{n}: {direction}, {percent}% speed',
+        description: 'Tooltip of a running motor on the virtual board'
+    },
+    motorOff: {
+        id: 'gui.simBoard.motorOff',
+        defaultMessage: 'Motor M{n}: stopped',
+        description: 'Tooltip of a stopped motor on the virtual board'
+    },
+    forward: {
+        id: 'gui.simBoard.forward',
+        defaultMessage: 'forward',
+        description: 'Motor direction in a board tooltip'
+    },
+    backward: {
+        id: 'gui.simBoard.backward',
+        defaultMessage: 'backward',
+        description: 'Motor direction in a board tooltip'
+    },
+    servo: {
+        id: 'gui.simBoard.servo',
+        defaultMessage: 'Servo S{n}: angle {angle}°',
+        description: 'Tooltip of a servo on the virtual board'
+    },
+    servoUnset: {
+        id: 'gui.simBoard.servoUnset',
+        defaultMessage: 'Servo S{n}: no angle set yet',
+        description: 'Tooltip of a servo the program has not moved'
+    },
+    ledOn: {
+        id: 'gui.simBoard.ledOn',
+        defaultMessage: 'LED {name}: on, {percent}% brightness',
+        description: 'Tooltip of a lit LED on the virtual board'
+    },
+    ledOff: {
+        id: 'gui.simBoard.ledOff',
+        defaultMessage: 'LED {name}: off',
+        description: 'Tooltip of an unlit LED on the virtual board'
+    },
+    buzzerOn: {
+        id: 'gui.simBoard.buzzerOn',
+        defaultMessage: 'Buzzer: sounding at {hz} Hz',
+        description: 'Tooltip of the virtual buzzer while it sounds'
+    },
+    buzzerOff: {
+        id: 'gui.simBoard.buzzerOff',
+        defaultMessage: 'Buzzer: off',
+        description: 'Tooltip of the silent virtual buzzer'
+    }
+});
+
+/** A PCA9685 duty (out of 4096) as a whole percentage. */
+const percentOf = duty => Math.round(Math.min(duty, FULL) * 100 / FULL);
 
 const BX = 62;
 const BY = 30;
@@ -430,11 +489,15 @@ const BoardArt = React.memo(() => (
 BoardArt.displayName = 'BoardArt';
 
 const Servo = ({n, duty}) => {
+    const intl = useIntl();
     const angle = servoAngle(duty);
     const y = signalPin(n);
     const pivot = 34;
     return (
         <g opacity={angle === null ? 0.35 : 1}>
+            <title>{angle === null ?
+                intl.formatMessage(messages.servoUnset, {n}) :
+                intl.formatMessage(messages.servo, {n, angle: Math.round(angle)})}</title>
             <line
                 stroke="#f59324"
                 strokeWidth={1.5}
@@ -486,10 +549,18 @@ Servo.propTypes = {
 const Wheel = ({n, a, b}) => {
     const {x, y} = WHEELS[n - 1];
     // `set motor … forward` drives B and grounds A; backward the other way round.
+    const intl = useIntl();
     const level = Math.min(Math.max(a, b), FULL) / FULL;
     const forward = b >= a;
     return (
         <g opacity={level > 0 ? 1 : 0.35}>
+            <title>{level > 0 ?
+                intl.formatMessage(messages.motorOn, {
+                    n,
+                    direction: intl.formatMessage(forward ? messages.forward : messages.backward),
+                    percent: Math.round(level * 100)
+                }) :
+                intl.formatMessage(messages.motorOff, {n})}</title>
             <circle
                 cx={x}
                 cy={y}
@@ -637,7 +708,11 @@ OledModule.propTypes = {
     rows: PropTypes.number.isRequired
 };
 
-const ThingBotBoard = ({pwm, oledRows, switchLabel, switchPressed, onPress, onRelease}) => {
+const ThingBotBoard = ({pwm, pwmHz, oledRows, switchLabel, switchPressed, onPress, onRelease}) => {
+    const intl = useIntl();
+    const ledTip = (name, d) => (d > 0 ?
+        intl.formatMessage(messages.ledOn, {name, percent: percentOf(d)}) :
+        intl.formatMessage(messages.ledOff, {name}));
     const duty = ch => pwm[ch] || 0;
     const buzzing = duty(BUZZER) > 0;
     const l2y = signalPin(1) + 12;
@@ -667,50 +742,68 @@ const ThingBotBoard = ({pwm, oledRows, switchLabel, switchPressed, onPress, onRe
                 />
             ))}
             {/* L2 next to S1, L1 next to SW, the buzzer under the Core (drawn on top to be seen) */}
-            <circle
-                cx={HDR_X + 12}
-                cy={l2y}
-                fill="#2fd158"
-                opacity={glow(duty(LED_2))}
-                r={4}
-                stroke="#f6f6f1"
-                strokeWidth={1}
-            />
-            <Silk
-                anchor="start"
-                size={6}
-                x={HDR_X + 18}
-                y={l2y + 2}
-            >{'L2'}</Silk>
-            <circle
-                cx={BX + 186}
-                cy={BY + 200}
-                fill="#ff3b30"
-                opacity={glow(duty(LED_1))}
-                r={4}
-                stroke="#f6f6f1"
-                strokeWidth={1}
-            />
-            <Silk
-                x={BX + 186}
-                y={BY + 212}
-            >{'L1'}</Silk>
-            <circle
-                cx={BX + 140}
-                cy={BY + 160}
-                fill="#17191c"
-                r={9}
-                stroke="#3b3f45"
-            />
-            {buzzing && (
-                <path
-                    d={`M${BX + 153},${BY + 154} q5,6 0,12 M${BX + 158},${BY + 150} q8,10 0,20`}
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeLinecap="round"
-                    strokeWidth={2}
+            <g>
+                <title>{ledTip('L2', duty(LED_2))}</title>
+                <circle
+                    cx={HDR_X + 12}
+                    cy={l2y}
+                    fill="#2fd158"
+                    opacity={glow(duty(LED_2))}
+                    r={4}
+                    stroke="#f6f6f1"
+                    strokeWidth={1}
                 />
-            )}
+                <Silk
+                    anchor="start"
+                    size={6}
+                    x={HDR_X + 18}
+                    y={l2y + 2}
+                >{duty(LED_2) > 0 ? `L2 ${percentOf(duty(LED_2))}%` : 'L2'}</Silk>
+            </g>
+            <g>
+                <title>{ledTip('L1', duty(LED_1))}</title>
+                <circle
+                    cx={BX + 186}
+                    cy={BY + 200}
+                    fill="#ff3b30"
+                    opacity={glow(duty(LED_1))}
+                    r={4}
+                    stroke="#f6f6f1"
+                    strokeWidth={1}
+                />
+                <Silk
+                    x={BX + 186}
+                    y={BY + 212}
+                >{duty(LED_1) > 0 ? `L1 ${percentOf(duty(LED_1))}%` : 'L1'}</Silk>
+            </g>
+            <g>
+                <title>{buzzing && pwmHz > 0 ?
+                    intl.formatMessage(messages.buzzerOn, {hz: Math.round(pwmHz)}) :
+                    intl.formatMessage(messages.buzzerOff)}</title>
+                <circle
+                    cx={BX + 140}
+                    cy={BY + 160}
+                    fill="#17191c"
+                    r={9}
+                    stroke="#3b3f45"
+                />
+                {buzzing && (
+                    <path
+                        d={`M${BX + 153},${BY + 154} q5,6 0,12 M${BX + 158},${BY + 150} q8,10 0,20`}
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeLinecap="round"
+                        strokeWidth={2}
+                    />
+                )}
+                {buzzing && pwmHz > 0 && (
+                    <Silk
+                        size={6}
+                        x={BX + 140}
+                        y={BY + 177}
+                    >{`${Math.round(pwmHz)} Hz`}</Silk>
+                )}
+            </g>
             <g
                 aria-label={switchLabel}
                 aria-pressed={switchPressed}
@@ -749,6 +842,7 @@ const ThingBotBoard = ({pwm, oledRows, switchLabel, switchPressed, onPress, onRe
 
 ThingBotBoard.propTypes = {
     onPress: PropTypes.func.isRequired,
+    pwmHz: PropTypes.number,
     oledRows: PropTypes.number,
     onRelease: PropTypes.func.isRequired,
     pwm: PropTypes.arrayOf(PropTypes.number).isRequired,

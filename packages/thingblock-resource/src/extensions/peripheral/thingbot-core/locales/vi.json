@@ -3,7 +3,7 @@
     "message0": "khởi động ThingBot"
   },
   "thingBotC3_setMotor": {
-    "message0": "động cơ %1 chạy %2 tốc độ %3",
+    "message0": "động cơ %1 chạy %2 tốc độ %3%%",
     "options": {
       "DIRECTION": {
         "forward": "tiến",
@@ -43,7 +43,7 @@
     "message0": "nghỉ %1 phách"
   },
   "thingBotC3_setLed": {
-    "message0": "đặt đèn %1 độ sáng %2"
+    "message0": "đặt đèn %1 độ sáng %2%%"
   },
   "thingBotC3_initPS2": {
     "message0": "khởi động tay cầm PS2 trên ThingBot"

@@ -1,8 +1,12 @@
 import {BuzzerAudio, buzzerPitch} from '../../../src/lib/sim/buzzer-audio';
 
-const param = () => ({value: 0, setTargetAtTime: jest.fn(function (v) {
-    this.value = v;
-})});
+const param = () => {
+    const p = {value: 0};
+    p.setTargetAtTime = jest.fn(v => {
+        p.value = v;
+    });
+    return p;
+};
 
 class FakeContext {
     constructor () {
@@ -13,11 +17,19 @@ class FakeContext {
         this.close = jest.fn(() => Promise.resolve());
     }
     createGain () {
-        this.gainNode = {gain: param(), connect: jest.fn()};
+        this.gainNode = {
+            gain: param(),
+            connect: jest.fn()
+        };
         return this.gainNode;
     }
     createOscillator () {
-        this.osc = {frequency: param(), connect: jest.fn(), start: jest.fn(), type: ''};
+        this.osc = {
+            frequency: param(),
+            connect: jest.fn(),
+            start: jest.fn(),
+            type: ''
+        };
         return this.osc;
     }
 }

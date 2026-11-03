@@ -186,14 +186,23 @@ describe('the buzzer plays through the speakers', () => {
                 this.state = 'running';
             }
             createGain () {
-                return {gain: {setTargetAtTime: v => {
+                const setGain = v => {
                     gain = v;
-                }}, connect: () => {}};
+                };
+                return {
+                    gain: {setTargetAtTime: setGain},
+                    connect: () => {}
+                };
             }
             createOscillator () {
-                return {frequency: {setTargetAtTime: v => {
+                const setFrequency = v => {
                     frequency = v;
-                }}, connect: () => {}, start: () => {}};
+                };
+                return {
+                    frequency: {setTargetAtTime: setFrequency},
+                    connect: () => {},
+                    start: () => {}
+                };
             }
             close () {
                 return Promise.resolve();

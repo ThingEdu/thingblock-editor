@@ -475,6 +475,7 @@ const SimPanel = ({
                         <ThingBotBoard
                             oledRows={showOled ? rows : null}
                             pwm={pwm}
+                            pwmHz={(snapshot && snapshot.pwmHz) || 0}
                             switchLabel={intl.formatMessage(messages.switchLabel)}
                             switchPressed={switchPressed}
                             onPress={press}
@@ -569,6 +570,7 @@ SimPanel.propTypes = {
         running: PropTypes.bool,
         error: PropTypes.string,
         pwm: PropTypes.arrayOf(PropTypes.number),
+        pwmHz: PropTypes.number,
         inputs: PropTypes.shape({ultrasonic: PropTypes.bool, ps2: PropTypes.bool}),
         oled: PropTypes.shape({
             width: PropTypes.number,

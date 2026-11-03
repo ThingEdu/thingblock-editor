@@ -86,7 +86,7 @@ it('a block created in Vietnamese shows Vietnamese text and keeps its values', (
   const vi = blocksIn(register, 'vi').thingBotC3_setMotor
   const en = blocksIn(register, 'en').thingBotC3_setMotor
   expect(en.message0).toBe('set motor %1 go %2 at %3')
-  expect(vi.message0).toBe('động cơ %1 chạy %2 tốc độ %3')
+  expect(vi.message0).toBe('động cơ %1 chạy %2 tốc độ %3%%') // Blockly shows %% as a literal %
   expect(vi.args0?.find((a) => a.name === 'DIRECTION')?.options).toEqual([
     ['tiến', 'forward'],
     ['lùi', 'backward'],
