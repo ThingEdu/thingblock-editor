@@ -391,3 +391,16 @@ test('getTutorialsOrigin sits next to the extensions under the same resource roo
 
     t.end();
 });
+
+test('a board applied while packs are still loading waits for its peripherals', async t => {
+    const vm = new VirtualMachine();
+    // The device pack has registered but its peripheral pack has not yet: the helper index lists device
+    // packs first, so a project restored on startup can land in this window.
+    vm.devices.registerDeviceManifest({...sampleManifest, extensions: ['thingBotC3']},
+        'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    await vm.devices.applyBoard({device: 'thingbot', peripherals: []});
+    t.same(vm.devices._pendingBoard, {device: 'thingbot', peripherals: []},
+        'the board is held until every pack is registered');
+    t.end();
+});

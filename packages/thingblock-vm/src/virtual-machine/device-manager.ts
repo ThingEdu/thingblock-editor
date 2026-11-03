@@ -515,7 +515,12 @@ export default class DeviceManager {
         this._pendingBoard = null;
         this._syncRuntimeBoard();
 
-        if (board && board.device && !this.deviceRegistry.get(board.device)) {
+        // A helper-served device can register before the peripheral packs it references, so hold its board
+        // until the whole index has loaded, or its blocks would never activate.
+        const pack = board && board.device ? this._resourceDevicePacks.get(board.device) : null;
+        const packDeviceEarly = Boolean(pack) && !this._resourcePacksLoaded &&
+            (pack.manifest.extensions || []).some(id => !this._resourcePeripheralPacks.has(id));
+        if (board && board.device && (!this.deviceRegistry.get(board.device) || packDeviceEarly)) {
             this._pendingBoard = board;
             return;
         }
