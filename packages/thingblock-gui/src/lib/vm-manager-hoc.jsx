@@ -10,10 +10,36 @@ import {setDevice} from '../reducers/board';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
     LoadingStates,
+    defaultProjectId,
     getIsLoadingWithId,
     onLoadedProject,
     projectError
 } from '../reducers/project-state';
+import {loadPreference} from './user-preferences';
+
+/**
+ * A new project (the default one) opens on the board the learner chose last time on this machine;
+ * any other project keeps the board it was saved with.
+ * @param {string|object} projectData The project to load.
+ * @param {?string|number} projectId Its id; the default project's is `defaultProjectId`.
+ * @returns {string|object} The project to load, with the remembered board when it is a new one.
+ */
+const withRememberedBoard = (projectData, projectId) => {
+    const device = loadPreference('device');
+    if (!device || String(projectId) !== defaultProjectId) return projectData;
+    try {
+        // Storage hands the default project over as JSON text, possibly as bytes.
+        const bytes = ArrayBuffer.isView(projectData) || projectData instanceof ArrayBuffer;
+        const text = bytes ? new TextDecoder().decode(projectData) : projectData;
+        const json = typeof text === 'string' ? JSON.parse(text) : text;
+        if (!json || typeof json !== 'object' || json.board) return projectData;
+        const withBoard = {...json, board: {device, peripherals: []}};
+        return typeof text === 'string' ? JSON.stringify(withBoard) : withBoard;
+    } catch {
+        // Not JSON (a zipped project, say): load it as it is.
+        return projectData;
+    }
+};
 
 /*
  * Higher Order Component to manage events emitted by the VM
@@ -62,7 +88,7 @@ const vmManagerHOC = function (WrappedComponent) {
             }
         }
         loadProject () {
-            return this.props.vm.project.load(this.props.projectData)
+            return this.props.vm.project.load(withRememberedBoard(this.props.projectData, this.props.projectId))
                 .then(() => {
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
                     // Wrap in a setTimeout so any project-changed events emitted while

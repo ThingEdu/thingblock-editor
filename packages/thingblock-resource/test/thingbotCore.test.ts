@@ -10,6 +10,7 @@ const makeGenerator = (values: Record<string, string> = {}) => ({
   includes: new Map<string, string>(),
   globals: new Map<string, string>(),
   setups: new Map<string, string>(),
+  loopHooks: new Map<string, string>(),
   valueToCode: (_block: unknown, name: string) => values[name] ?? '',
 })
 
@@ -52,11 +53,17 @@ describe('set buzzer to N pulse', () => {
 })
 
 describe('start servo block', () => {
-  it('tells the learner the motion needs "wait for servos"', () => {
+  it('steps started motions from every loop() pass, so the servo moves without a wait block', () => {
+    const { gen, code } = generate('thingBotC3_startServoAngle', { SERVO: '1' }, { ANGLE: '45', SECONDS: '2' })
+    expect(code).toBe('servoStart(SERVO_1, 45, 2);\n')
+    expect([...gen.loopHooks.values()]).toEqual(['servoTickAll();'])
+  })
+  it('tells the learner the motion runs in the background and "wait for servos" waits for it', () => {
     const Blocks: Record<string, { init(this: { jsonInit: (config: { tooltip?: string }) => void }): void }> = {}
     registerBlocks({ Blocks } as unknown as Blockly)
     let tooltip: string | undefined
     Blocks.thingBotC3_startServoAngle.init.call({ jsonInit: (config) => (tooltip = config.tooltip) })
+    expect(tooltip).toContain('background')
     expect(tooltip).toContain('wait for servos')
   })
 })

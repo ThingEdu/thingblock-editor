@@ -196,3 +196,30 @@ describe('OLED resource pack', () => {
     expect(oledToolbox.contents.map(({ type }) => type)).toEqual(blockIds)
   })
 })
+
+describe('oled block defaults', () => {
+  const jsonOf = (type: string) => {
+    const Blocks: Record<string, { init: (this: unknown) => void }> = {}
+    registerBlocks({ Blocks } as unknown as Blockly)
+    let json: { args0: { name?: string; options?: [string, string][] }[] } | undefined
+    Blocks[type].init.call({
+      jsonInit: (j: typeof json) => {
+        json = j
+      },
+    })
+    if (!json) throw new Error(`${type} did not call jsonInit`)
+    return json
+  }
+  const options = (type: string, name: string) => jsonOf(type).args0.find((a) => a.name === name)?.options
+
+  it('draws white text on black by default (a dropdown defaults to its first option)', () => {
+    expect(options('oled_setText', 'COLOUR')?.[0][1]).toBe('SSD1306_WHITE')
+    expect(options('oled_setText', 'BGCOLOR')?.[0][1]).toBe('SSD1306_BLACK')
+  })
+  it('labels the end-of-line option "wrap", keeping the saved value', () => {
+    expect(options('oled_print', 'EOL')).toEqual([
+      ['wrap', 'warp'],
+      ['no wrap', 'noWarp'],
+    ])
+  })
+})

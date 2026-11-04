@@ -10,7 +10,11 @@ import {render} from '@testing-library/react';
 import VM from '@thingblock/thingblock-vm';
 import {LoadingState} from '../../../src/reducers/project-state';
 
+import {TextDecoder, TextEncoder} from 'util';
 import vmManagerHOC from '../../../src/lib/vm-manager-hoc.jsx';
+
+// jsdom has no text codecs; the browser does.
+global.TextDecoder = global.TextDecoder || TextDecoder;
 
 describe('VMManagerHOC', () => {
     const mockStore = configureStore();
@@ -228,5 +232,87 @@ describe('VMManagerHOC', () => {
         expect(vm.project.load).toHaveBeenCalledTimes(0);
         // delay needed since vm.project.load is async
         setTimeout(() => expect(mockedOnLoadedProject).toHaveBeenCalledTimes(0), 1);
+    });
+    test('a new project starts on the board the learner used last time', () => {
+        vm.project.load = jest.fn(() => Promise.resolve());
+        localStorage.setItem('thingblock.device', 'thingbot');
+        try {
+            const Component = () => <div />;
+            const WrappedComponent = vmManagerHOC(Component);
+            const {rerender} = render(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId={false}
+                    store={store}
+                    vm={vm}
+                />
+            );
+            rerender(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId
+                    store={store}
+                    vm={vm}
+                    loadingState={LoadingState.LOADING_VM_WITH_ID}
+                    projectData={JSON.stringify({targets: []})}
+                    projectId="0"
+                />
+            );
+            expect(JSON.parse(vm.project.load.mock.calls[0][0]).board).toEqual({device: 'thingbot', peripherals: []});
+            // The same project handed over as bytes.
+            rerender(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId={false}
+                    store={store}
+                    vm={vm}
+                />
+            );
+            rerender(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId
+                    store={store}
+                    vm={vm}
+                    loadingState={LoadingState.LOADING_VM_WITH_ID}
+                    projectData={new TextEncoder().encode(JSON.stringify({targets: []}))}
+                    projectId="0"
+                />
+            );
+            expect(JSON.parse(vm.project.load.mock.calls[1][0]).board).toEqual({device: 'thingbot', peripherals: []});
+        } finally {
+            localStorage.clear();
+        }
+    });
+    test('a project with an id keeps its own board, or none', () => {
+        vm.project.load = jest.fn(() => Promise.resolve());
+        localStorage.setItem('thingblock.device', 'thingbot');
+        try {
+            const Component = () => <div />;
+            const WrappedComponent = vmManagerHOC(Component);
+            const {rerender} = render(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId={false}
+                    store={store}
+                    vm={vm}
+                />
+            );
+            const data = JSON.stringify({targets: []});
+            rerender(
+                <WrappedComponent
+                    fontsLoaded
+                    isLoadingWithId
+                    store={store}
+                    vm={vm}
+                    loadingState={LoadingState.LOADING_VM_WITH_ID}
+                    projectData={data}
+                    projectId="123"
+                />
+            );
+            expect(vm.project.load).toHaveBeenLastCalledWith(data);
+        } finally {
+            localStorage.clear();
+        }
     });
 });

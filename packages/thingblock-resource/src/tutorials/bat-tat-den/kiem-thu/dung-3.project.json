@@ -1,0 +1,65 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "blocks": {},
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    },
+    {
+      "isStage": false,
+      "name": "Device",
+      "variables": {},
+      "lists": {},
+      "blocks": {
+        "h1": {
+          "topLevel": true,
+          "shadow": false,
+          "inputs": {},
+          "fields": {},
+          "opcode": "event_whenarduinobegin",
+          "next": "s1",
+          "parent": null,
+          "x": 0,
+          "y": 0
+        },
+        "s1": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "BRIGHTNESS": [1, [4, "0"]]
+          },
+          "fields": {
+            "LED": ["LED_1", null]
+          },
+          "opcode": "thingBotC3_setLed",
+          "next": "s2",
+          "parent": "h1"
+        },
+        "s2": {
+          "topLevel": false,
+          "shadow": false,
+          "inputs": {
+            "BRIGHTNESS": [1, [4, "0"]]
+          },
+          "fields": {
+            "LED": ["LED_2", null]
+          },
+          "opcode": "thingBotC3_setLed",
+          "next": null,
+          "parent": "s1"
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [],
+      "sounds": []
+    }
+  ],
+  "meta": {
+    "semver": "3.0.0"
+  }
+}

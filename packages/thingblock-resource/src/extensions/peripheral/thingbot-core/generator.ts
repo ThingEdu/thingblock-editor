@@ -28,7 +28,7 @@ const SEMITONES: Record<string, number> = {
  * @param octave The octave number, e.g. `4`.
  * @returns The frequency in Hz.
  */
-const noteFrequency = (note: string, octave: string): number => {
+export const noteFrequency = (note: string, octave: string): number => {
   const midi = (Number(octave) + 1) * 12 + (SEMITONES[note] ?? 0)
   return Math.round(440 * Math.pow(2, (midi - 69) / 12))
 }
@@ -200,6 +200,8 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
     const angle = generator.valueToCode(block, 'ANGLE', Order.ATOMIC) || '90'
     const seconds = generator.valueToCode(block, 'SECONDS', Order.ATOMIC) || '1'
     registerServoAngleHelpers()
+    // Step started motions from every loop() pass, so the servo moves without a wait block.
+    generator.loopHooks.set('servo_tick', 'servoTickAll();')
     return `servoStart(SERVO_${servo}, ${angle}, ${seconds});\n`
   }
 

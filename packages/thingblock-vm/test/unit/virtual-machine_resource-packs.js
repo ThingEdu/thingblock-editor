@@ -34,6 +34,16 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
     t.end();
 });
 
+test('getExamplesOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:3030/resources/examples', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:8080/resources/examples', 'cloud mode');
+
+    t.end();
+});
+
 test('registerDeviceManifest exposes the pack device through getDeviceList', t => {
     const vm = new VirtualMachine();
     const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
@@ -369,5 +379,28 @@ test('flashFirmware rejects an unknown image id', async t => {
         /no firmware "no-such-image"/,
         'names the missing id rather than failing silently'
     );
+    t.end();
+});
+
+test('getTutorialsOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:3030/resources/tutorials', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:8080/resources/tutorials', 'cloud mode');
+
+    t.end();
+});
+
+test('a board applied while packs are still loading waits for its peripherals', async t => {
+    const vm = new VirtualMachine();
+    // The device pack has registered but its peripheral pack has not yet: the helper index lists device
+    // packs first, so a project restored on startup can land in this window.
+    vm.devices.registerDeviceManifest({...sampleManifest, extensions: ['thingBotC3']},
+        'http://localhost:3030/resources/extensions/devices/thingbot');
+
+    await vm.devices.applyBoard({device: 'thingbot', peripherals: []});
+    t.same(vm.devices._pendingBoard, {device: 'thingbot', peripherals: []},
+        'the board is held until every pack is registered');
     t.end();
 });

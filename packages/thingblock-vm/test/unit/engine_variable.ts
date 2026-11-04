@@ -83,6 +83,13 @@ test('toXML', t => {
     t.end();
 });
 
+test('toXML carries the data type, so a float variable stays float in the editor', t => {
+    const typed = new Variable('varId', 'speed', Variable.SCALAR_TYPE, 'float');
+    t.match(typed.toXML(false), / datatype="float">speed</);
+    t.notMatch(new Variable('varId', 'n', Variable.SCALAR_TYPE).toXML(false), /datatype/);
+    t.end();
+});
+
 test('escape variable name for XML', t => {
     const varId = 'varId';
     const varName = '<>&\'"';

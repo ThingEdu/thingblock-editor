@@ -3,12 +3,14 @@
  * shapes live in the same instance the workspace uses.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 const COLOUR = '#5C9EAD'
 const SECONDARY_COLOUR = '#3E7C8A'
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.serial_begin = {
     init(this: Block) {
       this.jsonInit({
@@ -90,3 +92,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

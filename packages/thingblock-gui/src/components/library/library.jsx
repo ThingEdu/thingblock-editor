@@ -12,7 +12,7 @@ import Filter from '../filter/filter.jsx';
 import TagButton from '../../containers/tag-button.jsx';
 import {legacyConfig} from '../../legacy-config';
 import Spinner from '../spinner/spinner.jsx';
-import {CATEGORIES} from '../../../src/lib/libraries/decks/index.jsx';
+import {CATEGORIES} from '../../lib/libraries/categories.js';
 
 import styles from './library.css';
 import {ModalFocusContext} from '../../contexts/modal-focus-context.jsx';

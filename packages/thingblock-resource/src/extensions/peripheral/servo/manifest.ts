@@ -18,7 +18,8 @@ const manifest: PeripheralManifest = {
   blocks: './blocks.js',
   generator: './generator.js',
   toolbox: './toolbox.js',
-  libs: [{ path: 'libs/Servo' }],
+  // Servo for AVR boards, ESP32Servo (LGPL-2.1) for ESP32 boards; the sketch includes the one its board needs.
+  libs: [{ path: 'libs/Servo' }, { path: 'libs/ESP32Servo' }],
 }
 
 export default manifest

@@ -3,7 +3,9 @@
  * detent click), resetting that count, and whether the knob's button is held down.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 const COLOUR = '#4C97FF'
 const SECONDARY_COLOUR = '#3373CC'
@@ -18,7 +20,7 @@ const pinField = (name: string, value: number) => ({
   precision: 1,
 })
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.encoder_init = {
     init(this: Block) {
       this.jsonInit({
@@ -64,3 +66,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

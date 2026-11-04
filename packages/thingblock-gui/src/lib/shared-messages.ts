@@ -26,6 +26,16 @@ const reactIntlMessages = defineMessages({
         defaultMessage: 'Replace contents of the current project?',
         description: 'Confirmation that user wants to overwrite the current project contents'
     },
+    replaceProjectConfirm: {
+        id: 'gui.sharedMessages.replaceProjectConfirm',
+        defaultMessage: 'Replace',
+        description: 'Button that confirms replacing the current project'
+    },
+    cancel: {
+        id: 'gui.sharedMessages.cancel',
+        defaultMessage: 'Cancel',
+        description: 'Button that cancels a confirmation dialog'
+    },
     loadFromComputerTitle: {
         id: 'gui.sharedMessages.loadFromComputerTitle',
         defaultMessage: 'Load from your computer',

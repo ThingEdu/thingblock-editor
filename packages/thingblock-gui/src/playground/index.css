@@ -8,7 +8,8 @@ body,
 
     /* Setting min height/width makes the UI scroll below those sizes */
     min-width: 1024px;
-    min-height: 640px; /* Min height to fit sprite/backdrop button */
+    /* Laptops at 1366x768 leave ~650px; the device panel scrolls inside itself below that. */
+    min-height: 480px;
 }
 
 /* @todo: move globally? Safe / side FX, for blocks particularly? */

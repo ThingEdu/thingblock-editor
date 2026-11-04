@@ -1,0 +1,23 @@
+{
+  "pca9685_init": {
+    "message0": "khởi động pca9685 địa chỉ I2C %1"
+  },
+  "pca9685_setToServoMode": {
+    "message0": "pca9685 chuyển sang chế độ servo"
+  },
+  "pca9685_setServoAngle": {
+    "message0": "pca9685 đặt kênh %1 góc servo %2"
+  },
+  "pca9685_setAllServoAngle": {
+    "message0": "pca9685 đặt mọi servo góc %1"
+  },
+  "pca9685_setPWMFrequency": {
+    "message0": "pca9685 đặt tần số PWM %1"
+  },
+  "pca9685_setChannelPWM": {
+    "message0": "pca9685 đặt kênh %1 giá trị PWM %2"
+  },
+  "pca9685_setAllChannelPWM": {
+    "message0": "pca9685 đặt mọi kênh giá trị PWM %1"
+  }
+}

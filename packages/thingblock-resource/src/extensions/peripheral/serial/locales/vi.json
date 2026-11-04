@@ -1,0 +1,20 @@
+{
+  "serial_begin": {
+    "message0": "bắt đầu Serial tốc độ %1 baud"
+  },
+  "serial_print": {
+    "message0": "Serial in %1"
+  },
+  "serial_println": {
+    "message0": "Serial in dòng %1"
+  },
+  "serial_available": {
+    "message0": "Serial có dữ liệu?"
+  },
+  "serial_readString": {
+    "message0": "đọc chữ từ Serial"
+  },
+  "serial_parseInt": {
+    "message0": "đọc số từ Serial"
+  }
+}

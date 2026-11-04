@@ -3,7 +3,12 @@
  * number so multiple DHT sensors on different pins stay independent.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
+
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
 
 const COLOUR = '#42CCFF'
 const SECONDARY_COLOUR = '#00BFFF'
@@ -18,13 +23,13 @@ const pinField = (name: string, value: number) => ({
   precision: 1,
 })
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.dht_init = {
     init(this: Block) {
       this.jsonInit({
         message0: 'init dht %1 pin %2 model %3',
         args0: [
-          { type: 'input_value', name: 'NO', check: 'Number' },
+          { type: 'input_value', name: 'NO', check: NUMBER_INPUT },
           pinField('PIN', 2),
           {
             type: 'field_dropdown',
@@ -47,7 +52,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'dht %1 read humidity',
-        args0: [{ type: 'input_value', name: 'NO', check: 'Number' }],
+        args0: [{ type: 'input_value', name: 'NO', check: NUMBER_INPUT }],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
         extensions: ['output_number'],
@@ -60,7 +65,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
       this.jsonInit({
         message0: 'dht %1 read temperature %2',
         args0: [
-          { type: 'input_value', name: 'NO', check: 'Number' },
+          { type: 'input_value', name: 'NO', check: NUMBER_INPUT },
           {
             type: 'field_dropdown',
             name: 'UNIT',
@@ -77,3 +82,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

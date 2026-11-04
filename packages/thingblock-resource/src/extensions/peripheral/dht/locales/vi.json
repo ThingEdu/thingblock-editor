@@ -1,0 +1,11 @@
+{
+  "dht_init": {
+    "message0": "khởi động DHT %1 chân %2 loại %3"
+  },
+  "dht_readHumidity": {
+    "message0": "DHT %1 đọc độ ẩm"
+  },
+  "dht_readTemperature": {
+    "message0": "DHT %1 đọc nhiệt độ %2"
+  }
+}

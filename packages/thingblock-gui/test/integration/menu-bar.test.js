@@ -63,10 +63,10 @@ describe('Menu bar settings', () => {
 
     test('(GH#4064) Project name should be editable', async () => {
         await loadUri(uri);
-        const el = await findByXpath('//input[@value="Scratch Project"]');
+        const el = await findByXpath('//input[@value="ThingBlock Project"]');
         await el.sendKeys(' - Personalized');
         await clickText('Costumes'); // just to blur the input
-        await clickXpath('//input[@value="Scratch Project - Personalized"]');
+        await clickXpath('//input[@value="ThingBlock Project - Personalized"]');
     });
 
     test('User is not warned before uploading project file over a fresh project', async () => {
@@ -152,7 +152,7 @@ describe('Menu bar settings', () => {
             .window()
             .setSize(1024, 768);
 
-        const collapsibleMenus = ['Settings', 'File', 'Edit', 'Tutorials'];
+        const collapsibleMenus = ['Settings', 'File', 'Edit', 'Lessons'];
         for (const menu of collapsibleMenus) {
             const settingsMenu = await findByText(menu, scope.menuBar);
             expect(await settingsMenu.isDisplayed()).toBe(false);
@@ -165,7 +165,7 @@ describe('Menu bar settings', () => {
             .window()
             .setSize(1200, 768);
 
-        const collapsibleMenus = ['Settings', 'File', 'Edit', 'Tutorials'];
+        const collapsibleMenus = ['Settings', 'File', 'Edit', 'Lessons'];
         for (const menu of collapsibleMenus) {
             const settingsMenu = await findByText(menu, scope.menuBar);
             expect(await settingsMenu.isDisplayed()).toBe(true);

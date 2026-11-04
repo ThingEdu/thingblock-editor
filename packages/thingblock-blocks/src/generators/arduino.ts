@@ -11,6 +11,8 @@ import { registerOperators } from './arduino/operators'
 import { registerProcedures } from './arduino/procedures'
 import { registerSensing } from './arduino/sensing'
 import { registerValues } from './arduino/values'
+import { variableCppType } from './cpp-types'
+import { procedureArgs } from './procedure-args'
 
 /** Name-database category for custom-block argument reporters. */
 const ARGUMENT_NAME_TYPE = 'ARGUMENT'
@@ -31,11 +33,6 @@ const RESERVED_WORDS = [
   // Identifiers this generator emits itself.
   '__scratchCounter',
 ].join('')
-
-/** A variable model carrying Scratch's optional explicit value type. */
-interface ScratchVariable {
-  dataType?: string
-}
 
 /**
  * Arduino (C++) code generator for Scratch firmware blocks. It is the standard
@@ -61,6 +58,8 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
   readonly globals = new Map<string, string>()
   /** Statements to run once in `setup()`, keyed so duplicates collapse. */
   readonly setups = new Map<string, string>()
+  /** Statements to run at the top of every `loop()` pass (e.g. stepping timed motions), keyed so duplicates collapse. */
+  readonly loopHooks = new Map<string, string>()
   /** Source of unique loop-counter names within a single generation pass. */
   private repeatCount = 0
 
@@ -112,11 +111,7 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
    * @returns 'int' | 'float' | 'String'.
    */
   variableCppType(block: Block, variableId: string): string {
-    // dataType is a Scratch extension on the variable model; default to int.
-    const model = block.workspace.getVariableMap().getVariableById(variableId) as ScratchVariable | null
-    if (model?.dataType === 'string') return 'String'
-    if (model?.dataType === 'float') return 'float'
-    return 'int'
+    return variableCppType(block, variableId)
   }
 
   /**
@@ -130,6 +125,7 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
     this.includes.clear()
     this.globals.clear()
     this.setups.clear()
+    this.loopHooks.clear()
     this.repeatCount = 0
 
     if (!this.nameDB_) this.nameDB_ = new Blockly.Names(this.RESERVED_WORDS_)
@@ -169,18 +165,21 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
 
   /**
    * Emit a `procedures_definition` hat as a file-scope `void` function in the
-   * `globals` bucket. Scratch custom blocks are parameterless in firmware, so
-   * only the name and body are generated.
+   * `globals` bucket, with the custom block's parameters.
    * @param hat The `procedures_definition` top block.
    */
   private emitProcedureDefinition(hat: Block): void {
     const prototype = hat.getInputTargetBlock('custom_block') as { getProcCode?: () => string } | null
     const procCode = prototype?.getProcCode?.() ?? 'custom_block'
     const name = this.getProcedureName(procCode)
+    // Number-or-text parameters are numbers on the board (`float`); boolean ones are `bool`.
+    const params = procedureArgs(prototype as Block | null)
+      .map((arg) => `${arg.boolean ? 'bool' : 'float'} ${this.getArgumentName(arg.name)}`)
+      .join(', ')
     const next = hat.getNextBlock()
     const body = next ? this.blockToCodeString(next) : ''
     const indented = body ? `${this.prefixLines(body, this.INDENT)}\n` : ''
-    this.globals.set(`proc_${name}`, `void ${name}() {\n${indented}}`)
+    this.globals.set(`proc_${name}`, `void ${name}(${params}) {\n${indented}}`)
   }
 
   /**
@@ -223,7 +222,8 @@ export class ArduinoGenerator extends Blockly.CodeGenerator {
     // already indented by `statementToCode`, so per-line prefixing composes.
     const setupBody = [...this.setups.values(), setupCode].filter((line) => line.length > 0).join('\n')
     sections.push(`void setup() {\n${setupBody ? `${this.prefixLines(setupBody, this.INDENT)}\n` : ''}}`)
-    sections.push(`void loop() {\n${loopCode ? `${this.prefixLines(loopCode, this.INDENT)}\n` : ''}}`)
+    const loopBody = [...this.loopHooks.values(), loopCode].filter((line) => line.length > 0).join('\n')
+    sections.push(`void loop() {\n${loopBody ? `${this.prefixLines(loopBody, this.INDENT)}\n` : ''}}`)
 
     return `${sections.join('\n\n')}\n`
   }

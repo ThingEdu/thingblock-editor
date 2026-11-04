@@ -60,6 +60,7 @@ type PeripheralPackManifest = {
     toolbox?: string
     blocks?: string
     generator?: string
+    sim?: string
     libs?: Array<{path: string}>
 };
 
@@ -67,12 +68,13 @@ type Pack<M> = {manifest: M, base: string};
 
 type Board = {device: string, peripherals?: string[]};
 
-type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown};
+type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown, simGenerator?: unknown};
 
 type PackModule = {
     default?: unknown
     registerBlocks?: (scratchBlocks: ScratchBlocks) => void
     registerGenerators?: (generator: unknown, order: unknown) => void
+    registerSimGenerators?: (generator: unknown, order: unknown) => void
 };
 
 type ModuleImporter = (url: string) => Promise<PackModule>;
@@ -126,7 +128,7 @@ export default class DeviceManager {
      */
     _pendingBoard: Board | null = null;
 
-    private readonly _deviceManifestsById = new Map<string, {iconURL: string}>();
+    private readonly _deviceManifestsById = new Map<string, {iconURL: string, hidden?: boolean}>();
 
     /**
      * Guards {@link loadResourcePacks} to one successful run per VM instance: the registries throw
@@ -185,11 +187,16 @@ export default class DeviceManager {
 
     /**
      * The list of selectable devices for the GUI, each with its presentation info and FQBN.
+     * @param options - `includeHidden`: also list boards retired from the picker, for looking up the
+     *   board an older project was saved on.
+     * @param options.includeHidden - include hidden boards.
      * @returns device descriptors: {deviceId, fqbn, iconURL, name, description, manufacturer, requires,
      *   learnMore, help}.
      */
-    getDeviceList (): object[] {
-        return this.deviceRegistry.deviceIds.map(deviceId => {
+    getDeviceList ({includeHidden = false}: {includeHidden?: boolean} = {}): object[] {
+        const deviceIds = this.deviceRegistry.deviceIds.filter(deviceId =>
+            includeHidden || !this._deviceManifestsById.get(deviceId)?.hidden);
+        return deviceIds.map(deviceId => {
             const device = this.deviceRegistry.get(deviceId);
             const manifest = this._deviceManifestsById.get(deviceId);
             if (!manifest) {
@@ -214,6 +221,26 @@ export default class DeviceManager {
     getResourceOrigin (): string | null {
         const origin = this.linkResourceOrigin();
         return origin && `${origin}/extensions`;
+    }
+
+    /**
+     * The HTTP base the bundled example projects are served from: `examples/index.json` lists them and
+     * each entry's `file` is relative to this base. Null when the active link backend serves no packs.
+     * @returns the examples base, e.g. `http://localhost:3030/resources/examples`.
+     */
+    getExamplesOrigin (): string | null {
+        const origin = this.linkResourceOrigin();
+        return origin && `${origin}/examples`;
+    }
+
+    /**
+     * The HTTP base the bundled lessons are served from: `index.json` lists them and each lesson's
+     * files sit under `<ma>/`. Null when the active link backend serves no packs.
+     * @returns the lessons base, e.g. `http://localhost:3030/resources/tutorials`.
+     */
+    getTutorialsOrigin (): string | null {
+        const origin = this.linkResourceOrigin();
+        return origin && `${origin}/tutorials`;
     }
 
     /**
@@ -488,7 +515,12 @@ export default class DeviceManager {
         this._pendingBoard = null;
         this._syncRuntimeBoard();
 
-        if (board && board.device && !this.deviceRegistry.get(board.device)) {
+        // A helper-served device can register before the peripheral packs it references, so hold its board
+        // until the whole index has loaded, or its blocks would never activate.
+        const pack = board && board.device ? this._resourceDevicePacks.get(board.device) : null;
+        const packDeviceEarly = Boolean(pack) && !this._resourcePacksLoaded &&
+            (pack.manifest.extensions || []).some(id => !this._resourcePeripheralPacks.has(id));
+        if (board && board.device && (!this.deviceRegistry.get(board.device) || packDeviceEarly)) {
             this._pendingBoard = board;
             return;
         }
@@ -617,6 +649,14 @@ export default class DeviceManager {
                         `${base}/${manifest.generator.replace(/^\.\//, '')}`
                     );
                     registerGenerators(this._scratchBlocks.arduinoGenerator, this._scratchBlocks.ArduinoOrder);
+                }
+                // The simulator's codegen mirrors the Arduino codegen; a pack without it still
+                // uploads, and the simulator names its blocks as not simulated yet.
+                if (manifest.sim && this._scratchBlocks.simGenerator) {
+                    const {registerSimGenerators} = await this._importPackModule(
+                        `${base}/${manifest.sim.replace(/^\.\//, '')}`
+                    );
+                    registerSimGenerators(this._scratchBlocks.simGenerator, this._scratchBlocks.ArduinoOrder);
                 }
             }
             this.peripheralRegistry.register({id: manifest.id, toolbox, libs, base});

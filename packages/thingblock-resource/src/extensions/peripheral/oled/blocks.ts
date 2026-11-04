@@ -7,7 +7,12 @@
  * dropdowns of preset rows rather than free numbers.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
+
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
 
 const COLOUR = '#C0C0C0'
 const SECONDARY_COLOUR = '#A9A9A9'
@@ -23,6 +28,12 @@ const TEXT_COLOURS: [string, string][] = [
   ['black', 'SSD1306_BLACK'],
 ]
 
+// Black first so a fresh text block draws white on black; a dropdown defaults to its first option.
+const BACKGROUND_COLOURS: [string, string][] = [
+  ['black', 'SSD1306_BLACK'],
+  ['white', 'SSD1306_WHITE'],
+]
+
 const colourField = (name = 'COLOUR', options = DRAW_COLOURS) => ({
   type: 'field_dropdown' as const,
   name,
@@ -32,10 +43,10 @@ const colourField = (name = 'COLOUR', options = DRAW_COLOURS) => ({
 const numberInput = (name: string) => ({
   type: 'input_value' as const,
   name,
-  check: 'Number',
+  check: NUMBER_INPUT,
 })
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.oled_init = {
     init(this: Block) {
       this.jsonInit({
@@ -184,7 +195,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
             ],
           },
           colourField('COLOUR', TEXT_COLOURS),
-          colourField('BGCOLOR', TEXT_COLOURS),
+          colourField('BGCOLOR', BACKGROUND_COLOURS),
         ],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,
@@ -215,8 +226,9 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
             type: 'field_dropdown',
             name: 'EOL',
             options: [
-              ['warp', 'warp'],
-              ['no-warp', 'noWarp'],
+              // The values keep their original spelling so saved projects still load.
+              ['wrap', 'warp'],
+              ['no wrap', 'noWarp'],
             ],
           },
         ],
@@ -311,3 +323,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

@@ -10,7 +10,9 @@ import BoardMenu from '../../../src/components/menu-bar/board-menu.jsx';
 
 describe('BoardMenu', () => {
     const vm = new VM();
-    const selectedDevice = vm.devices.getDeviceList()[0];
+    // The built-in boards are all hidden from the picker since 0.6; the menu still names a
+    // hidden board a project was saved on.
+    const selectedDevice = vm.devices.getDeviceList({includeHidden: true})[0];
 
     const renderBoardMenu = (selectedDeviceId = selectedDevice.deviceId) => {
         const store = configureStore()({

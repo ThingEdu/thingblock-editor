@@ -5,7 +5,8 @@ import {defineMessages, injectIntl} from 'react-intl';
 import intlShape from './intlShape';
 import {connect} from 'react-redux';
 import log from '../lib/log';
-import sharedMessages from './shared-messages';
+import {isDesktopApp, pickProjectFile, setCurrentFile, showFileInWindowTitle} from './project-file';
+import {confirmReplaceProject} from './native-dialogs';
 
 import {
     LoadingStates,
@@ -26,6 +27,11 @@ const messages = defineMessages({
         id: 'gui.projectLoader.loadError',
         defaultMessage: 'The project file that was selected failed to load.',
         description: 'An error that displays when a local project file fails to load.'
+    },
+    exampleLoadError: {
+        id: 'gui.projectLoader.exampleLoadError',
+        defaultMessage: 'The example project could not be loaded.',
+        description: 'An error that displays when a bundled example project fails to load.'
     }
 });
 
@@ -46,7 +52,10 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 'createFileObjects',
                 'handleFinishedLoadingUpload',
                 'handleStartSelectingFileUpload',
+                'handleStartLoadingExample',
+                'handleStartPickingDesktopFile',
                 'handleChange',
+                'loadProjectData',
                 'onload',
                 'removeFileObjects'
             ]);
@@ -61,7 +70,52 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 1: this is where the upload process begins
         handleStartSelectingFileUpload () {
+            if (isDesktopApp()) return this.handleStartPickingDesktopFile();
             this.createFileObjects(); // go to step 2
+        }
+        /**
+         * Desktop app: pick the project with the native Open dialog instead of an <input>, so the
+         * editor knows the file's path and "Lưu" (Ctrl+S) can write back to it. Then load it through
+         * the same steps as a file chosen in the browser.
+         * @returns {Promise} settles once the dialog has been answered.
+         */
+        handleStartPickingDesktopFile () {
+            this.removeFileObjects();
+            return pickProjectFile().then(async file => {
+                if (!file) return; // cancelled
+                if (!(await this.confirmReplacingProject())) return;
+                this.desktopFileToLoad = file;
+                this.props.requestProjectUpload(this.props.loadingState);
+            }, error => {
+                log.warn(error);
+                alert(this.props.intl.formatMessage(messages.loadError)); // eslint-disable-line no-alert
+            });
+        }
+        /**
+         * Open a bundled example project through the same steps as a file chosen from the computer:
+         * confirm replacing the current project, move the project state to loading, then (step 5)
+         * fetch the example instead of reading a local file.
+         * @param {{url: string, title: string}} example - where the example's `.tb` is served, and the
+         *   project title to show once it loads.
+         */
+        async handleStartLoadingExample (example) {
+            this.removeFileObjects();
+            if (!(await this.confirmReplacingProject())) return;
+            this.exampleToLoad = example;
+            this.props.requestProjectUpload(this.props.loadingState);
+        }
+        /**
+         * If the user owns the project, or has changed it, ask before replacing it. (If they don't own
+         * it and haven't changed it, there is nothing to lose.) Awaited: in the desktop app the
+         * question is a native dialog that answers asynchronously.
+         * @returns {Promise<boolean>} whether the project may be replaced.
+         */
+        confirmReplacingProject () {
+            const {intl, isShowingWithoutId, projectChanged, userOwnsProject} = this.props;
+            if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
+                return confirmReplaceProject(intl);
+            }
+            return Promise.resolve(true);
         }
         // step 2: create a FileReader and an <input> element, and issue a
         // pseudo-click to it. That will open the file chooser dialog.
@@ -84,14 +138,8 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 3: user has picked a file using the file chooser dialog.
         // We don't actually load the file here, we only decide whether to do so.
-        handleChange (e) {
-            const {
-                intl,
-                isShowingWithoutId,
-                loadingState,
-                projectChanged,
-                userOwnsProject
-            } = this.props;
+        async handleChange (e) {
+            const {loadingState} = this.props;
             const thisFileInput = e.target;
             if (thisFileInput.files) { // Don't attempt to load if no file was selected
                 this.fileToUpload = thisFileInput.files[0];
@@ -100,12 +148,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // we must confirm with the user that they really intend to
                 // replace it. (If they don't own the project and haven't
                 // changed it, no need to confirm.)
-                let uploadAllowed = true;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                    uploadAllowed = confirm( // eslint-disable-line no-alert
-                        intl.formatMessage(sharedMessages.replaceProjectWarning)
-                    );
-                }
+                const uploadAllowed = await this.confirmReplacingProject();
                 if (uploadAllowed) {
                     // cues step 4
                     this.props.requestProjectUpload(loadingState);
@@ -120,7 +163,33 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 5: called from componentDidUpdate when project state shows
         // that project data has finished "uploading" into the browser
         handleFinishedLoadingUpload () {
-            if (this.fileToUpload && this.fileReader) {
+            if (this.desktopFileToLoad) {
+                const file = this.desktopFileToLoad;
+                this.desktopFileToLoad = null;
+                this.loadProjectData(file.data, getProjectTitleFromFilename(file.name), messages.loadError)
+                    .then(loaded => {
+                        if (!loaded) return;
+                        setCurrentFile(file);
+                        showFileInWindowTitle(file.name);
+                    });
+            } else if (this.exampleToLoad) {
+                const {url, title} = this.exampleToLoad;
+                this.exampleToLoad = null;
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`example fetch failed: ${response.status} ${url}`);
+                        return response.arrayBuffer();
+                    })
+                    .then(
+                        data => this.loadProjectData(data, title, messages.exampleLoadError),
+                        error => {
+                            log.warn(error);
+                            // eslint-disable-next-line no-alert
+                            alert(this.props.intl.formatMessage(messages.exampleLoadError));
+                            this.props.cancelFileUpload(this.props.loadingState);
+                        }
+                    );
+            } else if (this.fileToUpload && this.fileReader) {
                 // begin to read data from the file. When finished,
                 // cues step 6 using the reader's onload callback
                 this.fileReader.readAsArrayBuffer(this.fileToUpload);
@@ -134,28 +203,37 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // file upload raw data is available in the reader
         onload () {
             if (this.fileReader) {
-                this.props.onLoadingStarted();
                 const filename = this.fileToUpload && this.fileToUpload.name;
-                let loadingSuccess = false;
-                this.props.vm.project.load(this.fileReader.result)
-                    .then(() => {
-                        if (filename) {
-                            const uploadedProjectTitle = getProjectTitleFromFilename(filename);
-                            this.props.onSetProjectTitle(uploadedProjectTitle);
-                        }
-                        loadingSuccess = true;
-                    })
-                    .catch(error => {
-                        log.warn(error);
-                        alert(this.props.intl.formatMessage(messages.loadError)); // eslint-disable-line no-alert
-                    })
-                    .then(() => {
-                        this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
-                        // go back to step 7: whether project loading succeeded
-                        // or failed, reset file objects
-                        this.removeFileObjects();
-                    });
+                const title = filename ? getProjectTitleFromFilename(filename) : null;
+                this.loadProjectData(this.fileReader.result, title, messages.loadError);
             }
+        }
+        /**
+         * Load project bytes into the VM, then finish the loading state whether it succeeded or not.
+         * @param {ArrayBuffer} data - the `.tb` file contents.
+         * @param {?string} title - the project title to set on success, if any.
+         * @param {object} errorMessage - the message to alert on failure.
+         * @returns {Promise<boolean>} whether the project loaded.
+         */
+        loadProjectData (data, title, errorMessage) {
+            this.props.onLoadingStarted();
+            let loadingSuccess = false;
+            return this.props.vm.project.load(data)
+                .then(() => {
+                    if (title) this.props.onSetProjectTitle(title);
+                    loadingSuccess = true;
+                })
+                .catch(error => {
+                    log.warn(error);
+                    alert(this.props.intl.formatMessage(errorMessage)); // eslint-disable-line no-alert
+                })
+                .then(() => {
+                    this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
+                    // go back to step 7: whether project loading succeeded
+                    // or failed, reset file objects
+                    this.removeFileObjects();
+                    return loadingSuccess;
+                });
         }
         // step 7: remove the <input> element from the DOM and clear reader and
         // fileToUpload reference, so those objects can be garbage collected
@@ -190,6 +268,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             return (
                 <React.Fragment>
                     <WrappedComponent
+                        onStartLoadingExample={this.handleStartLoadingExample}
                         onStartSelectingFileUpload={this.handleStartSelectingFileUpload}
                         {...componentProps}
                     />

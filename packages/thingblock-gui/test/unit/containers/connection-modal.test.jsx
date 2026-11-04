@@ -29,6 +29,7 @@ describe('ConnectionModal container', () => {
         lastProps = null;
         store = mockStore({
             scratchGui: {
+                board: {connectedBoard: null},
                 connectionModal: {extensionId: 'thingbotTelemetrix'}
             }
         });
@@ -37,6 +38,9 @@ describe('ConnectionModal container', () => {
         vm = Object.create(VM.prototype);
         vm.getPeripheralIsConnected = () => false;
         vm.events = {on: () => {}, removeListener: () => {}};
+        // No helper backend: the dialog offers no firmware install.
+        vm.link = {backend: null};
+        vm.devices = {getFirmwareTarget: () => null};
     });
 
     afterEach(() => {

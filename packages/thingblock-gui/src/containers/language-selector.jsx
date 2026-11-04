@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import {selectLocale} from '../reducers/locales';
+import {savePreference} from '../lib/user-preferences';
 
 import LanguageSelectorComponent from '../components/language-selector/language-selector.jsx';
 
@@ -54,6 +55,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
     onChangeLanguage: locale => {
+        savePreference('locale', locale);
         dispatch(selectLocale(locale));
     }
 });

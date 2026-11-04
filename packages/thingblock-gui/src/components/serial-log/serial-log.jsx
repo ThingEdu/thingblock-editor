@@ -2,6 +2,7 @@ import React, {useState, useCallback, useEffect, useLayoutEffect, useRef} from '
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
+import PaneChevron from '../pane-header/pane-chevron.jsx';
 import styles from './serial-log.css';
 
 const MIN_HEIGHT = 48;
@@ -55,6 +56,11 @@ const messages = defineMessages({
         defaultMessage: 'Latest',
         description: 'Label for the button that scrolls the serial monitor back to the newest output'
     },
+    toggle: {
+        id: 'gui.serialLog.toggle',
+        defaultMessage: 'Show or hide the serial monitor',
+        description: 'Tooltip of the header that opens or closes the serial monitor pane'
+    },
     jumpToLatestLabel: {
         id: 'gui.serialLog.jumpToLatestLabel',
         defaultMessage: 'Scroll to latest output',
@@ -74,10 +80,16 @@ const SerialLog = ({
     onBaudChange,
     onClear,
     onSend,
-    prompt
+    prompt,
+    collapsed = false,
+    onToggle
 }) => {
     const intl = useIntl();
     const hasPrompt = prompt !== null && typeof prompt !== 'undefined';
+    // Host mode has nothing else in the panel, so the monitor never folds away there; a program
+    // waiting for an answer opens it.
+    const canCollapse = Boolean(onToggle) && !fill;
+    const closed = canCollapse && collapsed && !hasPrompt;
     const [height, setHeight] = useState(DEFAULT_HEIGHT);
     const [inputValue, setInputValue] = useState('');
     const [atBottom, setAtBottom] = useState(true);
@@ -102,6 +114,15 @@ const SerialLog = ({
         const el = contentRef.current;
         if (el && atBottomRef.current) el.scrollTop = el.scrollHeight;
     }, [logs]);
+
+    // Reopened: show the newest output, which arrived while the monitor was closed.
+    useLayoutEffect(() => {
+        const el = contentRef.current;
+        if (el && !closed) {
+            el.scrollTop = el.scrollHeight;
+            setAtBottom(true);
+        }
+    }, [closed]);
 
     const handleScroll = useCallback(() => {
         const el = contentRef.current;
@@ -154,16 +175,31 @@ const SerialLog = ({
 
     return (
         <div
-            className={classNames(styles.serialLog, {[styles.fill]: fill})}
-            style={fill ? null : {height: `${height}px`}}
+            className={classNames(styles.serialLog, {[styles.fill]: fill, [styles.collapsed]: closed})}
+            style={fill || closed ? null : {height: `${height}px`}}
         >
-            <div
-                className={styles.resizeHandle}
-                onMouseDown={fill ? null : handleResizeMouseDown}
-            />
+            {!closed && (
+                <div
+                    className={styles.resizeHandle}
+                    onMouseDown={fill ? null : handleResizeMouseDown}
+                />
+            )}
             <div className={styles.inner}>
                 <div className={styles.header}>
-                    <span><FormattedMessage {...messages.monitor} /></span>
+                    {canCollapse ? (
+                        <button
+                            aria-expanded={!closed}
+                            className={styles.toggle}
+                            title={intl.formatMessage(messages.toggle)}
+                            type="button"
+                            onClick={onToggle}
+                        >
+                            <PaneChevron open={!closed} />
+                            <FormattedMessage {...messages.monitor} />
+                        </button>
+                    ) : (
+                        <span><FormattedMessage {...messages.monitor} /></span>
+                    )}
                     <div className={styles.headerActions}>
                         <select
                             className={styles.baudSelect}
@@ -207,66 +243,68 @@ const SerialLog = ({
                         </button>
                     </div>
                 </div>
-                <div className={styles.contentWrap}>
-                    <div
-                        ref={contentRef}
-                        className={styles.content}
-                        onScroll={handleScroll}
-                    >
-                        {logs && logs.map((entry, i) => (
-                            <div
-                                key={i}
-                                className={styles.entry}
-                            >
-                                {entry.message}
-                            </div>
-                        ))}
-                    </div>
-                    {!atBottom && (
-                        <button
-                            className={styles.jumpButton}
-                            onClick={handleJumpToLatest}
-                            aria-label={intl.formatMessage(messages.jumpToLatestLabel)}
+                {!closed && (<React.Fragment>
+                    <div className={styles.contentWrap}>
+                        <div
+                            ref={contentRef}
+                            className={styles.content}
+                            onScroll={handleScroll}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                            {logs && logs.map((entry, i) => (
+                                <div
+                                    key={i}
+                                    className={styles.entry}
+                                >
+                                    {entry.message}
+                                </div>
+                            ))}
+                        </div>
+                        {!atBottom && (
+                            <button
+                                className={styles.jumpButton}
+                                onClick={handleJumpToLatest}
+                                aria-label={intl.formatMessage(messages.jumpToLatestLabel)}
                             >
-                                <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                            <FormattedMessage {...messages.jumpToLatest} />
-                        </button>
-                    )}
-                </div>
-                {hasPrompt && (
-                    <div className={styles.promptBanner}>{prompt}</div>
-                )}
-                <div className={styles.inputRow}>
-                    <input
-                        ref={inputRef}
-                        className={styles.input}
-                        type="text"
-                        value={inputValue}
-                        placeholder={intl.formatMessage(
-                            hasPrompt ? messages.promptedInputPlaceholder : messages.sendPlaceholder
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                                <FormattedMessage {...messages.jumpToLatest} />
+                            </button>
                         )}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                    />
-                    <button
-                        className={styles.sendButton}
-                        onClick={handleSend}
-                    >
-                        <FormattedMessage {...messages.send} />
-                    </button>
-                </div>
+                    </div>
+                    {hasPrompt && (
+                        <div className={styles.promptBanner}>{prompt}</div>
+                    )}
+                    <div className={styles.inputRow}>
+                        <input
+                            ref={inputRef}
+                            className={styles.input}
+                            type="text"
+                            value={inputValue}
+                            placeholder={intl.formatMessage(
+                                hasPrompt ? messages.promptedInputPlaceholder : messages.sendPlaceholder
+                            )}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <button
+                            className={styles.sendButton}
+                            onClick={handleSend}
+                        >
+                            <FormattedMessage {...messages.send} />
+                        </button>
+                    </div>
+                </React.Fragment>)}
             </div>
         </div>
     );
@@ -282,7 +320,9 @@ SerialLog.propTypes = {
     onBaudChange: PropTypes.func,
     onClear: PropTypes.func,
     onSend: PropTypes.func,
-    prompt: PropTypes.string
+    prompt: PropTypes.string,
+    collapsed: PropTypes.bool,
+    onToggle: PropTypes.func
 };
 
 export default SerialLog;

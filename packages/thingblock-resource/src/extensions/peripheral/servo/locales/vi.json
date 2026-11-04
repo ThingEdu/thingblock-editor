@@ -1,0 +1,5 @@
+{
+  "servo_setangle": {
+    "message0": "đặt servo chân %1 góc %2 độ"
+  }
+}
