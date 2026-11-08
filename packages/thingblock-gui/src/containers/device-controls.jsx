@@ -25,6 +25,9 @@ class DeviceControls extends React.Component {
             scanning: false,
             // null until a scan runs; an array (possibly empty) once it has.
             boards: null,
+            // The board a connect is in flight to, and the message of the last failed connect.
+            connectingBoard: null,
+            connectError: null,
             // null when the upload modal is closed; otherwise one of
             // 'compiling' | 'uploading' | 'done' | 'cancelled' | 'error'.
             uploadStatus: null,
@@ -120,12 +123,12 @@ class DeviceControls extends React.Component {
 
     // Open the board dialog and immediately scan.
     handleConnect () {
-        this.setState({dialogOpen: true, boards: null});
+        this.setState({dialogOpen: true, boards: null, connectError: null});
         this.handleScan();
     }
 
     handleScan () {
-        this.setState({scanning: true});
+        this.setState({scanning: true, connectError: null});
         this.props.vm.link.listBoards(this.props.selectedDeviceId)
             .then(boards => {
                 if (this._unmounted) return;
@@ -143,16 +146,17 @@ class DeviceControls extends React.Component {
     handleConnectBoard (boardId) {
         const board = (this.state.boards || []).find(candidate => candidate.id === boardId);
         if (!board) return;
-        this.props.vm.link.connectBoard(board)
+        this.setState({connectingBoard: board, connectError: null});
+        this.props.vm.link.connectBoard(this.props.selectedDeviceId, board)
             .then(() => {
                 if (this._unmounted) return;
                 this.props.setConnected(board);
-                this.setState({dialogOpen: false});
+                this.setState({dialogOpen: false, connectingBoard: null});
             })
             .catch(error => {
                 if (this._unmounted) return;
-                // Keep the dialog open so the user can retry against another board.
-                console.warn(`connect failed: ${error.message}`); // eslint-disable-line no-console
+                // Back to the list with the error, so the user can retry or pick another board.
+                this.setState({connectingBoard: null, connectError: error.message});
             });
     }
 
@@ -192,6 +196,8 @@ class DeviceControls extends React.Component {
                 dialogOpen={this.state.dialogOpen}
                 scanning={this.state.scanning}
                 boards={this.state.boards}
+                connectingBoard={this.state.connectingBoard}
+                connectError={this.state.connectError}
                 deviceIconURL={selectedDevice && selectedDevice.iconURL}
                 uploading={uploading}
                 uploadStatus={this.state.uploadStatus}

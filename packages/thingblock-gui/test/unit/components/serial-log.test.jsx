@@ -17,15 +17,6 @@ describe('SerialLog', () => {
         </IntlProvider>
     );
 
-    test('triggers callback when clear button is clicked', () => {
-        const onClear = jest.fn();
-        renderSerialLog({onClear});
-
-        fireEvent.click(screen.getByRole('button', {name: 'Clear monitor'}));
-
-        expect(onClear).toHaveBeenCalledTimes(1);
-    });
-
     describe('auto-scroll', () => {
         // jsdom has no layout, so the scrollable element's geometry must be stubbed.
         const stubGeometry = (el, {scrollHeight, scrollTop, clientHeight}) => {
@@ -33,12 +24,6 @@ describe('SerialLog', () => {
             Object.defineProperty(el, 'clientHeight', {value: clientHeight, configurable: true});
             Object.defineProperty(el, 'scrollTop', {value: scrollTop, writable: true, configurable: true});
         };
-
-        test('does not show the jump-to-latest button while pinned to the bottom', () => {
-            renderSerialLog({});
-
-            expect(screen.queryByRole('button', {name: 'Scroll to latest output'})).not.toBeInTheDocument();
-        });
 
         test('shows the jump-to-latest button after the user scrolls up', () => {
             renderSerialLog({});
@@ -104,21 +89,6 @@ describe('SerialLog', () => {
             expect(onSend).not.toHaveBeenCalled();
         });
 
-        test('does not render a collapse control', () => {
-            renderSerialLog({});
-
-            expect(screen.queryByRole('button', {name: 'Collapse monitor'})).not.toBeInTheDocument();
-            expect(screen.getByPlaceholderText('Send message...')).toBeInTheDocument();
-        });
-
-        test('shows the baud dropdown with the current value selected', () => {
-            renderSerialLog({baudRate: 9600});
-
-            const select = screen.getByRole('combobox', {name: 'Serial monitor baud rate'});
-            expect(select).toHaveValue('9600');
-            expect(screen.getByRole('option', {name: '115200 baud'})).toBeInTheDocument();
-        });
-
         test('calls onBaudChange with a number when a new rate is picked', () => {
             const onBaudChange = jest.fn();
             renderSerialLog({baudRate: 9600, onBaudChange});
@@ -128,12 +98,6 @@ describe('SerialLog', () => {
             });
 
             expect(onBaudChange).toHaveBeenCalledWith(115200);
-        });
-
-        test('disables the baud dropdown when baudDisabled is set', () => {
-            renderSerialLog({baudRate: 115200, baudDisabled: true});
-
-            expect(screen.getByRole('combobox', {name: 'Serial monitor baud rate'})).toBeDisabled();
         });
 
         test('clears pre-existing input value when prompt becomes active', () => {

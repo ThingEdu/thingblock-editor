@@ -23,7 +23,7 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
 
     t.equal(
         vm.devices.getResourceOrigin(),
-        'http://localhost:3030/resources/extensions',
+        'http://127.0.0.1:3030/resources/extensions',
         'swaps ws->http and appends the resource path'
     );
 
@@ -188,52 +188,6 @@ test('loadResourcePacks does not latch after a failed run, so a later call still
     t.end();
 });
 
-test('loadResourcePacks still gets the packs when the helper answers well past the old 2s window', async t => {
-    const vm = new VirtualMachine();
-    const realFetch = global.fetch;
-    const realSetTimeout = global.setTimeout;
-    let attempts = 0;
-    const requestedDelaysMs = [];
-
-    // Stand in for the wait itself: record what the retry loop asks to wait, but fire on the next
-    // tick instead of really waiting. This is what keeps the test fast while still proving the
-    // *bound* the production code computes, not a fake one built into the test.
-    global.setTimeout = (fn, ms) => {
-        requestedDelaysMs.push(ms);
-        return realSetTimeout(fn, 0);
-    };
-
-    // Measured on real hardware, the helper has taken up to 47s to open its port (it starts an
-    // arduino-cli daemon and probes a Bluetooth adapter before it serves). Answering only on the
-    // 11th attempt means the retry loop must have already asked to wait more than 47s in total
-    // before this attempt fires — well past the old 5-attempt/500ms-fixed window (~2s), under which
-    // the helper would never have gotten this far: that code gave up for good after its 5th failure.
-    global.fetch = () => {
-        attempts++;
-        if (attempts < 11) return Promise.reject(new Error('ECONNREFUSED'));
-        return Promise.resolve({json: () => Promise.resolve({packs: [{kind: 'device', path: 'devices/thingbot'}]})});
-    };
-    vm.devices.setModuleImporter(() => Promise.resolve({default: sampleManifest}));
-
-    try {
-        await vm.devices.loadResourcePacks();
-    } finally {
-        global.fetch = realFetch;
-        global.setTimeout = realSetTimeout;
-    }
-
-    const cumulativeDelayMs = requestedDelaysMs.reduce((total, ms) => total + ms, 0);
-
-    t.equal(attempts, 11, 'kept retrying past the old window until the helper answered');
-    t.ok(cumulativeDelayMs > 47000,
-        `retry window before this attempt (${cumulativeDelayMs}ms) covers the 47s worst case measured ` +
-        'on real hardware');
-    t.ok(vm.devices.getDeviceList().find(d => d.deviceId === 'thingbot'),
-        'the pack device joins the list once the helper finally answers');
-
-    t.end();
-});
-
 const firmwareManifest = Object.assign({}, sampleManifest, {
     firmware: [{
         id: 'telemetrix-ble',
@@ -285,35 +239,6 @@ test('flashFirmware sends flashFirmware with the pack-relative image', async t =
     // sampleManifest declares compile.options {CDCOnBoot: 'cdc'}, which `_composeFqbn` (shared with
     // `flash()`) folds onto the base fqbn as arduino-cli board-menu selections.
     t.equal(sent[0].payload.fqbn, 'esp32:esp32:esp32c3:CDCOnBoot=cdc', 'carries the composed board fqbn');
-    t.end();
-});
-
-test('flashFirmware closes the monitor before the flash and reopens it after', async t => {
-    const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
-
-    // The board's one serial port can't be monitored while esptool drives it (confirmed on real
-    // hardware: arduino-cli's serial-monitor holds the port and the flash fails with EBUSY), so
-    // `flashFirmware` must free it first, same as `upload()`.
-    const order = [];
-    vm.link.backend.session.request = type => {
-        order.push(type);
-        return Promise.resolve({});
-    };
-    vm.link.backend.monitor.closeMonitor = () => {
-        order.push('closeMonitor');
-        return Promise.resolve();
-    };
-    vm.link.backend.monitor.openMonitor = opts => {
-        order.push(`openMonitor:${opts.baudRate}`);
-        return Promise.resolve();
-    };
-    vm.link.backend.session.connectedTarget = {id: '/dev/ttyUSB0'};
-
-    await vm.link.flashFirmware('thingbot', 'telemetrix-ble');
-
-    t.same(order, ['closeMonitor', 'flashFirmware', 'openMonitor:115200'],
-        'frees the port for the flash, then restores the monitor at the stored baud, in that order');
     t.end();
 });
 

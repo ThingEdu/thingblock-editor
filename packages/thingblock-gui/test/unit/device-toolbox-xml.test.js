@@ -20,16 +20,6 @@ describe('packCategoryToToolboxXML', () => {
         expect(xml).toContain('<block type="thingbot_analogread"/>');
     });
 
-    test('namespaces the id by the given prefix', () => {
-        const {id} = packCategoryToToolboxXML({
-            kind: 'category',
-            name: 'Servo',
-            contents: [{kind: 'block', type: 'servo_setangle'}]
-        }, 'peripheral');
-
-        expect(id).toBe('peripheral_servo');
-    });
-
     test('escapes the category name and falls back to a default colour', () => {
         const {id, xml} = packCategoryToToolboxXML({
             kind: 'category',

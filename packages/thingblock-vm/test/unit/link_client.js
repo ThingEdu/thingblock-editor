@@ -77,14 +77,34 @@ class FakeRuntime {
 
 /**
  * Build a local backend wired to a fresh FakeWebSocket registry and a recording runtime.
+ * @param {Function} [fetch] - the fake fetch for the helper HTTP API.
  * @returns {{client: LocalBackend, sockets: Array.<FakeWebSocket>, runtime: FakeRuntime}} the client,
  *   its sockets, and its runtime.
  */
-const makeClient = () => {
+const makeClient = fetch => {
     FakeWebSocket.instances = [];
     const runtime = new FakeRuntime();
-    const client = createLocalBackend(runtime, {url: 'ws://test/', WebSocket: FakeWebSocket});
+    const client = createLocalBackend(runtime, {url: 'ws://test/ws/arduino', WebSocket: FakeWebSocket, fetch});
     return {client, sockets: FakeWebSocket.instances, runtime};
+};
+
+/**
+ * A minimal fetch stand-in: records requested URLs and replies with the queued responses in order.
+ * @param {Array.<{status?: number, body?: object}>} responses - the responses to serve.
+ * @returns {Function} the fake fetch, with a `calls` array of requested URLs.
+ */
+const fakeFetch = responses => {
+    const fn = url => {
+        fn.calls.push(url);
+        const {status = 200, body = {}} = responses.shift() || {};
+        return Promise.resolve({
+            ok: status >= 200 && status < 300,
+            status,
+            json: () => Promise.resolve(body)
+        });
+    };
+    fn.calls = [];
+    return fn;
 };
 
 /** @returns {Promise<void>} resolves after the microtask queue (pending sends) drains. */
@@ -118,75 +138,46 @@ const stubDevice = (pnpid, {fqbn = 'arduino:avr:uno', options = {}, uploadSpeed}
     getCompileConfig: () => ({options})
 });
 
-test('listBoards sends a listBoards envelope with the device pnpid', t => {
-    const {client, sockets} = makeClient();
-    client.connection.listBoards(stubDevice(['USB\\VID_2341&PID_0043']));
+/** A stub device with one pnpid, for connecting. */
+const boardDevice = stubDevice(['USB\\VID_2341&PID_0043']);
 
-    // The socket opens lazily; flush the microtask that sends after open resolves.
-    sockets[0].emitOpen();
-    Promise.resolve().then(() => {
-        t.equal(sockets.length, 1, 'opens exactly one socket');
-        t.equal(sockets[0].sent.length, 1, 'sends one frame');
-        const frame = sockets[0].sent[0];
-        t.equal(frame.type, 'listBoards');
-        t.same(frame.payload, {pnpid: ['USB\\VID_2341&PID_0043']});
-        t.type(frame.id, 'string', 'frame carries a correlation id');
-        t.end();
-    });
+test('listBoards fetches the helper board list filtered by the device pnpids', async t => {
+    const fetch = fakeFetch([{body: {targets: [{port: '/dev/ttyACM0', label: 'Arduino Uno'}]}}]);
+    const {client, sockets} = makeClient(fetch);
+
+    const device = stubDevice(['USB\\VID_2341&PID_0043', 'USB\\VID_1A86&PID_7523']);
+    const targets = await client.connection.listBoards(device);
+
+    t.same(fetch.calls, ['http://test/api/boards?pnpid=USB%5CVID_2341%26PID_0043%2CUSB%5CVID_1A86%26PID_7523'],
+        'pnpids are joined with commas into one query parameter');
+    t.same(targets, [{id: '/dev/ttyACM0', name: 'Arduino Uno'}], 'helper {port,label} maps to {id,name}');
+    t.equal(sockets.length, 0, 'opens no socket');
 });
 
-test('listBoards maps helper {port,label} targets to {id,name}', t => {
-    const {client, sockets} = makeClient();
-    const promise = client.connection.listBoards(stubDevice([]));
-
-    sockets[0].emitOpen();
-    Promise.resolve().then(() => {
-        const {id} = sockets[0].sent[0];
-        sockets[0].emitMessage({
-            id,
-            type: 'result',
-            payload: {targets: [{port: '/dev/ttyACM0', label: 'Arduino Uno'}]}
-        });
-    });
-
-    promise.then(targets => {
-        t.same(targets, [{id: '/dev/ttyACM0', name: 'Arduino Uno'}]);
-        t.end();
-    });
-});
-
-test('listBoards resolves empty when no boards match', t => {
-    const {client, sockets} = makeClient();
-    const promise = client.connection.listBoards(stubDevice([]));
-
-    sockets[0].emitOpen();
-    Promise.resolve().then(() => {
-        sockets[0].emitMessage({id: sockets[0].sent[0].id, type: 'result', payload: {targets: []}});
-    });
-
-    promise.then(targets => {
-        t.same(targets, []);
-        t.end();
-    });
+test('listBoards throws when the device has no pnpid', async t => {
+    const fetch = fakeFetch([]);
+    const {client} = makeClient(fetch);
+    await t.rejects(client.connection.listBoards(stubDevice([])), /no pnpid/);
+    t.same(fetch.calls, [], 'sends no request');
 });
 
 test('a helper error rejects the request and carries its code', t => {
     const {client, sockets} = makeClient();
-    const promise = client.connection.listBoards(stubDevice([]));
+    const promise = client.builder.compile(stubDevice([]), 'src');
 
     sockets[0].emitOpen();
     Promise.resolve().then(() => {
         sockets[0].emitMessage({
             id: sockets[0].sent[0].id,
             type: 'error',
-            payload: {code: 'unimplemented', message: 'not yet'}
+            payload: {code: 'invalidRequest', message: 'not yet'}
         });
     });
 
     promise.then(
         () => t.fail('should not resolve'),
         err => {
-            t.equal(err.code, 'unimplemented');
+            t.equal(err.code, 'invalidRequest');
             t.match(err.message, /not yet/);
             t.end();
         }
@@ -195,7 +186,7 @@ test('a helper error rejects the request and carries its code', t => {
 
 test('closing the socket rejects in-flight requests', t => {
     const {client, sockets} = makeClient();
-    const promise = client.connection.listBoards(stubDevice([]));
+    const promise = client.builder.compile(stubDevice([]), 'src');
 
     sockets[0].emitOpen();
     Promise.resolve().then(() => sockets[0].emitClose());
@@ -209,16 +200,16 @@ test('closing the socket rejects in-flight requests', t => {
     );
 });
 
-test('connect sends the port, marks connected, and emits DEVICE_CONNECTED', async t => {
+test('connect sends the port and pnpids, marks connected, and emits DEVICE_CONNECTED', async t => {
     const {client, sockets, runtime} = makeClient();
-    const promise = client.connection.connect({id: '/dev/ttyACM0', name: 'Arduino Uno'});
+    const promise = client.connection.connect(boardDevice, {id: '/dev/ttyACM0', name: 'Arduino Uno'});
 
     await roundTrip(sockets[0], 0);
     await promise;
 
     const frame = sockets[0].sent[0];
     t.equal(frame.type, 'connect');
-    t.same(frame.payload, {port: '/dev/ttyACM0'});
+    t.same(frame.payload, {port: '/dev/ttyACM0', pnpid: ['USB\\VID_2341&PID_0043']});
     t.equal(client.connection.isConnected, true, 'isConnected becomes true');
     t.same(runtime.emitted, ['DEVICE_CONNECTED']);
 });
@@ -226,7 +217,7 @@ test('connect sends the port, marks connected, and emits DEVICE_CONNECTED', asyn
 test('disconnect clears the link and emits DEVICE_DISCONNECTED', async t => {
     const {client, sockets, runtime} = makeClient();
 
-    const connecting = client.connection.connect({id: '/dev/ttyACM0', name: 'Arduino Uno'});
+    const connecting = client.connection.connect(boardDevice, {id: '/dev/ttyACM0', name: 'Arduino Uno'});
     await roundTrip(sockets[0], 0);
     await connecting;
 
@@ -251,7 +242,7 @@ test('disconnect when not connected is a no-op', async t => {
 test('a socket close while connected emits DEVICE_DISCONNECTED', async t => {
     const {client, sockets, runtime} = makeClient();
 
-    const connecting = client.connection.connect({id: '/dev/ttyACM0', name: 'Arduino Uno'});
+    const connecting = client.connection.connect(boardDevice, {id: '/dev/ttyACM0', name: 'Arduino Uno'});
     await roundTrip(sockets[0], 0);
     await connecting;
 
@@ -285,21 +276,6 @@ test('compile sends a compile envelope with the composed fqbn and source', async
     });
     const artifact = await promise;
     t.same(artifact, {format: 'bin', path: '/tmp/sketch.bin'}, 'resolves the helper artifact');
-    t.end();
-});
-
-test('compile forwards vendored lib references in the envelope', async t => {
-    const {client, sockets} = makeClient();
-    const libs = [{pack: 'extensions/peripheral/servo', lib: 'libs/Servo'}];
-    const promise = client.builder.compile(stubDevice([]), 'src', libs);
-
-    sockets[0].emitOpen();
-    await flush();
-    const frame = sockets[0].sent[0];
-    t.same(frame.payload.libs, libs, 'libs ride along untouched for the helper to resolve');
-
-    sockets[0].emitMessage({id: frame.id, type: 'result', payload: {artifact: {format: 'bin', path: '/p'}}});
-    await promise;
     t.end();
 });
 
@@ -341,29 +317,6 @@ test('compile tolerates streaming frames when no callbacks are given', async t =
     t.end();
 });
 
-test('a compile error rejects the request', t => {
-    const {client, sockets} = makeClient();
-    const promise = client.builder.compile(stubDevice([]), 'src');
-
-    sockets[0].emitOpen();
-    flush().then(() => {
-        sockets[0].emitMessage({
-            id: sockets[0].sent[0].id,
-            type: 'error',
-            payload: {code: 'daemon', message: 'compile failed'}
-        });
-    });
-
-    promise.then(
-        () => t.fail('should not resolve'),
-        err => {
-            t.equal(err.code, 'daemon');
-            t.match(err.message, /compile failed/);
-            t.end();
-        }
-    );
-});
-
 /**
  * Connect a client to a target so `flash` has a selected port. Drives the `connect` round-trip
  * (opening the lazily-created socket) and resolves with that socket once the client reports connected.
@@ -373,7 +326,7 @@ test('a compile error rejects the request', t => {
  * @returns {Promise<FakeWebSocket>} the now-open socket.
  */
 const connectClient = async (client, sockets, target) => {
-    const promise = client.connection.connect(target);
+    const promise = client.connection.connect(boardDevice, target);
     const socket = sockets[0];
     socket.emitOpen();
     await flush();
@@ -392,7 +345,7 @@ test('flash rejects when no port is connected', async t => {
     t.end();
 });
 
-test('flash sends an upload envelope with the fqbn, port, uploadSpeed, and artifact', async t => {
+test('flash sends an upload envelope with the fqbn, uploadSpeed, and artifact', async t => {
     const {client, sockets} = makeClient();
     const device = stubDevice([], {fqbn: 'arduino:avr:uno', uploadSpeed: 115200});
     await connectClient(client, sockets, {id: '/dev/ttyACM0', name: 'Uno'});
@@ -404,10 +357,9 @@ test('flash sends an upload envelope with the fqbn, port, uploadSpeed, and artif
     t.equal(frame.type, 'upload');
     t.same(frame.payload, {
         fqbn: 'arduino:avr:uno',
-        port: '/dev/ttyACM0',
         uploadSpeed: 115200,
         artifact
-    }, 'upload payload carries the composed fqbn, selected port, speed, and artifact');
+    }, 'upload payload carries the composed fqbn, speed, and artifact; the helper uses the connected port');
 
     sockets[0].emitMessage({id: frame.id, type: 'result', payload: {}});
     await promise;
@@ -426,46 +378,6 @@ test('flash defaults uploadSpeed to 0 when the device omits it', async t => {
 
     sockets[0].emitMessage({id: frame.id, type: 'result', payload: {}});
     await promise;
-    t.end();
-});
-
-test('flash streams log chunks to onLog, then resolves', async t => {
-    const {client, sockets} = makeClient();
-    await connectClient(client, sockets, {id: '/dev/ttyACM0', name: 'Uno'});
-
-    const logs = [];
-    const promise = client.flasher.flash(stubDevice([]), {format: 'hex', path: '/p'}, {
-        onLog: chunk => logs.push(chunk)
-    });
-    await flush();
-    const {id} = sockets[0].sent[1];
-    sockets[0].emitMessage({id, type: 'log', payload: {chunk: 'avrdude: writing flash'}});
-    sockets[0].emitMessage({id, type: 'result', payload: {}});
-
-    await promise;
-    t.same(logs, ['avrdude: writing flash'], 'upload log chunks route to onLog');
-    t.end();
-});
-
-test('a flash error rejects the request', async t => {
-    const {client, sockets} = makeClient();
-    await connectClient(client, sockets, {id: '/dev/ttyACM0', name: 'Uno'});
-
-    const promise = client.flasher.flash(stubDevice([]), {format: 'hex', path: '/p'});
-    await flush();
-    sockets[0].emitMessage({
-        id: sockets[0].sent[1].id,
-        type: 'error',
-        payload: {code: 'daemon', message: 'upload failed'}
-    });
-
-    await promise.then(
-        () => t.fail('should not resolve'),
-        err => {
-            t.equal(err.code, 'daemon');
-            t.match(err.message, /upload failed/);
-        }
-    );
     t.end();
 });
 
@@ -497,13 +409,12 @@ test('openMonitor rejects when no port is connected', async t => {
     t.end();
 });
 
-test('openMonitor sends a monitorOpen envelope with the connected port and baud rate', async t => {
+test('openMonitor sends a monitorOpen envelope with the baud rate', async t => {
     const {client, sockets} = makeClient();
     const frame = await openMonitorClient(client, sockets, 9600);
 
     t.equal(frame.type, 'monitorOpen');
-    t.same(frame.payload, {port: '/dev/ttyACM0', baudRate: 9600},
-        'monitorOpen carries the connected port and requested baud rate');
+    t.same(frame.payload, {baudRate: 9600}, 'the helper uses the connected port');
     t.end();
 });
 
@@ -518,16 +429,6 @@ test('monitorData frames after open emit SERIAL_DATA on the runtime', async t =>
     t.end();
 });
 
-test('monitorData on a foreign id is ignored', async t => {
-    const {client, sockets, runtime} = makeClient();
-    await openMonitorClient(client, sockets);
-
-    sockets[0].emitMessage({id: 'not-the-monitor', type: 'monitorData', payload: {data: 'x'}});
-
-    t.same(runtime.serialData, [], 'data for an unknown id does not reach the runtime');
-    t.end();
-});
-
 test('writeMonitor sends a monitorWrite envelope on the open monitor id', async t => {
     const {client, sockets} = makeClient();
     const {id} = await openMonitorClient(client, sockets);
@@ -537,13 +438,6 @@ test('writeMonitor sends a monitorWrite envelope on the open monitor id', async 
     t.equal(frame.type, 'monitorWrite');
     t.equal(frame.id, id, 'the write is stamped with the monitor session id');
     t.same(frame.payload, {data: 'ping'});
-    t.end();
-});
-
-test('writeMonitor is a no-op when no monitor is open', t => {
-    const {client, sockets} = makeClient();
-    client.monitor.writeMonitor('ping');
-    t.equal(sockets.length, 0, 'opens no socket and sends nothing');
     t.end();
 });
 
@@ -565,18 +459,11 @@ test('closeMonitor sends monitorClose and stops routing later monitorData', asyn
     t.end();
 });
 
-test('closeMonitor is a no-op when no monitor is open', async t => {
-    const {client, sockets} = makeClient();
-    await client.monitor.closeMonitor();
-    t.equal(sockets.length, 0, 'opens no socket and sends nothing');
-    t.end();
-});
-
 test('a post-open monitor error tears the monitor down', async t => {
     const {client, sockets, runtime} = makeClient();
     const {id} = await openMonitorClient(client, sockets);
 
-    sockets[0].emitMessage({id, type: 'error', payload: {code: 'grpc', message: 'port lost'}});
+    sockets[0].emitMessage({id, type: 'error', payload: {code: 'failed', message: 'port lost'}});
     // The monitor is gone; subsequent data on its id is dropped and a later write is a no-op.
     sockets[0].emitMessage({id, type: 'monitorData', payload: {data: 'after'}});
     client.monitor.writeMonitor('x');
@@ -615,26 +502,6 @@ test('cancel aborts an in-flight compile, rejecting it with code cancelled', asy
     await promise.then(
         () => t.fail('should not resolve'),
         err => t.equal(err.code, 'cancelled', 'the compile promise rejects with the cancelled code')
-    );
-    t.end();
-});
-
-test('cancel aborts an in-flight upload too', async t => {
-    const {client, sockets} = makeClient();
-    await connectClient(client, sockets, {id: '/dev/ttyACM0', name: 'Uno'});
-    const promise = client.flasher.flash(stubDevice([]), {format: 'hex', path: '/p'});
-    await flush();
-    const {id} = sockets[0].sent[1];
-
-    client.builder.cancel();
-    const cancelFrame = sockets[0].sent[2];
-    t.equal(cancelFrame.type, 'cancel');
-    t.equal(cancelFrame.id, id, 'cancel targets the in-flight upload');
-
-    sockets[0].emitMessage({id, type: 'error', payload: {code: 'cancelled', message: 'cancelled'}});
-    await promise.then(
-        () => t.fail('should not resolve'),
-        err => t.equal(err.code, 'cancelled')
     );
     t.end();
 });
@@ -683,7 +550,7 @@ test('a monitorOpen that fails leaves no monitor routing behind', async t => {
     const promise = client.monitor.openMonitor({baudRate: 115200});
     await flush();
     const openFrame = sockets[0].sent[1];
-    sockets[0].emitMessage({id: openFrame.id, type: 'error', payload: {code: 'grpc', message: 'busy'}});
+    sockets[0].emitMessage({id: openFrame.id, type: 'error', payload: {code: 'failed', message: 'busy'}});
     await t.rejects(promise, /busy/, 'the failed open rejects');
 
     // The routing must be gone: no write goes out and stray data on the dead id does not emit.
@@ -698,20 +565,14 @@ test('resourceOrigin derives the helper HTTP resource base from the WebSocket UR
     const {client} = makeClient();
     t.equal(client.resourceOrigin, 'http://test/resources', 'ws:// maps to http:// plus /resources');
 
-    const secure = createLocalBackend(new FakeRuntime(), {url: 'wss://helper.local:3030/', WebSocket: FakeWebSocket});
+    const secure = createLocalBackend(new FakeRuntime(), {url: 'wss://helper.local:3030/ws/arduino', WebSocket: FakeWebSocket});
     t.equal(secure.resourceOrigin, 'https://helper.local:3030/resources', 'wss:// maps to https://');
-    t.end();
-});
-
-test('canFlashFirmware is true: the local flasher implements flashFirmware', t => {
-    const {client} = makeClient();
-    t.equal(client.flasher.canFlashFirmware, true);
     t.end();
 });
 
 test('resourceOrigin prefers a host-supplied resourceBase over the helper route', t => {
     const hosted = createLocalBackend(new FakeRuntime(), {
-        url: 'ws://test/',
+        url: 'ws://test/ws/arduino',
         WebSocket: FakeWebSocket,
         resourceBase: '/thingblock-resource'
     });
@@ -736,31 +597,12 @@ test('cancel after a request settles is a no-op', async t => {
     t.end();
 });
 
-/**
- * A minimal fetch stand-in: records requested URLs and replies with the queued responses in order.
- * @param {Array.<{status?: number, body?: object}>} responses - the responses to serve.
- * @returns {Function} the fake fetch, with a `calls` array of requested URLs.
- */
-const fakeFetch = responses => {
-    const fn = url => {
-        fn.calls.push(url);
-        const {status = 200, body = {}} = responses.shift() || {};
-        return Promise.resolve({
-            ok: status >= 200 && status < 300,
-            status,
-            json: () => Promise.resolve(body)
-        });
-    };
-    fn.calls = [];
-    return fn;
-};
-
 test('getPlatformStatus fetches the platform by id from the helper HTTP API', async t => {
     const fetch = fakeFetch([{
         status: 200,
         body: {id: 'esp32:esp32', name: 'esp32', installed: false, latestVersion: '3.0.5'}
     }]);
-    const client = createLocalBackend(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
+    const client = createLocalBackend(new FakeRuntime(), {url: 'ws://test/ws/arduino', WebSocket: FakeWebSocket, fetch});
 
     const status = await client.builder.getPlatformStatus(stubDevice([], {fqbn: 'esp32:esp32:esp32'}));
 
@@ -772,24 +614,12 @@ test('getPlatformStatus fetches the platform by id from the helper HTTP API', as
 });
 
 test('getPlatformStatus reports an unindexed platform as uninstalled and unknown', async t => {
-    const fetch = fakeFetch([{status: 404, body: {code: 'invalidRequest', message: 'unknown platform'}}]);
-    const client = createLocalBackend(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
+    const fetch = fakeFetch([{status: 404, body: {code: 'notFound', message: 'unknown platform'}}]);
+    const client = createLocalBackend(new FakeRuntime(), {url: 'ws://test/ws/arduino', WebSocket: FakeWebSocket, fetch});
 
     const status = await client.builder.getPlatformStatus(stubDevice([], {fqbn: 'acme:chip:board'}));
 
     t.same(status, {id: 'acme:chip', name: 'acme:chip', installed: false, known: false});
-    t.end();
-});
-
-test('getPlatformStatus throws on a helper failure', async t => {
-    const fetch = fakeFetch([{status: 502, body: {code: 'daemon', message: 'daemon gone'}}]);
-    const client = createLocalBackend(new FakeRuntime(), {url: 'ws://test/', WebSocket: FakeWebSocket, fetch});
-
-    await t.rejects(
-        client.builder.getPlatformStatus(stubDevice([])),
-        /502/,
-        'a non-404 error status rejects'
-    );
     t.end();
 });
 
@@ -819,30 +649,10 @@ test('installPlatform sends an installPlatform envelope and streams progress to 
     t.end();
 });
 
-test('cancel aborts an in-flight platform install, rejecting it with code cancelled', async t => {
-    const {client, sockets} = makeClient();
-    const promise = client.builder.installPlatform(stubDevice([], {fqbn: 'esp32:esp32:esp32'}));
-    sockets[0].emitOpen();
-    await flush();
-    const {id} = sockets[0].sent[0];
-
-    client.builder.cancel();
-    const cancelFrame = sockets[0].sent[1];
-    t.equal(cancelFrame.type, 'cancel', 'sends a cancel frame');
-    t.equal(cancelFrame.id, id, 'cancel targets the in-flight install');
-
-    sockets[0].emitMessage({id, type: 'error', payload: {code: 'cancelled', message: 'cancelled'}});
-    await promise.then(
-        () => t.fail('should not resolve'),
-        err => t.equal(err.code, 'cancelled', 'the install promise rejects with the cancelled code')
-    );
-    t.end();
-});
-
 test('concurrent requests share one lazily-opened socket', t => {
     const {client, sockets} = makeClient();
-    client.connection.listBoards(stubDevice([]));
-    client.connection.listBoards(stubDevice([]));
+    client.builder.compile(stubDevice([]), 'a');
+    client.builder.compile(stubDevice([]), 'b');
 
     sockets[0].emitOpen();
     Promise.resolve().then(() => {

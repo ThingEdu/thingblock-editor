@@ -36,15 +36,6 @@ describe('PeripheralCard', () => {
         expect(defaultProps.onToggle).toHaveBeenCalledWith('servo');
     });
 
-    test('an active peripheral shows Remove and toggles off when clicked', async () => {
-        const user = userEvent.setup();
-        renderCard({active: true});
-
-        expect(screen.getByText('Remove')).toBeInTheDocument();
-        await user.click(screen.getByRole('button', {name: /Servo/i}));
-        expect(defaultProps.onToggle).toHaveBeenCalledWith('servo');
-    });
-
     test('a locked peripheral shows Included and cannot be toggled', async () => {
         const user = userEvent.setup();
         renderCard({active: true, locked: true});

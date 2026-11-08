@@ -73,5 +73,7 @@ export const VMWorkspaceEvent = {
 export const DeviceEvent = {
     RESOURCE_PACKS_LOADED: 'RESOURCE_PACKS_LOADED',
     PERIPHERALS_CHANGED: 'PERIPHERALS_CHANGED',
-    BOARD_RESTORED: 'BOARD_RESTORED' // (board: {device: string | null, peripherals: string[]})
+    BOARD_RESTORED: 'BOARD_RESTORED', // (board: {device: string | null, peripherals: string[]})
+    /** The selected device changed, including to or from none. */
+    DEVICE_CHANGE: 'DEVICE_CHANGE'
 };

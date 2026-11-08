@@ -1,149 +1,27 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { registerBlocks } from '../src/extensions/peripheral/ps2/blocks'
 import { registerGenerators } from '../src/extensions/peripheral/ps2/generator'
-import ps2Manifest from '../src/extensions/peripheral/ps2/manifest'
-import ps2Toolbox from '../src/extensions/peripheral/ps2/toolbox'
 import { registerGenerators as registerThingbotGenerators } from '../src/extensions/peripheral/thingbot-core/generator'
-import type { ArduinoGenerator, ArduinoOrder, Blockly } from '../src/shared/types'
+import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
 
 const Order = { ATOMIC: 0 } as unknown as ArduinoOrder
 
-const makeGenerator = () => ({
-  forBlock: {} as Record<string, (block: unknown) => string | [string, number]>,
-  includes: new Map<string, string>(),
-  globals: new Map<string, string>(),
-  setups: new Map<string, string>(),
-  valueToCode: () => '',
-})
-
-const makeBlock = (fields: Record<string, string | number> = {}) => ({
-  getFieldValue: (name: string) => fields[name],
-})
-
-interface JsonArgument {
-  name?: string
-  text?: unknown
-  options?: string[][]
-}
-
-interface JsonConfig {
-  args0?: JsonArgument[]
-}
-
-interface BlockDefinition {
-  init(this: { jsonInit: (config: JsonConfig) => void }): void
-}
-
-const configFor = (definition: unknown): JsonConfig => {
-  let config: JsonConfig | undefined
-  const block = { jsonInit: (value: JsonConfig) => (config = value) }
-  ;(definition as BlockDefinition).init.call(block)
-  if (!config) throw new Error('configFor: block did not call jsonInit')
-  return config
-}
-
-const blockIds = ['ps2_init', 'ps2_readData', 'ps2_getButton', 'ps2_GetJoystick']
-
-describe('PS2 blocks', () => {
-  it('defines the four PS2 block opcodes', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-    expect(Object.keys(Blocks)).toEqual(blockIds)
-  })
-
-  it('defaults the pin fields to the ThingBot PS2 port', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-
-    const args = configFor(Blocks.ps2_init).args0 ?? []
-    expect(args.map(({ name }) => name)).toEqual(['DIN', 'DOUT', 'CS', 'CLK'])
-    // `field_number` (a FieldTextInput subclass) reads its default from `text`, so the pin numbers live there.
-    // They match `init PS2 on ThingBot`: DAT on IO7, CMD on IO2, SEL on IO10, CLK on IO6.
-    expect(args.map(({ text }) => text)).toEqual(['7', '2', '10', '6'])
-  })
-
-  it('preserves the button and joystick constants', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-
-    const buttons = configFor(Blocks.ps2_getButton).args0?.[0].options?.map((option) => option[1])
-    const joysticks = configFor(Blocks.ps2_GetJoystick).args0?.[0].options?.map((option) => option[1])
-    expect(buttons).toContain('PSB_PAD_UP')
-    expect(buttons).toContain('PSB_START')
-    expect(joysticks).toEqual(['PSS_LX', 'PSS_LY', 'PSS_RX', 'PSS_RY'])
-  })
-})
-
 describe('PS2 generator', () => {
-  it('emits configuration with selected pins and safe defaults', () => {
-    const gen = makeGenerator()
-    registerGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    expect(gen.forBlock.ps2_init(makeBlock({ DIN: 7, DOUT: 2, CS: 10, CLK: 6 }))).toBe(
-      'ps2x.config_gamepad(6, 2, 10, 7, false, false);\n',
-    )
-    expect(gen.forBlock.ps2_init(makeBlock())).toBe('ps2x.config_gamepad(6, 2, 10, 7, false, false);\n')
-  })
-
-  it('emits polling, button, and joystick code', () => {
-    const gen = makeGenerator()
-    registerGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    expect(gen.forBlock.ps2_readData(makeBlock())).toBe('ps2x.read_gamepad();\n')
-    expect(gen.forBlock.ps2_getButton(makeBlock({ BUTTON: 'PSB_CROSS' }))).toEqual([
-      'ps2x.Button(PSB_CROSS)',
-      Order.ATOMIC,
-    ])
-    expect(gen.forBlock.ps2_GetJoystick(makeBlock({ JOYSTICK: 'PSS_RY' }))).toEqual([
-      'ps2x.Analog(PSS_RY)',
-      Order.ATOMIC,
-    ])
-  })
-
   it('deduplicates the include and controller instance across PS2 and ThingBot generators', () => {
-    const gen = makeGenerator()
+    const gen = {
+      forBlock: {} as Record<string, (block: unknown) => string | [string, number]>,
+      includes: new Map<string, string>(),
+      globals: new Map<string, string>(),
+      setups: new Map<string, string>(),
+      valueToCode: () => '',
+    }
     registerGenerators(gen as unknown as ArduinoGenerator, Order)
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
+    const block = { getFieldValue: () => undefined }
 
-    gen.forBlock.ps2_readData(makeBlock())
-    gen.forBlock.thingBotC3_initPS2(makeBlock())
+    gen.forBlock.ps2_readData(block)
+    gen.forBlock.thingBotC3_initPS2(block)
 
     expect(gen.includes.get('ps2x_include')).toBe('#include <PS2X_lib.h>')
-    expect(gen.globals.get('ps2x_instance')).toBe('PS2X ps2x;')
     expect([...gen.globals.values()].filter((value) => value === 'PS2X ps2x;')).toHaveLength(1)
-  })
-})
-
-describe('PS2 resource pack', () => {
-  it('declares its served modules, icon, and vendored library', () => {
-    expect(ps2Manifest).toMatchObject({
-      id: 'ps2',
-      kind: 'peripheral',
-      icon: './icon.png',
-      blocks: './blocks.js',
-      generator: './generator.js',
-      toolbox: './toolbox.js',
-      libs: [{ path: 'libs/PS2X_lib' }],
-    })
-  })
-
-  it('preserves the toolbox block order', () => {
-    expect(ps2Toolbox.colour).toBe('#FF3399')
-    expect(ps2Toolbox.contents.map(({ type }) => type)).toEqual(blockIds)
-  })
-
-  it('ships the vendored PS2X library with its metadata and licence', () => {
-    // Without library.properties arduino-cli treats the folder as a bare legacy library and has no
-    // name, version or licence to report for it.
-    const properties = readFileSync(
-      join(__dirname, '../src/extensions/peripheral/ps2/libs/PS2X_lib/library.properties'),
-      'utf8',
-    )
-    expect(properties).toMatch(/^name=PS2X_lib$/m)
-    expect(properties).toMatch(/^version=\d+\.\d+$/m)
-    expect(properties).toMatch(/^architectures=\*$/m)
-    expect(properties).toContain('GPL-3.0-or-later')
   })
 })

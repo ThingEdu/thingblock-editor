@@ -9,6 +9,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 
 test('connectBoard auto-opens the monitor at the default baud after connecting', async t => {
     const vm = new VirtualMachine();
+    vm.devices.deviceRegistry.get = () => ({});
     const order = [];
     vm.link.backend = flatBackend({
         connect: () => {
@@ -21,7 +22,7 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
         }
     });
 
-    await vm.link.connectBoard({id: '/dev/ttyACM0', name: 'Uno'});
+    await vm.link.connectBoard('uno', {id: '/dev/ttyACM0', name: 'Uno'});
     await flush();
     t.same(order, ['connect', 'open:115200'], 'connects first, then opens the monitor at 115200');
     t.end();
@@ -29,12 +30,13 @@ test('connectBoard auto-opens the monitor at the default baud after connecting',
 
 test('connectBoard still resolves when the monitor fails to open', async t => {
     const vm = new VirtualMachine();
+    vm.devices.deviceRegistry.get = () => ({});
     vm.link.backend = flatBackend({
         connect: () => Promise.resolve(),
         openMonitor: () => Promise.reject(new Error('port busy'))
     });
 
-    await t.resolves(vm.link.connectBoard({id: '/dev/ttyACM0', name: 'Uno'}),
+    await t.resolves(vm.link.connectBoard('uno', {id: '/dev/ttyACM0', name: 'Uno'}),
         'a monitor that fails to open does not fail the connection');
     t.end();
 });

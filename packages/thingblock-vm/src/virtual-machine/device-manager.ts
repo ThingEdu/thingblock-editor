@@ -191,6 +191,9 @@ export default class DeviceManager {
     getDeviceList (): object[] {
         return this.deviceRegistry.deviceIds.map(deviceId => {
             const device = this.deviceRegistry.get(deviceId);
+            if (!device) {
+                throw new Error(`getDeviceList: no device registered for "${deviceId}"`);
+            }
             const manifest = this._deviceManifestsById.get(deviceId);
             if (!manifest) {
                 throw new Error(`getDeviceList: no device manifest registered for "${deviceId}"`);
@@ -209,7 +212,7 @@ export default class DeviceManager {
      * The backend's `resourceOrigin` is rooted at the pack directory itself (the helper's
      * `--resource-root` is the `thingblock-resource` dir), so the pack name is the root and does not
      * appear in the path: `extensions/…` sits directly under it.
-     * @returns the resource base, e.g. `http://localhost:3030/resources/extensions`.
+     * @returns the resource base, e.g. `http://127.0.0.1:3030/resources/extensions`.
      */
     getResourceOrigin (): string | null {
         const origin = this.linkResourceOrigin();
@@ -245,7 +248,7 @@ export default class DeviceManager {
         if (!firmware) {
             throw new Error(`getFirmwareImage: no firmware "${firmwareId}" for "${deviceId}"`);
         }
-        return {pack: this._packPath(deviceId), file: firmware.path};
+        return {pack: this._packRelativePath(pack.base), file: firmware.path};
     }
 
     /**
@@ -298,7 +301,7 @@ export default class DeviceManager {
         const origin = this.getResourceOrigin();
         if (!origin) return;
 
-        let packs: Array<{kind: string, path: string}>;
+        let packs: Array<{kind: string, path: string}> = [];
         for (let attempt = 1; attempt <= RESOURCE_INDEX_ATTEMPTS; attempt++) {
             try {
                 const response = await fetch(`${origin}/index.json`);
@@ -382,23 +385,28 @@ export default class DeviceManager {
      * own hidden pack plus any reusable components it references, in `extensions` order), then the
      * user-added project peripherals on top. Clears the previously active peripherals first; selecting a
      * built-in board (no pack) or `null` just clears them. Idempotent per peripheral — a re-selected
-     * device re-activates without re-importing or re-registering.
+     * device re-activates without re-importing or re-registering. Emits `DEVICE_CHANGE` when the
+     * selection differs from the previous one.
      * @param deviceId - the selected device's id, or null when none is selected.
      * @returns resolves once the device's peripherals are active.
      */
     async selectDevice (deviceId: string | null): Promise<void> {
+        const previousDeviceId = this._selectedDeviceId;
         this._selectedDeviceId = deviceId || null;
         this.peripheralRegistry.clearActive();
-        const pack = this._resourceDevicePacks.get(deviceId);
-        if (pack) {
-            for (const id of pack.manifest.extensions || []) {
-                await this._activatePeripheral(id);
-            }
-            for (const id of this._projectPeripheralIds) {
-                await this._activatePeripheral(id);
+        if (deviceId) {
+            const pack = this._resourceDevicePacks.get(deviceId);
+            if (pack) {
+                for (const id of pack.manifest.extensions || []) {
+                    await this._activatePeripheral(id);
+                }
+                for (const id of this._projectPeripheralIds) {
+                    await this._activatePeripheral(id);
+                }
             }
         }
         this._syncRuntimeBoard();
+        if (this._selectedDeviceId !== previousDeviceId) this.emit(DeviceEvent.DEVICE_CHANGE);
     }
 
     /**
@@ -482,14 +490,12 @@ export default class DeviceManager {
     async applyBoard (board: Board | null): Promise<void> {
         // A board held pending means the workspace was already rendered without its blocks.
         const wasPending = Boolean(this._pendingBoard);
-        this._selectedDeviceId = null;
         this._projectPeripheralIds = new Set();
-        this.peripheralRegistry.clearActive();
         this._pendingBoard = null;
-        this._syncRuntimeBoard();
 
         if (board && board.device && !this.deviceRegistry.get(board.device)) {
             this._pendingBoard = board;
+            await this.selectDevice(null);
             return;
         }
         if (board && board.device) {
@@ -501,6 +507,8 @@ export default class DeviceManager {
                 // type. Re-render now that they are defined.
                 this.runtime.requestBlocksUpdate();
             }
+        } else {
+            await this.selectDevice(null);
         }
         this.emit(DeviceEvent.BOARD_RESTORED, {
             device: this._selectedDeviceId,
@@ -541,17 +549,10 @@ export default class DeviceManager {
      */
     private _packRelativePath (base: string): string {
         const origin = this.linkResourceOrigin();
+        if (!origin) {
+            throw new Error(`_packRelativePath: the active link backend serves no resource packs (base "${base}")`);
+        }
         return base.slice(origin.length + 1);
-    }
-
-    /**
-     * The pack-relative directory the helper expects in `flashFirmware`'s `pack` field.
-     * @param deviceId - the device whose pack path to derive.
-     * @returns the pack directory, relative to the helper's resource root.
-     */
-    private _packPath (deviceId: string): string {
-        const {base} = this._resourceDevicePacks.get(deviceId);
-        return this._packRelativePath(base);
     }
 
     /**
@@ -561,6 +562,7 @@ export default class DeviceManager {
      * @returns the device's own peripheral ids.
      */
     private _deviceAutoPeripheralIds (): string[] {
+        if (!this._selectedDeviceId) return [];
         const pack = this._resourceDevicePacks.get(this._selectedDeviceId);
         return pack ? (pack.manifest.extensions || []) : [];
     }
@@ -611,11 +613,17 @@ export default class DeviceManager {
                 const {registerBlocks} = await this._importPackModule(
                     `${base}/${manifest.blocks.replace(/^\.\//, '')}`
                 );
+                if (!registerBlocks) {
+                    throw new Error(`peripheral "${id}" blocks module has no registerBlocks export`);
+                }
                 registerBlocks(this._scratchBlocks);
                 if (manifest.generator) {
                     const {registerGenerators} = await this._importPackModule(
                         `${base}/${manifest.generator.replace(/^\.\//, '')}`
                     );
+                    if (!registerGenerators) {
+                        throw new Error(`peripheral "${id}" generator module has no registerGenerators export`);
+                    }
                     registerGenerators(this._scratchBlocks.arduinoGenerator, this._scratchBlocks.ArduinoOrder);
                 }
             }
