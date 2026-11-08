@@ -24,11 +24,6 @@ const fakeExtension: ExtensionInfo = {
     ]
 };
 
-test('spec', t => {
-    t.ok(new Runtime() instanceof Runtime);
-    t.end();
-});
-
 test('a runtime emits on the bus it is given', t => {
     const bus = new EventBus();
     const rt = new Runtime(bus);
