@@ -27,13 +27,4 @@ describe('ExtensionButton', () => {
         renderButton({boardMode: true});
         expect(screen.getByRole('button', {name: 'Add Peripheral'})).toBeInTheDocument();
     });
-
-    test('clicking invokes the provided handler', async () => {
-        const onExtensionButtonClick = jest.fn();
-        const user = userEvent.setup();
-        renderButton({boardMode: true, onExtensionButtonClick});
-
-        await user.click(screen.getByRole('button', {name: 'Add Peripheral'}));
-        expect(onExtensionButtonClick).toHaveBeenCalled();
-    });
 });

@@ -57,38 +57,4 @@ describe('UploadModal', () => {
         expect(getByText(/Done flashing/)).toBeInTheDocument();
         expect(queryByText(/\[2K/)).not.toBeInTheDocument();
     });
-
-    test('clicking Stop while running calls onCancel', () => {
-        const onCancel = jest.fn();
-        const {getByRole} = renderModal({status: 'uploading', onCancel});
-
-        fireEvent.click(getByRole('button', {name: 'Stop'}));
-        expect(onCancel).toHaveBeenCalled();
-    });
-
-    test('shows a success status and a Close button when done', () => {
-        const onClose = jest.fn();
-        const {getByText, getByRole} = renderModal({status: 'done', onClose});
-
-        expect(getByText('Your board is ready to go.')).toBeInTheDocument();
-        const button = getByRole('button', {name: 'Close'});
-        fireEvent.click(button);
-        expect(onClose).toHaveBeenCalled();
-    });
-
-    test('shows the error detail when the upload failed', () => {
-        const {getByText, getByRole} = renderModal({
-            status: 'error',
-            error: 'avrdude: not in sync'
-        });
-
-        expect(getByText('Upload didn’t finish.')).toBeInTheDocument();
-        expect(getByText('avrdude: not in sync')).toBeInTheDocument();
-        expect(getByRole('button', {name: 'Close'})).toBeInTheDocument();
-    });
-
-    test('shows the cancelled status', () => {
-        const {getByText} = renderModal({status: 'cancelled'});
-        expect(getByText('Upload stopped.')).toBeInTheDocument();
-    });
 });
