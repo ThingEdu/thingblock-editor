@@ -85,10 +85,11 @@ export default class CloudConnection implements Connection {
     /**
      * Open the native port picker, then open the chosen port. Requires a user gesture (the picker is
      * gesture-gated by the browser). Emits `DEVICE_CONNECTED` on success.
+     * @param _device - unused; the browser picker chooses the port.
      * @param target - optional Web Serial filters (see {@link filtersFromDevice}); when omitted, the
      *   picker shows all serial ports.
      */
-    async connect (target: WebSerialTarget | null = null): Promise<void> {
+    async connect (_device: LinkDevice, target: WebSerialTarget | null = null): Promise<void> {
         if (!isWebSerialSupported()) {
             log.error(`CloudClient.connect: ${unsupportedMessage}`);
             throw new Error('Web Serial is not available in this browser');

@@ -5,9 +5,9 @@ import type LinkSession from './link-session';
 import type {Connection, ConnectionTarget, LinkDevice} from '../types';
 
 /**
- * Board discovery and port selection over the helper's session. `connect` records the selected port
- * with the helper (no daemon round-trip — the port is validated later at upload/monitor time), and
- * the session's close handler clears it again when the socket drops.
+ * Board discovery over the helper's HTTP API and port binding over its session. `connect` binds the
+ * session to a port after the helper checks a matching board is on it, and the session's close
+ * handler clears it again when the socket drops.
  */
 export default class LinkConnection implements Connection {
     private readonly runtime: Runtime;
@@ -19,41 +19,50 @@ export default class LinkConnection implements Connection {
     }
 
     /**
-     * gRPC `BoardList` via the helper, narrowed to the device's known USB ids. The helper reconstructs
-     * each port's PNP id and keeps those matching `getUploadConfig().pnpid`, returning `{port, label}`
-     * targets; this maps them onto the VM-facing `{id, name}` shape.
+     * The helper's `GET /api/boards`, narrowed to the device's `getUploadConfig().pnpid`, with its
+     * `{port, label}` targets mapped onto the VM-facing `{id, name}` shape.
      */
     async listBoards (device: LinkDevice): Promise<ConnectionTarget[]> {
         const {pnpid = []} = device.getUploadConfig();
+        if (pnpid.length === 0) {
+            throw new Error(`LinkClient.listBoards: device ${device.fqbn} has no pnpid to discover boards by`);
+        }
         log.info(`LinkClient.listBoards: requesting boards matching pnpid=${JSON.stringify(pnpid)}`);
-        const {targets} = await this.session.request<{targets: Array<{port: string, label: string}>}>(
-            'listBoards',
-            {pnpid}
-        );
+        const query = new URLSearchParams({pnpid: pnpid.join(',')});
+        const response = await this.session.fetch(`${this.session.httpOrigin}/api/boards?${query}`);
+        if (!response.ok) {
+            throw new Error(`LinkClient.listBoards: helper returned ${response.status}`);
+        }
+        const {targets}: {targets: Array<{port: string, label: string}>} = await response.json();
         log.info(`LinkClient.listBoards: helper returned ${targets.length} board(s)`);
         return targets.map(target => ({id: target.port, name: target.label}));
     }
 
     /**
-     * Record the selected port with the helper, which stores it on this socket's session and replies
-     * `result {}`.
+     * Bind the helper session to the target's port. The helper rejects with `invalidRequest` when no
+     * board with one of the device's pnpids is on that port, or when the session is already connected.
+     * @param device - the selected device (supplies the pnpids the helper checks).
      * @param target - the target chosen from `listBoards()`; `id` is the port.
      */
-    async connect (target: ConnectionTarget): Promise<void> {
-        log.info(`LinkClient.connect: selecting port ${target.id} with the helper`);
-        await this.session.request('connect', {port: target.id});
+    async connect (device: LinkDevice, target: ConnectionTarget): Promise<void> {
+        const {pnpid = []} = device.getUploadConfig();
+        log.info(`LinkClient.connect: connecting the helper to port ${target.id}`);
+        await this.session.request('connect', {port: target.id, pnpid});
         this.session.connectedTarget = target;
         log.info('LinkClient.connect: connected');
         this.runtime.events.emit(LinkEvent.DEVICE_CONNECTED);
     }
 
-    /** Clear the helper's selected port. Safe to call when already disconnected. */
+    /**
+     * Disconnect the helper session, which also cancels its in-flight requests. Safe to call when
+     * already disconnected.
+     */
     async disconnect (): Promise<void> {
         if (!this.session.connectedTarget) {
-            log.info('LinkClient.disconnect: no selected port; nothing to do');
+            log.info('LinkClient.disconnect: no connected port; nothing to do');
             return;
         }
-        log.info('LinkClient.disconnect: clearing the helper-selected port');
+        log.info('LinkClient.disconnect: disconnecting the helper session');
         await this.session.request('disconnect', {});
         // The helper closes any open monitor as part of disconnect; drop our routing to match.
         this.session.monitor = null;
@@ -65,7 +74,7 @@ export default class LinkConnection implements Connection {
         return this.session.connectedTarget !== null;
     }
 
-    /** The helper session, which the flasher and the monitor drive the selected port through. */
+    /** The helper session, which the flasher and the monitor drive the connected port through. */
     get transport (): LinkSession {
         return this.session;
     }

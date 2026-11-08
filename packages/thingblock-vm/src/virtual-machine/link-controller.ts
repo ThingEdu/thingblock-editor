@@ -1,7 +1,7 @@
 import {createCloudBackend} from '../link/cloud';
 import {createLocalBackend} from '../link/local';
 import type Runtime from '../engine/runtime';
-import {VMEvent} from '../event/event-name';
+import {DeviceEvent, VMEvent} from '../event/event-name';
 import log from '../util/log';
 import type DeviceManager from './device-manager';
 import type {
@@ -36,6 +36,14 @@ export default class LinkController {
         this.devices = devices;
         this.backend = this.createBackend(this.mode);
 
+        // A connected board belongs to the previously selected device, whose pnpids it was checked
+        // against, so a device change releases it.
+        this.runtime.events.on(DeviceEvent.DEVICE_CHANGE, () => {
+            if (!this.backend.connection.isConnected) return;
+            this.disconnectBoard()
+                .catch((err: Error) => log.warn(`DEVICE_CHANGE: disconnecting the board failed: ${err.message}`));
+        });
+
         this.runtime.events.on(VMEvent.WRITE_MONITOR, (text: string) => {
             if (!this.backend.connection.isConnected) return;
             // Arduino sketches read line-terminated input.
@@ -57,9 +65,16 @@ export default class LinkController {
         return this.backend.connection.listBoards(device);
     }
 
-    async connectBoard (target: ConnectionTarget): Promise<void> {
+    /**
+     * Connect to a board, then open its serial monitor.
+     * @param deviceId - the board type in the device registry; its manifest supplies the pnpids the
+     *   helper checks against the board on the target's port.
+     * @param target - the board chosen from `listBoards()`.
+     */
+    async connectBoard (deviceId: string, target: ConnectionTarget): Promise<void> {
+        const device = this.getDevice(deviceId);
         const {connection, monitor} = this.backend;
-        await connection.connect(target);
+        await connection.connect(device, target);
         monitor.openMonitor({baudRate: this.monitorBaud})
             .catch((err: Error) => log.warn(`connectBoard: serial monitor did not open: ${err.message}`));
     }
