@@ -79,6 +79,8 @@ class CameraAiExtension implements Extension {
             this._wasReady = ready;
         });
         this.runtime.events.on(RuntimeEvent.PROJECT_STOP_ALL, () => this.playground.stop());
+        // A new project starts with an empty playground.
+        this.runtime.events.on(RuntimeEvent.RUNTIME_DISPOSED, () => this.playground.reset());
         this.runtime.events.on(CameraAiEvent.PLAYGROUND_COMMAND, (command: {type: string}) => {
             if (command.type === 'reset') this.playground.reset();
         });

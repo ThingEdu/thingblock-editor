@@ -62,6 +62,7 @@ export class Playground {
     _onChange: (state: PlaygroundState) => void;
     _onTimeUp: () => void;
     _timeout: ReturnType<typeof setTimeout> | null = null;
+    _timerTicker: ReturnType<typeof setInterval> | null = null;
     _gravity = 0;
     _ticker: ReturnType<typeof setInterval> | null = null;
     _lastTick = 0;
@@ -234,12 +235,13 @@ export class Playground {
         this._timerEnd = this._now() + ms;
         this._showScoreboard = true;
         this._clearTimeout();
-        // The GUI shows the seconds; the program hears the end through its hat.
+        // The GUI shows the seconds, refreshed once a second; the program hears the end through its hat.
         this._timeout = setTimeout(() => {
-            this._timeout = null;
+            this._clearTimeout();
             this._changed();
             this._onTimeUp();
         }, ms);
+        this._timerTicker = setInterval(() => this._changed(), 1000);
         this._changed();
     }
 
@@ -247,6 +249,10 @@ export class Playground {
         if (this._timeout !== null) {
             clearTimeout(this._timeout);
             this._timeout = null;
+        }
+        if (this._timerTicker !== null) {
+            clearInterval(this._timerTicker);
+            this._timerTicker = null;
         }
     }
 
@@ -260,11 +266,6 @@ export class Playground {
     timeLeft (): number {
         if (this._timerEnd === null) return 0;
         return Math.max(0, Math.ceil((this._timerEnd - this._now()) / 1000));
-    }
-
-    // True once the countdown has run out, until the next timer starts.
-    timeUp (): boolean {
-        return this._timerEnd !== null && this._now() >= this._timerEnd;
     }
 
     say (text: string) {

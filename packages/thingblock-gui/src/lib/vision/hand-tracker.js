@@ -73,7 +73,8 @@ const toHands = result => result.landmarks.map((landmarks, i) => {
     return {
         gesture: gesture ? (GESTURE_BY_CATEGORY[gesture.categoryName] || 'none') : 'none',
         score: gesture ? gesture.score : 0,
-        side: handedness && handedness.categoryName === 'Left' ? 'left' : 'right',
+        // MediaPipe labels hands for a mirrored picture; camera frames are not mirrored, so swap.
+        side: handedness && handedness.categoryName === 'Left' ? 'right' : 'left',
         landmarks: landmarks.map(p => ({x: p.x, y: p.y, z: p.z}))
     };
 });

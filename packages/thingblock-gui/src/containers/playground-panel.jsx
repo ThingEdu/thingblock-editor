@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {defineMessages, useIntl} from 'react-intl';
 import {connect} from 'react-redux';
 import VM from '@thingblock/thingblock-vm';
 
@@ -30,6 +31,21 @@ const PICTURES = {
 
 const EMPTY_PLAYGROUND = {objects: [], scores: [0, 0], timeLeft: null, say: '', showScoreboard: false};
 
+/** The gesture names drawn under a hand, by the tracker's gesture value; same ids as the blocks' menu. */
+const gestureMessages = defineMessages({
+    fist: {id: 'cameraAi.menu.fist', defaultMessage: 'fist', description: 'Gesture name: a closed fist'},
+    open: {id: 'cameraAi.menu.open', defaultMessage: 'open hand', description: 'Gesture name: an open palm'},
+    thumb_up: {id: 'cameraAi.menu.thumbUp', defaultMessage: 'thumbs up', description: 'Gesture name: thumbs up'},
+    thumb_down: {
+        id: 'cameraAi.menu.thumbDown', defaultMessage: 'thumbs down', description: 'Gesture name: thumbs down'
+    },
+    victory: {id: 'cameraAi.menu.victory', defaultMessage: 'victory', description: 'Gesture name: the V sign'},
+    point_up: {
+        id: 'cameraAi.menu.pointUp', defaultMessage: 'pointing up', description: 'Gesture name: index finger up'
+    },
+    i_love_you: {id: 'cameraAi.menu.iLoveYou', defaultMessage: 'I love you', description: 'Gesture name: the ILY sign'}
+});
+
 /** Where the model's assets are served from; the desktop app loads the page from a file, so relative. */
 const assetBase = () => {
     const base = document.querySelector('base');
@@ -42,8 +58,9 @@ const assetBase = () => {
  * @param {object|null} results The latest `{hands}` from the tracker.
  * @param {boolean} mirror Whether the picture is mirrored.
  * @param {object} playground The objects to draw.
+ * @param {object} labels The text to draw for each gesture value.
  */
-const draw = (canvas, results, mirror, playground) => {
+const draw = (canvas, results, mirror, playground, labels) => {
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     if (width === 0 || height === 0) return;
@@ -89,7 +106,7 @@ const draw = (canvas, results, mirror, playground) => {
                 ctx.fillStyle = '#facc15';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                ctx.fillText(hand.gesture, px(wrist), py(wrist) + 6);
+                ctx.fillText(labels[hand.gesture] || hand.gesture, px(wrist), py(wrist) + 6);
             }
         }
     }
@@ -113,6 +130,12 @@ const draw = (canvas, results, mirror, playground) => {
  * @returns {React.ReactElement} The panel.
  */
 const PlaygroundPanel = ({vm}) => {
+    const intl = useIntl();
+    const labels = useMemo(() => Object.fromEntries(
+        Object.entries(gestureMessages).map(([gesture, message]) => [gesture, intl.formatMessage(message)])
+    ), [intl]);
+    const labelsRef = useRef(labels);
+    labelsRef.current = labels;
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
@@ -121,6 +144,8 @@ const PlaygroundPanel = ({vm}) => {
     const playgroundRef = useRef(EMPTY_PLAYGROUND);
     const mirrorRef = useRef(true);
     const startingRef = useRef(false);
+    // Bumped by every start and stop; a start whose number is stale was stopped while it waited.
+    const runRef = useRef(0);
     const fpsRef = useRef({count: 0, since: performance.now()});
 
     const [status, setStatus] = useState('off');
@@ -136,6 +161,7 @@ const PlaygroundPanel = ({vm}) => {
     }, [vm]);
 
     const stop = useCallback(() => {
+        runRef.current += 1;
         if (trackerRef.current) {
             trackerRef.current.stop();
             trackerRef.current = null;
@@ -165,33 +191,43 @@ const PlaygroundPanel = ({vm}) => {
 
     const start = useCallback(async () => {
         if (startingRef.current || trackerRef.current) return;
+        runRef.current += 1;
+        const run = runRef.current;
+        const stale = () => run !== runRef.current;
         startingRef.current = true;
         setError(null);
         setStatus('starting');
         emitStatus(true, false);
+        let stream = null;
+        let tracker = null;
         try {
-            const stream = await startCamera();
+            stream = await startCamera();
+            if (stale()) return;
             streamRef.current = stream;
             await attachStream(videoRef.current, stream);
-            const tracker = await trackHands(videoRef.current, handleResults, {base: assetBase()});
-            if (!startingRef.current) {
-                // Stopped while loading.
-                tracker.stop();
-                return;
-            }
+            if (stale()) return;
+            tracker = await trackHands(videoRef.current, handleResults, {base: assetBase()});
+            if (stale()) return;
             trackerRef.current = tracker;
             fpsRef.current = {count: 0, since: performance.now()};
             setStatus('ready');
             emitStatus(true, true);
         } catch (err) {
+            if (stale()) return;
             console.error('[cameraAi] camera failed:', err); // eslint-disable-line no-console
-            stopCamera(streamRef.current);
+            stopCamera(stream);
             streamRef.current = null;
             setError({name: err.name, message: err.message});
             setStatus('error');
             emitStatus(false, false, err);
         } finally {
-            startingRef.current = false;
+            if (stale()) {
+                // Stopped while this start was waiting: release what it opened, which stop() never saw.
+                if (tracker) tracker.stop();
+                stopCamera(stream);
+            } else {
+                startingRef.current = false;
+            }
         }
     }, [emitStatus, handleResults]);
 
@@ -228,7 +264,8 @@ const PlaygroundPanel = ({vm}) => {
         let frame = 0;
         const tick = () => {
             if (canvasRef.current) {
-                draw(canvasRef.current, resultsRef.current, mirrorRef.current, playgroundRef.current);
+                draw(canvasRef.current, resultsRef.current, mirrorRef.current, playgroundRef.current,
+                    labelsRef.current);
             }
             frame = requestAnimationFrame(tick);
         };

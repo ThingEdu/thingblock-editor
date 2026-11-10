@@ -171,10 +171,8 @@ test('the countdown counts seconds and fires time-up once', async t => {
 
     pg.startTimer(0.05);
     t.equal(pg.timeLeft(), 1);
-    t.notOk(pg.timeUp());
     now = 50;
     t.equal(pg.timeLeft(), 0);
-    t.ok(pg.timeUp());
     await new Promise(resolve => setTimeout(resolve, 80));
     t.equal(fired, 1);
 
@@ -183,6 +181,20 @@ test('the countdown counts seconds and fires time-up once', async t => {
     pg.stop();
     await new Promise(resolve => setTimeout(resolve, 80));
     t.equal(fired, 1);
+    t.end();
+});
+
+test('the countdown reports once a second so the scoreboard can tick', async t => {
+    const updates: PlaygroundState[] = [];
+    const pg = new Playground(s => updates.push(s));
+    pg.startTimer(5);
+    const after = updates.length;
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    t.ok(updates.length > after, 'an update arrived without any block running');
+    pg.stop();
+    const stopped = updates.length;
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    t.equal(updates.length, stopped, 'stop ends the ticking');
     t.end();
 });
 
