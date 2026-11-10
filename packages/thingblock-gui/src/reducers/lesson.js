@@ -8,7 +8,7 @@ const MARK_PASSED = 'scratch-gui/lesson/MARK_PASSED';
 const idleCheck = {status: 'idle', messages: []};
 
 const initialState = {
-    // The open lesson's built JSON (tutorials/<ma>/bai.<lang>.json), or null when no lesson is open.
+    // The open lesson's built JSON (tutorials/<id>/lesson.<lang>.json), or null when no lesson is open.
     lesson: null,
     stepIndex: 0,
     // Steps whose rules all passed at least once; a later edit does not take a pass away.

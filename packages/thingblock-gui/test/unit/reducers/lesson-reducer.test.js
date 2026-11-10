@@ -3,7 +3,7 @@ import reducer, {
     closeLesson, goToStep, lessonInitialState, markStepPassed, openLesson, setCheck, showNextHint
 } from '../../../src/reducers/lesson';
 
-const lesson = {ma: 'x', steps: [{rules: []}, {rules: [{kind: 'light'}]}, {rules: []}]};
+const lesson = {id: 'x', steps: [{rules: []}, {rules: [{kind: 'light'}]}, {rules: []}]};
 
 test('opens at saved progress, or step 0', () => {
     expect(reducer(lessonInitialState, openLesson(lesson, {stepIndex: 1, passedSteps: [1]})))

@@ -2,8 +2,8 @@
 // Imports scratch-blocks source, whose `Order` enum is not erasable syntax, so the package's tsc excludes this
 // file; it only runs under vitest, which strips types without checking them.
 /**
- * Every shipped lesson proves itself: its `kiem-thu/dung*.tb` passes each graded step and each
- * `sai-<n>.tb` fails step n, graded as the editor grades a learner: the rules are checked after every
+ * Every shipped lesson proves itself: its `solutions/pass*.tb` passes each graded step and each
+ * `fail-<n>.tb` fails step n, graded as the editor grades a learner: the rules are checked after every
  * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time. A step
  * with input rules runs with the rig set the way the step tells the learner to set it.
  */
@@ -45,7 +45,7 @@ beforeEach(() => {
 const readTb = async (path: string): Promise<Sb3Project> => {
   const zip = await JSZip.loadAsync(readFileSync(path))
   const entry = zip.file('project.json')
-  if (!entry) throw new Error(`${path} thiếu project.json`)
+  if (!entry) throw new Error(`${path} has no project.json`)
   return JSON.parse(await entry.async('string')) as Sb3Project
 }
 
@@ -59,10 +59,10 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   const workspace = loadProject(Blockly, await readTb(tb))
   const code = generator.workspaceToCode(workspace)
   workspace.dispose()
-  expect(generator.diagnostics, `${tb} dùng khối chưa mô phỏng`).toEqual([])
+  expect(generator.diagnostics, `${tb} uses blocks with no simulation`).toEqual([])
   // A fixed clock keeps every tick within its real-time budget, so each one advances the full 16 ms.
   const session = new Session(code, { now: () => 0 })
-  // Set the rig as the step asks the learner to ("giữ nút SW", "khoảng cách < 20 cm"…).
+  // Set the rig as the step asks the learner to ("hold SW", "distance < 20 cm"…).
   for (const [key, value] of Object.entries(inputsFor(rules))) session.setInput(key, value)
   const watcher = new Watcher()
   watcher.set(rules)
@@ -75,7 +75,7 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
     if (snapshot.phase === 'halted') break
     t = snapshot.t
   }
-  if (!report) throw new Error(`${tb}: không có kết quả chấm`)
+  if (!report) throw new Error(`${tb}: no grading result`)
   return { passed: allOk(report), results: report.results }
 }
 
@@ -83,26 +83,26 @@ const lessonDirs = readdirSync(TUTORIALS, { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
 
-describe.each(lessonDirs)('lesson %s', (ma) => {
-  const dir = join(TUTORIALS, ma)
+describe.each(lessonDirs)('lesson %s', (id) => {
+  const dir = join(TUTORIALS, id)
   const files = readdirSync(dir)
-  const { lesson } = parseLesson(readFileSync(join(dir, 'bai.vi.md'), 'utf8'), { dirName: ma, lang: 'vi', files })
+  const { lesson } = parseLesson(readFileSync(join(dir, 'lesson.vi.md'), 'utf8'), { dirName: id, lang: 'vi', files })
   const graded = lesson.steps.map((s, i) => ({ step: s, n: i + 1 })).filter(({ step }) => step.rules.length)
   const rulesOf = (n: number): Rule[] => {
     const found = graded.find((g) => g.n === n)
-    if (!found) throw new Error(`bước ${n} không có luật`)
+    if (!found) throw new Error(`step ${n} has no rules`)
     return found.step.rules
   }
-  const fixture = (name: string) => join(dir, 'kiem-thu', name)
+  const fixture = (name: string) => join(dir, 'solutions', name)
 
   it('has at least one graded step and a correct solution', () => {
     expect(graded.length).toBeGreaterThan(0)
-    expect(existsSync(fixture('dung.tb')) || graded.every(({ n }) => existsSync(fixture(`dung-${n}.tb`)))).toBe(true)
+    expect(existsSync(fixture('pass.tb')) || graded.every(({ n }) => existsSync(fixture(`pass-${n}.tb`)))).toBe(true)
   })
 
-  it('declares in thiet-bi every peripheral its solutions use, so their blocks are in the palette', async () => {
+  it('declares in peripherals every peripheral its solutions use, so their blocks are in the palette', async () => {
     const used = new Set<string>()
-    for (const name of readdirSync(join(dir, 'kiem-thu')).filter((f) => /^dung.*\.tb$/.test(f))) {
+    for (const name of readdirSync(join(dir, 'solutions')).filter((f) => /^pass.*\.tb$/.test(f))) {
       const project = await readTb(fixture(name))
       for (const target of project.targets) {
         for (const block of Object.values(target.blocks)) {
@@ -112,18 +112,18 @@ describe.each(lessonDirs)('lesson %s', (ma) => {
         }
       }
     }
-    expect([...used].filter((pack) => !lesson.thietBi.includes(pack))).toEqual([])
+    expect([...used].filter((pack) => !lesson.peripherals.includes(pack))).toEqual([])
   })
 
   it.each(graded.map(({ n }) => n))('step %i passes with the correct solution', async (n) => {
-    const tb = existsSync(fixture(`dung-${n}.tb`)) ? fixture(`dung-${n}.tb`) : fixture('dung.tb')
+    const tb = existsSync(fixture(`pass-${n}.tb`)) ? fixture(`pass-${n}.tb`) : fixture('pass.tb')
     const { results } = await grade(tb, rulesOf(n))
     expect(results.map((r) => r.message)).toEqual(results.map(() => ''))
   })
 
-  it.each(graded.map(({ n }) => n))('step %i fails with its sai-<n>.tb and explains why', async (n) => {
-    const tb = fixture(`sai-${n}.tb`)
-    expect(existsSync(tb), `thiếu ${tb}`).toBe(true)
+  it.each(graded.map(({ n }) => n))('step %i fails with its fail-<n>.tb and explains why', async (n) => {
+    const tb = fixture(`fail-${n}.tb`)
+    expect(existsSync(tb), `missing ${tb}`).toBe(true)
     const { passed, results } = await grade(tb, rulesOf(n))
     expect(passed).toBe(false)
     for (const r of results.filter((r) => !r.ok)) expect(r.message).not.toBe('')

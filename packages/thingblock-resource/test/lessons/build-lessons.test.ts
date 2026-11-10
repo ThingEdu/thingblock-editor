@@ -5,78 +5,79 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildLessons } from '../../scripts/build-lessons.mjs'
 
-const lesson = (ma: string, nhom: string, thuTu: number) => `---
-ma: ${ma}
-ten: Bài ${ma}
-nhom: ${nhom}
-thu-tu: ${thuTu}
-bo: thingbot
+const lesson = (id: string, group: string, order: number) => `---
+id: ${id}
+name: Lesson ${id}
+group: ${group}
+order: ${order}
+board: thingbot
 ---
-## Bước
-Làm gì đó.
-![](anh.png)
-kiểm: L1 sáng
-## Bước hai
-Chỉ đọc.
+## Step
+Do something.
+![](picture.png)
+check: L1 on
+## Step two
+Read only.
 `
 
 describe('buildLessons', () => {
-  it('writes each lesson as JSON, copies its images, skips kiem-thu and indexes by group then order', () => {
+  it('writes each lesson as JSON, copies its images, skips solutions and indexes by group then order', () => {
     const src = mkdtempSync(join(tmpdir(), 'lessons-src-'))
     const out = mkdtempSync(join(tmpdir(), 'lessons-out-'))
-    for (const [ma, nhom, n] of [
-      ['den', 'dau-ra', 2],
-      ['quen', 'lam-quen', 1],
-      ['bat', 'dau-ra', 1],
+    for (const [id, group, n] of [
+      ['blink', 'outputs', 2],
+      ['intro', 'getting-started', 1],
+      ['light', 'outputs', 1],
     ] as const) {
-      mkdirSync(join(src, ma, 'kiem-thu'), { recursive: true })
-      writeFileSync(join(src, ma, 'bai.vi.md'), lesson(ma, nhom, n))
-      writeFileSync(join(src, ma, 'anh.png'), 'png')
-      writeFileSync(join(src, ma, 'kiem-thu', 'dung.tb'), 'zip')
+      mkdirSync(join(src, id, 'solutions'), { recursive: true })
+      writeFileSync(join(src, id, 'lesson.vi.md'), lesson(id, group, n))
+      writeFileSync(join(src, id, 'picture.png'), 'png')
+      writeFileSync(join(src, id, 'solutions', 'pass.tb'), 'zip')
     }
 
     const index = buildLessons(src, out)
 
-    expect(index.lessons.map((l) => l.ma)).toEqual(['quen', 'bat', 'den'])
+    expect(index.lessons.map((l) => l.id)).toEqual(['intro', 'light', 'blink'])
     expect(index.lessons[0]).toEqual({
-      ma: 'quen',
-      ten: 'Bài quen',
-      nhom: 'lam-quen',
-      thuTu: 1,
-      thoiLuong: null,
+      id: 'intro',
+      name: 'Lesson intro',
+      group: 'getting-started',
+      order: 1,
+      image: null,
+      duration: null,
       langs: ['vi'],
       stepCount: 2,
       gradedCount: 1,
     })
     expect(JSON.parse(readFileSync(join(out, 'index.json'), 'utf8'))).toEqual(index)
-    const built = JSON.parse(readFileSync(join(out, 'den', 'bai.vi.json'), 'utf8')) as {
+    const built = JSON.parse(readFileSync(join(out, 'blink', 'lesson.vi.json'), 'utf8')) as {
       steps: { rules: unknown[] }[]
     }
     expect(built.steps[0].rules).toEqual([{ kind: 'light', target: 'L1', on: true }])
-    expect(existsSync(join(out, 'den', 'anh.png'))).toBe(true)
-    expect(existsSync(join(out, 'den', 'kiem-thu'))).toBe(false)
+    expect(existsSync(join(out, 'blink', 'picture.png'))).toBe(true)
+    expect(existsSync(join(out, 'blink', 'solutions'))).toBe(false)
   })
 
   it('fails naming the file and line of a bad rule', () => {
     const src = mkdtempSync(join(tmpdir(), 'lessons-src-'))
     const out = mkdtempSync(join(tmpdir(), 'lessons-out-'))
-    mkdirSync(join(src, 'hong'))
-    writeFileSync(join(src, 'hong', 'bai.vi.md'), lesson('hong', 'dau-ra', 1).replace('L1 sáng', 'L7 sáng'))
-    writeFileSync(join(src, 'hong', 'anh.png'), 'png')
-    expect(() => buildLessons(src, out)).toThrow(/hong\/bai\.vi\.md.*dòng 11.*L7 sáng/s)
+    mkdirSync(join(src, 'broken'))
+    writeFileSync(join(src, 'broken', 'lesson.vi.md'), lesson('broken', 'outputs', 1).replace('L1 on', 'L7 on'))
+    writeFileSync(join(src, 'broken', 'picture.png'), 'png')
+    expect(() => buildLessons(src, out)).toThrow(/broken\/lesson\.vi\.md.*line 11.*L7 on/s)
   })
 
-  it('fails on two lessons with the same order in one group, naming the second and its thu-tu line', () => {
+  it('fails on two lessons with the same order in one group, naming the second and its order line', () => {
     const src = mkdtempSync(join(tmpdir(), 'lessons-src-'))
     const out = mkdtempSync(join(tmpdir(), 'lessons-out-'))
-    for (const [ma, nhom] of [
-      ['a-den', 'dau-ra'],
-      ['b-quen', 'lam-quen'],
-      ['c-bat', 'dau-ra'],
+    for (const [id, group] of [
+      ['a-blink', 'outputs'],
+      ['b-intro', 'getting-started'],
+      ['c-light', 'outputs'],
     ] as const) {
-      mkdirSync(join(src, ma))
-      writeFileSync(join(src, ma, 'bai.vi.md'), lesson(ma, nhom, 1))
-      writeFileSync(join(src, ma, 'anh.png'), 'png')
+      mkdirSync(join(src, id))
+      writeFileSync(join(src, id, 'lesson.vi.md'), lesson(id, group, 1))
+      writeFileSync(join(src, id, 'picture.png'), 'png')
     }
     let error: (Error & { file?: string; problems?: { line: number; message: string }[] }) | undefined
     try {
@@ -84,21 +85,23 @@ describe('buildLessons', () => {
     } catch (e) {
       error = e as typeof error
     }
-    expect(error?.file).toBe('c-bat/bai.vi.md')
-    expect(error?.problems).toEqual([{ line: 5, message: 'trùng thứ tự 1 trong nhóm dau-ra với bài a-den' }])
-    expect(error?.message).toMatch(/c-bat\/bai\.vi\.md.*dòng 5: trùng thứ tự 1 trong nhóm dau-ra với bài a-den/s)
+    expect(error?.file).toBe('c-light/lesson.vi.md')
+    expect(error?.problems).toEqual([{ line: 5, message: 'order 1 in group outputs is already used by a-blink' }])
+    expect(error?.message).toMatch(
+      /c-light\/lesson\.vi\.md.*line 5: order 1 in group outputs is already used by a-blink/s,
+    )
   })
 
   it('as a script prints file:line: message and exits 1 on a bad lesson', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'lessons-cwd-'))
-    const dir = join(cwd, 'src', 'tutorials', 'hong')
+    const dir = join(cwd, 'src', 'tutorials', 'broken')
     mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, 'bai.vi.md'), lesson('hong', 'dau-ra', 1).replace('L1 sáng', 'L7 sáng'))
-    writeFileSync(join(dir, 'anh.png'), 'png')
+    writeFileSync(join(dir, 'lesson.vi.md'), lesson('broken', 'outputs', 1).replace('L1 on', 'L7 on'))
+    writeFileSync(join(dir, 'picture.png'), 'png')
     const script = join(__dirname, '..', '..', 'scripts', 'build-lessons.mjs')
     const run = spawnSync(process.execPath, [script], { cwd, encoding: 'utf8' })
     expect(run.status).toBe(1)
-    expect(run.stderr).toMatch(/hong\/bai\.vi\.md:11: .*L7 sáng/)
+    expect(run.stderr).toMatch(/broken\/lesson\.vi\.md:11: .*L7 on/)
     const ok = execFileSync(process.execPath, [script], {
       cwd: mkdtempSync(join(tmpdir(), 'lessons-empty-')),
       encoding: 'utf8',

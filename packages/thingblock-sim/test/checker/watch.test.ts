@@ -31,7 +31,7 @@ describe('Watcher', () => {
   it('reports once when results first appear and again only when they change', () => {
     const session = new Session(LIGHT_LATER, { now: () => 0 })
     const watcher = new Watcher()
-    watcher.set([parseRule('L1 sáng')])
+    watcher.set([parseRule('L1 on')])
 
     session.running = true
     session.tick(16)
@@ -50,7 +50,7 @@ describe('Watcher', () => {
   it('grades nothing while setup is still running, so an "off" rule cannot pass at power-on', () => {
     const session = new Session(LIGHT_ON, { now: () => 0 })
     const watcher = new Watcher()
-    watcher.set([parseRule('L1 tắt')])
+    watcher.set([parseRule('L1 off')])
     expect(watcher.after(session)).toBeNull()
 
     session.running = true
@@ -65,7 +65,7 @@ describe('Watcher', () => {
   it('grades a setup that waits, as a program that never leaves setup does', () => {
     const session = new Session(SETUP_WAITS, { now: () => 0 })
     const watcher = new Watcher()
-    watcher.set([parseRule('L1 sáng')])
+    watcher.set([parseRule('L1 on')])
     session.running = true
     expect(session.tick(100).phase).toBe('setup')
     expect(watcher.after(session)?.results).toEqual([{ ok: true, message: '' }])
@@ -74,14 +74,14 @@ describe('Watcher', () => {
   it('reports nothing while no rules are set', () => {
     const watcher = new Watcher()
     expect(watcher.after(new Session(LIGHT_ON))).toBeNull()
-    watcher.set([parseRule('L1 sáng')])
+    watcher.set([parseRule('L1 on')])
     watcher.set(null)
     expect(watcher.after(new Session(LIGHT_ON))).toBeNull()
   })
 
   it('forgets the last report on reset so a reloaded program is graded afresh', () => {
     const watcher = new Watcher()
-    watcher.set([parseRule('L1 sáng')])
+    watcher.set([parseRule('L1 on')])
     const session = new Session(LIGHT_ON, { now: () => 0 })
     session.running = true
     session.tick(100)
@@ -105,7 +105,7 @@ describe('worker protocol', () => {
   it('posts one check for a program that never satisfies the rules while snapshots keep advancing', () => {
     const session = new Session(L2_ONLY, { now: () => 0 })
     const watcher = new Watcher()
-    watcher.set([parseRule('L1 sáng')])
+    watcher.set([parseRule('L1 on')])
     const checks = [watcher.after(session)]
     session.running = true
     let t = 0

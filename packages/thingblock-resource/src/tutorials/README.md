@@ -1,107 +1,120 @@
-# Viết bài học
+# Writing lessons
 
-Mỗi bài là một thư mục `src/tutorials/<ma>/` chứa `bai.vi.md` (và ảnh dùng trong bài, nếu có). Lệnh
-`npm run build` biên dịch các bài thành JSON trong `dist/thingblock-resource/tutorials/`.
+Each lesson is a folder `src/tutorials/<id>/` holding `lesson.<lang>.md` (currently only `lesson.vi.md`) and any
+images the lesson uses. `npm run build` compiles the lessons to JSON in `dist/thingblock-resource/tutorials/`.
 
-## Đầu bài (front matter)
+Everything a developer or author types — front-matter keys and values, markers, rules, file and folder names — is
+English. Only the learner-facing text (lesson name, step titles, body, hints) is written in the lesson's language.
+
+## Front matter
 
 ```markdown
 ---
-ma: bat-tat-den
-ten: Bật tắt đèn
-nhom: dau-ra
-thu-tu: 1
-bo: thingbot
-thoi-luong: 10
+id: light-on-off
+name: Bật tắt đèn
+group: outputs
+order: 1
+board: thingbot
+duration: 10
 ---
 ```
 
-- `ma`: định danh, trùng tên thư mục.
-- `ten`: tên bài hiện cho em học sinh.
-- `nhom`: nhóm bài (ví dụ `dau-ra`).
-- `thu-tu`: số thứ tự trong nhóm, phải là số. Hai bài cùng `nhom` không được trùng `thu-tu`.
-- `bo`: bo mạch của bài (ví dụ `thingbot`).
-- `thoi-luong`: số phút ước tính, phải là số.
-- `thiet-bi` (không bắt buộc): các thiết bị ngoài bài cần, cách nhau dấu phẩy, viết bằng tên thư mục trong
-  `src/extensions/peripheral/` (ví dụ `thiet-bi: oled`). Mở bài là editor tự thêm các thiết bị này vào bảng khối,
-  học sinh không phải tự tìm **Add Peripheral**.
+- `id`: identifier, equal to the folder name.
+- `name`: the lesson name shown to learners.
+- `group`: one of `getting-started`, `outputs`, `motors`, `inputs`.
+- `order`: position within the group, a number. Two lessons in the same `group` cannot share an `order`.
+- `board`: the lesson's board (for example `thingbot`), or `none` to open the lesson without a board.
+- `duration`: estimated minutes, a number.
+- `peripherals` (optional): extra devices the lesson needs, comma-separated, named by their folder in
+  `src/extensions/peripheral/` (for example `peripherals: oled`). Opening the lesson adds them to the palette, so
+  learners don't have to find **Add Peripheral**.
+- `image` (optional): a `.png` or `.gif` in the lesson folder, shown on the lesson's card in the library. Without
+  one, the card shows a placeholder. Use a 600×372 image, the shape of a Scratch library card.
+- `start` (optional): a `.tb` project in the lesson folder the lesson opens with. Without one, the lesson opens a
+  blank project on its board.
 
-## Các bước
+## Steps
 
-Mỗi dòng `## Tên bước` mở một bước. Bước đầu là lời chào (không chấm điểm) và bước cuối là lời kết. Chỉ dùng
-`##`; tiêu đề `###` bị báo lỗi. Nội dung bước là Markdown thường: đoạn văn, danh sách, chữ đậm (`**đậm**` hoặc `__đậm__`, như nhau), chữ nghiêng (`*nghiêng*` hoặc `_nghiêng_`, như nhau), ảnh (tệp ảnh
-phải nằm trong thư mục của bài).
+Each `## Step title` line starts a step. The first step is a greeting (not graded) and the last one a wrap-up.
+Use `##` only; a `###` heading is an error. A step's content is plain Markdown: paragraphs, lists, bold
+(`**bold**` or `__bold__`), italic (`*italic*` or `_italic_`) and images (the image file must be in the lesson
+folder).
 
-Bài gọi khối bằng nhãn tiếng Việt đang hiện trong bảng khối (chọn ngôn ngữ Tiếng Việt), in **đậm**, ví dụ **khi Arduino khởi động**, **đặt đèn L1 độ sáng 100**.
+Lessons name blocks by the labels the palette shows in the lesson's language, in **bold**, for example
+**khi Arduino khởi động**.
 
-### Gợi ý
+### Hints
 
-Dòng `> gợi ý: ...` thêm một gợi ý cho bước. Nhiều dòng `> gợi ý:` liền nhau là nhiều gợi ý riêng, hiện lần lượt
-từng cái.
+A `> hint: ...` line adds a hint to the step. Consecutive `> hint:` lines are separate hints, revealed one at a
+time.
 
-### Luật chấm
+### Point at
 
-Dòng `kiểm: ...` đặt một luật mà mạch ảo phải thoả để bước được tính là đạt. Một bước có thể có nhiều luật
-(phải thoả tất cả). Bước không có `kiểm:` thì không chấm. Chữ hoa, chữ thường không phân biệt. Các dạng được
-hiểu:
+A `point at: <anchor>` line highlights part of the editor during the step. Anchors are listed in
+`scripts/lessons/tour-markers.mjs`.
 
-| Viết                                        | Nghĩa                                                   |
-| ------------------------------------------- | ------------------------------------------------------- |
-| `kiểm: L1 sáng` / `L2 tắt`                  | Đèn L1 hoặc L2 đang sáng / tắt                          |
-| `kiểm: còi kêu` / `còi tắt`                 | Còi đang kêu / tắt                                      |
-| `kiểm: L1 nhấp nháy, chu kỳ 1 giây`         | Đèn chớp đều với chu kỳ này, sai số mặc định 20%        |
-| `kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 10%` | Như trên với sai số tự chọn; chu kỳ tối đa 1,5 giây     |
-| `kiểm: M1 tiến` / `lùi` / `dừng`            | Động cơ M1 (M1 đến M4) quay tiến / lùi / đứng yên       |
-| `kiểm: M1 tốc độ ≥ 50%`                     | Tốc độ động cơ từ mức này trở lên (phần trăm)           |
-| `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ    |
-| `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                                |
-| `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì               |
-| `kiểm: OLED hiện "ThingBot" ở y 16`         | Chữ này được in bắt đầu từ dòng y = 16                  |
-| `kiểm: OLED hiện "Xin chao" cỡ 12x16`       | Chữ này được in ở cỡ 12x16 (khối set oled text size)    |
-| `kiểm: servo S1 quét từ 0 đến 180 độ`       | Servo đã đi tới gần cả hai góc; sai số mặc định 5 độ    |
-| `kiểm: giữ nút SW` / `nhả nút SW`           | Học sinh đang giữ / đã nhả nút SW trên mạch ảo          |
-| `kiểm: khoảng cách < 20 cm`                 | Thanh khoảng cách đang ở dưới 20 cm (`≤ > ≥` cũng được) |
-| `kiểm: giữ nút PS2 lên`                     | Học sinh đang giữ nút ▲ trên tay cầm PS2 ảo             |
+### Rules
 
-Ba luật cuối là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật
-đầu ra trong cùng bước, ví dụ `giữ nút SW` và `L1 sáng`: bước đạt khi cả hai cùng đúng một lúc. Khi chạy
-`kiem-thu/`, bộ kiểm thử tự đặt mạch ảo cho các luật này (giữ nút, kéo thanh khoảng cách) trước khi chấm. Nút
-PS2 viết bằng tên (`lên`, `xuống`, `trái`, `phải`, `tam giác`, `tròn`, `nhân`, `vuông`, `L1`, `L2`, `R1`, `R2`,
-`select`, `start`) hoặc ký hiệu trên tay cầm ảo (`▲ ▼ ◀ ▶ △ ○ ✕ □`).
+A `check: ...` line adds a rule the virtual board must satisfy for the step to pass. A step can have several rules
+(all must hold). A step without `check:` is not graded. Case does not matter. Known forms:
 
-Số thập phân viết bằng dấu phẩy hoặc dấu chấm đều được. Gõ sai dạng luật thì `npm run build` dừng và báo
-`tệp:dòng`.
+| Rule                                       | Meaning                                                       |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| `check: L1 on` / `L2 off`                  | Light L1 or L2 is on / off                                    |
+| `check: buzzer on` / `buzzer off`          | The buzzer is sounding / silent                               |
+| `check: L1 blinks every 1 s`               | The light blinks with this period, default tolerance 20%      |
+| `check: L1 blinks every 0.5 s ± 10%`       | As above with a chosen tolerance; the period is at most 1.5 s |
+| `check: M1 forward` / `backward` / `stop`  | Motor M1 (M1 to M4) turns forward / backward / stands still   |
+| `check: M1 speed ≥ 50%`                    | The motor reaches at least this speed (percent)               |
+| `check: servo S1 at 90 deg ± 5`            | Servo S1 (S1 to S5) is at this angle; default tolerance 5     |
+| `check: OLED shows "Xin chào"`             | The OLED contains this text                                   |
+| `check: OLED shows exactly "Xin chào"`     | The OLED shows exactly this text on a line, nothing more      |
+| `check: OLED shows "ThingBot" at y 16`     | This text is printed starting at line y = 16                  |
+| `check: OLED shows "Xin chao" size 12x16`  | This text is printed at size 12x16 (set oled text size block) |
+| `check: servo S1 sweeps from 0 to 180 deg` | The servo reached near both angles; default tolerance 5       |
+| `check: hold SW` / `release SW`            | The learner holds / has released SW on the virtual board      |
+| `check: distance < 20 cm`                  | The distance slider is below 20 cm (`≤ > ≥` also work)        |
+| `check: hold PS2 up`                       | The learner holds ▲ on the virtual PS2 gamepad                |
 
-## Lời giải kiểm thử
+The last three are things the learner does on the virtual board, not things the program does. Pair them with an
+output rule in the same step, for example `hold SW` and `L1 on`: the step passes when both hold at the same time.
+When grading `solutions/`, the test sets the virtual board for these rules (holds the switch, moves the distance
+slider) before grading. PS2 buttons are named (`up`, `down`, `left`, `right`, `triangle`, `circle`, `cross`,
+`square`, `L1`, `L2`, `R1`, `R2`, `select`, `start`) or written as the gamepad symbol (`▲ ▼ ◀ ▶ △ ○ ✕ □`).
 
-Bài có luật `kiểm:` cần các dự án `.tb` trong `kiem-thu/` để thử rằng chấm điểm không sai. Thư mục này không
-được đưa vào bản dựng. Số `<n>` là thứ tự bước trong bài, tính từ 1 và tính cả bước chào.
+Decimals may use a point or a comma. A malformed rule stops `npm run build`, which reports `file:line`.
 
-- `dung.tb`: lời giải phải đạt **mọi** bước có luật.
-- `dung-<n>.tb`: lời giải đạt riêng bước n, ưu tiên hơn `dung.tb` cho bước đó. Dùng khi hai bước loại trừ
-  nhau (ví dụ `den-nhap-nhay`: chu kỳ 1 giây và chu kỳ 0,5 giây không thể cùng đạt nên có `dung-2.tb` và
-  `dung-3.tb`, không có `dung.tb`).
-- `sai-<n>.tb`: phản ví dụ phải **trượt** bước n.
+## Solutions
 
-Cạnh mỗi `.tb` giữ tệp `*.project.json` cùng tên để người xem đọc được nội dung.
+A lesson with `check:` rules needs `.tb` projects in `solutions/` that prove the grading is right. This folder is
+not part of the build. `<n>` is the step number in the lesson, counting from 1 and including the greeting.
 
-### Tạo tệp `.tb`
+- `pass.tb`: a solution that must pass **every** graded step.
+- `pass-<n>.tb`: a solution for step n only, used instead of `pass.tb` for that step. Use it when two steps
+  exclude each other (for example `blink`: a 1 s period and a 0.5 s period cannot both pass, so it has
+  `pass-2.tb` and `pass-3.tb` and no `pass.tb`).
+- `fail-<n>.tb`: a counterexample that must **fail** step n.
 
-- Cách thường: dựng chương trình trong editor, chọn **Lưu dự án**, rồi chép tệp vào `kiem-thu/` với đúng tên.
-- Cách viết tay: soạn `*.project.json` rồi gói lại bằng công cụ của gói:
+Keep a `*.project.json` with the same name next to each `.tb` so reviewers can read it.
+
+### Making a `.tb`
+
+- Usually: build the program in the editor, choose **Save project**, and copy the file into `solutions/` with
+  the right name.
+- By hand: write the `*.project.json`, then pack it with the package's tool:
 
 ```sh
 cd packages/thingblock-resource
-node scripts/lessons/make-tb.mjs src/tutorials/bat-tat-den/kiem-thu/dung-2.project.json \
-  src/tutorials/bat-tat-den/kiem-thu/dung-2.tb
+node scripts/lessons/make-tb.mjs src/tutorials/light-on-off/solutions/pass-2.project.json \
+  src/tutorials/light-on-off/solutions/pass-2.tb
 ```
 
-## Dựng và kiểm tra
+## Build and check
 
 ```sh
 cd packages/thingblock-resource
 node scripts/build-lessons.mjs
 ```
 
-Dựng thành công in `Built N lesson(s)` và ghi `dist/thingblock-resource/tutorials/index.json`. Nếu có lỗi,
-lệnh thoát với mã 1 và in từng lỗi dạng `tệp:dòng: thông điệp`.
+A successful build prints `Built N lesson(s)` and writes `dist/thingblock-resource/tutorials/index.json`. On an
+error it exits with code 1 and prints each problem as `file:line: message`.

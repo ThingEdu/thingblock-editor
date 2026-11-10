@@ -5,8 +5,8 @@ import {renderWithIntl} from '../../helpers/intl-helpers.jsx';
 import LessonPanel from '../../../src/components/lesson-panel/lesson-panel.jsx';
 
 const lesson = {
-    ma: 'den',
-    ten: 'Đèn nhấp nháy',
+    id: 'blink',
+    name: 'Đèn nhấp nháy',
     baseUrl: 'http://x/tutorials/den/',
     steps: [
         {
@@ -104,10 +104,10 @@ test('Back is disabled on the first step and Next on the last', () => {
 
 test('Back, Next, close and collapse call their handlers', () => {
     const handlers = {onPrev: jest.fn(), onNext: jest.fn(), onClose: jest.fn(), onToggleCollapse: jest.fn()};
-    const {getByRole, getByText} = renderPanel({stepIndex: 0, ...handlers});
+    const {getByRole} = renderPanel({stepIndex: 0, ...handlers});
     fireEvent.click(getByRole('button', {name: /Next/}));
-    fireEvent.click(getByText('✕'));
-    fireEvent.click(getByText('◀'));
+    fireEvent.click(getByRole('button', {name: 'Close lesson'}));
+    fireEvent.click(getByRole('button', {name: 'Hide lesson'}));
     expect(handlers.onNext).toHaveBeenCalledTimes(1);
     expect(handlers.onClose).toHaveBeenCalledTimes(1);
     expect(handlers.onToggleCollapse).toHaveBeenCalledTimes(1);
@@ -118,9 +118,9 @@ test('Back, Next, close and collapse call their handlers', () => {
 
 test('collapsed shows only the expand button and the step counter', () => {
     const onToggleCollapse = jest.fn();
-    const {container, getByText} = renderPanel({collapsed: true, stepIndex: 1, onToggleCollapse});
+    const {container, getByRole} = renderPanel({collapsed: true, stepIndex: 1, onToggleCollapse});
     expect(container).not.toHaveTextContent('Bật đèn');
     expect(container).toHaveTextContent('2/2');
-    fireEvent.click(getByText('▶'));
+    fireEvent.click(getByRole('button', {name: 'Show lesson'}));
     expect(onToggleCollapse).toHaveBeenCalledTimes(1);
 });

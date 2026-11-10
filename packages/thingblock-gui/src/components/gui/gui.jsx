@@ -18,6 +18,7 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 import ExtensionsButton from '../extension-button/extension-button.jsx';
 import LessonLibrary from '../../containers/lesson-library.jsx';
 import LessonPanel from '../../containers/lesson-panel.jsx';
+import LeftPanel from '../left-panel/left-panel.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -320,6 +321,11 @@ const GUIComponent = props => {
                     </MenuRefProvider>
                     }
                     <Box className={classNames(boxStyles, styles.flexWrapper)}>
+                        {lessonOpen && (
+                            <LeftPanel>
+                                <LessonPanel />
+                            </LeftPanel>
+                        )}
                         <Box
                             role="main"
                             aria-label={intl.formatMessage(ariaMessages.editor)}
@@ -380,26 +386,23 @@ const GUIComponent = props => {
                                         aria-label={intl.formatMessage(ariaMessages.codePanel)}
                                         element="section"
                                     >
-                                        {lessonOpen && <LessonPanel />}
-                                        <div className={styles.blocksArea}>
-                                            <Blocks
-                                                key={`${blocksId}/${colorMode}/${theme}`}
-                                                grow={1}
-                                                isVisible={blocksTabVisible}
-                                                options={{media: blocksMedia}}
-                                                stageSize={stageSize}
-                                                theme={theme}
-                                                vm={vm}
-                                                colorMode={colorMode}
-                                            />
-                                            <ExtensionsButton
-                                                boardMode={Boolean(selectedDeviceId)}
-                                                intl={intl}
-                                                onExtensionButtonClick={
-                                                    selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
-                                                }
-                                            />
-                                        </div>
+                                        <Blocks
+                                            key={`${blocksId}/${colorMode}/${theme}`}
+                                            grow={1}
+                                            isVisible={blocksTabVisible}
+                                            options={{media: blocksMedia}}
+                                            stageSize={stageSize}
+                                            theme={theme}
+                                            vm={vm}
+                                            colorMode={colorMode}
+                                        />
+                                        <ExtensionsButton
+                                            boardMode={Boolean(selectedDeviceId)}
+                                            intl={intl}
+                                            onExtensionButtonClick={
+                                                selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
+                                            }
+                                        />
                                     </Box>
                                 </TabPanel>
                             </Tabs>

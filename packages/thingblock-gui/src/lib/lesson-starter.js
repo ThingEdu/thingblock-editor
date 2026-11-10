@@ -12,8 +12,8 @@ const COSTUME = {
 };
 
 /**
- * @param {{bo: ?string, thietBi: ?Array<string>}} lesson The lesson: its board (`khong` for none) and
- *     extra devices.
+ * @param {{board: ?string, peripherals: ?Array<string>}} lesson The lesson: its board (`none` for no board)
+ *     and extra devices.
  * @returns {object} A project.json object for `vm.project.load`.
  */
 const blankLessonProject = lesson => ({
@@ -61,8 +61,8 @@ const blankLessonProject = lesson => ({
     monitors: [],
     extensions: [],
     meta: {semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-gui/lesson'},
-    board: lesson.bo && lesson.bo !== 'khong' ?
-        {device: lesson.bo, peripherals: lesson.thietBi || []} :
+    board: lesson.board && lesson.board !== 'none' ?
+        {device: lesson.board, peripherals: lesson.peripherals || []} :
         null
 });
 

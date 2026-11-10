@@ -187,7 +187,6 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    /* A tall lesson column scrolls inside itself instead of growing the page. */
     min-height: 0;
 }
 
@@ -207,16 +206,6 @@
     position: relative;
     display: flex;
     min-height: 0;
-}
-
-/*
-    The workspace beside the lesson column; Blockly's injection div and the extension button are absolutely
-    positioned inside it.
-*/
-.blocks-area {
-    flex: 1;
-    position: relative;
-    min-width: 0;
 }
 
 .resize-handle {

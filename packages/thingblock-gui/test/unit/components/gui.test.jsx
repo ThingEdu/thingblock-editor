@@ -53,13 +53,6 @@ const ui = lessonOpen => (
 );
 
 describe('GUI with a lesson open', () => {
-    test('the extension button sits in the workspace area, not over the lesson column', () => {
-        render(ui(true));
-        const workspaceArea = screen.getByTestId('blocks').parentElement;
-        expect(workspaceArea).not.toContainElement(screen.getByTestId('lesson-panel'));
-        expect(workspaceArea).toContainElement(screen.getByRole('button', {name: 'Add Peripheral'}));
-    });
-
     test('the device panel narrows while the lesson is open and returns to its width after', () => {
         const devicePanel = () => screen.getByRole('complementary');
         const {rerender} = render(ui(false));

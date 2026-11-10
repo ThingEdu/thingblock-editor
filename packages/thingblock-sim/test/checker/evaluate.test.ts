@@ -12,22 +12,22 @@ const check = (rule: string, log: LogEntry[]) => evaluateLogRules([parseRule(rul
 
 describe('light rules', () => {
   it('passes when the LED channel ends lit', () => {
-    expect(check('L1 sáng', pwmLog([20, 15, 4096]))).toEqual({ ok: true, message: '' })
+    expect(check('L1 on', pwmLog([20, 15, 4096]))).toEqual({ ok: true, message: '' })
   })
   // Review Focus 1: the final state is what counts.
   it('fails when the LED was lit then turned off again', () => {
-    expect(check('L1 sáng', pwmLog([20, 15, 4096], [520, 15, 0]))).toEqual({
+    expect(check('L1 on', pwmLog([20, 15, 4096], [520, 15, 0]))).toEqual({
       ok: false,
       message: 'Đèn L1 chưa sáng.',
     })
   })
   it('fails with nothing logged at all', () => {
-    expect(check('L1 sáng', []).ok).toBe(false)
+    expect(check('L1 on', []).ok).toBe(false)
   })
   it('passes "tắt" when the channel was never driven or ends at 0', () => {
-    expect(check('L2 tắt', []).ok).toBe(true)
-    expect(check('L2 tắt', pwmLog([20, 13, 4096], [40, 13, 0])).ok).toBe(true)
-    expect(check('L2 tắt', pwmLog([20, 13, 4096]))).toEqual({
+    expect(check('L2 off', []).ok).toBe(true)
+    expect(check('L2 off', pwmLog([20, 13, 4096], [40, 13, 0])).ok).toBe(true)
+    expect(check('L2 off', pwmLog([20, 13, 4096]))).toEqual({
       ok: false,
       message: 'Đèn L2 đang sáng. Bài cần L2 tắt.',
     })
@@ -36,8 +36,8 @@ describe('light rules', () => {
 
 describe('buzzer rules', () => {
   it('"kêu" passes if the buzzer sounded at any time', () => {
-    expect(check('còi kêu', pwmLog([10, 14, 2048], [300, 14, 0])).ok).toBe(true)
-    expect(check('còi kêu', [])).toEqual({ ok: false, message: 'Còi chưa kêu.' })
+    expect(check('buzzer on', pwmLog([10, 14, 2048], [300, 14, 0])).ok).toBe(true)
+    expect(check('buzzer on', [])).toEqual({ ok: false, message: 'Còi chưa kêu.' })
   })
 })
 
@@ -50,16 +50,16 @@ describe('blink rule', () => {
       ]).flat(),
     )
   it('passes a 1 s blink seen four times', () => {
-    expect(check('L1 nhấp nháy, chu kỳ 1 giây ± 20%', blink(1000, 4)).ok).toBe(true)
+    expect(check('L1 blinks every 1 s ± 20%', blink(1000, 4)).ok).toBe(true)
   })
   it('fails a 0.5 s blink against a 1 s rule and says what it saw', () => {
-    expect(check('L1 nhấp nháy, chu kỳ 1 giây ± 20%', blink(500, 8))).toEqual({
+    expect(check('L1 blinks every 1 s ± 20%', blink(500, 8))).toEqual({
       ok: false,
       message: 'Đèn L1 có nhấp nháy, nhưng mỗi lần khoảng 0,5 giây. Bài cần khoảng 1 giây.',
     })
   })
   it('fails when the LED turned off fewer than three times', () => {
-    expect(check('L1 nhấp nháy, chu kỳ 1 giây', blink(1000, 2))).toEqual({
+    expect(check('L1 blinks every 1 s', blink(1000, 2))).toEqual({
       ok: false,
       message: 'Đèn L1 chưa nhấp nháy đủ: cần bật rồi tắt ít nhất 3 lần.',
     })
@@ -76,7 +76,7 @@ describe('blink rule', () => {
       [3000, 15, 4096],
       [3300, 15, 0],
     )
-    expect(check('L1 nhấp nháy, chu kỳ 1 giây', log).ok).toBe(true)
+    expect(check('L1 blinks every 1 s', log).ok).toBe(true)
   })
   it('grades the median period so one long pause does not fail an otherwise steady blink', () => {
     const log = pwmLog(
@@ -85,29 +85,29 @@ describe('blink rule', () => {
         [on + 200, 15, 0],
       ]),
     )
-    expect(check('L1 nhấp nháy, chu kỳ 1 giây ± 20%', log).ok).toBe(true)
+    expect(check('L1 blinks every 1 s ± 20%', log).ok).toBe(true)
   })
 })
 
 describe('motor rules', () => {
   it('reads forward (B driven, A grounded) and backward from the A/B pair', () => {
-    expect(check('M1 tiến', pwmLog([10, 2, 0], [10, 3, 2047])).ok).toBe(true)
-    expect(check('M1 lùi', pwmLog([10, 2, 2047], [10, 3, 0])).ok).toBe(true)
-    expect(check('M1 lùi', pwmLog([10, 2, 0], [10, 3, 2047]))).toEqual({
+    expect(check('M1 forward', pwmLog([10, 2, 0], [10, 3, 2047])).ok).toBe(true)
+    expect(check('M1 backward', pwmLog([10, 2, 2047], [10, 3, 0])).ok).toBe(true)
+    expect(check('M1 backward', pwmLog([10, 2, 0], [10, 3, 2047]))).toEqual({
       ok: false,
       message: 'Động cơ M1 đang tiến. Bài cần M1 lùi.',
     })
   })
   it('"dừng" checks the final state', () => {
-    expect(check('M2 dừng', pwmLog([10, 4, 2047], [10, 5, 0], [900, 4, 0])).ok).toBe(true)
-    expect(check('M2 dừng', pwmLog([10, 4, 2047], [10, 5, 0]))).toEqual({
+    expect(check('M2 stop', pwmLog([10, 4, 2047], [10, 5, 0], [900, 4, 0])).ok).toBe(true)
+    expect(check('M2 stop', pwmLog([10, 4, 2047], [10, 5, 0]))).toEqual({
       ok: false,
       message: 'Động cơ M2 vẫn đang chạy. Bài cần M2 dừng.',
     })
   })
   it('speed is the peak duty of the driven channel as a percent of 4095', () => {
-    expect(check('M1 tốc độ ≥ 50', pwmLog([10, 2, 2047])).ok).toBe(true)
-    expect(check('M1 tốc độ ≥ 50', pwmLog([10, 2, 1000]))).toEqual({
+    expect(check('M1 speed ≥ 50', pwmLog([10, 2, 2047])).ok).toBe(true)
+    expect(check('M1 speed ≥ 50', pwmLog([10, 2, 1000]))).toEqual({
       ok: false,
       message: 'Động cơ M1 chạy nhanh nhất khoảng 24% tốc độ. Bài cần ít nhất 50% tốc độ.',
     })
@@ -116,31 +116,31 @@ describe('motor rules', () => {
 
 describe('servo rule', () => {
   it('converts the final duty back to an angle', () => {
-    expect(check('servo S1 ở 90 độ ± 5', pwmLog([10, 12, 307])).ok).toBe(true)
-    expect(check('servo S1 ở 90 độ ± 5', pwmLog([10, 12, 204]))).toEqual({
+    expect(check('servo S1 at 90 deg ± 5', pwmLog([10, 12, 307])).ok).toBe(true)
+    expect(check('servo S1 at 90 deg ± 5', pwmLog([10, 12, 204]))).toEqual({
       ok: false,
       message: 'Servo S1 đang ở góc 45°. Bài cần góc khoảng 90°.',
     })
-    expect(check('servo S1 ở 90 độ', [])).toEqual({ ok: false, message: 'Servo S1 chưa được đặt góc.' })
+    expect(check('servo S1 at 90 deg', [])).toEqual({ ok: false, message: 'Servo S1 chưa được đặt góc.' })
   })
 })
 
 describe('oled rules', () => {
   it('contains, case-insensitively', () => {
-    expect(check('OLED hiện "xin chào"', oledLog('Xin chào\nT: 25')).ok).toBe(true)
-    expect(check('OLED hiện "Xin chào"', oledLog('T: 25'))).toEqual({
+    expect(check('OLED shows "xin chào"', oledLog('Xin chào\nT: 25')).ok).toBe(true)
+    expect(check('OLED shows "Xin chào"', oledLog('T: 25'))).toEqual({
       ok: false,
       message: 'Màn hình chưa hiện chữ "Xin chào".',
     })
   })
   it('"đúng" needs a whole line to match', () => {
-    expect(check('OLED hiện đúng "1"', oledLog('1\n')).ok).toBe(true)
-    expect(check('OLED hiện đúng "1"', oledLog('10')).ok).toBe(false)
-    expect(check('OLED hiện đúng "1"', oledLog(' 1 \n')).ok).toBe(true)
+    expect(check('OLED shows exactly "1"', oledLog('1\n')).ok).toBe(true)
+    expect(check('OLED shows exactly "1"', oledLog('10')).ok).toBe(false)
+    expect(check('OLED shows exactly "1"', oledLog(' 1 \n')).ok).toBe(true)
   })
   it('uses the latest text the display logged', () => {
     const log = [...oledLog('Xin chào'), { t: 2000, dev: 'oled', key: 'text', value: '' }]
-    expect(check('OLED hiện "Xin chào"', log).ok).toBe(false)
+    expect(check('OLED shows "Xin chào"', log).ok).toBe(false)
   })
 })
 
@@ -156,27 +156,27 @@ describe('oled placement rules', () => {
     },
   ]
   it('checks the line the text starts on', () => {
-    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chao', 0, 0, 1], ['ThingBot', 0, 16, 1])).ok).toBe(true)
-    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chaoThingBot', 0, 0, 1]))).toEqual({
+    expect(check('OLED shows "ThingBot" at y 16', spans(['Xin chao', 0, 0, 1], ['ThingBot', 0, 16, 1])).ok).toBe(true)
+    expect(check('OLED shows "ThingBot" at y 16', spans(['Xin chaoThingBot', 0, 0, 1]))).toEqual({
       ok: false,
       message: 'Chữ "ThingBot" chưa nằm ở dòng y = 16. Đặt con trỏ trước khi in.',
     })
   })
   it('checks the text size', () => {
-    expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 2])).ok).toBe(true)
-    expect(check('OLED hiện "Xin chao" cỡ 12x16', spans(['Xin chao', 0, 0, 1]))).toEqual({
+    expect(check('OLED shows "Xin chao" size 12x16', spans(['Xin chao', 0, 0, 2])).ok).toBe(true)
+    expect(check('OLED shows "Xin chao" size 12x16', spans(['Xin chao', 0, 0, 1]))).toEqual({
       ok: false,
       message: 'Chữ "Xin chao" chưa ở cỡ chữ 12×16.',
     })
   })
   it('fails a placement rule when the text is not on the screen at all', () => {
-    expect(check('OLED hiện "ThingBot" ở y 16', spans(['Xin chao', 0, 0, 1])).message).toBe(
+    expect(check('OLED shows "ThingBot" at y 16', spans(['Xin chao', 0, 0, 1])).message).toBe(
       'Màn hình chưa hiện chữ "ThingBot".',
     )
   })
 })
 
 it('returns one result per rule, in order', () => {
-  const results = evaluateLogRules([parseRule('L1 sáng'), parseRule('L2 tắt')], pwmLog([20, 15, 4096]))
+  const results = evaluateLogRules([parseRule('L1 on'), parseRule('L2 off')], pwmLog([20, 15, 4096]))
   expect(results.map((r) => r.ok)).toEqual([true, true])
 })

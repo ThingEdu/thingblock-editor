@@ -30,8 +30,8 @@ const LessonPanel = ({
     }, [collapsed]);
 
     useEffect(() => {
-        saveProgress(lesson.ma, {stepIndex, passedSteps});
-    }, [lesson.ma, stepIndex, passedSteps]);
+        saveProgress(lesson.id, {stepIndex, passedSteps});
+    }, [lesson.id, stepIndex, passedSteps]);
 
     // Watch this step's rules; a step without rules watches nothing. The worker answers with a `check`
     // on the program it holds.
@@ -98,7 +98,7 @@ const LessonPanel = ({
 
 LessonPanel.propTypes = {
     lesson: PropTypes.shape({
-        ma: PropTypes.string.isRequired,
+        id: PropTypes.string.isRequired,
         steps: PropTypes.arrayOf(PropTypes.shape({
             rules: PropTypes.arrayOf(PropTypes.object).isRequired
         })).isRequired

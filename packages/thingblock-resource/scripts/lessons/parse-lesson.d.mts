@@ -23,15 +23,17 @@ export interface Step {
 }
 
 export interface Lesson {
-  ma: string
-  ten: string
-  nhom: 'lam-quen' | 'dau-ra' | 'dong-co' | 'dau-vao'
-  thuTu: number
-  bo: string
-  batDau: string | null
-  /** Extra packs the editor adds when the lesson opens (`thiet-bi:`). */
-  thietBi: string[]
-  thoiLuong: number | null
+  id: string
+  name: string
+  group: 'getting-started' | 'outputs' | 'motors' | 'inputs'
+  order: number
+  board: string
+  start: string | null
+  /** The lesson's library image, a file in the lesson folder. */
+  image: string | null
+  /** Extra packs the editor adds when the lesson opens (`peripherals:`). */
+  peripherals: string[]
+  duration: number | null
   lang: string
   steps: Step[]
 }
