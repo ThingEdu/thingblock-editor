@@ -36,6 +36,11 @@ const groupMessages = defineMessages({
         description: 'Example library tag: the lessons of the ThingBot simulator',
         id: 'gui.exampleLibrary.groupSim'
     },
+    'CoBot': {
+        defaultMessage: 'CoBot',
+        description: 'Example library tag: the CoBot line-following robot of the Maker Village',
+        id: 'gui.exampleLibrary.groupCoBot'
+    },
     'FanRoc': {
         defaultMessage: 'FanRoc',
         description: 'Example library tag: competition robot samples for the FanRoc contest',

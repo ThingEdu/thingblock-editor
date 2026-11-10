@@ -310,3 +310,11 @@
     aspect-ratio: 370 / 190;
     border-top: 1px solid $ui-black-transparent;
 }
+
+/* Shown instead of the virtual board when the selected board has no simulator. */
+.unavailable {
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: $text-primary;
+}

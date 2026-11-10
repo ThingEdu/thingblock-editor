@@ -300,6 +300,20 @@ export default class DeviceManager {
     }
 
     /**
+     * Whether the simulator can run programs for a device. The simulator models the board through its
+     * blocks' simulator codegen, so a pack device needs its own pack (the first of its `extensions`) to
+     * ship a `sim` module; a built-in board has only core blocks, which the simulator runs.
+     * @param deviceId - the device to ask about.
+     * @returns false for a pack device whose own pack has no simulator codegen.
+     */
+    hasSimulator (deviceId: string): boolean {
+        const pack = this._resourceDevicePacks.get(deviceId);
+        if (!pack) return true;
+        const own = pack.manifest.extensions?.[0];
+        return Boolean(own && this._resourcePeripheralPacks.get(own)?.manifest.sim);
+    }
+
+    /**
      * Whether an extension id names a device extension — a registered peripheral pack, device-owned or
      * reusable — rather than a VM extension. A pack's id is also the opcode prefix its blocks use, so
      * this is how project load tells the sb3-derived extension ids it owns from ones the

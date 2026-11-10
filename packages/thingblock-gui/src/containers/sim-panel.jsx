@@ -4,6 +4,7 @@ import {connect} from 'react-redux';
 
 import {ballById} from '../components/sim-panel/balls.js';
 import SimPanelComponent from '../components/sim-panel/sim-panel.jsx';
+import SimUnavailable from '../components/sim-panel/sim-unavailable.jsx';
 import {flushGeneratedCode} from '../lib/code-flush';
 import {getSimClient} from '../lib/sim/sim-client';
 import {BuzzerAudio, buzzerPitch} from '../lib/sim/buzzer-audio';
@@ -264,13 +265,41 @@ SimPanel.propTypes = {
     onLoaded: PropTypes.func.isRequired
 };
 
+/**
+ * The simulator panel for the selected board, or a note that the board has no simulator.
+ * @param {object} props Component props.
+ * @param {string|null} props.unsimulatedDevice The selected board's name when it cannot be simulated.
+ * @returns {React.ReactElement} The panel.
+ */
+const SimPanelOrNote = ({unsimulatedDevice, ...props}) => (
+    unsimulatedDevice ? <SimUnavailable device={unsimulatedDevice} /> : <SimPanel {...props} />
+);
+
+SimPanelOrNote.propTypes = {
+    unsimulatedDevice: PropTypes.string
+};
+
+/**
+ * The selected board's name when the simulator does not model it, else null.
+ * @param {object} state The GUI state.
+ * @returns {string|null} The board's name.
+ */
+const unsimulatedDevice = state => {
+    const {vm, board} = state.scratchGui;
+    const deviceId = board && board.selectedDeviceId;
+    if (!vm || !deviceId || vm.devices.hasSimulator(deviceId)) return null;
+    const device = vm.devices.getDeviceList({includeHidden: true}).find(d => d.deviceId === deviceId);
+    return device ? device.name : deviceId;
+};
+
 const usesBelt = lesson => Boolean(lesson) &&
     lesson.steps.some(step => step.rules.some(rule => BELT_RULES.has(rule.kind)));
 
 const mapStateToProps = state => ({
     beltLesson: usesBelt(state.scratchGui.lesson && state.scratchGui.lesson.lesson),
     simCode: state.scratchGui.code.simCode,
-    simDiagnostics: state.scratchGui.code.simDiagnostics
+    simDiagnostics: state.scratchGui.code.simDiagnostics,
+    unsimulatedDevice: unsimulatedDevice(state)
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -278,4 +307,4 @@ const mapDispatchToProps = dispatch => ({
     onLoaded: code => dispatch(setSimLoadedCode(code))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SimPanel);
+export default connect(mapStateToProps, mapDispatchToProps)(SimPanelOrNote);

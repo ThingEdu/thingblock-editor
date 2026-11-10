@@ -50,6 +50,7 @@ jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
 
 import React from 'react';
 import {act, fireEvent, render} from '@testing-library/react';
+import {IntlProvider} from 'react-intl';
 import {Provider} from 'react-redux';
 import configureStore from 'redux-mock-store';
 import SimPanel from '../../../src/containers/sim-panel.jsx';
@@ -300,4 +301,36 @@ test('a lesson graded on the egg belt opens with the belt, and taking it away br
     fireEvent.click(getByText('Toggle belt'));
     expect(getByText('belt off')).toBeTruthy();
     expect(ir()).toEqual([{type: 'input', key: 'belt', value: 0}, {type: 'input', key: 'adc4', value: 3500}]);
+});
+
+describe('a board the simulator does not model', () => {
+    const vmWith = simulated => ({devices: {
+        hasSimulator: id => simulated.includes(id),
+        getDeviceList: () => [{deviceId: 'cobot', name: 'CoBot'}, {deviceId: 'thingbot', name: 'ThingBot'}]
+    }});
+    const renderFor = (deviceId, simulated) => {
+        const store = configureStore()({scratchGui: {
+            code: {simCode: 'code-1', simDiagnostics: []},
+            board: {selectedDeviceId: deviceId},
+            vm: vmWith(simulated)
+        }});
+        return render(<Provider store={store}><IntlProvider locale="en"><SimPanel /></IntlProvider></Provider>);
+    };
+
+    test('gets a note naming it instead of the virtual board', () => {
+        let worker = null;
+        setWorkerFactory(() => (worker = new FakeWorker()));
+        const {getByRole, queryByText} = renderFor('cobot', ['thingbot']);
+        expect(getByRole('status').textContent).toBe(
+            'CoBot has no simulator yet. Upload the program to the board to see it run.'
+        );
+        expect(queryByText('Run')).toBeNull();
+        expect(worker).toBeNull();
+    });
+
+    test('a simulated board still gets the panel', () => {
+        const {getByText, queryByRole} = renderFor('thingbot', ['thingbot']);
+        expect(getByText('Run')).toBeTruthy();
+        expect(queryByRole('status')).toBeNull();
+    });
 });
