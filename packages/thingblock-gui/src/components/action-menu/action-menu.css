@@ -38,6 +38,23 @@ button::-moz-focus-inner {
     padding: inherit;
 }
 
+.button:disabled {
+    background: $looks-secondary;
+    cursor: default;
+}
+
+.more-button:disabled {
+    background: $looks-secondary-dark;
+}
+
+.button:disabled > img {
+    opacity: 0.45;
+}
+
+.main-button:disabled:hover {
+    transform: none;
+}
+
 .button.coming-soon:hover {
     background: $data-primary;
 }

@@ -123,8 +123,8 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   shows only `containers/host-monitor.jsx` (block print output, "ask and wait"). Each pane can be hidden from the
   panel's menu. Both monitors own their state and render `components/monitor-view`. While a lesson is open,
   `components/left-panel` sits left of the editor and holds the lesson panel, so the editor's tab strip moves with
-  the workspace. `containers/sim-panel.jsx` is
-  not rendered while the simulator is being redesigned. The VM still runs one implicit device target, but no sprite
+  the workspace. With a board selected, the panel also shows `containers/sim-panel.jsx` above the code view:
+  a headerless card whose Run/Pause, Step, Reset and Mute are an `ActionMenu` FAB like the monitor's. The VM still runs one implicit device target, but no sprite
   UI renders.
 - `thingblock-gui`'s webpack build (and dev server) compiles `@thingblock/thingblock-vm` from source through its
   `webpack` export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead

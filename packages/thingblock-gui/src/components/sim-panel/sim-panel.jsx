@@ -3,35 +3,17 @@ import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
+import ActionMenu from '../action-menu/action-menu.jsx';
+import mutedIcon from './icon--muted.svg';
+import pauseIcon from './icon--pause.svg';
+import resetIcon from './icon--reset.svg';
+import runIcon from './icon--run.svg';
+import soundIcon from './icon--sound.svg';
+import stepIcon from './icon--step.svg';
 import styles from './sim-panel.css';
 import ThingBotBoard, {boardExtent, oledActiveArea} from './thingbot-board.jsx';
 
 const messages = defineMessages({
-    title: {
-        id: 'gui.simPanel.title',
-        defaultMessage: 'Simulator',
-        description: 'Title of the device panel section that runs the program on a virtual board'
-    },
-    run: {
-        id: 'gui.simPanel.run',
-        defaultMessage: 'Run',
-        description: 'Button that runs the program on the virtual board'
-    },
-    pause: {
-        id: 'gui.simPanel.pause',
-        defaultMessage: 'Pause',
-        description: 'Button that pauses the program on the virtual board'
-    },
-    step: {
-        id: 'gui.simPanel.step',
-        defaultMessage: 'Step',
-        description: 'Button that runs one block of the program on the virtual board'
-    },
-    reset: {
-        id: 'gui.simPanel.reset',
-        defaultMessage: 'Reset',
-        description: 'Button that restarts the virtual board from power-on'
-    },
     runTip: {
         id: 'gui.simPanel.runTip',
         defaultMessage: 'Run the program on the virtual board',
@@ -52,20 +34,10 @@ const messages = defineMessages({
         defaultMessage: 'Restart the virtual board from power-on',
         description: 'Tooltip of the button that restarts the virtual board'
     },
-    mute: {
-        id: 'gui.simPanel.mute',
-        defaultMessage: 'Mute',
-        description: 'Button that silences the virtual buzzer'
-    },
     muteTip: {
         id: 'gui.simPanel.muteTip',
         defaultMessage: 'Turn off the buzzer\'s sound on the computer',
         description: 'Tooltip of the button that silences the virtual buzzer'
-    },
-    unmute: {
-        id: 'gui.simPanel.unmute',
-        defaultMessage: 'Sound',
-        description: 'Button that turns the virtual buzzer\'s sound back on'
     },
     unmuteTip: {
         id: 'gui.simPanel.unmuteTip',
@@ -121,123 +93,6 @@ const messages = defineMessages({
 
 const SPEEDS = [1, 10, 100];
 
-/* Control icons, 24-unit boxes drawn in the button's text colour. */
-const ICONS = {
-    run: <path d="M7 4.5v15l12.5-7.5z" />,
-    // a speaker, with sound waves or crossed out
-    sound: (
-        <React.Fragment>
-            <path d="M4 9h4l5-4.5v15L8 15H4z" />
-            <path
-                d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.6 8.6 0 0 1 0 12"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2"
-            />
-        </React.Fragment>
-    ),
-    muted: (
-        <React.Fragment>
-            <path d="M4 9h4l5-4.5v15L8 15H4z" />
-            <path
-                d="M16 9l5 6M21 9l-5 6"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2"
-            />
-        </React.Fragment>
-    ),
-    pause: (
-        <React.Fragment>
-            <rect
-                height="15"
-                rx="1.2"
-                width="4.5"
-                x="5.5"
-                y="4.5"
-            />
-            <rect
-                height="15"
-                rx="1.2"
-                width="4.5"
-                x="14"
-                y="4.5"
-            />
-        </React.Fragment>
-    ),
-    // step over: an arc hopping to the right onto a dot
-    step: (
-        <React.Fragment>
-            <path
-                d="M4 14a8 8 0 0 1 15.2-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2.4"
-            />
-            <path d="M20.8 5.6l.2 6.2-6-1.4z" />
-            <circle
-                cx="12"
-                cy="19"
-                r="2.6"
-            />
-        </React.Fragment>
-    ),
-    reset: (
-        <React.Fragment>
-            <path
-                d="M5.5 12a6.5 6.5 0 1 0 2-4.7"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="2.4"
-            />
-            <path d="M4 3.5v6h6z" />
-        </React.Fragment>
-    )
-};
-
-/**
- * A simulator control: an icon with its label, and a tooltip saying what it does.
- * @param {object} props Component props.
- * @param {string} props.icon Which icon, a key of `ICONS`.
- * @param {string} props.label The visible label.
- * @param {string} props.tip The tooltip.
- * @param {boolean} props.primary Whether it is the main action, drawn filled.
- * @param {boolean} props.disabled Whether it can be pressed.
- * @param {Function} props.onClick Called on press.
- * @returns {React.ReactElement} The button.
- */
-const ControlButton = ({icon, label, tip, primary, disabled, onClick}) => (
-    <button
-        aria-label={label}
-        className={classNames(styles.button, {[styles.primary]: primary})}
-        data-variant={primary ? 'primary' : 'secondary'}
-        disabled={disabled}
-        title={tip}
-        type="button"
-        onClick={onClick}
-    >
-        <svg
-            aria-hidden="true"
-            className={styles.icon}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-        >{ICONS[icon]}</svg>
-        <span className={styles.buttonLabel}>{label}</span>
-    </button>
-);
-
-ControlButton.propTypes = {
-    disabled: PropTypes.bool,
-    icon: PropTypes.oneOf(Object.keys(ICONS)).isRequired,
-    label: PropTypes.string.isRequired,
-    onClick: PropTypes.func.isRequired,
-    primary: PropTypes.bool,
-    tip: PropTypes.string.isRequired
-};
 const DISTANCE_MIN_CM = 2;
 const DISTANCE_MAX_CM = 400;
 
@@ -393,7 +248,10 @@ const SimPanel = ({
     const pwm = snapshot ? snapshot.pwm : [];
     const press = useCallback(() => onSwitchChange(true), [onSwitchChange]);
     const release = useCallback(() => onSwitchChange(false), [onSwitchChange]);
-    const handleSpeedChange = useCallback(e => onSpeedChange(Number(e.target.value)), [onSpeedChange]);
+    const handleSpeedCycle = useCallback(
+        () => onSpeedChange(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length]),
+        [onSpeedChange, speed]
+    );
     const handleDistanceChange = useCallback(e => onDistanceChange(Number(e.target.value)), [onDistanceChange]);
     const inputs = (snapshot && snapshot.inputs) || {};
 
@@ -402,113 +260,119 @@ const SimPanel = ({
             className={classNames(styles.simPanel, {[styles.roomy]: roomy})}
             data-roomy={Boolean(roomy)}
         >
-            <div className={styles.header}>
-                <span className={styles.title}>{intl.formatMessage(messages.title)}</span>
-                {running ? (
-                    <ControlButton
-                        primary
-                        icon="pause"
-                        label={intl.formatMessage(messages.pause)}
-                        tip={intl.formatMessage(messages.pauseTip)}
-                        onClick={onPause}
-                    />
-                ) : (
-                    <ControlButton
-                        primary
-                        disabled={blocked}
-                        icon="run"
-                        label={intl.formatMessage(messages.run)}
-                        tip={intl.formatMessage(messages.runTip)}
-                        onClick={onRun}
-                    />
-                )}
-                <ControlButton
-                    disabled={blocked || running}
-                    icon="step"
-                    label={intl.formatMessage(messages.step)}
-                    tip={intl.formatMessage(messages.stepTip)}
-                    onClick={onStep}
-                />
-                <ControlButton
-                    disabled={blocked}
-                    icon="reset"
-                    label={intl.formatMessage(messages.reset)}
-                    tip={intl.formatMessage(messages.resetTip)}
-                    onClick={onReset}
-                />
-                <ControlButton
-                    icon={muted ? 'muted' : 'sound'}
-                    label={intl.formatMessage(muted ? messages.unmute : messages.mute)}
-                    tip={intl.formatMessage(muted ? messages.unmuteTip : messages.muteTip)}
-                    onClick={onToggleMute}
-                />
-                <select
-                    aria-label={intl.formatMessage(messages.speedTip)}
-                    className={styles.speed}
-                    title={intl.formatMessage(messages.speedTip)}
-                    value={speed}
-                    onChange={handleSpeedChange}
+            {problems.map((problem, i) => (
+                <div
+                    className={styles.problem}
+                    key={i}
+                >{problem.message}</div>
+            ))}
+            {/* An error from the last run is shown but does not lock the controls: Run or Reset tries again. */}
+            {runError && <div className={styles.problem}>{runError}</div>}
+            {restarted && <div className={styles.problem}>{intl.formatMessage(messages.restarted)}</div>}
+            {stale && <div className={styles.notice}>{intl.formatMessage(messages.stale)}</div>}
+            {snapshot && snapshot.error && (
+                <div className={styles.problem}>{intl.formatMessage(messages.halted, {reason: snapshot.error})}</div>
+            )}
+            <div className={styles.rig}>
+                <div
+                    className={styles.drawing}
+                    style={{'--aspect': aspect, '--part': part}}
                 >
-                    {SPEEDS.map(s => (
-                        <option
-                            key={s}
-                            value={s}
-                        >{`${s}×`}</option>
-                    ))}
-                </select>
-            </div>
-            <div className={styles.body}>
-                {problems.map((problem, i) => (
-                    <div
-                        className={styles.problem}
-                        key={i}
-                    >{problem.message}</div>
-                ))}
-                {/* An error from the last run is shown but does not lock the controls: Run or Reset tries again. */}
-                {runError && <div className={styles.problem}>{runError}</div>}
-                {restarted && <div className={styles.problem}>{intl.formatMessage(messages.restarted)}</div>}
-                <div className={styles.rig}>
-                    <div
-                        className={styles.drawing}
-                        style={{'--aspect': aspect, '--part': part}}
-                    >
-                        <ThingBotBoard
-                            oledRows={showOled ? rows : null}
-                            pwm={pwm}
-                            pwmHz={(snapshot && snapshot.pwmHz) || 0}
-                            switchLabel={intl.formatMessage(messages.switchLabel)}
-                            switchPressed={switchPressed}
-                            onPress={press}
-                            onRelease={release}
+                    <ThingBotBoard
+                        oledRows={showOled ? rows : null}
+                        pwm={pwm}
+                        pwmHz={(snapshot && snapshot.pwmHz) || 0}
+                        switchLabel={intl.formatMessage(messages.switchLabel)}
+                        switchPressed={switchPressed}
+                        onPress={press}
+                        onRelease={release}
+                    />
+                    {showOled && (
+                        <canvas
+                            ref={canvasRef}
+                            className={styles.oled}
+                            height={rows}
+                            style={overlayStyle(oledActiveArea(rows), boardExtent(true))}
+                            width={128}
                         />
-                        {showOled && (
-                            <canvas
-                                ref={canvasRef}
-                                className={styles.oled}
-                                height={rows}
-                                style={overlayStyle(oledActiveArea(rows), boardExtent(true))}
-                                width={128}
-                            />
-                        )}
-                    </div>
+                    )}
                 </div>
-                {showOled && (
-                    <div className={styles.zoomRow}>
+                <div className={styles.status}>
+                    <span className={styles.chip}>{formatTime(snapshot ? snapshot.t : 0)}</span>
+                    <button
+                        aria-label={intl.formatMessage(messages.speedTip)}
+                        className={classNames(styles.chip, styles.chipButton)}
+                        title={intl.formatMessage(messages.speedTip)}
+                        type="button"
+                        onClick={handleSpeedCycle}
+                    >{`${speed}×`}</button>
+                    {showOled && (
                         <button
+                            aria-label={intl.formatMessage(zoomed ? messages.unzoomOled : messages.zoomOled)}
                             aria-pressed={zoomed}
-                            className={styles.button}
+                            className={classNames(styles.chip, styles.chipButton)}
+                            title={intl.formatMessage(zoomed ? messages.unzoomOled : messages.zoomOled)}
                             type="button"
                             onClick={toggleZoom}
-                        >{intl.formatMessage(zoomed ? messages.unzoomOled : messages.zoomOled)}</button>
-                        {zoomed && (
-                            <canvas
-                                ref={zoomRef}
-                                className={styles.oledZoom}
-                                height={rows}
-                                style={{aspectRatio: `128 / ${rows}`}}
-                                width={128}
-                            />
-                        )}
+                        >
+                            <svg
+                                aria-hidden="true"
+                                className={styles.chipIcon}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle
+                                    cx="10.5"
+                                    cy="10.5"
+                                    r="6.5"
+                                />
+                                {/* a magnifier with minus while zoomed, plus otherwise */}
+                                <path d="M7.5 10.5h6M15.5 15.5L20 20" />
+                                {!zoomed && <path d="M10.5 7.5v6" />}
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                <ActionMenu
+                    className={styles.fab}
+                    disabled={!running && blocked}
+                    img={running ? pauseIcon : runIcon}
+                    moreButtons={[
+                        {
+                            disabled: blocked || running,
+                            img: stepIcon,
+                            title: intl.formatMessage(messages.stepTip),
+                            onClick: onStep
+                        },
+                        {
+                            disabled: blocked,
+                            img: resetIcon,
+                            title: intl.formatMessage(messages.resetTip),
+                            onClick: onReset
+                        },
+                        {
+                            img: muted ? mutedIcon : soundIcon,
+                            title: intl.formatMessage(muted ? messages.unmuteTip : messages.muteTip),
+                            onClick: onToggleMute
+                        }
+                    ]}
+                    title={intl.formatMessage(running ? messages.pauseTip : messages.runTip)}
+                    onClick={running ? onPause : onRun}
+                />
+            </div>
+            <div className={styles.body}>
+                {zoomed && showOled && (
+                    <div className={styles.zoomRow}>
+                        <canvas
+                            ref={zoomRef}
+                            className={styles.oledZoom}
+                            height={rows}
+                            style={{aspectRatio: `128 / ${rows}`}}
+                            width={128}
+                        />
                     </div>
                 )}
                 {inputs.ultrasonic && (
@@ -542,13 +406,6 @@ const SimPanel = ({
                     </div>
                 )}
                 {serial && <pre className={styles.serial}>{serial}</pre>}
-            </div>
-            <div className={styles.status}>
-                <span>{snapshot ? formatTime(snapshot.t) : formatTime(0)}</span>
-                {stale && <span>{intl.formatMessage(messages.stale)}</span>}
-                {snapshot && snapshot.error && (
-                    <span>{intl.formatMessage(messages.halted, {reason: snapshot.error})}</span>
-                )}
             </div>
         </div>
     );

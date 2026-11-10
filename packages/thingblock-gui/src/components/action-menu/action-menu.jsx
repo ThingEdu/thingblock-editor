@@ -9,6 +9,7 @@ const CLOSE_DELAY = 300; // ms
 
 const ActionMenu = ({
     className,
+    disabled,
     img: mainImg,
     title: mainTitle,
     moreButtons,
@@ -185,6 +186,7 @@ const ActionMenu = ({
                 className={classNames(styles.button, styles.mainButton)}
                 data-for={mainTooltipId}
                 data-tip={mainTitle}
+                disabled={disabled}
                 onClick={onClick}
                 ref={buttonRef}
                 onMouseEnter={handleItemMouseEnter(-1)}
@@ -209,6 +211,7 @@ const ActionMenu = ({
                             {
                                 img,
                                 title,
+                                disabled: itemDisabled,
                                 onClick: onClickItem,
                                 fileAccept,
                                 fileChange,
@@ -230,6 +233,7 @@ const ActionMenu = ({
                                         })}
                                         data-for={tooltipId}
                                         data-tip={title}
+                                        disabled={itemDisabled}
                                         onClick={handleItemClick(onClickItem)}
                                         tabIndex={-1}
                                         ref={el => {
@@ -273,9 +277,11 @@ const ActionMenu = ({
 
 ActionMenu.propTypes = {
     className: PropTypes.string,
+    disabled: PropTypes.bool,
     img: PropTypes.string,
     moreButtons: PropTypes.arrayOf(
         PropTypes.shape({
+            disabled: PropTypes.bool,
             img: PropTypes.string,
             title: PropTypes.node.isRequired,
             onClick: PropTypes.func, // Optional, "coming soon" if no callback provided
@@ -290,10 +296,4 @@ ActionMenu.propTypes = {
     tooltipPlace: PropTypes.string
 };
 
-export default React.memo(ActionMenu, (prevProps, nextProps) =>
-    // This check prevents re-rendering while the project is updating.
-    // This is needed because of the sloppy way the props are passed as a new object,
-    // which should be refactored.
-    // Only re-render if the title changes
-    prevProps.title === nextProps.title
-);
+export default ActionMenu;

@@ -12,6 +12,7 @@ import BoardMonitor from '../../containers/board-monitor.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
 import HostMonitor from '../../containers/host-monitor.jsx';
 import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
+import SimPanel from '../../containers/sim-panel.jsx';
 import {usePaneCollapsed} from '../../lib/pane-collapse';
 import check from '../menu-bar/check.svg';
 
@@ -27,6 +28,11 @@ const messages = defineMessages({
         id: 'gui.sidePanel.showPanels',
         defaultMessage: 'Show panels',
         description: 'Label of the side panel button that opens the list of panels to show or hide'
+    },
+    simulator: {
+        id: 'gui.sidePanel.simulator',
+        defaultMessage: 'Simulator',
+        description: 'Side panel menu option that shows or hides the simulator panel'
     },
     generatedCode: {
         id: 'gui.sidePanel.generatedCode',
@@ -109,16 +115,18 @@ PanelOption.propTypes = {
 };
 
 /**
- * Right-hand column of the editor: device controls, and either the board's generated code and serial
- * monitor, or the host monitor when no board is selected.
+ * Right-hand column of the editor: device controls, and either the board's simulator, generated code and
+ * serial monitor, or the host monitor when no board is selected.
  * @param {object} props component props.
  * @returns {React.ReactElement} the panel.
  */
 const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
     const intl = useIntl();
     // Hiding a pane removes it from the panel; the pane store keeps the choice across reloads.
+    const [simHidden, toggleSimHidden] = usePaneCollapsed('sim.hidden', false);
     const [codeHidden, toggleCodeHidden] = usePaneCollapsed('code.hidden', false);
     const [monitorHidden, toggleMonitorHidden] = usePaneCollapsed('monitor.hidden', false);
+    const showSim = Boolean(selectedDeviceId) && !simHidden;
     const showCode = Boolean(selectedDeviceId) && !codeHidden;
     const [menuOpen, setMenuOpen] = useState(false);
     const handleToggleMenu = useCallback(() => setMenuOpen(open => !open), []);
@@ -169,6 +177,13 @@ const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
                     >
                         {selectedDeviceId && (
                             <PanelOption
+                                label={messages.simulator}
+                                shown={!simHidden}
+                                onToggle={toggleSimHidden}
+                            />
+                        )}
+                        {selectedDeviceId && (
+                            <PanelOption
                                 label={messages.generatedCode}
                                 shown={!codeHidden}
                                 onToggle={toggleCodeHidden}
@@ -183,6 +198,7 @@ const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
                 </div>
             </div>
             <PlatformInstallModal />
+            {showSim && <SimPanel roomy={!showCode} />}
             {showCode && (
                 <CodeView
                     code={generatedCode}
@@ -197,7 +213,7 @@ const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
                     vm={vm}
                 />
             ) : <HostMonitor vm={vm} />)}
-            {!showCode && monitorHidden && (
+            {!showSim && !showCode && monitorHidden && (
                 <div className={styles.noPanel}>
                     <PanelsIcon className={styles.noPanelIcon} />
                     <FormattedMessage {...messages.noPanel} />
