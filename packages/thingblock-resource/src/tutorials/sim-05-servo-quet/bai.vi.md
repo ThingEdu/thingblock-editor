@@ -84,4 +84,4 @@ Bước này không chấm, em đọc xong thì sang bước sau.
 
 Em biết hai cách quay servo: **đặt servo** quay ngay, **quay servo** quay từ từ và chờ quay xong. Barie thật cũng vậy, chỉ thêm một cảm biến thấy xe tới.
 
-Xong việc thì thả servo cho đỡ tốn pin: **thả lỏng servo S1**. Bài sau em sẽ dùng cảm biến để đo khoảng cách.
+Xong việc thì thả servo cho đỡ tốn pin: **thả lỏng servo S1**. Bài 6 em làm cho robot **tự thấy** quả bóng trước mặt.

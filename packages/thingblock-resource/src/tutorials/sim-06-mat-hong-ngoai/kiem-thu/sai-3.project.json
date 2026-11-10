@@ -78,26 +78,24 @@
           "topLevel": false
         },
         "b5": {
-          "opcode": "operator_gt",
+          "opcode": "operator_lt",
           "next": null,
           "parent": "b4",
           "inputs": {
             "OPERAND1": [3, "b6", [10, ""]],
-            "OPERAND2": [1, [10, "20"]]
+            "OPERAND2": [1, [10, "1500"]]
           },
           "fields": {},
           "shadow": false,
           "topLevel": false
         },
         "b6": {
-          "opcode": "ultrasonic_readDistance",
+          "opcode": "cobot_readIr",
           "next": null,
           "parent": "b5",
           "inputs": {},
           "fields": {
-            "TRIG": ["0", null],
-            "ECHO": ["4", null],
-            "UNIT": ["CM", null]
+            "PIN": ["4", null]
           },
           "shadow": false,
           "topLevel": false
@@ -120,7 +118,7 @@
           "next": null,
           "parent": "b4",
           "inputs": {
-            "BRIGHTNESS": [1, [4, "0"]]
+            "BRIGHTNESS": [1, [4, "100"]]
           },
           "fields": {
             "LED": ["LED_1", null]
@@ -163,7 +161,7 @@
     }
   ],
   "monitors": [],
-  "extensions": ["thingBotC3", "ultrasonic"],
+  "extensions": ["thingBotC3", "cobot"],
   "meta": {
     "semver": "3.0.0",
     "vm": "14.1.0",
@@ -171,6 +169,6 @@
   },
   "board": {
     "device": "thingbot",
-    "peripherals": ["ultrasonic"]
+    "peripherals": ["cobot"]
   }
 }

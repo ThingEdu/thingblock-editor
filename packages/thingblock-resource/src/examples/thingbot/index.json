@@ -410,15 +410,15 @@
       "source": "thingbot-sim bài 5"
     },
     {
-      "id": "sim-06-cam-bien-khoang-cach",
-      "file": "sim-06-cam-bien-khoang-cach.tb",
-      "title": "Cảm biến khoảng cách",
+      "id": "sim-06-mat-hong-ngoai",
+      "file": "sim-06-mat-hong-ngoai.tb",
+      "title": "Mắt hồng ngoại",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Cảm biến lùi xe: vật lại gần hơn 20 cm thì đèn L1 sáng báo động.",
+      "description": "Mắt nhận bóng FanRoc: bóng tối màu (xanh dương, đen) thì đèn L1 sáng, bóng sáng màu thì tắt.",
       "device": "thingbot",
-      "peripherals": ["ultrasonic"],
-      "hardware": ["Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)", "Đèn L1"],
+      "peripherals": ["cobot"],
+      "hardware": ["Mắt hồng ngoại (cắm cổng cảm biến, chân tín hiệu IO4)", "Đèn L1"],
       "source": "thingbot-sim bài 6"
     },
     {
@@ -458,15 +458,15 @@
       "source": "thingbot-sim bài 9"
     },
     {
-      "id": "sim-10-xe-tranh-vat-can",
-      "file": "sim-10-xe-tranh-vat-can.tb",
-      "title": "Dự án: xe tránh vật cản",
+      "id": "sim-10-day-chuyen-phan-loai",
+      "file": "sim-10-day-chuyen-phan-loai.tb",
+      "title": "Dự án: dây chuyền phân loại",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Dự án robot tự lái: xe tự đi thẳng, gặp vật cản gần hơn 25 cm thì xoay né.",
+      "description": "Dự án máy soi trứng: băng chuyền chở trứng qua mắt hồng ngoại, trứng hỏng (tối) bị servo gạt ra.",
       "device": "thingbot",
-      "peripherals": ["ultrasonic"],
-      "hardware": ["Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)", "Động cơ M1, M2"],
+      "peripherals": ["cobot"],
+      "hardware": ["Mắt hồng ngoại (chân tín hiệu IO4)", "Động cơ M1 (kéo băng chuyền)", "Servo S1 (cần gạt)"],
       "source": "thingbot-sim bài 10"
     }
   ]

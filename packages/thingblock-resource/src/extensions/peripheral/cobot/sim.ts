@@ -2,7 +2,7 @@
  * Cobot sensor simulator codegen, call for call with `generator.ts`. The rig sets each reading: an IR
  * sensor on GPIO n is the board's `adc<n>` input, a colour channel the `adccolour_<channel>` input.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterSimGenerators } from '../../../shared/types'
 
 export const registerSimGenerators: RegisterSimGenerators = (generator, Order) => {

@@ -3,7 +3,7 @@
  * sensors are plain `analogRead`s (0–4095 on the ESP32-C3), IO21 powers the IR emitters, IO20 the white
  * LED beside the colour sensor, and the TCS34725 is read raw with the sketch's integration time and gain.
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterGenerators } from '../../../shared/types'
 
 export const IR_LED_PIN = 21

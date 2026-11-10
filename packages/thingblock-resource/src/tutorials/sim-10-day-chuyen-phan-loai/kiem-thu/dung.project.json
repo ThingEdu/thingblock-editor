@@ -46,7 +46,7 @@
         },
         "b2": {
           "opcode": "thingBotC3_init",
-          "next": null,
+          "next": "b3",
           "parent": "b1",
           "inputs": {},
           "fields": {},
@@ -54,8 +54,35 @@
           "topLevel": false
         },
         "b3": {
-          "opcode": "event_whenarduinoloop",
+          "opcode": "thingBotC3_setMotor",
           "next": "b4",
+          "parent": "b2",
+          "inputs": {
+            "SPEED": [1, [4, "40"]]
+          },
+          "fields": {
+            "MOTOR": ["1", null],
+            "DIRECTION": ["forward", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b4": {
+          "opcode": "thingBotC3_setServoAngle",
+          "next": null,
+          "parent": "b3",
+          "inputs": {
+            "ANGLE": [1, [4, "0"]]
+          },
+          "fields": {
+            "SERVO": ["1", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b5": {
+          "opcode": "event_whenarduinoloop",
+          "next": "b6",
           "parent": null,
           "inputs": {},
           "fields": {},
@@ -64,74 +91,86 @@
           "x": 600,
           "y": 40
         },
-        "b4": {
-          "opcode": "control_if_else",
-          "next": "b9",
-          "parent": "b3",
-          "inputs": {
-            "CONDITION": [2, "b5"],
-            "SUBSTACK": [2, "b7"],
-            "SUBSTACK2": [2, "b8"]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
-        "b5": {
-          "opcode": "operator_lt",
-          "next": null,
-          "parent": "b4",
-          "inputs": {
-            "OPERAND1": [3, "b6", [10, ""]],
-            "OPERAND2": [1, [10, "20"]]
-          },
-          "fields": {},
-          "shadow": false,
-          "topLevel": false
-        },
         "b6": {
-          "opcode": "ultrasonic_readDistance",
-          "next": null,
+          "opcode": "control_if_else",
+          "next": "b12",
           "parent": "b5",
-          "inputs": {},
-          "fields": {
-            "TRIG": ["0", null],
-            "ECHO": ["4", null],
-            "UNIT": ["CM", null]
+          "inputs": {
+            "CONDITION": [2, "b7"],
+            "SUBSTACK": [2, "b9"],
+            "SUBSTACK2": [2, "b11"]
           },
+          "fields": {},
           "shadow": false,
           "topLevel": false
         },
         "b7": {
-          "opcode": "thingBotC3_setLed",
+          "opcode": "operator_lt",
           "next": null,
-          "parent": "b4",
+          "parent": "b6",
           "inputs": {
-            "BRIGHTNESS": [1, [4, "100"]]
+            "OPERAND1": [3, "b8", [10, ""]],
+            "OPERAND2": [1, [10, "1500"]]
           },
-          "fields": {
-            "LED": ["LED_1", null]
-          },
+          "fields": {},
           "shadow": false,
           "topLevel": false
         },
         "b8": {
-          "opcode": "thingBotC3_setLed",
+          "opcode": "cobot_readIr",
           "next": null,
-          "parent": "b4",
-          "inputs": {
-            "BRIGHTNESS": [1, [4, "100"]]
-          },
+          "parent": "b7",
+          "inputs": {},
           "fields": {
-            "LED": ["LED_1", null]
+            "PIN": ["4", null]
           },
           "shadow": false,
           "topLevel": false
         },
         "b9": {
+          "opcode": "thingBotC3_setServoAngle",
+          "next": "b10",
+          "parent": "b6",
+          "inputs": {
+            "ANGLE": [1, [4, "90"]]
+          },
+          "fields": {
+            "SERVO": ["1", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b10": {
+          "opcode": "thingBotC3_playNote",
+          "next": null,
+          "parent": "b9",
+          "inputs": {
+            "BEATS": [1, [4, "0.25"]]
+          },
+          "fields": {
+            "NOTE": ["C", null],
+            "OCTAVE": ["5", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b11": {
+          "opcode": "thingBotC3_setServoAngle",
+          "next": null,
+          "parent": "b6",
+          "inputs": {
+            "ANGLE": [1, [4, "0"]]
+          },
+          "fields": {
+            "SERVO": ["1", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b12": {
           "opcode": "control_wait",
           "next": null,
-          "parent": "b4",
+          "parent": "b6",
           "inputs": {
             "DURATION": [1, [5, "0.05"]]
           },
@@ -163,7 +202,7 @@
     }
   ],
   "monitors": [],
-  "extensions": ["thingBotC3", "ultrasonic"],
+  "extensions": ["thingBotC3", "cobot"],
   "meta": {
     "semver": "3.0.0",
     "vm": "14.1.0",
@@ -171,6 +210,6 @@
   },
   "board": {
     "device": "thingbot",
-    "peripherals": ["ultrasonic"]
+    "peripherals": ["cobot"]
   }
 }

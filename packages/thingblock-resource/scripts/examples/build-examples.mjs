@@ -50,10 +50,10 @@ const SIM_META = {
     note: 'Thanh chắn bãi xe nhấc lên rồi hạ xuống, cánh tay robot gập khuỷu. Servo làm được kiểu chuyển động này: nó là động cơ biết quay đúng một góc rồi đứng lại, như khớp tay. Não ra lệnh qua hai dây I2C, mạch công suất cấp điện cho servo. Khối «quay servo S1 tới góc … độ trong … giây» cho servo quay mượt tới góc đích, quay xong mới làm khối tiếp theo.',
   },
   'bai-6': {
-    slug: 'cam-bien-khoang-cach',
-    hardware: ['Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)', 'Đèn L1'],
-    description: 'Cảm biến lùi xe: vật lại gần hơn 20 cm thì đèn L1 sáng báo động.',
-    note: 'Ô tô có cảm biến lùi: xe tới gần tường thì kêu báo. Cảm biến siêu âm phát tiếng kêu rất cao (tai người không nghe được) rồi đo thời gian tiếng vang dội lại, như con dơi. Chân TRIG (IO0) ra lệnh phát tiếng, chân ECHO (IO4) nghe tiếng vang. Ngưỡng là cái mốc để quyết định: vật gần hơn 20 cm thì đèn sáng, xa hơn thì tắt.',
+    slug: 'mat-hong-ngoai',
+    hardware: ['Mắt hồng ngoại (cắm cổng cảm biến, chân tín hiệu IO4)', 'Đèn L1'],
+    description: 'Mắt nhận bóng FanRoc: bóng tối màu (xanh dương, đen) thì đèn L1 sáng, bóng sáng màu thì tắt.',
+    note: 'Robot FanRoc phải biết quả bóng trước mặt là quả nào. Mắt hồng ngoại giống em rọi đèn pin vào đồ vật trong phòng tối: đồ màu sáng hắt ánh sáng lại nhiều, đồ màu tối nuốt ánh sáng. Mắt cắm ở cổng cảm biến, chân tín hiệu nối IO4, đọc ra một số từ 0 tới 4095: bóng trắng khoảng 3500, bóng đen khoảng 300. Ngưỡng 1500 là cái mốc để quyết định: nhỏ hơn là bóng tối màu, đèn sáng. Trong mô phỏng, chọn quả bóng ở thanh bóng dưới mạch ảo.',
   },
   'bai-7': {
     slug: 'dong-co-m1',
@@ -74,10 +74,10 @@ const SIM_META = {
     note: 'Xe đồ chơi điều khiển từ xa nghe lệnh từ tay cầm. Tay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2 trên mạch. Khối «khởi động tay cầm PS2 trên ThingBot» dùng đúng chân của cổng PS2, em không phải chọn chân. Đầu mỗi vòng lặp, khối «đọc dữ liệu tay cầm PS2» hỏi tay cầm, rồi khối «nút … của PS2 đang bấm?» trả lời đúng hoặc sai.',
   },
   'bai-10': {
-    slug: 'xe-tranh-vat-can',
-    hardware: ['Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)', 'Động cơ M1, M2'],
-    description: 'Dự án robot tự lái: xe tự đi thẳng, gặp vật cản gần hơn 25 cm thì xoay né.',
-    note: 'Robot hút bụi, xe tự hành trong nhà kho tự tránh vật cản. Dự án này ghép bài 6 và bài 8: cảm biến siêu âm là đôi mắt đo khoảng cách bằng tiếng vang, hai bánh M1, M2 là đôi chân. Ngưỡng 25 cm là cái mốc để quyết định: vật ở gần hơn thì xoay, không thì đi thẳng.',
+    slug: 'day-chuyen-phan-loai',
+    hardware: ['Mắt hồng ngoại (chân tín hiệu IO4)', 'Động cơ M1 (kéo băng chuyền)', 'Servo S1 (cần gạt)'],
+    description: 'Dự án máy soi trứng: băng chuyền chở trứng qua mắt hồng ngoại, trứng hỏng (tối) bị servo gạt ra.',
+    note: 'Trại gà soi trứng: quả tốt sáng trong, quả hỏng tối đục. Dự án này ghép bài 6, bài 5 và bài 7: động cơ M1 kéo băng chuyền, mắt hồng ngoại IO4 nhìn từng quả, số đọc nhỏ hơn 1500 thì servo S1 hạ 90 độ gạt trứng xuống thùng loại, còn lại nhấc 0 độ cho trứng đi tiếp. Khối đợi phải thật ngắn để não kịp nhìn từng quả. Trong mô phỏng, chọn băng chuyền trứng ở thanh dưới mạch ảo.',
   },
 }
 

@@ -1,0 +1,34 @@
+{
+  "cobot_readIr": {
+    "message0": "đọc mắt hồng ngoại %1"
+  },
+  "cobot_irLight": {
+    "message0": "đèn hồng ngoại Cobot %1",
+    "options": {
+      "STATE": {
+        "HIGH": "bật",
+        "LOW": "tắt"
+      }
+    }
+  },
+  "cobot_readColour": {
+    "message0": "đọc cảm biến màu %1",
+    "options": {
+      "CHANNEL": {
+        "0": "đỏ",
+        "1": "lục",
+        "2": "lam",
+        "3": "độ sáng"
+      }
+    }
+  },
+  "cobot_colourLight": {
+    "message0": "đèn cảm biến màu %1",
+    "options": {
+      "STATE": {
+        "HIGH": "bật",
+        "LOW": "tắt"
+      }
+    }
+  }
+}

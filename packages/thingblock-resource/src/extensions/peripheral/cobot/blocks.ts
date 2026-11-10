@@ -4,8 +4,10 @@
  * `IR_LED_ON`, `W_LED_ON`). The IR read takes the GPIO itself, so the same block reads a single IR module
  * plugged into a ThingBot sensor port (IO4 or IO0).
  */
-import type { Block } from '@scratch/scratch-blocks'
+import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 const COLOUR = '#4CAF8F'
 const SECONDARY_COLOUR = '#3A8C72'
@@ -35,7 +37,7 @@ const onOff = {
   ],
 }
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.cobot_readIr = {
     init(this: Block) {
       this.jsonInit({
@@ -81,3 +83,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })
