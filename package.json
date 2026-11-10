@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/ThingEdu/thingblock-editor.git"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "author": "ThingEdu",
   "workspaces": [
     "packages/thingblock-blocks",
