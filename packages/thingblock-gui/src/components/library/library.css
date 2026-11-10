@@ -22,6 +22,8 @@
 .library-category {
   display: flex;
   flex-direction: column;
+  /* A full row each, so a short section doesn't sit beside the next one. */
+  width: 100%;
 }
 
 .library-category-title {

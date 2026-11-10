@@ -10,15 +10,15 @@ jest.mock('../../../src/containers/modal.jsx', () => {
 });
 
 jest.mock('../../../src/components/library/library.jsx', () => {
-    const MockLibrary = ({data, tags, onItemSelected}) => (
+    const MockLibrary = ({data, categories, onItemSelected}) => (
         <div>
-            {tags.map(t => <span key={t.tag}>{t.tag}</span>)}
+            {categories.map(c => <span key={c.id}>{c.id}</span>)}
             {data.map(item => (
                 <button
                     key={item.lessonId}
                     data-image={item.rawURL}
                     data-lesson={item.lessonId}
-                    data-tags={item.tags.join(',')}
+                    data-category={item.category}
                     // eslint-disable-next-line react/jsx-no-bind
                     onClick={() => onItemSelected(item)}
                 >{item.name}</button>
@@ -46,11 +46,11 @@ const renderLibrary = props => renderWithIntl(
     />
 );
 
-test('lists lessons as library items with their image or a placeholder and group tag', () => {
+test('lists lessons as library items with their image or a placeholder, sectioned by group', () => {
     const {container} = renderLibrary();
     const withImage = container.querySelector('[data-lesson="light-on-off"]');
     expect(withImage).toHaveAttribute('data-image', `${BASE}/light-on-off/cover.png`);
-    expect(withImage).toHaveAttribute('data-tags', 'outputs');
+    expect(withImage).toHaveAttribute('data-category', 'outputs');
     expect(withImage).toHaveTextContent('Bật tắt đèn');
     const withoutImage = container.querySelector('[data-lesson="blink"]');
     expect(withoutImage.getAttribute('data-image')).not.toContain(BASE);

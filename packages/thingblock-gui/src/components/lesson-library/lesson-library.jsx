@@ -44,12 +44,12 @@ const messages = defineMessages({
     }
 });
 
-/** Lesson groups as the library's filter tags, in the order the lessons are taught. */
-const GROUP_TAGS = [
-    {tag: 'getting-started', intlLabel: messages.gettingStarted},
-    {tag: 'outputs', intlLabel: messages.outputs},
-    {tag: 'motors', intlLabel: messages.motors},
-    {tag: 'inputs', intlLabel: messages.inputs}
+/** Lesson groups as the library's sections, in the order the lessons are taught. */
+const GROUPS = [
+    {id: 'getting-started', intlLabel: messages.gettingStarted},
+    {id: 'outputs', intlLabel: messages.outputs},
+    {id: 'motors', intlLabel: messages.motors},
+    {id: 'inputs', intlLabel: messages.inputs}
 ];
 
 const LessonLibrary = ({lessons, tutorialsBase, loading, error, onClose, onSelect}) => {
@@ -75,14 +75,14 @@ const LessonLibrary = ({lessons, tutorialsBase, loading, error, onClose, onSelec
         lessonId: lesson.id,
         name: lesson.name,
         rawURL: lesson.image ? `${tutorialsBase}/${lesson.id}/${lesson.image}` : placeholderImage,
-        tags: [lesson.group],
+        category: lesson.group,
         featured: true
     }));
     return (
         <LibraryComponent
+            categories={GROUPS}
             data={data}
             id="lessonLibrary"
-            tags={GROUP_TAGS}
             title={intl.formatMessage(messages.title)}
             onItemSelected={handleItemSelected}
             onRequestClose={onClose}

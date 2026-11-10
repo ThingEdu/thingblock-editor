@@ -39,7 +39,7 @@
 .header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.25rem;
     flex-shrink: 0;
     /* Same height as the editor's tab strip, so the card starts level with the workspace. */
     height: $stage-menu-height;
