@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- NEO Tre — nhân vật rô bốt của Làng Maker, dùng chung cho các mini app
+     ThingEdu thêm vào GCompris. Vẽ riêng, không kèm cờ và không kèm logo
+     của bất kỳ đối tác nào, để dùng được trong bản phát hành công khai.
+     SPDX-FileCopyrightText: 2026 ThingEdu <tuan@rogo.com.vn>
+     SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<svg width="200" height="200" viewBox="0 0 200 200" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="than" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3f9e33"/>
+      <stop offset="0.45" stop-color="#5cc44a"/>
+      <stop offset="1" stop-color="#2f7d27"/>
+    </linearGradient>
+  </defs>
+
+  <!-- râu ăng ten -->
+  <path d="M74 62 C68 40 62 30 56 24" stroke="#2b2b2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M126 62 C132 40 138 30 144 24" stroke="#2b2b2b" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="54" cy="21" r="11" fill="#e8483f" stroke="#2b2b2b" stroke-width="3.5"/>
+  <circle cx="146" cy="21" r="11" fill="#e8483f" stroke="#2b2b2b" stroke-width="3.5"/>
+
+  <!-- thân -->
+  <rect x="55" y="52" width="90" height="104" rx="26" ry="22"
+        fill="url(#than)" stroke="#2b2b2b" stroke-width="4.5"/>
+  <!-- các vòng đốt, gợi thân cây tre -->
+  <path d="M57 110 H143" stroke="#2b2b2b" stroke-width="3" opacity="0.55"/>
+  <path d="M57 132 H143" stroke="#2b2b2b" stroke-width="3" opacity="0.55"/>
+
+  <!-- màn hình mặt -->
+  <rect x="70" y="66" width="60" height="34" rx="9" ry="9"
+        fill="#23303a" stroke="#2b2b2b" stroke-width="3.5"/>
+  <circle cx="86" cy="83" r="7" fill="#7df07d"/>
+  <circle cx="114" cy="83" r="7" fill="#7df07d"/>
+  <path d="M89 92 Q100 100 111 92" stroke="#7df07d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+  <!-- tay hình lá tre -->
+  <path d="M55 118 C36 116 26 124 20 133 C32 139 46 136 55 128 Z"
+        fill="#4bb03a" stroke="#2b2b2b" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M145 118 C164 116 174 124 180 133 C168 139 154 136 145 128 Z"
+        fill="#4bb03a" stroke="#2b2b2b" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- đế di chuyển -->
+  <path d="M62 156 H138 C146 156 152 163 152 170 C152 177 146 182 138 182 H62
+           C54 182 48 177 48 170 C48 163 54 156 62 156 Z"
+        fill="#c9d2d8" stroke="#2b2b2b" stroke-width="4.5"/>
+  <path d="M48 172 H152" stroke="#2b2b2b" stroke-width="3" opacity="0.5"/>
+</svg>

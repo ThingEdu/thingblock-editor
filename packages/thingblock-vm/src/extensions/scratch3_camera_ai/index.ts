@@ -616,7 +616,8 @@ class CameraAiExtension implements Extension {
                         item('basket', 'basket', 'basket'),
                         item('star', 'star', 'star'),
                         item('bomb', 'bomb', 'bomb'),
-                        item('bamboo', 'bamboo', 'bamboo with a gap')
+                        item('bamboo', 'bamboo', 'bamboo with a gap'),
+                        item('tre', 'tre', 'Tre robot')
                     ]
                 },
                 EDGE: {

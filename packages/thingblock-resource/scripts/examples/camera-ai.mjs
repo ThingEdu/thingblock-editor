@@ -450,28 +450,29 @@ export const CAMERA_AI_EXAMPLES = [
     id: 'cam-09-nghieng-dau-hung-sao',
     title: 'Thể dục cổ: nghiêng đầu hứng sao',
     level: 2,
-    description: 'Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để đưa rổ hứng sao rơi, trong 60 giây.',
+    description:
+      'Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để rô bốt Tre chạy tới hứng sao rơi, trong 60 giây.',
     note: headNote(
       'Thể dục cổ: nghiêng đầu hứng sao',
-      'Nhiệm vụ: sao rơi từ trời xuống. Cái rổ đi theo đầu em: nghiêng đầu sang trái, rổ chạy sang trái.',
+      'Nhiệm vụ: sao rơi từ trời xuống. Rô bốt Tre của Làng Maker chạy theo đầu em để hứng: nghiêng đầu sang trái, Tre chạy sang trái.',
       'Động tác: nghiêng đầu thật chậm về một bên, tai hướng xuống vai, giữ 2 giây, về giữa, rồi sang bên kia. Tập 60 giây.',
       'AI mô hình tư thế tìm 33 điểm trên người em: mũi, mắt, tai, vai… Đường nối hai mắt cho biết đầu nghiêng bao nhiêu độ.',
-      'Khối "góc nghiêng đầu" ra số độ: âm là nghiêng trái, dương là nghiêng phải. Nhân 7 lên là chỗ của rổ.',
+      'Khối "góc nghiêng đầu" ra số độ: âm là nghiêng trái, dương là nghiêng phải. Nhân 7 lên là chỗ của rô bốt Tre.',
       SAFE,
     ),
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
-        spawn('basket', 'ro', 0, -140, 80),
+        spawn('tre', 'robot', 0, -140, 80),
         spawn('star', 'sao', random(-180, 180), 170, 40),
         setVelocity('sao', 0, -70),
         startTimer(60),
-        say('Nghiêng đầu thật chậm để đưa rổ hứng sao'),
+        say('Nghiêng đầu thật chậm để rô bốt Tre hứng sao'),
         forever(
-          moveTo('ro', mul(headTilt(), 7), -140),
+          moveTo('robot', mul(headTilt(), 7), -140),
           ifThen(
-            objectTouching('sao', 'ro'),
+            objectTouching('sao', 'robot'),
             addScore(1),
             say('+1 ⭐'),
             moveTo('sao', random(-180, 180), 170),

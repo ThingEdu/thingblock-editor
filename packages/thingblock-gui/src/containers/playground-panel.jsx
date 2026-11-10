@@ -9,6 +9,7 @@ import {attachStream, listCameras, startCamera, stopCamera} from '../lib/vision/
 import {HAND_CONNECTIONS, POSE_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
 import {MOUSE, loadDeviceName, saveDeviceName} from '../lib/vision/camera-choice';
 import {trackMouse} from '../lib/vision/mouse-hand';
+import {drawPicture, objectImage} from '../lib/vision/object-images';
 import {replayHands} from '../lib/vision/replay';
 
 /** The event names shared with the VM's Camera AI extension (see thingblock-vm event-name.ts). */
@@ -23,14 +24,15 @@ const PLAYGROUND_COMMAND = 'CAMERA_AI_PLAYGROUND_COMMAND';
 const STAGE_WIDTH = 480;
 const STAGE_HEIGHT = 360;
 
-/** The picture drawn for each object kind. */
+/** The emoji drawn for each object kind; the cricket and the robot Tre have pictures and use these while they load. */
 const PICTURES = {
     ball: '🏀',
     cricket: '🦗',
     drop: '💧',
     basket: '🧺',
     star: '⭐',
-    bomb: '💣'
+    bomb: '💣',
+    tre: '🤖'
 };
 
 /** A bamboo's stalks are this wide on the stage (the VM's playground uses the same width to judge touches). */
@@ -196,6 +198,11 @@ const draw = (canvas, results, mirror, playground, labels) => {
         }
         const x = ((o.x / STAGE_WIDTH) + 0.5) * width;
         const y = (0.5 - (o.y / STAGE_HEIGHT)) * height;
+        const img = objectImage(o.kind, assetBase());
+        if (img) {
+            drawPicture(ctx, img, o, x, y, o.size * scale);
+            continue;
+        }
         ctx.font = `${Math.round(o.size * scale)}px serif`;
         ctx.fillText(PICTURES[o.kind] || PICTURES.ball, x, y);
     }

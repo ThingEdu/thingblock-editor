@@ -143,6 +143,16 @@ describe('Camera AI examples', () => {
     },
   )
 
+  it('the neck exercise has the robot Tre catch the stars, and its note says so', async () => {
+    const p = await project('cam-09-nghieng-dau-hung-sao.tb')
+    const blocks = p.targets.flatMap((t) => Object.values(t.blocks)) as {
+      opcode?: string
+      fields?: Partial<Record<string, unknown[]>>
+    }[]
+    expect(blocks.some((b) => b.opcode === 'cameraAi_spawn' && b.fields?.KIND?.[0] === 'tre')).toBe(true)
+    expect(p.targets.flatMap((t) => Object.values(t.comments).map((c) => c.text))[0]).toMatch(/rô bốt Tre/)
+  })
+
   it.each(index.examples.map((e) => e.file))('%s uses only blocks the VM runs', async (file) => {
     const run = await CameraAiRun.load(bytes(file))
     try {

@@ -10,7 +10,7 @@
 import {STAGE_HEIGHT, STAGE_WIDTH} from './vision-state';
 
 /** What an object looks like; the GUI draws each kind as a picture. */
-export type ObjectKind = 'ball' | 'cricket' | 'drop' | 'basket' | 'star' | 'bomb' | 'bamboo';
+export type ObjectKind = 'ball' | 'cricket' | 'drop' | 'basket' | 'star' | 'bomb' | 'bamboo' | 'tre';
 
 /**
  * A bamboo is a wall of two stalks, from the top of the stage and from the bottom, with an opening between

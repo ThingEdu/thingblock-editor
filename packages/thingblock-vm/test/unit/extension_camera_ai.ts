@@ -494,3 +494,14 @@ test('objects touch each other; a bamboo touches only on its stalks, not in its 
     pg.removeAll();
     t.end();
 });
+
+test('the robot Tre is a kind in the create menu, round to touch like the other pictures', t => {
+    const {ext} = makeExtension();
+    const kinds = ext.getInfo().menus.KIND as {items: {value: string}[]};
+    t.ok(kinds.items.some(i => i.value === 'tre'));
+    ext.spawn({KIND: 'tre', NAME: 'tre', X: 0, Y: -100, SIZE: 80});
+    ext.spawn({KIND: 'star', NAME: 'sao', X: 30, Y: -60, SIZE: 40});
+    t.equal(ext.objectTouching({NAME: 'sao', OTHER: 'tre'}), true);
+    ext.removeAll();
+    t.end();
+});
