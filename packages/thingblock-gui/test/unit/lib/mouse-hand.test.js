@@ -208,6 +208,9 @@ describe('trackMouse', () => {
         expect(later[0].landmarks[0].y - first[0].landmarks[0].y).toBeGreaterThan(0.3);
         jest.advanceTimersByTime(200);
         expect(frames[frames.length - 1].hands).toHaveLength(1);
+        const up = new KeyboardEvent('keyup', {key: ' ', cancelable: true});
+        window.dispatchEvent(up);
+        expect(up.defaultPrevented).toBe(true);
         tracker.stop();
     });
 
@@ -226,10 +229,28 @@ describe('trackMouse', () => {
         const key = new KeyboardEvent('keydown', {key: 'ArrowRight', cancelable: true});
         window.dispatchEvent(key);
         expect(key.defaultPrevented).toBe(true);
-        jest.advanceTimersByTime(40);
-        const [l, r] = [2, 5].map(i => frames[frames.length - 1].pose.landmarks[i]).sort((a, b) => a.x - b.x);
-        expect(r.y).toBeGreaterThan(l.y);
+        const lean = () => {
+            const [l, r] = [2, 5].map(i => frames[frames.length - 1].pose.landmarks[i]).sort((a, b) => a.x - b.x);
+            // Degrees, on a 4:3 frame.
+            return (Math.atan2((r.y - l.y) * 0.75, r.x - l.x) * 180) / Math.PI;
+        };
+        jest.advanceTimersByTime(200);
+        const early = lean();
+        jest.advanceTimersByTime(200);
+        expect(lean()).toBeGreaterThan(early);
+        expect(early).toBeGreaterThan(0);
         window.dispatchEvent(new KeyboardEvent('keyup', {key: 'ArrowRight'}));
+        const kept = lean();
+        jest.advanceTimersByTime(300);
+        expect(lean()).toBeCloseTo(kept, 5);
+        jest.advanceTimersByTime(2000);
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp'}));
+        jest.advanceTimersByTime(40);
+        expect(Math.abs(lean())).toBeLessThan(0.01);
+        // Held long, the lean stops at what a neck should do.
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+        jest.advanceTimersByTime(3000);
+        expect(lean()).toBeCloseTo(-35, 0);
         tracker.stop();
     });
 

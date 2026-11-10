@@ -70,8 +70,8 @@ const messages = defineMessages({
     mouseHint: {
         id: 'gui.playgroundPanel.mouseHint',
         defaultMessage: 'The index finger (or the head, in head games) follows the mouse. Hold the left ' +
-            'button: fist. Right button or keys 1–7: another gesture. ← →: lean the head, ↓: nod, space: flap ' +
-            'both hands.',
+            'button: fist. Right button or keys 1–7: another gesture. Hold ← →: lean the head, ↑: straight, ↓: nod, ' +
+            'space: flap both hands.',
         description: 'Shown on the playground while the hand follows the mouse'
     },
     clear: {

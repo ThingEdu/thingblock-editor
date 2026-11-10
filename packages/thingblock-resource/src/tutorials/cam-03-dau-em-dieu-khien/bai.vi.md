@@ -16,7 +16,7 @@ Hôm nay đầu em điều khiển trò chơi. Đây cũng là một **bài tậ
 
 Làm chậm thôi. Thấy chóng mặt, mỏi hay đau cổ thì dừng lại, ngồi nghỉ.
 
-Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần webcam)**. Đầu đi theo con chuột. Giữ phím ← hoặc → để nghiêng đầu, bấm phím ↓ để gật đầu.
+Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần webcam)**. Đầu đi theo con chuột. Giữ phím ← hoặc → để nghiêng đầu dần, phím ↑ để đầu thẳng lại, phím ↓ để gật đầu.
 
 ## Ngôi sao trên đầu
 

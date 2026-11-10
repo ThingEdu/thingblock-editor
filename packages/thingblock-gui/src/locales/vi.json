@@ -213,7 +213,7 @@
     "gui.playgroundPanel.phoneHint": "Không có webcam? Dùng điện thoại: iPhone + Mac thì bật Continuity Camera; Android hoặc Windows thì cài DroidCam hay Iriun, rồi chọn camera đó ở đây.",
     "gui.playgroundPanel.mouse": "Chuột (không cần webcam)",
     "gui.playgroundPanel.useMouse": "Chơi bằng chuột",
-    "gui.playgroundPanel.mouseHint": "Ngón trỏ (hoặc đầu, ở trò dùng đầu) đi theo chuột. Giữ chuột trái: nắm tay. Chuột phải hoặc phím 1–7: đổi cử chỉ. Phím ← →: nghiêng đầu, ↓: gật đầu, phím cách: vỗ hai tay.",
+    "gui.playgroundPanel.mouseHint": "Ngón trỏ (hoặc đầu, ở trò dùng đầu) đi theo chuột. Giữ chuột trái: nắm tay. Chuột phải hoặc phím 1–7: đổi cử chỉ. Giữ phím ← →: nghiêng đầu, ↑: thẳng lại, ↓: gật đầu, phím cách: vỗ hai tay.",
     "gui.playgroundPanel.clear": "Xoá",
     "gui.playgroundPanel.clearTip": "Xoá mọi vật, điểm và đồng hồ đếm ngược",
     "gui.playgroundPanel.off": "Camera đang tắt. Bấm Camera, hoặc chạy khối \"bật camera\".",

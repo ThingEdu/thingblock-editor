@@ -127,7 +127,7 @@ const note = (title, ...lines) => [`${title} · Camera AI`, ...lines, MOUSE_TIP]
 /** How to play the head games without a webcam. */
 const HEAD_MOUSE_TIP =
   'Máy không có webcam? Ở khung Sân chơi, chọn "Chuột (không cần webcam)". Đầu đi theo con chuột. ' +
-  'Giữ phím ← hoặc → để nghiêng đầu, bấm phím ↓ để gật đầu (con trỏ phải nằm trên sân chơi).'
+  'Giữ phím ← hoặc → để nghiêng đầu dần, phím ↑ để đầu thẳng lại, phím ↓ để gật đầu (con trỏ nằm trên sân chơi).'
 const headNote = (title, ...lines) => [`${title} · Camera AI · Bài tập thể dục`, ...lines, HEAD_MOUSE_TIP].join('\n')
 /** A short safety line every exercise game repeats. */
 const SAFE = 'Làm chậm thôi. Thấy chóng mặt, mỏi hay đau thì dừng lại, ngồi nghỉ.'
@@ -417,7 +417,7 @@ export const CAMERA_AI_EXAMPLES = [
         cameraOn(),
         setScore(1, 0),
         spawn('cricket', 'de', -120, 40, 50),
-        spawn('bamboo', 'tre', 240, 0, 130),
+        spawn('bamboo', 'tre', 240, 0, 150),
         forever(
           setGravity(0),
           setVelocity('de', 0, 0),
@@ -432,7 +432,7 @@ export const CAMERA_AI_EXAMPLES = [
           say('1'),
           wait(1),
           say('Vỗ cánh nào!'),
-          setGravity(380),
+          setGravity(300),
           setVelocity('tre', -100, 0),
           waitUntil(or(objectTouching('de', 'tre'), atEdge('de', 'bottom'))),
           setGravity(0),
@@ -442,7 +442,7 @@ export const CAMERA_AI_EXAMPLES = [
           wait(3),
         ),
       ),
-      whenFlap(setVelocity('de', 0, 210)),
+      whenFlap(setVelocity('de', 0, 180)),
       whenTouching('tre', 'LEFT', addScore(1), moveTo('tre', 240, random(-60, 60)), setVelocity('tre', -100, 0)),
     ],
   },

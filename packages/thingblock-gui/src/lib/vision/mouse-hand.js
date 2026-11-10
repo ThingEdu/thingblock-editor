@@ -212,15 +212,21 @@ const FLAP_X = [0.3, 0.7];
  */
 export const flapPoints = p => FLAP_X.map(fx => ({x: fx, y: FLAP_FROM + ((FLAP_TO - FLAP_FROM) * p)}));
 
-/** How far a lean with the arrow keys goes, and how long a nod with the down arrow takes. */
-const KEY_TILT = 25;
+/**
+ * Leaning with the arrow keys: holding one turns the head this many degrees a second, up to the most a
+ * neck should lean; the head stays where the key is let go, so a game can be steered exactly.
+ */
+const TILT_SPEED = 50;
+const MAX_TILT = 35;
+/** How long a nod with the down arrow takes. */
 const NOD_MS = 400;
 
 /**
  * Report a mouse hand over an element until stopped: one frame every FRAME_MS while the pointer is over
  * the element, and frames with no hand while it is away. While the project uses the head and body blocks,
- * the pointer moves the head instead: the arrow keys lean it (left, right) and nod it (down). The space bar
- * flaps both arms down. Keys count only while the pointer is on the playground, so typing in the blocks is
+ * the pointer moves the head instead: holding the left or right arrow leans it further, the up arrow
+ * straightens it, and the down arrow nods it. The space bar flaps both arms down.
+ * Keys count only while the pointer is on the playground, so typing in the blocks is
  * left alone.
  * @param {HTMLElement} element The playground the pointer moves over.
  * @param {function(object): void} onResults Called with `{hands, pose, t}` for every frame.
@@ -233,6 +239,9 @@ export const trackMouse = (element, onResults, isMirrored, wantPose = () => fals
     let held = false;
     let gesture = 'open';
     let tilt = 0;
+    // -1 while the left arrow is held, +1 for the right one.
+    let leaning = 0;
+    let lastFrame = Date.now();
     let nodAt = -Infinity;
     let flapAt = -Infinity;
     const onMove = e => {
@@ -241,7 +250,7 @@ export const trackMouse = (element, onResults, isMirrored, wantPose = () => fals
     const onLeave = () => {
         point = null;
         held = false;
-        tilt = 0;
+        leaning = 0;
     };
     const onDown = e => {
         onMove(e);
@@ -258,8 +267,9 @@ export const trackMouse = (element, onResults, isMirrored, wantPose = () => fals
         if (!point || e.ctrlKey || e.metaKey || e.altKey) return;
         const picked = gestureForKey(e.key);
         if (picked) gesture = picked;
-        else if (e.key === 'ArrowLeft') tilt = -KEY_TILT;
-        else if (e.key === 'ArrowRight') tilt = KEY_TILT;
+        else if (e.key === 'ArrowLeft') leaning = -1;
+        else if (e.key === 'ArrowRight') leaning = 1;
+        else if (e.key === 'ArrowUp') tilt = 0;
         else if (e.key === 'ArrowDown' && !e.repeat) nodAt = Date.now();
         else if (e.key === ' ' && !e.repeat) flapAt = Date.now();
         else return;
@@ -267,7 +277,9 @@ export const trackMouse = (element, onResults, isMirrored, wantPose = () => fals
         e.preventDefault();
     };
     const onKeyUp = e => {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') tilt = 0;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') leaning = 0;
+        // A focused button (Run, after it was clicked) is pressed by the space bar when it comes back up.
+        if (e.key === ' ' && point) e.preventDefault();
     };
     element.addEventListener('pointermove', onMove);
     element.addEventListener('pointerleave', onLeave);
@@ -278,6 +290,9 @@ export const trackMouse = (element, onResults, isMirrored, wantPose = () => fals
     window.addEventListener('keyup', onKeyUp);
     const timer = setInterval(() => {
         const now = Date.now();
+        const turned = tilt + ((leaning * TILT_SPEED * (now - lastFrame)) / 1000);
+        tilt = Math.max(-MAX_TILT, Math.min(MAX_TILT, turned));
+        lastFrame = now;
         const mirror = isMirrored();
         const body = wantPose();
         const flapping = now - flapAt < FLAP_MS;
