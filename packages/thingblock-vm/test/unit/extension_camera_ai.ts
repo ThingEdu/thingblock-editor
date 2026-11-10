@@ -22,6 +22,10 @@ const makeExtension = () => {
     const hats: HatCall[] = [];
     const runtime = {
         events: new EventEmitter(),
+        redraws: 0,
+        requestRedraw () {
+            this.redraws += 1;
+        },
         startHats: (opcode: string, fields: Record<string, string> = {}) => {
             hats.push([opcode, fields]);
             return [];
@@ -147,6 +151,7 @@ test('playground objects move, report and touch a hand part', t => {
     t.equal(ext.objX({NAME: 'bong'}), 240, 'clamped to the stage');
     t.equal(ext.objY({NAME: 'bong'}), -180);
     t.equal(updates.length, 2);
+    t.equal(runtime.redraws, 2, 'every change asks for a redraw, so a loop moving it yields each frame');
     t.same(updates[1].objects, [{name: 'bong', kind: 'ball', x: 240, y: -180, size: 60, vx: 0, vy: 0}]);
 
     // Index tip at the bottom-right corner of the mirrored picture, i.e. camera-left.

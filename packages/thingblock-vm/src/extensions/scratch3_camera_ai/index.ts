@@ -92,6 +92,9 @@ class CameraAiExtension implements Extension {
     }
 
     _emitPlayground (state: PlaygroundState) {
+        // A change on the playground is a change on screen: like a sprite moving in Scratch, it makes a
+        // loop yield until the next frame instead of moving an object thousands of times per frame.
+        this.runtime.requestRedraw();
         this.runtime.events.emit(CameraAiEvent.PLAYGROUND_UPDATE, state);
         // Objects moved (by a block or by gravity), so they may have reached a hand or a side.
         this._fireTouchHats();
