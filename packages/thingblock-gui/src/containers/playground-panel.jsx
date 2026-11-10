@@ -7,6 +7,7 @@ import VM from '@thingblock/thingblock-vm';
 import PlaygroundPanelComponent from '../components/playground-panel/playground-panel.jsx';
 import {attachStream, listCameras, startCamera, stopCamera} from '../lib/vision/camera';
 import {HAND_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
+import {trackMouse} from '../lib/vision/mouse-hand';
 import {replayHands} from '../lib/vision/replay';
 
 /** The event names shared with the VM's Camera AI extension (see thingblock-vm event-name.ts). */
@@ -30,6 +31,9 @@ const PICTURES = {
     star: '⭐',
     bomb: '💣'
 };
+
+/** The device name that plays with the mouse instead of a camera; the "use camera" block's menu has it too. */
+const MOUSE = 'mouse';
 
 const EMPTY_PLAYGROUND = {objects: [], scores: [0, 0], timeLeft: null, say: '', showScoreboard: false};
 
@@ -168,6 +172,7 @@ const PlaygroundPanel = ({vm}) => {
     labelsRef.current = labels;
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const stageRef = useRef(null);
     const streamRef = useRef(null);
     const trackerRef = useRef(null);
     const resultsRef = useRef(null);
@@ -251,8 +256,11 @@ const PlaygroundPanel = ({vm}) => {
         let stream = null;
         let tracker = null;
         const frames = replayFrames();
-        if (frames) {
-            trackerRef.current = replayHands(frames, handleResults);
+        const mouse = deviceNameRef.current === MOUSE;
+        if (frames || mouse) {
+            trackerRef.current = frames ?
+                replayHands(frames, handleResults) :
+                trackMouse(stageRef.current, handleResults, () => mirrorRef.current);
             startingRef.current = false;
             fpsRef.current = {count: 0, since: performance.now()};
             setStatus('ready');
@@ -302,6 +310,12 @@ const PlaygroundPanel = ({vm}) => {
             start();
         }
     }, [start, stop]);
+
+    // Offered when no webcam answers: play with the mouse at once.
+    const handleUseMouse = useCallback(() => {
+        chooseCamera(MOUSE);
+        start();
+    }, [chooseCamera, start]);
 
     // Blocks drive the camera through the VM's event bus; the VM describes the playground the same way.
     useEffect(() => {
@@ -364,14 +378,17 @@ const PlaygroundPanel = ({vm}) => {
             error={error}
             fps={fps}
             mirror={mirror}
+            mouseName={MOUSE}
             playground={playground}
             status={status}
             videoRef={videoRef}
             onCameraOff={stop}
             onCameraOn={start}
             onChooseCamera={chooseCamera}
+            stageRef={stageRef}
             onClear={handleClear}
             onToggleMirror={handleToggleMirror}
+            onUseMouse={handleUseMouse}
         />
     );
 };

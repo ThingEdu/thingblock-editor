@@ -197,3 +197,19 @@
     text-overflow: ellipsis;
     pointer-events: none;
 }
+
+/* The hand follows the mouse, so the pointer itself is the fingertip. */
+.mouse-stage {
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.mouse-hint {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    max-width: 60%;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+}

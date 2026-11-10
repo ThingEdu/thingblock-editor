@@ -121,16 +121,17 @@ test('camera blocks ask the GUI and reflect its status; ready starts its hat onc
     t.end();
 });
 
-test('"use camera" lists the cameras the GUI found and asks the GUI for one by name', t => {
+test('"use camera" lists the cameras the GUI found, then the mouse, and asks the GUI for one by name', t => {
     const {ext, runtime} = makeExtension();
     const commands: object[] = [];
     runtime.events.on(CameraAiEvent.CAMERA_COMMAND, (c: object) => commands.push(c));
-    t.same(ext.getCameraMenu().map(i => (typeof i === 'string' ? i : i.value)), ['default']);
+    t.same(ext.getCameraMenu().map(i => (typeof i === 'string' ? i : i.value)), ['default', 'mouse']);
     runtime.events.emit(CameraAiEvent.CAMERA_DEVICES, ['FaceTime HD Camera', 'iPhone Camera']);
     t.same(ext.getCameraMenu().map(i => (typeof i === 'string' ? i : i.value)),
-        ['default', 'FaceTime HD Camera', 'iPhone Camera']);
+        ['default', 'FaceTime HD Camera', 'iPhone Camera', 'mouse']);
     ext.cameraSelect({DEVICE: 'iPhone Camera'});
-    t.same(commands, [{device: 'iPhone Camera'}]);
+    ext.cameraSelect({DEVICE: 'mouse'});
+    t.same(commands, [{device: 'iPhone Camera'}, {device: 'mouse'}]);
     t.end();
 });
 

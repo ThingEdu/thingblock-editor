@@ -516,7 +516,9 @@ class CameraAiExtension implements Extension {
     getCameraMenu (): MenuItem[] {
         return [
             item('default', 'defaultCamera', 'default camera'),
-            ...this._cameraNames.map(name => ({text: name, value: name}))
+            ...this._cameraNames.map(name => ({text: name, value: name})),
+            // The playground's hand that follows the mouse, for a computer without a webcam.
+            item('mouse', 'mouse', 'mouse (no webcam)')
         ];
     }
 

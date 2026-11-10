@@ -57,6 +57,22 @@ const messages = defineMessages({
             'on Android or Windows install DroidCam or Iriun, then choose that camera here.',
         description: 'Shown when the computer has no camera or the camera is off'
     },
+    mouse: {
+        id: 'gui.playgroundPanel.mouse',
+        defaultMessage: 'Mouse (no webcam)',
+        description: 'Choice in the list of cameras: play with a hand that follows the mouse'
+    },
+    useMouse: {
+        id: 'gui.playgroundPanel.useMouse',
+        defaultMessage: 'Play with the mouse',
+        description: 'Button shown when there is no webcam: play with a hand that follows the mouse'
+    },
+    mouseHint: {
+        id: 'gui.playgroundPanel.mouseHint',
+        defaultMessage: 'The index finger follows the mouse. Hold the left button: fist. ' +
+            'Right button or keys 1–7: another gesture.',
+        description: 'Shown on the playground while the hand follows the mouse'
+    },
     clear: {
         id: 'gui.playgroundPanel.clear',
         defaultMessage: 'Clear',
@@ -122,6 +138,9 @@ const ICONS = {
     mirror: (
         <path d="M11 3h2v18h-2zM3 7l6 5-6 5zM21 7l-6 5 6 5z" />
     ),
+    mouse: (
+        <path d="M12 2a6 6 0 0 0-6 6v8a6 6 0 0 0 12 0V8a6 6 0 0 0-6-6zm-1 3h2v5h-2z" />
+    ),
     clear: (
         <path d="M6 7h12l-1 13H7zM9 4h6v2H9zM4 6h16v2H4z" />
     )
@@ -171,18 +190,22 @@ const PlaygroundPanel = ({
     error,
     fps,
     mirror,
+    mouseName,
     onCameraOff,
     onCameraOn,
     onChooseCamera,
     onClear,
     onToggleMirror,
+    onUseMouse,
     playground,
+    stageRef,
     status,
     videoRef
 }) => {
     const intl = useIntl();
     const on = status === 'starting' || status === 'ready';
-    const showVideo = status === 'ready';
+    const mouse = deviceName === mouseName;
+    const showVideo = status === 'ready' && !mouse;
 
     let placeholder = null;
     if (status === 'off') placeholder = intl.formatMessage(messages.off);
@@ -194,8 +217,11 @@ const PlaygroundPanel = ({
     }
 
     const scoreboard = playground && playground.showScoreboard;
-    const known = cameras.some(c => c.name === deviceName);
-    const showPhoneHint = status === 'off' || (status === 'error' && error && error.name === 'NotFoundError');
+    const known = mouse || cameras.some(c => c.name === deviceName);
+    const noCamera = status === 'error' && error && error.name === 'NotFoundError';
+    const showPhoneHint = !mouse && (status === 'off' || noCamera);
+    // Without a webcam the mouse is the way to play: offered whenever the camera cannot be used.
+    const offerMouse = !mouse && (status === 'error' || (status === 'off' && cameras.length === 0));
     const handleDeviceChange = useCallback(e => onChooseCamera(e.target.value), [onChooseCamera]);
 
     return (
@@ -223,23 +249,22 @@ const PlaygroundPanel = ({
                         onClick={onCameraOn}
                     />
                 )}
-                {cameras.length > 1 && (
-                    <select
-                        aria-label={intl.formatMessage(messages.device)}
-                        className={styles.device}
-                        title={intl.formatMessage(messages.device)}
-                        value={known ? deviceName : 'default'}
-                        onChange={handleDeviceChange}
-                    >
-                        <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
-                        {cameras.map(c => (
-                            <option
-                                key={c.id}
-                                value={c.name}
-                            >{c.name}</option>
-                        ))}
-                    </select>
-                )}
+                <select
+                    aria-label={intl.formatMessage(messages.device)}
+                    className={styles.device}
+                    title={intl.formatMessage(messages.device)}
+                    value={known ? deviceName : 'default'}
+                    onChange={handleDeviceChange}
+                >
+                    <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
+                    {cameras.map(c => (
+                        <option
+                            key={c.id}
+                            value={c.name}
+                        >{c.name}</option>
+                    ))}
+                    <option value={mouseName}>{intl.formatMessage(messages.mouse)}</option>
+                </select>
                 <Button
                     icon="mirror"
                     label={intl.formatMessage(messages.mirror)}
@@ -255,7 +280,10 @@ const PlaygroundPanel = ({
                     onClick={onClear}
                 />
             </div>
-            <div className={styles.stage}>
+            <div
+                className={classNames(styles.stage, {[styles.mouseStage]: mouse && status === 'ready'})}
+                ref={stageRef}
+            >
                 <video
                     className={classNames(styles.video, {
                         [styles.mirrored]: mirror,
@@ -270,10 +298,22 @@ const PlaygroundPanel = ({
                 {placeholder && (
                     <div className={classNames(styles.placeholder, {[styles.problem]: status === 'error'})}>
                         {placeholder}
+                        {offerMouse && (
+                            <Button
+                                primary
+                                icon="mouse"
+                                label={intl.formatMessage(messages.useMouse)}
+                                tip={intl.formatMessage(messages.mouseHint)}
+                                onClick={onUseMouse}
+                            />
+                        )}
                         {showPhoneHint && (
                             <div className={styles.hint}>{intl.formatMessage(messages.phoneHint)}</div>
                         )}
                     </div>
+                )}
+                {mouse && status === 'ready' && (
+                    <div className={styles.mouseHint}>{intl.formatMessage(messages.mouseHint)}</div>
                 )}
                 {scoreboard && (
                     <div className={styles.scoreboard}>
@@ -301,11 +341,13 @@ PlaygroundPanel.propTypes = {
     error: PropTypes.shape({name: PropTypes.string, message: PropTypes.string}),
     fps: PropTypes.number,
     mirror: PropTypes.bool,
+    mouseName: PropTypes.string.isRequired,
     onCameraOff: PropTypes.func.isRequired,
     onCameraOn: PropTypes.func.isRequired,
     onChooseCamera: PropTypes.func.isRequired,
     onClear: PropTypes.func.isRequired,
     onToggleMirror: PropTypes.func.isRequired,
+    onUseMouse: PropTypes.func.isRequired,
     playground: PropTypes.shape({
         objects: PropTypes.array,
         scores: PropTypes.arrayOf(PropTypes.number),
@@ -313,6 +355,7 @@ PlaygroundPanel.propTypes = {
         say: PropTypes.string,
         showScoreboard: PropTypes.bool
     }),
+    stageRef: PropTypes.shape({current: PropTypes.instanceOf(Element)}).isRequired,
     status: PropTypes.oneOf(['off', 'starting', 'ready', 'error']).isRequired,
     videoRef: PropTypes.shape({current: PropTypes.instanceOf(Element)}).isRequired
 };
