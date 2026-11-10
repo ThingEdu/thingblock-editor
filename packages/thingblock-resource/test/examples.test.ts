@@ -222,7 +222,7 @@ describe('bundled examples', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
     const merged = copyExamples(join(__dirname, '..', 'src', 'examples'), out)
     // The ThingBot examples and the boardless Camera AI ones, each under its own folder.
-    expect(merged.examples).toHaveLength(36 + 7)
+    expect(merged.examples).toHaveLength(36 + 11)
     expect(merged.groups).toContain('Camera AI')
     for (const example of merged.examples as Example[]) {
       expect(example.file).toMatch(example.device === 'thingbot' ? /^thingbot\// : /^camera-ai\//)

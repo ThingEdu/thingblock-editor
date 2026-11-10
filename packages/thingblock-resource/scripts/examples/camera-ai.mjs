@@ -69,8 +69,9 @@ const itemNum = (value, list) => ({
 
 // Camera AI.
 const cameraOn = () => cam('cameraOn', { MIRROR: 'mirror' })
+const numIn = (x) => (typeof x === 'object' ? num(x) : N(x))
 const spawn = (kind, name, x, y, size) =>
-  cam('spawn', { KIND: kind }, { NAME: T(name), X: N(x), Y: N(y), SIZE: N(size) })
+  cam('spawn', { KIND: kind }, { NAME: T(name), X: numIn(x), Y: numIn(y), SIZE: N(size) })
 const handX = (part) => cam('handX', { PART: part, HAND: 'ANY' })
 const handY = (part) => cam('handY', { PART: part, HAND: 'ANY' })
 const moveTo = (name, x, y) =>
@@ -105,6 +106,16 @@ const whenTouching = (name, target, ...then) =>
     ...then,
   )
 const timeUpScore = () => say(join('Hết giờ! Điểm: ', score()))
+const add = (a, b) => ({ type: 'operator_add', inputs: { NUM1: numIn(a), NUM2: numIn(b) } })
+const mul = (a, b) => ({ type: 'operator_multiply', inputs: { NUM1: numIn(a), NUM2: numIn(b) } })
+const atEdge = (name, edge) => cam('atEdge', { EDGE: edge }, { NAME: T(name) })
+const objectTouching = (name, other) => cam('objectTouching', {}, { NAME: T(name), OTHER: T(other) })
+const headX = () => cam('headX')
+const headY = () => cam('headY')
+const headTilt = () => cam('headTilt')
+const whenNod = (...then) => stack(cam('whenNod'), ...then)
+const whenHeadTilt = (dir, ...then) => stack(cam('whenHeadTilt', { DIR: dir }), ...then)
+const whenFlap = (...then) => stack(cam('whenFlap'), ...then)
 
 const GROUP = 'Camera AI'
 const HARDWARE = ['Webcam, hoặc chuột nếu máy không có webcam']
@@ -113,6 +124,13 @@ const MOUSE_TIP =
   'Máy không có webcam? Ở khung Sân chơi, chọn "Chuột (không cần webcam)". ' +
   'Ngón trỏ đi theo con chuột. Giữ chuột trái là nắm tay. Bấm chuột phải hoặc phím 1–7 để đổi cử chỉ.'
 const note = (title, ...lines) => [`${title} · Camera AI`, ...lines, MOUSE_TIP].join('\n')
+/** How to play the head games without a webcam. */
+const HEAD_MOUSE_TIP =
+  'Máy không có webcam? Ở khung Sân chơi, chọn "Chuột (không cần webcam)". Đầu đi theo con chuột. ' +
+  'Giữ phím ← hoặc → để nghiêng đầu, bấm phím ↓ để gật đầu (con trỏ phải nằm trên sân chơi).'
+const headNote = (title, ...lines) => [`${title} · Camera AI · Bài tập thể dục`, ...lines, HEAD_MOUSE_TIP].join('\n')
+/** A short safety line every exercise game repeats. */
+const SAFE = 'Làm chậm thôi. Thấy chóng mặt, mỏi hay đau thì dừng lại, ngồi nghỉ.'
 
 export const CAMERA_AI_EXAMPLES = [
   {
@@ -379,6 +397,164 @@ export const CAMERA_AI_EXAMPLES = [
       ),
     ],
   },
+  {
+    id: 'cam-08-de-xanh-bay',
+    title: 'Dế Xanh bay',
+    level: 3,
+    description: 'Bài tập tay-vai: vỗ hai tay xuống để Dế Xanh bay lên, lách qua khe giữa hai cây tre.',
+    note: [
+      'Dế Xanh bay · Camera AI · Bài tập thể dục tay và vai',
+      'Nhiệm vụ: Dế Xanh phải bay qua rừng tre. Em là đôi cánh của dế.',
+      'Động tác: giơ hai tay lên cao quá đầu, rồi vỗ mạnh xuống ngang hông, như chim vỗ cánh. Mỗi lần vỗ, dế bật lên một chút.',
+      'Trọng lực kéo dế rơi xuống. Dế chạm cây tre hoặc chạm đất là hết lượt. Qua mỗi khe được 1 điểm.',
+      'AI tìm hai bàn tay em (và cổ tay, nhờ mô hình tư thế). Hai tay cùng đi từ nửa trên xuống thật nhanh là một lần vỗ.',
+      'Mỗi lượt vỗ khoảng 10 đến 20 lần. Chơi 3 lượt rồi nghỉ, thả lỏng vai.',
+      SAFE,
+      'Máy không có webcam? Ở khung Sân chơi, chọn "Chuột (không cần webcam)", để con trỏ trên sân chơi và bấm phím cách để vỗ hai tay.',
+    ].join('\n'),
+    stacks: [
+      whenFlag(
+        cameraOn(),
+        setScore(1, 0),
+        spawn('cricket', 'de', -120, 40, 50),
+        spawn('bamboo', 'tre', 240, 0, 130),
+        forever(
+          setGravity(0),
+          setVelocity('de', 0, 0),
+          moveTo('de', -120, 40),
+          setVelocity('tre', 0, 0),
+          moveTo('tre', 240, random(-60, 60)),
+          setScore(1, 0),
+          say('Giơ hai tay lên cao. 3'),
+          wait(1),
+          say('2'),
+          wait(1),
+          say('1'),
+          wait(1),
+          say('Vỗ cánh nào!'),
+          setGravity(380),
+          setVelocity('tre', -100, 0),
+          waitUntil(or(objectTouching('de', 'tre'), atEdge('de', 'bottom'))),
+          setGravity(0),
+          setVelocity('de', 0, 0),
+          setVelocity('tre', 0, 0),
+          say(join('Ối! Dế bay qua ', join(score(), ' khe. Nghỉ tay một chút nhé!'))),
+          wait(3),
+        ),
+      ),
+      whenFlap(setVelocity('de', 0, 210)),
+      whenTouching('tre', 'LEFT', addScore(1), moveTo('tre', 240, random(-60, 60)), setVelocity('tre', -100, 0)),
+    ],
+  },
+  {
+    id: 'cam-09-nghieng-dau-hung-sao',
+    title: 'Thể dục cổ: nghiêng đầu hứng sao',
+    level: 2,
+    description: 'Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để đưa rổ hứng sao rơi, trong 60 giây.',
+    note: headNote(
+      'Thể dục cổ: nghiêng đầu hứng sao',
+      'Nhiệm vụ: sao rơi từ trời xuống. Cái rổ đi theo đầu em: nghiêng đầu sang trái, rổ chạy sang trái.',
+      'Động tác: nghiêng đầu thật chậm về một bên, tai hướng xuống vai, giữ 2 giây, về giữa, rồi sang bên kia. Tập 60 giây.',
+      'AI mô hình tư thế tìm 33 điểm trên người em: mũi, mắt, tai, vai… Đường nối hai mắt cho biết đầu nghiêng bao nhiêu độ.',
+      'Khối "góc nghiêng đầu" ra số độ: âm là nghiêng trái, dương là nghiêng phải. Nhân 7 lên là chỗ của rổ.',
+      SAFE,
+    ),
+    stacks: [
+      whenFlag(
+        cameraOn(),
+        setScore(1, 0),
+        spawn('basket', 'ro', 0, -140, 80),
+        spawn('star', 'sao', random(-180, 180), 170, 40),
+        setVelocity('sao', 0, -70),
+        startTimer(60),
+        say('Nghiêng đầu thật chậm để đưa rổ hứng sao'),
+        forever(
+          moveTo('ro', mul(headTilt(), 7), -140),
+          ifThen(
+            objectTouching('sao', 'ro'),
+            addScore(1),
+            say('+1 ⭐'),
+            moveTo('sao', random(-180, 180), 170),
+            setVelocity('sao', 0, -70),
+          ),
+        ),
+      ),
+      whenTouching('sao', 'BOTTOM', moveTo('sao', random(-180, 180), 170), setVelocity('sao', 0, -70)),
+      whenTimeUp(say(join('Hết giờ! Hứng được ', join(score(), ' ngôi sao. Thả lỏng cổ nhé.'))), remove('sao')),
+    ],
+  },
+  {
+    id: 'cam-10-gat-dau-dem-nhip',
+    title: 'Gật đầu đếm nhịp',
+    level: 1,
+    description: 'Bài tập cổ: gật đầu chậm 10 lần, sân chơi đếm giúp em và đội vương miện sao.',
+    note: headNote(
+      'Gật đầu đếm nhịp',
+      'Nhiệm vụ: như thầy thể dục đếm nhịp, máy đếm số lần em gật đầu.',
+      'Động tác: cúi đầu chậm cho cằm gần ngực, rồi ngẩng lên nhìn thẳng. Đó là một lần. Làm 10 lần.',
+      'AI tìm mũi và hai vai. Mũi đi xuống gần vai rồi lên lại thì máy hiểu là em vừa gật đầu.',
+      'Ngôi sao đội trên đầu em: nó đi theo "x của đầu" và "y của đầu" cộng thêm 70.',
+      SAFE,
+    ),
+    stacks: [
+      whenFlag(
+        cameraOn(),
+        setScore(1, 0),
+        spawn('star', 'sao', 0, 0, 40),
+        say('Gật đầu thật chậm 10 lần nhé'),
+        forever(moveTo('sao', headX(), add(headY(), 70))),
+      ),
+      whenNod(
+        addScore(1),
+        ifElse(gt(score(), 9), [say('Giỏi lắm! Đủ 10 lần rồi. Thả lỏng cổ nhé.')], [say(join('Gật lần ', score()))]),
+      ),
+    ],
+  },
+  {
+    id: 'cam-11-ngoi-xuong-ne-bong',
+    title: 'Ngồi xuống né bóng',
+    level: 2,
+    description: 'Bài tập chân: bóng bay ngang tầm đầu, em ngồi xuống chậm để né rồi đứng lên, trong 60 giây.',
+    note: headNote(
+      'Ngồi xuống né bóng',
+      'Nhiệm vụ: quả bóng bay ngang qua đúng tầm đầu em. Ngồi xuống để bóng bay qua trên đầu.',
+      'Động tác: hai chân rộng bằng vai, lưng thẳng, ngồi xuống chậm như ngồi ghế, rồi đứng lên. Tập 60 giây.',
+      'Lúc đầu máy nhớ chiều cao đầu em khi đứng thẳng vào biến "cao". Bóng bay ở đúng độ cao đó.',
+      'Bóng chạm đầu là trúng. Bóng bay qua tới mép trái là né được: +1 điểm.',
+      'Đứng cách camera đủ xa để thấy cả người. Dọn chỗ trống quanh em trước khi chơi.',
+      SAFE,
+    ),
+    variables: [{ name: 'cao' }],
+    stacks: [
+      whenFlag(
+        cameraOn(),
+        setScore(1, 0),
+        say('Đứng thẳng, nhìn vào camera…'),
+        wait(3),
+        set('cao', headY()),
+        spawn('ball', 'bong', 240, v('cao'), 50),
+        setVelocity('bong', -120, 0),
+        startTimer(60),
+        say('Bóng tới! Ngồi xuống thật chậm để né'),
+      ),
+      whenTouching(
+        'bong',
+        'HEAD',
+        say('Ối, trúng đầu!'),
+        moveTo('bong', 240, v('cao')),
+        setVelocity('bong', -120, 0),
+      ),
+      whenTouching(
+        'bong',
+        'LEFT',
+        addScore(1),
+        say('Né giỏi! Đứng lên nào'),
+        moveTo('bong', 240, v('cao')),
+        setVelocity('bong', -120, 0),
+      ),
+      whenTimeUp(say(join('Hết giờ! Né được ', join(score(), ' quả. Đứng thẳng, thở đều nhé.'))), remove('bong')),
+    ],
+  },
 ].map((example) => ({
   source: 'ThingBlock Camera AI',
   ...example,
@@ -391,7 +567,20 @@ export const CAMERA_AI_EXAMPLES = [
 
 /** The block helpers, for the Camera AI lessons' `kiem-thu` fixtures. */
 export const cameraBlocks = {
+  add,
   addScore,
+  atEdge,
+  headTilt,
+  headX,
+  headY,
+  moveTo,
+  mul,
+  objectTouching,
+  setGravity,
+  setVelocity,
+  whenFlap,
+  whenHeadTilt,
+  whenNod,
   cameraOn,
   forever,
   ifThen,

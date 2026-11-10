@@ -84,6 +84,54 @@
       "peripherals": [],
       "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
       "source": "ThingBlock Camera AI"
+    },
+    {
+      "id": "cam-08-de-xanh-bay",
+      "file": "cam-08-de-xanh-bay.tb",
+      "title": "Dế Xanh bay",
+      "group": "Camera AI",
+      "level": 3,
+      "description": "Bài tập tay-vai: vỗ hai tay xuống để Dế Xanh bay lên, lách qua khe giữa hai cây tre.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
+    },
+    {
+      "id": "cam-09-nghieng-dau-hung-sao",
+      "file": "cam-09-nghieng-dau-hung-sao.tb",
+      "title": "Thể dục cổ: nghiêng đầu hứng sao",
+      "group": "Camera AI",
+      "level": 2,
+      "description": "Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để đưa rổ hứng sao rơi, trong 60 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
+    },
+    {
+      "id": "cam-10-gat-dau-dem-nhip",
+      "file": "cam-10-gat-dau-dem-nhip.tb",
+      "title": "Gật đầu đếm nhịp",
+      "group": "Camera AI",
+      "level": 1,
+      "description": "Bài tập cổ: gật đầu chậm 10 lần, sân chơi đếm giúp em và đội vương miện sao.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
+    },
+    {
+      "id": "cam-11-ngoi-xuong-ne-bong",
+      "file": "cam-11-ngoi-xuong-ne-bong.tb",
+      "title": "Ngồi xuống né bóng",
+      "group": "Camera AI",
+      "level": 2,
+      "description": "Bài tập chân: bóng bay ngang tầm đầu, em ngồi xuống chậm để né rồi đứng lên, trong 60 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
     }
   ]
 }
