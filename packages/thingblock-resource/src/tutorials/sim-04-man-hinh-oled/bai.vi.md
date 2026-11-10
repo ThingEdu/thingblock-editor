@@ -4,44 +4,82 @@ ten: ThingBot Sim 4: Màn hình OLED
 nhom: dau-vao
 thu-tu: 2
 bo: thingbot
-thoi-luong: 15
+thoi-luong: 20
 thiet-bi: oled
 ---
 
-## Chào em!
+## Nhiệm vụ: bảng tên robot
 
-Màn hình **OLED** nhỏ xíu nhưng viết được chữ và vẽ hình. Bài này em viết hai dòng chữ lên màn hình ảo.
+Đèn chỉ nói được hai điều: **có** hoặc **không**. Muốn robot nói được **chữ và số** (tên, nhiệt độ, lời nhắn) thì cần **màn hình**, như màn hình lò vi sóng hay đồng hồ điện tử.
+
+Nhiệm vụ: làm **bảng tên** cho robot trên màn hình **OLED**. OLED là màn hình nhỏ xíu, mỗi chấm tự phát sáng, viết được chữ và vẽ hình. Màn hình cắm vào **cổng I2C** của ThingBot.
+
+Giống cơ thể người: màn hình là **khuôn mặt** của robot, chỗ nó "nói" bằng chữ và hình cho người đứng xem.
 
 Mở bài này là nhóm khối **OLED** đã có sẵn trong bảng khối.
+
+Bấm sang bước sau để bắt đầu.
 
 ## Viết dòng đầu tiên
 
 Dưới **khởi động ThingBot** trong **khi Arduino khởi động**, xếp ba khối của nhóm **OLED**:
 
-1. **khởi động OLED rộng 128 cao 64 địa chỉ I2C 0x78 (0x3c) chip SSD1306** để bật màn hình.
-2. **OLED in Xin chao** để ghi chữ vào bộ nhớ.
-3. **hiện lên màn OLED** để đưa chữ ra màn hình.
+1. **khởi động OLED rộng 128 cao 64 địa chỉ I2C 0x78 (0x3c) chip SSD1306**: đánh thức màn hình.
+2. **OLED in Xin chao**: viết chữ vào **bộ nhớ** của màn hình, như viết vào giấy nháp.
+3. **hiện lên màn OLED**: đưa giấy nháp lên bảng cho mọi người xem.
+
+**Đoán trước:** nếu thiếu khối **hiện lên màn OLED**, màn hình sẽ…
+
+- Vẫn hiện chữ
+- Đen, không có gì
+
+> gợi ý: Đáp án: **đen, không có gì**. Chữ mới nằm trong bộ nhớ. Màn hình vẽ xong cả trang trong bộ nhớ rồi mới hiện một lần, để không bị nhấp nháy.
+> gợi ý: Gõ chữ không dấu, ví dụ "Xin chao": màn hình chỉ có bảng chữ tiếng Anh.
 
 Bấm **Chạy**.
-
-> gợi ý: Quên **hiện lên màn OLED** thì chữ chỉ nằm trong bộ nhớ, màn hình vẫn đen.
-> gợi ý: Gõ chữ không dấu: màn hình chỉ có bảng chữ tiếng Anh.
 
 kiểm: OLED hiện "Xin chao"
 
 ## Dòng thứ hai
 
-Trước khối **hiện lên màn OLED**, thêm **đặt con trỏ OLED x: 0 y: 16** rồi **OLED in ThingBot**. Con trỏ đưa chữ thứ hai xuống dòng dưới.
+Trước khối **hiện lên màn OLED**, thêm **đặt con trỏ OLED x: 0 y: 16** rồi **OLED in ThingBot**. Con trỏ là chỗ chữ tiếp theo sẽ được viết; nó đưa chữ thứ hai xuống dòng dưới.
 
-> gợi ý: Thứ tự đúng: init → print "Xin chao" → set cursor → print "ThingBot" → refresh.
+x và y trên màn hình:
+
+- Màn hình là lưới **128 × 64 chấm sáng**.
+- Điểm (0, 0) ở **góc trên bên trái**.
+- **x** đi sang phải, **y** đi xuống dưới.
+- Chữ cỡ nhỏ cao 8 chấm, nên y: 16 là xuống dưới, cách dòng đầu một khoảng.
+
+> gợi ý: Thứ tự đúng: khởi động OLED → in "Xin chao" → đặt con trỏ → in "ThingBot" → hiện lên màn OLED.
 
 kiểm: OLED hiện "Xin chao"
 kiểm: OLED hiện "ThingBot"
 
+## Hiểu sâu: hai dây, nhiều thiết bị
+
+Cổng I2C có bốn chân:
+
+- **GND, VCC**: cấp điện cho màn hình.
+- **SDA**, nối chân **IO8** của não: chở dữ liệu (chữ, lệnh).
+- **SCL**, nối chân **IO9** của não: gõ nhịp cho dữ liệu đi đều.
+
+**I2C** là cách não "nói chuyện" với nhiều thiết bị chỉ bằng **hai sợi dây** này. Mạch công suất (điều khiển đèn, còi, động cơ) cũng nằm trên đúng hai dây này.
+
+Vậy sao não không gửi nhầm? Vì mỗi thiết bị có một **"số nhà"** riêng, gọi là **địa chỉ**. Màn hình OLED ở số nhà **0x3C**, chính là ô **địa chỉ I2C** trong khối **khởi động OLED**. Não gọi đúng số nhà nào thì chỉ thiết bị đó trả lời.
+
+Vì vậy em đừng dùng IO8, IO9 cho việc khác: chúng là "đường dây chung" của cả mạch.
+
+Bước này không chấm, em đọc xong thì sang bước sau.
+
 ## Thử thách: tên em
 
-Thêm dòng thứ ba ở **y: 32** với tên của em. Bước này không chấm.
+Cho màn hình hiện **tên em** (không dấu) ở dòng thứ ba: **đặt con trỏ OLED x: 0 y: 32** rồi **OLED in …**. Bước này không chấm.
+
+> gợi ý: Muốn chữ to: thêm **đặt chữ OLED cỡ … màu … màu nền …** ngay sau khối **khởi động OLED**, chọn cỡ 12x16.
 
 ## Xong rồi!
 
-Em đã viết chữ lên màn hình OLED. Bài sau em sẽ cho servo quay.
+Robot của em đã có **bảng tên**. Em biết ba việc với OLED: **khởi động**, **in chữ** ở chỗ mình chọn bằng x, y, và **hiện lên màn** để mọi người xem.
+
+Bài sau em sẽ cho servo quay.

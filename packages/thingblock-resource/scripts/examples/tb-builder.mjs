@@ -56,6 +56,10 @@ const ZIP_DATE = new Date('2026-11-01T00:00:00Z')
 const COLUMN_WIDTH = 760
 const COMMENT_OFFSET_X = 420
 
+// Lines a comment takes once wrapped at `perLine` characters; each \n starts a new line.
+const wrappedLines = (text, perLine) =>
+  text.split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / perLine)), 0)
+
 /**
  * Convert one program to a ThingBlock `project.json` object.
  * @param {object} spec The example.
@@ -175,7 +179,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
         x: anchor.x + COMMENT_OFFSET_X,
         y: anchor.y,
         width: 300,
-        height: Math.max(80, 24 * Math.ceil(b.comment.length / 34)),
+        height: Math.max(80, 24 * wrappedLines(b.comment, 34)),
         minimized: false,
         text: b.comment,
       }
@@ -189,7 +193,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
 
   let y0 = 40
   if (note) {
-    const height = Math.max(100, 22 * Math.ceil(note.length / 60))
+    const height = Math.max(100, 22 * wrappedLines(note, 60) + 20)
     comments[nextId('c')] = { blockId: null, x: 40, y: 40, width: 640, height, minimized: false, text: note }
     y0 = 40 + height + 40
   }
