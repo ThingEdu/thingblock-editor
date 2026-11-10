@@ -15,6 +15,7 @@ const manifest: PeripheralManifest = {
     default: 'Cobot IR line sensors.',
     description: 'Description of the Cobot sensors peripheral',
   },
+  icon: './icon.svg',
   blocks: './blocks.js',
   generator: './generator.js',
   sim: './sim.js',

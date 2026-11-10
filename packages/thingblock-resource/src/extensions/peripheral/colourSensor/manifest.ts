@@ -15,6 +15,7 @@ const manifest: PeripheralManifest = {
     default: 'TCS34725 colour sensor on I2C: red, green, blue and brightness readings, and the colour it sees.',
     description: 'Description of the colour sensor peripheral',
   },
+  icon: './icon.svg',
   blocks: './blocks.js',
   generator: './generator.js',
   sim: './sim.js',
