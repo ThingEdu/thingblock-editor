@@ -70,18 +70,22 @@ hiểu:
 Bài có `mo-rong: cameraAi` chấm được trên khung **Sân chơi** (không cần mạch ảo). Một bước chỉ dùng một loại
 luật: toàn luật Camera AI hoặc toàn luật mạch ảo.
 
-| Viết                                      | Nghĩa                                                        |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| `kiểm: camera bật`                        | Camera (hoặc chế độ chuột) đang bật                          |
-| `kiểm: thấy bàn tay`                      | Sân chơi đang thấy ít nhất một bàn tay                       |
-| `kiểm: tay nắm` / `tay xòe` / `tay chữ V` | Học sinh đang làm cử chỉ này (cả `chỉ lên`, `giơ ngón cái`…) |
-| `kiểm: sân chơi có "sao"`                 | Trên sân chơi có vật tên `sao`                               |
-| `kiểm: "sao" chạm ngón trỏ`               | Vật `sao` chạm đầu ngón trỏ (cả `lòng bàn tay`, `cổ tay`)    |
-| `kiểm: điểm người chơi 1 ≥ 1`             | Điểm người chơi 1 (hoặc 2) so với số này (`< ≤ > ≥ =`)       |
-| `kiểm: sân chơi nói "Nắm tay"`            | Dòng chữ trên sân chơi có chứa chữ này                       |
+| Viết                                        | Nghĩa                                                          |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| `kiểm: camera bật`                          | Camera (hoặc chế độ chuột) đang bật                            |
+| `kiểm: thấy bàn tay`                        | Sân chơi đang thấy ít nhất một bàn tay                         |
+| `kiểm: tay nắm` / `tay xòe` / `tay chữ V`   | Học sinh đang làm cử chỉ này (cả `chỉ lên`, `giơ ngón cái`…)   |
+| `kiểm: sân chơi có "sao"`                   | Trên sân chơi có vật tên `sao`                                 |
+| `kiểm: "sao" chạm ngón trỏ`                 | Vật `sao` chạm đầu ngón trỏ (cả `lòng bàn tay`, `cổ tay`)      |
+| `kiểm: điểm người chơi 1 ≥ 1`               | Điểm người chơi 1 (hoặc 2) so với số này (`< ≤ > ≥ =`)         |
+| `kiểm: sân chơi nói "Nắm tay"`              | Dòng chữ trên sân chơi có chứa chữ này                         |
+| `kiểm: thấy đầu`                            | Sân chơi đang thấy đầu em (mô hình Pose)                       |
+| `kiểm: đầu nghiêng trái` / `phải` / `thẳng` | Đầu đang nghiêng (từ 15 độ) hoặc thẳng                         |
+| `kiểm: "sao" chạm đầu`                      | Vật `sao` chạm đầu                                             |
+| `kiểm: vỗ hai tay` / `gật đầu`              | Học sinh vừa vỗ hai tay xuống / gật đầu (trong 2 giây gần đây) |
 
-Luật `tay …` là việc học sinh làm. Khi chạy `kiem-thu/`, bộ kiểm thử dùng bàn tay tổng hợp: tay làm cử chỉ bước
-đó cần; bước có luật điểm thì tay lần lượt chạm từng vật trên sân chơi; bước khác thì tay đứng yên ở x 100,
+Luật `tay …`, `đầu nghiêng …`, `vỗ hai tay`, `gật đầu` là việc học sinh làm. Khi chạy `kiem-thu/`, bộ kiểm thử dùng bàn tay tổng hợp: tay làm cử chỉ bước
+đó cần; bước có luật điểm thì tay lần lượt chạm từng vật trên sân chơi; bước về đầu thì có cả người đứng ở chỗ đó, nghiêng hoặc gật đúng như luật; bước `vỗ hai tay` thì hai tay vỗ xuống mỗi 0,9 giây; bước khác thì tay đứng yên ở x 100,
 y -60 (xa chỗ các vật được tạo), nên luật `chạm` chỉ đạt khi chương trình thật sự đưa vật theo tay.
 
 Ba luật cuối của bảng mạch ảo là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật

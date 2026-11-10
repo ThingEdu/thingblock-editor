@@ -66,4 +66,4 @@ Vì sao cần **đợi 0.3 giây**? Không đợi thì có lúc dế nhảy tớ
 
 ## Xong rồi!
 
-Em đã làm một trò chơi AI thật sự: AI tìm ngón tay em, chương trình của em quyết định khi nào ghi điểm. Mở **Tệp → Ví dụ → Camera AI** để chơi thêm Hứng Mưa, Đỡ Bóng, Hái sao né bom.
+Em đã làm một trò chơi AI thật sự: AI tìm ngón tay em, chương trình của em quyết định khi nào ghi điểm. Mở **Tập tin → Ví dụ → Camera AI** để chơi thêm Hứng Mưa, Đỡ Bóng, Hái sao né bom.

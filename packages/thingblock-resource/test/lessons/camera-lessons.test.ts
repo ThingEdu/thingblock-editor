@@ -4,7 +4,9 @@
  * playground: the project runs in the real VM, a synthetic hand plays in front of the camera, and the step
  * passes if its rules all hold at some frame within the window. The hand does what the step asks the
  * learner to: it makes the gesture a `tay …` rule names, chases the playground's objects when the step
- * wants points, and otherwise rests at one spot away from where the objects start.
+ * wants points, and otherwise rests at one spot away from where the objects start. A step about the head
+ * shows a whole body there instead: leaning the way an `đầu nghiêng …` rule says, nodding for `gật đầu`,
+ * and flapping both arms for `vỗ hai tay`.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -13,7 +15,7 @@ import { evaluateCameraRules } from '../../../thingblock-sim/src/checker/camera'
 import type { RuleResult } from '../../../thingblock-sim/src/checker/evaluate'
 import { isCameraRule, type CameraRule } from '../../../thingblock-sim/src/checker/rules'
 import { parseLesson } from '../../scripts/lessons/parse-lesson.mjs'
-import { CameraAiRun, type Player } from '../support/camera-ai-vm'
+import { CameraAiRun, flapper, type Player } from '../support/camera-ai-vm'
 
 const TUTORIALS = join(__dirname, '../../src/tutorials')
 const WINDOW_MS = 3000
@@ -28,6 +30,20 @@ const CHASE_MS = 300
  * @returns Where the hand is each frame, and its gesture.
  */
 const playerFor = (rules: CameraRule[]): Player => {
+  const has = (motion: string) => rules.some((r) => r.kind === 'motion' && r.motion === motion)
+  if (has('flap')) return flapper()
+  const lean = rules.find((r) => r.kind === 'headTilt')
+  const usesHead =
+    lean !== undefined ||
+    has('nod') ||
+    rules.some((r) => r.kind === 'headSeen' || (r.kind === 'touch' && r.part === 'head'))
+  if (usesHead) {
+    const tilt = lean?.kind === 'headTilt' ? { left: -25, right: 25, straight: 0 }[lean.dir] : 0
+    return () => ({
+      hands: [],
+      head: { ...REST, tilt, nod: has('nod') ? Math.max(0, Math.sin((2 * Math.PI * Date.now()) / 800)) : 0 },
+    })
+  }
   const gestureRule = rules.find((r) => r.kind === 'gesture')
   const gesture = gestureRule?.kind === 'gesture' ? gestureRule.gesture : 'open'
   if (!rules.some((r) => r.kind === 'score')) return () => ({ ...REST, gesture })
