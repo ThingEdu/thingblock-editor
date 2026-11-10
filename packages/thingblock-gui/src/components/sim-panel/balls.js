@@ -2,6 +2,8 @@
  * The balls the learner can put in front of the IR eye on IO4, with what the eye reads for each: the same
  * ids and readings as thingblock-sim `hal/rig.ts` (`BALLS`, `NO_BALL_IR`), which the lesson checker grades.
  * Readings from ThingEdu/thingbot-sim `src/belt.ts` (commit bde12a2).
+ * thingbot-sim is AGPL-3.0; its author, Le Ngoc Tuan (ThingEdu), licensed this part to ThingBlock under MIT
+ * on 2026-11-10.
  */
 const BALLS = [
     {id: 'none', ir: 80, color: null},

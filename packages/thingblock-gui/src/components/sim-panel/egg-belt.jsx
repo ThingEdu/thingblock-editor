@@ -2,6 +2,8 @@
  * The egg sorting belt in front of the IR eye, drawn from the simulator's belt state. The drawing follows
  * ThingEdu/thingbot-sim `src/belt.ts` (https://github.com/ThingEdu/thingbot-sim, commit bde12a2); the belt
  * itself runs in the simulator (thingblock-sim `hal/rig.ts`), whose geometry the constants below mirror.
+ * thingbot-sim is AGPL-3.0; its author, Le Ngoc Tuan (ThingEdu), licensed this part to ThingBlock under MIT
+ * on 2026-11-10.
  */
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef} from 'react';

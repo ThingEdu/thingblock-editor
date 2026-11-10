@@ -79,7 +79,8 @@ Mắt hồng ngoại là module phản xạ cắm cổng cảm biến, chân tí
 ảo: động cơ M1 kéo băng, mắt hồng ngoại nhìn từng quả (trứng tốt 3300, trứng hỏng 900, mặt băng 2600), servo S1
 từ 45 độ trở lên gạt quả đang tới cần gạt vào thùng loại. Bài có luật trứng thì editor tự bật băng chuyền; bộ kiểm
 thử cũng vậy, và chấm bước đó trong 30 giây thay vì 5 giây vì băng cần thời gian chở 6 quả. Số liệu và cách chạy
-băng lấy từ ThingEdu/thingbot-sim (`src/belt.ts`, commit bde12a2).
+băng lấy từ ThingEdu/thingbot-sim (`src/belt.ts`, commit bde12a2). thingbot-sim dùng giấy phép AGPL-3.0;
+tác giả (Lê Ngọc Tuấn, ThingEdu) cho phép dùng phần này trong ThingBlock theo MIT ngày 10/11/2026.
 
 Số thập phân viết bằng dấu phẩy hoặc dấu chấm đều được. Gõ sai dạng luật thì `npm run build` dừng và báo
 `tệp:dòng`.
