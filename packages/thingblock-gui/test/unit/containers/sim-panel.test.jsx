@@ -6,8 +6,19 @@ jest.mock('../../../src/lib/sim/sim-worker-factory', () => ({
 jest.mock('../../../src/components/sim-panel/sim-panel.jsx', () => {
     /* eslint-disable react/jsx-no-bind -- a stand-in panel: one button per control the tests press */
     const MockSimPanel = ({
-        onRun, onReset, onDistanceChange, onPs2Change, onToggleMute, muted, usesOled, restarted, runError
+        onRun, onReset, onDistanceChange, onPs2Change, onToggleMute, muted, usesOled, restarted, runError,
+        usesIr, belt, onBallChange, onBeltChange
     }) => (<div>
+        <span>{usesIr ? 'with IR eye' : 'no IR eye'}</span>
+        <span>{belt ? 'belt on' : 'belt off'}</span>
+        <button
+            type="button"
+            onClick={() => onBallChange('black')}
+        >{'Black ball'}</button>
+        <button
+            type="button"
+            onClick={() => onBeltChange(!belt)}
+        >{'Toggle belt'}</button>
         <button
             type="button"
             onClick={onToggleMute}
@@ -241,4 +252,52 @@ describe('the buzzer plays through the speakers', () => {
         expect(gain).toBe(0);
         expect(getByText('Unmute')).toBeTruthy();
     });
+});
+
+test('puts the chosen ball in front of the IR eye when the program reads IO4, and keeps it across a reload', () => {
+    let worker;
+    setWorkerFactory(() => (worker = new FakeWorker()));
+    const store = configureStore()({scratchGui: {code: {simCode: 'x = $.analogRead(4);', simDiagnostics: []}}});
+    const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+    const ir = () => worker.posted.filter(m => m.type === 'input' && (m.key === 'adc4' || m.key === 'belt'));
+    expect(getByText('with IR eye')).toBeTruthy();
+
+    fireEvent.click(getByText('Run'));
+    expect(ir()).toEqual([{type: 'input', key: 'adc4', value: 3500}]);
+
+    worker.posted = [];
+    fireEvent.click(getByText('Black ball'));
+    fireEvent.click(getByText('Reset'));
+    expect(ir()).toEqual([{type: 'input', key: 'adc4', value: 300}, {type: 'input', key: 'adc4', value: 300}]);
+});
+
+test('a program that does not read IO4 gets no IR eye input', () => {
+    let worker;
+    setWorkerFactory(() => (worker = new FakeWorker()));
+    const store = configureStore()({scratchGui: {code: {simCode: 'code-1', simDiagnostics: []}}});
+    const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+    fireEvent.click(getByText('Run'));
+    expect(getByText('no IR eye')).toBeTruthy();
+    expect(worker.posted.filter(m => m.key === 'adc4' || m.key === 'belt')).toEqual([]);
+});
+
+test('a lesson graded on the egg belt opens with the belt, and taking it away brings the ball back', () => {
+    let worker;
+    setWorkerFactory(() => (worker = new FakeWorker()));
+    const lesson = {steps: [{rules: []}, {rules: [{kind: 'sorted', streak: 6}]}]};
+    const store = configureStore()({scratchGui: {
+        code: {simCode: 'x = $.analogRead(4);', simDiagnostics: []},
+        lesson: {lesson}
+    }});
+    const {getByText} = render(<Provider store={store}><SimPanel /></Provider>);
+    const ir = () => worker.posted.filter(m => m.type === 'input' && (m.key === 'adc4' || m.key === 'belt'));
+    expect(getByText('belt on')).toBeTruthy();
+
+    fireEvent.click(getByText('Run'));
+    expect(ir()).toEqual([{type: 'input', key: 'belt', value: 1}]);
+
+    worker.posted = [];
+    fireEvent.click(getByText('Toggle belt'));
+    expect(getByText('belt off')).toBeTruthy();
+    expect(ir()).toEqual([{type: 'input', key: 'belt', value: 0}, {type: 'input', key: 'adc4', value: 3500}]);
 });
