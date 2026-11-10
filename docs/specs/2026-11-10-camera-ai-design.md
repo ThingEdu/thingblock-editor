@@ -356,9 +356,10 @@ Luật chấm mới cho `checker/rules.ts`: `cử chỉ [X] → [hành động]`
 
 Nhánh `feat/camera-ai-demo` (tách từ `docs/camera-ai-design` ← `origin/develop`). Đã chạy được end-to-end trong trình duyệt bằng Chromium + camera giả (ảnh cử chỉ mẫu của MediaPipe), kiểm bằng Playwright:
 
-- VM: extension builtin `cameraAi` (`packages/thingblock-vm/src/extensions/scratch3_camera_ai/`: `index.ts`, `vision-state.ts`, `playground.ts`), 26 khối: Camera 4 · Tay 6 · Sân chơi 8 · Điểm 7. 9 test tap (`test/unit/extension_camera_ai.ts`).
+- VM: extension builtin `cameraAi` (`packages/thingblock-vm/src/extensions/scratch3_camera_ai/`: `index.ts`, `vision-state.ts`, `playground.ts`), 30 khối: Camera 4 · Tay 6 · Sân chơi 12 (có `setVelocity`, `setGravity`, `atEdge`, hat `whenTouching` từ 10/11 chiều) · Điểm 7. 13 test tap (`test/unit/extension_camera_ai.ts`).
+- Vật lý: vật có `vx/vy` (đơn vị/giây) và trọng lực chung; sân tự bước 30 Hz khi có vật chuyển động (`setInterval`, bước tối đa 0,1 s để tab bị tạm dừng không "dịch chuyển tức thời"), vật chạm mép thì mất vận tốc hướng đó; Dừng đóng băng mọi thứ. Hat `whenTouching [tên] [mục tiêu]` khớp theo **TEXT** (shadow chữ của tên vật) + **TARGET** (menu `acceptReporters: true` nên nằm trong input, runtime mới gom field của shadow để khớp); mục tiêu = ngón trỏ / lòng bàn tay / cổ tay (tay bất kỳ) hoặc 4 mép. Chưa có chạm vật–vật.
 - GUI: bảng **Sân chơi** (`containers/playground-panel.jsx`, `components/playground-panel/`) hiện khi extension được thêm; camera + GestureRecognizer chạy ở **luồng chính** (`lib/vision/hand-tracker.js`, GPU → CPU fallback) chứ chưa đưa vào Web Worker như §3.2 đề xuất — việc của M1. Mô hình tải bằng `scripts/fetch-ai-models.sh`, WASM chép qua webpack.
-- Ví dụ "Bắt Dế": `docs/specs/camera-ai-demo/bat-de.tb` (bóng theo ngón trỏ, chạm dế +1 điểm, đếm ngược 30 s, nắm tay thì dế nhảy). Chưa đưa vào `examples/index.json` vì bộ sinh ví dụ (`scripts/examples/dsl.mjs`) chưa biết khối extension.
+- Ví dụ (`docs/specs/camera-ai-demo/*.tb`, sinh bằng script Python tay; chưa đưa vào `examples/index.json` vì `scripts/examples/dsl.mjs` chưa biết khối extension): **Bắt Dế** (bóng theo ngón trỏ, chạm dế +1, 30 s, nắm tay thì dế nhảy), **Hứng Mưa** (rổ theo lòng bàn tay, giọt rơi −150/s, chạm tay +1, chạm đáy −1, 35 khối), **Đỡ Bóng** (trọng lực 250, chạm lòng bàn tay bật lên 330/s, chạm đáy báo điểm rồi chơi lại, 25 khối), **Oẳn tù tì** (đếm 3-2-1, máy chọn ngẫu nhiên qua danh sách, so cử chỉ nắm/xoè/chữ V, 56 khối). Cả bốn đã kiểm đầu-cuối bằng camera giả (Playwright) và trong Chrome thật 31–43 fps trên Mac mini M4.
 - Chưa làm: Tư thế, Mặt, Dạy máy, Vật thể, worker + watchdog, tệp phát lại, bài học, Tauri (quyền camera 3 hệ), đo fps trên laptop trường.
 
 ### Gợi ý ví dụ từ Day of AI / App Inventor (khảo sát 10/11)
@@ -423,6 +424,28 @@ Tiêu chí chọn: chơi bằng cơ thể, có điểm và đồng hồ, mỗi t
 
 ### 12.5 Đề xuất thứ tự làm
 
-1. Thi công `setVelocity`, `setGravity`, `whenTouching`, `touching` mép → dựng sp-02, sp-03, sp-04, sp-06 ngay trên bản demo (mỗi trò ≤ 15 khối).
+1. ✅ 10/11 chiều: `setVelocity`, `setGravity`, `whenTouching`, `atEdge` đã có; sp-02 Hứng Mưa, sp-03 Đỡ Bóng, sp-06 Oẳn tù tì đã dựng (xem §11). Còn sp-04 Bóng chuyền, sp-05 Hái sao, sp-07, sp-08.
 2. M2 Tư thế: thêm `whenJump` và `poseSpeed` (tốc độ bộ phận, đơn vị/giây) để sp-09, sp-10, sp-12 không phải tự tính hiệu toạ độ.
 3. Mỗi trò kèm tệp phát lại landmark để bộ chấm chạy không cần camera (§5), và ghi Nguồn (NeoAiSport MIT, Dancing with AI, App Inventor) trong NOTICE.
+
+## 13. Máy không có webcam: điện thoại làm camera qua Wi-Fi (đề xuất 10/11)
+
+Nhu cầu: nhiều máy bàn ở trường không có webcam; điện thoại thì ai cũng có và đặt được ở bất kỳ góc nào (nhìn cả người để chơi tư thế, hoặc nhìn bàn để chơi vật thể).
+
+### 13.1 Ba cách, xếp theo độ dễ
+
+| Cách | Cần làm trong ThingBlock | Ưu | Nhược |
+|---|---|---|---|
+| **A. App webcam ảo** (macOS Continuity Camera với iPhone; Windows/Linux: DroidCam, Iriun, Camo, EpocCam) | **Không** — điện thoại hiện ra như một webcam thường, `getUserMedia` thấy ngay; chỉ cần khối `cameraSelect` (§4.1, chưa làm) để chọn | độ trễ thấp (USB hoặc Wi-Fi, 30 fps), có app miễn phí, không đụng mã | phải cài app ở cả hai đầu; phiên bản miễn phí dán logo/giới hạn độ phân giải; Linux cần driver v4l2loopback |
+| **B. Luồng MJPEG từ app IP camera** ("IP Webcam" Android, DroidCam HTTP `/video`, mọi IP cam gia đình có MJPEG) | khối `dùng camera ở địa chỉ [http://192.168.1.23:8080/video]`; bảng Sân chơi có ô nhập địa chỉ + nút quét QR; GUI nạp luồng vào `<img>` → vẽ lên canvas → `captureStream()` → cùng đường ống tracker như webcam | một đầu không cần cài gì; dùng được cả IP cam gắn tường | **CORS + canvas "taint"**: app IP cam không gửi `Access-Control-Allow-Origin`, canvas bị đánh dấu bẩn thì `captureStream`/WebGL ném `SecurityError` → **phải đi qua proxy ở link helper** (`/camera-proxy?url=…`, cùng origin với editor, thêm header CORS); MJPEG 640×480 trên Wi-Fi ≈ 15–25 fps, trễ 100–250 ms; trong Tauri cần cho phép origin LAN |
+| **C. Trang "ThingBlock Cam" trên điện thoại + WebRTC** | editor hiện mã QR → điện thoại mở trang do link helper phục vụ, trang đó `getUserMedia` rồi đẩy video bằng WebRTC về editor; link helper làm signaling (WebSocket) | độ trễ thấp nhất (< 100 ms), 30 fps, có thể gửi luôn kết quả landmark từ điện thoại để máy yếu khỏi chạy mô hình | **điện thoại chỉ cho mở camera trên HTTPS** → link helper phải phát chứng chỉ tự ký và điện thoại phải tin nó (iOS: cài profile, phiền); hoặc dùng `mkcert` lúc cài ThingBlock; công sức lớn nhất |
+
+### 13.2 Đề xuất
+
+1. **Ngay (0 ngày):** viết hướng dẫn cách A vào bài học/CHAY-DEMO: Mac + iPhone dùng Continuity Camera (có sẵn, không cài gì); Windows dùng DroidCam/Iriun. Thêm khối `cameraSelect` và menu chọn camera trên bảng Sân chơi để chọn đúng thiết bị khi máy có nhiều camera.
+2. **M1 (2–3 ngày):** cách B với proxy trong link helper. Giao diện: ô "Camera qua mạng" trên bảng Sân chơi, dán địa chỉ hoặc quét QR mà app IP Webcam hiện; lưu địa chỉ theo máy. Khối: `dùng camera [webcam/địa chỉ…]`. Spike cần đo: fps/độ trễ MJPEG trên Wi-Fi trường, Tauri có cho `<img>` tải từ LAN không, proxy giữ kết nối multipart có ổn khi điện thoại ngủ màn hình không.
+3. **M2 trở đi (nếu cần):** cách C chỉ khi cách B không đủ nhanh cho trò tư thế, hoặc khi muốn chạy mô hình trên điện thoại.
+
+### 13.3 Lưu ý riêng tư
+
+Luồng camera chỉ đi trong mạng nội bộ qua link helper trên chính máy đó; không có máy chủ ngoài. Khi dùng cách B, ghi rõ trong bảng rằng app IP Webcam đang phát video cho mọi máy cùng Wi-Fi nếu không đặt mật khẩu; bài học dặn tắt app sau khi chơi.
