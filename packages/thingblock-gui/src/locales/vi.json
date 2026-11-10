@@ -199,6 +199,7 @@
     "gui.simBoard.buzzerOn": "Còi: đang kêu {hz} Hz",
     "gui.simBoard.buzzerOff": "Còi: tắt",
     "gui.extension.cameraAi.description": "Nhìn thấy bàn tay và cử chỉ qua webcam; chơi game trên sân chơi.",
+    "gui.extension.thingEdges.description": "Lập trình đèn, công tắc và remote hồng ngoại của ThingEdges Desktop trên máy này.",
     "gui.playgroundPanel.title": "Sân chơi",
     "gui.playgroundPanel.cameraOn": "Camera",
     "gui.playgroundPanel.cameraOff": "Tắt",

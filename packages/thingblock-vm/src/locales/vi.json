@@ -40,7 +40,7 @@
     "thingEdges.measure.temperature": "nhiệt độ",
     "thingEdges.menu.noDevice": "(không có)",
     "thingEdges.menu.notConnected": "(chưa kết nối)",
-    "thingEdges.name": "Nhà thông minh",
+    "thingEdges.name": "Thing Smart",
     "thingEdges.pressRemote": "bấm [KEY] trên điều khiển [REMOTE]",
     "thingEdges.sensorValue": "[MEASURE] của [SENSOR]",
     "thingEdges.setAcTemperature": "đặt [AC] ở [VALUE] °C",
