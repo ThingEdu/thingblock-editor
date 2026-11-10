@@ -1,0 +1,89 @@
+{
+  "groups": ["Camera AI"],
+  "examples": [
+    {
+      "id": "cam-01-tay-em-tren-san-choi",
+      "file": "cam-01-tay-em-tren-san-choi.tb",
+      "title": "Tay em trên sân chơi",
+      "group": "Camera AI",
+      "level": 1,
+      "description": "Ngôi sao đi theo ngón trỏ; sân chơi gọi tên cử chỉ em làm.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
+    },
+    {
+      "id": "cam-02-bat-de",
+      "file": "cam-02-bat-de.tb",
+      "title": "Bắt Dế",
+      "group": "Camera AI",
+      "level": 1,
+      "description": "Quả bóng theo ngón trỏ; chạm con dế để ghi điểm trong 30 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "Ý tưởng trò Bắt Dế của NeoAiSport (ThingEdu)"
+    },
+    {
+      "id": "cam-03-hung-mua",
+      "file": "cam-03-hung-mua.tb",
+      "title": "Hứng Mưa",
+      "group": "Camera AI",
+      "level": 2,
+      "description": "Rổ theo lòng bàn tay; hứng giọt mưa +1, để rơi xuống đáy −1, trong 30 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "Ý tưởng trò Hứng Mưa của NeoAiSport (ThingEdu)"
+    },
+    {
+      "id": "cam-04-do-bong",
+      "file": "cam-04-do-bong.tb",
+      "title": "Đỡ Bóng",
+      "group": "Camera AI",
+      "level": 2,
+      "description": "Bóng rơi theo trọng lực; đưa lòng bàn tay vào bóng để đỡ nó bay lên.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "Ý tưởng trò Đỡ Bóng của NeoAiSport (ThingEdu)"
+    },
+    {
+      "id": "cam-05-hai-sao-ne-bom",
+      "file": "cam-05-hai-sao-ne-bom.tb",
+      "title": "Hái sao né bom",
+      "group": "Camera AI",
+      "level": 2,
+      "description": "Lướt ngón trỏ qua ngôi sao +1, chạm quả bom −3; bom đổi chỗ mỗi 2 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "Ý tưởng FingerFoodNinja của Dancing with AI (MIT RAISE)"
+    },
+    {
+      "id": "cam-06-oan-tu-ti",
+      "file": "cam-06-oan-tu-ti.tb",
+      "title": "Oẳn tù tì",
+      "group": "Camera AI",
+      "level": 3,
+      "description": "Đếm 3-2-1 rồi ra búa ✊, bao ✋ hoặc kéo ✌️; máy chọn ngẫu nhiên, bảng điểm em và máy.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "Trò chơi dân gian oẳn tù tì"
+    },
+    {
+      "id": "cam-07-phan-xa-cu-chi",
+      "file": "cam-07-phan-xa-cu-chi.tb",
+      "title": "Phản xạ cử chỉ",
+      "group": "Camera AI",
+      "level": 3,
+      "description": "Sân chơi gọi một cử chỉ; làm đúng thật nhanh để ghi điểm trong 30 giây.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Webcam, hoặc chuột nếu máy không có webcam"],
+      "source": "ThingBlock Camera AI"
+    }
+  ]
+}

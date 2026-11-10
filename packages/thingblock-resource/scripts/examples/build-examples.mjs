@@ -2,18 +2,20 @@
 //
 //   node scripts/examples/build-examples.mjs
 //
-// The K12 and FanRoc programs live in lessons-k12.mjs, the music ones in music.mjs. The ThingBot Sim programs are the reference
+// The K12 and FanRoc programs live in lessons-k12.mjs, the music ones in music.mjs, the Camera AI games
+// (no board, written to src/examples/camera-ai/) in camera-ai.mjs. The ThingBot Sim programs are the reference
 // solutions (`example`) of the ten thingbot-sim lessons, captured in sim-lessons.json.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as prettier from 'prettier'
+import { CAMERA_AI_EXAMPLES } from './camera-ai.mjs'
 import { K12_LESSONS } from './lessons-k12.mjs'
 import { MUSIC_LESSONS } from './music.mjs'
 import { toProject, toTb } from './tb-builder.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const OUT = resolve(HERE, '..', '..', 'src', 'examples', 'thingbot')
+const EXAMPLES = resolve(HERE, '..', '..', 'src', 'examples')
 const SIM = 'Mô phỏng ThingBot Sim'
 
 /** Extra metadata for the thingbot-sim lessons; the program and title come from the lesson itself. */
@@ -98,33 +100,47 @@ const simExamples = Object.entries(simLessons.lessons).map(([key, lesson]) => {
   }
 })
 
-rmSync(OUT, { recursive: true, force: true })
-mkdirSync(OUT, { recursive: true })
-
-const examples = []
-for (const lesson of [...K12_LESSONS, ...MUSIC_LESSONS, ...simExamples]) {
-  const project = toProject(lesson)
-  const file = `${lesson.id}.tb`
-  writeFileSync(join(OUT, file), await toTb(project))
-  examples.push({
-    id: lesson.id,
-    file,
-    title: lesson.title,
-    group: lesson.group,
-    level: lesson.level,
-    description: lesson.description,
-    device: project.board.device,
-    peripherals: project.board.peripherals,
-    hardware: lesson.hardware,
-    source: lesson.source,
-  })
+/**
+ * Write one device folder: its `.tb` files and its index.json.
+ * @param {string} folder The folder under src/examples.
+ * @param {string[]} groups The groups, in the order the library shows them.
+ * @param {object[]} programs The examples, each an index record plus its program.
+ */
+async function writeFolder(folder, groups, programs) {
+  const out = join(EXAMPLES, folder)
+  rmSync(out, { recursive: true, force: true })
+  mkdirSync(out, { recursive: true })
+  const examples = []
+  for (const lesson of programs) {
+    const project = toProject(lesson)
+    const file = `${lesson.id}.tb`
+    writeFileSync(join(out, file), await toTb(project))
+    examples.push({
+      id: lesson.id,
+      file,
+      title: lesson.title,
+      group: lesson.group,
+      level: lesson.level,
+      description: lesson.description,
+      device: project.board?.device ?? null,
+      peripherals: project.board?.peripherals ?? [],
+      hardware: lesson.hardware,
+      source: lesson.source,
+    })
+  }
+  // Format with the package's Prettier config so the generated index passes `npm run lint` as written.
+  const prettierOptions = await prettier.resolveConfig(join(out, 'index.json'))
+  writeFileSync(
+    join(out, 'index.json'),
+    await prettier.format(JSON.stringify({ groups, examples }), { ...prettierOptions, parser: 'json' }),
+  )
+  console.log(`Wrote ${examples.length} examples to ${out}`)
 }
 
-const index = { groups: ['K12 cơ bản', 'Âm nhạc', SIM, 'FanRoc'], examples }
-// Format with the package's Prettier config so the generated index passes `npm run lint` as written.
-const prettierOptions = await prettier.resolveConfig(join(OUT, 'index.json'))
-writeFileSync(
-  join(OUT, 'index.json'),
-  await prettier.format(JSON.stringify(index), { ...prettierOptions, parser: 'json' }),
+await writeFolder(
+  'thingbot',
+  ['K12 cơ bản', 'Âm nhạc', SIM, 'FanRoc'],
+  [...K12_LESSONS, ...MUSIC_LESSONS, ...simExamples],
 )
-console.log(`Wrote ${examples.length} examples to ${OUT}`)
+// Camera AI runs in the editor without a board, so its projects save none and live in their own folder.
+await writeFolder('camera-ai', ['Camera AI'], CAMERA_AI_EXAMPLES)

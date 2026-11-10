@@ -73,18 +73,26 @@ device, peripherals, hardware, source}]}`). The build copies them to `dist/thing
 and writes one merged `examples/index.json` whose `file` paths are relative to that folder; the editor
 reads it from `vm.devices.getExamplesOrigin()`.
 
+`src/examples/camera-ai/` is the one folder that is not a device: its games run in the editor with the
+Camera AI extension and no board, so their projects save no `board` and their index entries have
+`device: null`. Opening one leaves the editor without a board, where Camera AI lives, and loads the
+extension from the blocks, so the example is ready to play at once.
+
 The `.tb` files are generated, not hand-edited:
 
 ```sh
-node scripts/examples/build-examples.mjs     # rewrite src/examples/thingbot/*.tb + index.json
+node scripts/examples/build-examples.mjs     # rewrite src/examples/{thingbot,camera-ai}/*.tb + index.json
 npx tsx scripts/check-examples.mjs            # generate each sketch with the real generators and compile it
 ```
 
 `scripts/examples/lessons-k12.mjs` writes the K12 and FanRoc programs with the block helpers in
-`dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons. `check-examples`
+`dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons; `camera-ai.mjs`
+holds the Camera AI games. `check-examples` (which skips the boardless Camera AI games)
 needs `arduino-cli` (`ARDUINO_CLI`) and the ESP32 core (`ARDUINO_DIRECTORIES_DATA`), so it is run by hand;
 `test/examples.test.ts` covers the rest in `npm test` (every block registered, field values valid, inputs
-type-compatible, sketch generated).
+type-compatible, sketch generated). `test/examples-camera-ai.test.ts` loads each Camera AI game in the
+built VM (`thingblock-vm/dist/node`, so `npm run build:libs` first) and plays it with a synthetic hand
+until it scores.
 
 ## Tutorials
 

@@ -50,6 +50,7 @@
     "gui.deviceControls.stop": "Dừng",
     "gui.deviceControls.upload": "Nạp code",
     "gui.exampleLibrary.groupFanRoc": "FanRoc",
+    "gui.exampleLibrary.groupCameraAi": "Camera AI (không cần mạch)",
     "gui.exampleLibrary.groupK12": "K12 cơ bản",
     "gui.exampleLibrary.groupSim": "Mô phỏng ThingBot Sim",
     "gui.exampleLibrary.title": "Ví dụ",

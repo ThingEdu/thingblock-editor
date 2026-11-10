@@ -24,7 +24,7 @@ interface Example {
   group: string
   level: number
   description: string
-  device: string
+  device: string | null
   peripherals: string[]
   hardware: string[]
   source: string
@@ -221,9 +221,11 @@ describe('bundled examples', () => {
   it('copies every example into the served pack with one merged index', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
     const merged = copyExamples(join(__dirname, '..', 'src', 'examples'), out)
-    expect(merged.examples).toHaveLength(36)
+    // The ThingBot examples and the boardless Camera AI ones, each under its own folder.
+    expect(merged.examples).toHaveLength(36 + 7)
+    expect(merged.groups).toContain('Camera AI')
     for (const example of merged.examples as Example[]) {
-      expect(example.file.startsWith('thingbot/')).toBe(true)
+      expect(example.file).toMatch(example.device === 'thingbot' ? /^thingbot\// : /^camera-ai\//)
       expect(existsSync(join(out, example.file))).toBe(true)
     }
     expect(JSON.parse(readFileSync(join(out, 'index.json'), 'utf8'))).toEqual(merged)

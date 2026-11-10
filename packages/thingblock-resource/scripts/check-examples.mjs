@@ -60,6 +60,8 @@ for (const deviceDir of readdirSync(EXAMPLES)) {
     if (only && example.id !== only) continue
     const zip = await JSZip.loadAsync(readFileSync(join(EXAMPLES, deviceDir, example.file)))
     const project = JSON.parse(await zip.file('project.json').async('string'))
+    // A boardless example (Camera AI) runs in the editor and has no sketch to compile.
+    if (!project.board) continue
     const device = devices.get(project.board.device)
     const active = [...new Set([...device.extensions, ...project.board.peripherals])]
 
