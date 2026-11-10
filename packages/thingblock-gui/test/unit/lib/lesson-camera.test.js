@@ -53,3 +53,18 @@ test('grades a step on the playground', () => {
     expect(gradeCameraStep(step, seen, 0).every(r => r.ok)).toBe(true);
     expect(gradeCameraStep(step, {...seen, cameraOn: false}, 0).filter(r => !r.ok)).toHaveLength(3);
 });
+
+test('sees the head from the pose and counts a flap or nod for two seconds', () => {
+    const landmarks = Array.from({length: 33}, () => ({x: 0.5, y: 0.9, visibility: 0.1}));
+    landmarks[0] = {x: 0.5, y: 0.5, visibility: 0.99};
+    landmarks[2] = {x: 0.47, y: 0.48, visibility: 0.99};
+    landmarks[5] = {x: 0.53, y: 0.48, visibility: 0.99};
+    const vision = {hands: [], pose: {landmarks}, mirror: true, t: 1000};
+    const seen = {cameraOn: true, vision, playground: PLAYGROUND, motions: {flap: 0}};
+    const snapshot = cameraSnapshot(seen, 1500);
+    expect(snapshot.head).toMatchObject({x: 0, y: 0, tilt: 0});
+    expect(snapshot.motions).toEqual(['flap']);
+    expect(cameraSnapshot(seen, 2500).motions).toEqual([]);
+    const step = {rules: [{kind: 'headSeen'}, {kind: 'headTilt', dir: 'straight'}, {kind: 'motion', motion: 'flap'}]};
+    expect(gradeCameraStep(step, seen, 1500).every(r => r.ok)).toBe(true);
+});

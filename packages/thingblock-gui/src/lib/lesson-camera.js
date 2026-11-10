@@ -3,13 +3,16 @@
  * tracker sees, the objects, scores and message the program put there), so the lesson panel grades them
  * here from the VM's Camera AI events instead of asking the simulator worker.
  */
-import {evaluateCameraRules, handsOnStage, isCameraRule} from '@thingblock/thingblock-sim/checker';
+import {evaluateCameraRules, handsOnStage, headOnStage, isCameraRule} from '@thingblock/thingblock-sim/checker';
 
 /** How long after Run a miss is still "checking…" rather than "not yet". */
 export const CAMERA_CHECK_WINDOW_MS = 4000;
 
 /** Hands older than this are gone: the tracker stopped, as the extension's blocks judge too. */
 const STALE_MS = 1000;
+
+/** A flap or a nod counts for a rule this long after it happened. */
+const MOTION_MS = 2000;
 
 /**
  * Whether a step is graded on the playground.
@@ -24,16 +27,22 @@ export const isCameraStep = step => step.rules.length > 0 && step.rules.every(is
  * @param {boolean} seen.cameraOn The last camera status.
  * @param {?{hands: Array<object>, mirror: boolean, t: number}} seen.vision The last tracker frame.
  * @param {{objects: Array<object>, scores: Array<number>, say: string}} seen.playground The last playground.
+ * @param {Object<string, number>} [seen.motions] When each movement ('flap', 'nod') last happened, in ms.
  * @param {number} now The time now, in ms.
  * @returns {object} The checker's `CameraSnapshot`.
  */
-export const cameraSnapshot = ({cameraOn, vision, playground}, now) => ({
-    cameraOn,
-    hands: cameraOn && vision && now - vision.t <= STALE_MS ? handsOnStage(vision) : [],
-    objects: playground.objects,
-    scores: playground.scores,
-    say: playground.say
-});
+export const cameraSnapshot = ({cameraOn, vision, playground, motions = {}}, now) => {
+    const fresh = cameraOn && vision && now - vision.t <= STALE_MS;
+    return {
+        cameraOn,
+        hands: fresh ? handsOnStage(vision) : [],
+        head: fresh ? headOnStage(vision) : null,
+        motions: Object.keys(motions).filter(kind => now - motions[kind] <= MOTION_MS),
+        objects: playground.objects,
+        scores: playground.scores,
+        say: playground.say
+    };
+};
 
 /**
  * The verdict box for a Camera AI step: passed as soon as every rule holds; before any Run, idle; for a

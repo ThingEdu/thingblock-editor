@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateCameraRules, handsOnStage, type CameraSnapshot } from '../../src/checker/camera'
+import { evaluateCameraRules, handsOnStage, headOnStage, type CameraSnapshot } from '../../src/checker/camera'
 import { evaluateLogRules } from '../../src/checker/evaluate'
 import { isCameraRule, parseRule, RuleSyntaxError, type CameraRule } from '../../src/checker/rules'
 
@@ -17,6 +17,12 @@ describe('Camera AI rules', () => {
     ['điểm người chơi 2 >= 3', { kind: 'score', player: 2, op: '≥', n: 3 }],
     ['điểm người chơi 1 = 0', { kind: 'score', player: 1, op: '=', n: 0 }],
     ['sân chơi nói "Nắm tay"', { kind: 'say', text: 'Nắm tay' }],
+    ['thấy đầu', { kind: 'headSeen' }],
+    ['đầu nghiêng trái', { kind: 'headTilt', dir: 'left' }],
+    ['Đầu nghiêng thẳng', { kind: 'headTilt', dir: 'straight' }],
+    ['"bong" chạm đầu', { kind: 'touch', name: 'bong', part: 'head' }],
+    ['vỗ hai tay', { kind: 'motion', motion: 'flap' }],
+    ['gật đầu', { kind: 'motion', motion: 'nod' }],
   ])('%s', (text, rule) => {
     const parsed = parseRule(text)
     expect(parsed).toEqual(rule)
@@ -77,6 +83,8 @@ describe('evaluateCameraRules', () => {
     objects: [{ name: 'sao', x: 10, y: 0, size: 50 }],
     scores: [2, 0],
     say: 'Nắm tay ✊',
+    head: null,
+    motions: [],
     ...over,
   })
 
@@ -112,5 +120,52 @@ describe('evaluateCameraRules', () => {
     const edge = snapshot({ objects: [{ name: 'sao', x: 39, y: 0, size: 50 }] })
     expect(evaluateCameraRules(rules('"sao" chạm ngón trỏ'), edge)[0].ok).toBe(true)
     expect(evaluateCameraRules(rules('tay xòe'), snapshot())[0].message).toMatch(/xòe tay/)
+  })
+})
+
+describe('head rules', () => {
+  /**
+   * A pose with the nose at a frame point and the eye on the frame's right lowered by `dy`.
+   * @param x Frame x of the nose.
+   * @param y Frame y of the nose.
+   * @param dy How much lower the right eye is, in frame heights.
+   * @returns The 33 landmarks the pose model would report.
+   */
+  const poseAt = (x: number, y: number, dy = 0) => {
+    const landmarks = Array.from({ length: 33 }, () => ({ x, y: 0.95, visibility: 0.1 }))
+    landmarks[0] = { x, y, visibility: 0.99 }
+    landmarks[2] = { x: x - 0.03, y: y - 0.02, visibility: 0.99 }
+    landmarks[5] = { x: x + 0.03, y: y - 0.02 + dy, visibility: 0.99 }
+    return { landmarks }
+  }
+  const rules = (...texts: string[]) => texts.map((t) => parseRule(t) as CameraRule)
+  const base: CameraSnapshot = {
+    cameraOn: true,
+    hands: [],
+    head: null,
+    motions: [],
+    objects: [{ name: 'bong', x: 0, y: 0, size: 50 }],
+    scores: [0, 0],
+    say: '',
+  }
+
+  it('finds the head like the head blocks: the nose on the stage, leaning by the eyes', () => {
+    expect(headOnStage({ hands: [], mirror: false, pose: poseAt(0.5, 0.5) })).toMatchObject({ x: 0, y: 0, tilt: 0 })
+    expect(headOnStage({ hands: [], mirror: false, pose: poseAt(0.5, 0.5, 0.04) })?.tilt).toBeGreaterThan(15)
+    expect(headOnStage({ hands: [], mirror: true, pose: poseAt(0.5, 0.5, 0.04) })?.tilt).toBeLessThan(-15)
+    expect(headOnStage({ hands: [], mirror: true })).toBeNull()
+  })
+
+  it('grades seeing the head, a lean, a head touch and the movements', () => {
+    const head = headOnStage({ hands: [], mirror: true, pose: poseAt(0.5, 0.5, 0.04) })
+    const ok = evaluateCameraRules(rules('thấy đầu', 'đầu nghiêng trái', '"bong" chạm đầu', 'vỗ hai tay'), {
+      ...base,
+      head,
+      motions: ['flap'],
+    })
+    expect(ok.map((r) => r.message)).toEqual(['', '', '', ''])
+    const missed = evaluateCameraRules(rules('thấy đầu', 'đầu nghiêng phải', 'gật đầu'), { ...base, head: null })
+    expect(missed.every((r) => !r.ok && r.message !== '')).toBe(true)
+    expect(evaluateCameraRules(rules('đầu nghiêng phải'), { ...base, head })[0].message).toMatch(/phải/)
   })
 })

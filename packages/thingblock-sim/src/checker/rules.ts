@@ -33,11 +33,14 @@ export type CameraRule =
   | { kind: 'touch'; name: string; part: HandPart }
   | { kind: 'score'; player: 1 | 2; op: CompareOp; n: number }
   | { kind: 'say'; text: string }
+  | { kind: 'headSeen' }
+  | { kind: 'headTilt'; dir: 'left' | 'right' | 'straight' }
+  | { kind: 'motion'; motion: 'flap' | 'nod' }
 
 export type DistanceOp = '<' | '≤' | '>' | '≥'
 export type CompareOp = DistanceOp | '='
 export type CameraGesture = 'fist' | 'open' | 'victory' | 'point_up' | 'thumb_up' | 'thumb_down' | 'i_love_you'
-export type HandPart = 'indexTip' | 'palm' | 'wrist'
+export type HandPart = 'indexTip' | 'palm' | 'wrist' | 'head'
 
 export const CAMERA_RULE_KINDS: readonly string[] = [
   'cameraOn',
@@ -47,6 +50,9 @@ export const CAMERA_RULE_KINDS: readonly string[] = [
   'touch',
   'score',
   'say',
+  'headSeen',
+  'headTilt',
+  'motion',
 ]
 
 export const isCameraRule = (rule: Rule): rule is CameraRule => CAMERA_RULE_KINDS.includes(rule.kind)
@@ -68,6 +74,7 @@ export const HAND_PARTS: Record<string, HandPart> = {
   'ngón trỏ': 'indexTip',
   'lòng bàn tay': 'palm',
   'cổ tay': 'wrist',
+  đầu: 'head',
 }
 
 /** Words a lesson may name a PS2 button by: the pad's symbol or a Vietnamese name, to the PS2X constant. */
@@ -185,6 +192,12 @@ export function parseRule(text: string): Rule {
   }
   if (t === 'camera bật') return { kind: 'cameraOn' }
   if (t === 'thấy bàn tay') return { kind: 'handSeen' }
+  if (t === 'thấy đầu') return { kind: 'headSeen' }
+  if ((m = /^đầu nghiêng (trái|phải|thẳng)$/.exec(t))) {
+    return { kind: 'headTilt', dir: m[1] === 'trái' ? 'left' : m[1] === 'phải' ? 'right' : 'straight' }
+  }
+  if (t === 'vỗ hai tay') return { kind: 'motion', motion: 'flap' }
+  if (t === 'gật đầu') return { kind: 'motion', motion: 'nod' }
   if ((m = /^tay (.+)$/.exec(t))) {
     const gesture = CAMERA_GESTURES[m[1]] as CameraGesture | undefined
     if (!gesture) throw new RuleSyntaxError(text, `cử chỉ được hiểu: ${Object.keys(CAMERA_GESTURES).join(', ')}`)
@@ -227,6 +240,7 @@ export function parseRule(text: string): Rule {
       '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N%", "servo S1 ở G độ ± D", "servo S1 quét từ A đến B độ", ' +
       '\'OLED hiện "…"\', \'OLED hiện đúng "…"\', \'OLED hiện "…" ở y N cỡ 12x16\', ' +
       '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên"; Camera AI: "camera bật", "thấy bàn tay", ' +
-      '"tay nắm", \'sân chơi có "tên"\', \'"tên" chạm ngón trỏ\', "điểm người chơi 1 ≥ N", \'sân chơi nói "…"\'',
+      '"tay nắm", \'sân chơi có "tên"\', \'"tên" chạm ngón trỏ\', "điểm người chơi 1 ≥ N", \'sân chơi nói "…"\', ' +
+      '"thấy đầu", "đầu nghiêng trái/phải/thẳng", \'"tên" chạm đầu\', "vỗ hai tay", "gật đầu"',
   )
 }

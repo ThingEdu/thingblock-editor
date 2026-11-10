@@ -12,6 +12,7 @@ import {closeLesson, goToStep, markStepPassed, setCheck, showNextHint} from '../
 const CAMERA_STATUS = 'CAMERA_AI_CAMERA_STATUS';
 const VISION_RESULTS = 'CAMERA_AI_VISION_RESULTS';
 const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE';
+const MOTION = 'CAMERA_AI_MOTION';
 const PROJECT_RUN_START = 'PROJECT_RUN_START';
 /** How often a Camera AI step is graded; the playground changes with every hand frame. */
 const CAMERA_GRADE_MS = 200;
@@ -37,6 +38,7 @@ const LessonPanel = ({
         cameraOn: false,
         vision: null,
         playground: {objects: [], scores: [0, 0], say: ''},
+        motions: {},
         ranAt: null
     });
     // The worker holds exactly the workspace's program: the Simulator panel loaded it after the last edit.
@@ -109,11 +111,16 @@ const LessonPanel = ({
         const onRun = () => {
             seen.ranAt = Date.now();
         };
+        const onMotion = motion => {
+            seen.motions = {...seen.motions, [motion.kind]: Date.now()};
+        };
         vm.events.on(CAMERA_STATUS, onStatus);
         vm.events.on(VISION_RESULTS, onVision);
         vm.events.on(PLAYGROUND_UPDATE, onPlayground);
         vm.events.on(PROJECT_RUN_START, onRun);
+        vm.events.on(MOTION, onMotion);
         return () => {
+            vm.events.off(MOTION, onMotion);
             vm.events.off(CAMERA_STATUS, onStatus);
             vm.events.off(VISION_RESULTS, onVision);
             vm.events.off(PLAYGROUND_UPDATE, onPlayground);

@@ -22,12 +22,23 @@ export interface StagePoint {
 /** A hand on the stage: its gesture and the parts the rules name. */
 export interface StageHand {
   gesture: string
-  parts: Record<HandPart, StagePoint>
+  parts: Record<HandLandmarkPart, StagePoint>
+}
+
+/** The head on the stage: the nose, the lean in degrees (+ to the right), about half its width. */
+export interface StageHead {
+  x: number
+  y: number
+  tilt: number
+  radius: number
 }
 
 export interface CameraSnapshot {
   cameraOn: boolean
   hands: StageHand[]
+  head: StageHead | null
+  /** The movements the playground saw lately ('flap', 'nod'). */
+  motions: string[]
   objects: { name: string; x: number; y: number; size: number }[]
   scores: [number, number]
   say: string
@@ -36,10 +47,41 @@ export interface CameraSnapshot {
 /** One frame of the tracker's results, as the playground panel sends it to the VM. */
 export interface VisionResults {
   hands: { gesture: string; landmarks: { x: number; y: number }[] }[]
+  pose?: { landmarks: { x: number; y: number; visibility?: number }[] } | null
   mirror: boolean
 }
 
-const PART_LANDMARKS: Record<HandPart, number[]> = { indexTip: [8], palm: [0, 5, 9, 13, 17], wrist: [0] }
+type HandLandmarkPart = Exclude<HandPart, 'head'>
+const PART_LANDMARKS: Record<HandLandmarkPart, number[]> = { indexTip: [8], palm: [0, 5, 9, 13, 17], wrist: [0] }
+
+/**
+ * The head on the stage, as the extension's head blocks see it: the nose, leaning by the line of the eyes.
+ * @param results The tracker's latest frame.
+ * @returns The head, or null without a pose or with the nose unseen.
+ */
+export function headOnStage(results: VisionResults): StageHead | null {
+  const pts = results.pose?.landmarks
+  const seen = (i: number) => {
+    const p = pts?.[i]
+    return p && (p.visibility ?? 1) >= 0.5 ? p : null
+  }
+  const toStage = (p: { x: number; y: number }): StagePoint => ({
+    x: Math.round(((results.mirror ? 1 - p.x : p.x) - 0.5) * STAGE_WIDTH),
+    y: Math.round((0.5 - p.y) * STAGE_HEIGHT),
+  })
+  const noseSeen = seen(0)
+  if (!noseSeen) return null
+  const nose = toStage(noseSeen)
+  const a = seen(2)
+  const b = seen(5)
+  if (!a || !b) return { ...nose, tilt: 0, radius: 30 }
+  const [p, q] = [toStage(a), toStage(b)].sort((u, w) => u.x - w.x)
+  const tilt = Math.round((Math.atan2(p.y - q.y, q.x - p.x) * 180) / Math.PI)
+  return { ...nose, tilt, radius: Math.max(20, Math.hypot(q.x - p.x, q.y - p.y) * 1.6) }
+}
+
+/** A lean counts from this many degrees, as the extension's head blocks judge it. */
+const TILT_ON = 15
 
 /**
  * The tracked hands on the stage, mirrored like the picture, as the extension's blocks place them.
@@ -81,7 +123,15 @@ const GESTURE_NAMES: Record<string, string> = {
   i_love_you: 'I love you',
 }
 
-const PART_NAMES: Record<HandPart, string> = { indexTip: 'ngón trỏ', palm: 'lòng bàn tay', wrist: 'cổ tay' }
+const PART_NAMES: Record<HandLandmarkPart, string> = { indexTip: 'ngón trỏ', palm: 'lòng bàn tay', wrist: 'cổ tay' }
+
+const NO_HEAD =
+  'Sân chơi chưa thấy đầu em. Em hãy đứng trước camera cho thấy mặt và vai, hoặc di chuột trên sân chơi.'
+const LEAN_NAMES = { left: 'nghiêng sang trái', right: 'nghiêng sang phải', straight: 'giữ thẳng' }
+const MOTION_ASK = {
+  flap: 'Em hãy giơ hai tay lên cao rồi vỗ mạnh xuống (chơi bằng chuột: bấm phím cách).',
+  nod: 'Em hãy gật đầu chậm một lần (chơi bằng chuột: bấm phím ↓).',
+}
 
 const COMPARE: Record<CompareOp, (seen: number, n: number) => boolean> = {
   '<': (seen, n) => seen < n,
@@ -110,11 +160,15 @@ const check = (rule: CameraRule, s: CameraSnapshot): RuleResult => {
     case 'touch': {
       const o = s.objects.find((obj) => obj.name === rule.name)
       if (!o) return fail(`Sân chơi chưa có vật tên "${rule.name}".`)
+      if (rule.part === 'head') {
+        if (!s.head) return fail(NO_HEAD)
+        const near = Math.hypot(s.head.x - o.x, s.head.y - o.y) <= o.size / 2 + s.head.radius + TOUCH_MARGIN
+        return near ? PASS : fail(`"${rule.name}" chưa chạm đầu em.`)
+      }
       if (!s.hands.length) return fail(NO_HAND)
       const reach = o.size / 2 + TOUCH_MARGIN
-      const touching = s.hands.some(
-        (h) => Math.hypot(h.parts[rule.part].x - o.x, h.parts[rule.part].y - o.y) <= reach,
-      )
+      const part = rule.part
+      const touching = s.hands.some((h) => Math.hypot(h.parts[part].x - o.x, h.parts[part].y - o.y) <= reach)
       return touching ? PASS : fail(`"${rule.name}" chưa chạm ${PART_NAMES[rule.part]} của em.`)
     }
     case 'score': {
@@ -125,6 +179,17 @@ const check = (rule: CameraRule, s: CameraSnapshot): RuleResult => {
     }
     case 'say':
       return s.say.includes(rule.text) ? PASS : fail(`Sân chơi chưa nói "${rule.text}".`)
+    case 'headSeen':
+      return s.head ? PASS : fail(NO_HEAD)
+    case 'headTilt': {
+      if (!s.head) return fail(NO_HEAD)
+      const { tilt } = s.head
+      const ok =
+        rule.dir === 'left' ? tilt <= -TILT_ON : rule.dir === 'right' ? tilt >= TILT_ON : Math.abs(tilt) < TILT_ON
+      return ok ? PASS : fail(`Em hãy ${LEAN_NAMES[rule.dir]} đầu, thật chậm.`)
+    }
+    case 'motion':
+      return s.motions.includes(rule.motion) ? PASS : fail(MOTION_ASK[rule.motion])
   }
 }
 

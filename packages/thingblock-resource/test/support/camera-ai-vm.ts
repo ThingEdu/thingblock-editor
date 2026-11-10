@@ -8,7 +8,11 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { handsOnStage, type CameraSnapshot as GradedSnapshot } from '../../../thingblock-sim/src/checker/camera'
+import {
+  handsOnStage,
+  headOnStage,
+  type CameraSnapshot as GradedSnapshot,
+} from '../../../thingblock-sim/src/checker/camera'
 
 const require = createRequire(import.meta.url)
 const VM_BUNDLE = join(__dirname, '../../../thingblock-vm/dist/node/thingblock-vm.js')
@@ -18,6 +22,9 @@ const CAMERA_COMMAND = 'CAMERA_AI_CAMERA_COMMAND'
 const CAMERA_STATUS = 'CAMERA_AI_CAMERA_STATUS'
 const VISION_RESULTS = 'CAMERA_AI_VISION_RESULTS'
 const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE'
+const MOTION = 'CAMERA_AI_MOTION'
+/** A flap or a nod counts for a lesson rule this long, as in the editor's lesson panel. */
+const MOTION_MS = 2000
 const STAGE_WIDTH = 480
 const STAGE_HEIGHT = 360
 const FRAME_MS = 33
@@ -47,13 +54,28 @@ export interface HandPose {
   gesture: string
 }
 
+/** Where the player's head is, in stage units: the nose; the lean in degrees (+ right); a nod 0 … 1. */
+export interface HeadPose {
+  x: number
+  y: number
+  tilt?: number
+  nod?: number
+}
+
+/** What the camera sees on one frame: any number of hands, and a body when the player shows one. */
+export interface Frame {
+  hands: HandPose[]
+  head?: HeadPose | null
+}
+
 export interface CameraAiSnapshot {
   cameraOn: boolean
   hands: HandPose[]
+  head: HeadPose | null
   playground: PlaygroundState
 }
 
-export type Player = (snapshot: CameraAiSnapshot) => HandPose | null
+export type Player = (snapshot: CameraAiSnapshot) => HandPose | Frame | null
 
 interface EventBus {
   on(name: string, listener: (payload: never) => void): void
@@ -76,6 +98,46 @@ const loadVm = (): new () => VirtualMachine => {
   return exported.default ?? exported
 }
 
+/**
+ * A body facing the camera with the nose at a stage point, as the frame would hold it (mirrored): eyes 14
+ * apart either side, turned by the lean; ears beyond them; shoulders 70 below the nose (a nod brings the
+ * head 30 closer); the wrists at the hands when there are two, else down by the hips.
+ * @param head Where the head is.
+ * @param hands The hands on this frame.
+ * @returns The 33 pose landmarks.
+ */
+const bodyAt = (head: HeadPose, hands: HandPose[]) => {
+  const { x, y, tilt = 0, nod = 0 } = head
+  const toFrame = (p: { x: number; y: number }, visibility = 0.99) => ({
+    x: 1 - (p.x / STAGE_WIDTH + 0.5),
+    y: 0.5 - p.y / STAGE_HEIGHT,
+    z: 0,
+    visibility,
+  })
+  const hy = y - nod * 30
+  const a = (-tilt * Math.PI) / 180
+  const headPoint = (dx: number, dy: number) =>
+    toFrame({ x: x + dx * Math.cos(a) - dy * Math.sin(a), y: hy + dx * Math.sin(a) + dy * Math.cos(a) })
+  const landmarks = Array.from({ length: 33 }, () => toFrame({ x, y: -170 }, 0.2))
+  landmarks[0] = headPoint(0, 0)
+  landmarks[2] = headPoint(14, 10)
+  landmarks[5] = headPoint(-14, 10)
+  landmarks[7] = headPoint(28, 4)
+  landmarks[8] = headPoint(-28, 4)
+  landmarks[11] = toFrame({ x: x + 55, y: y - 70 })
+  landmarks[12] = toFrame({ x: x - 55, y: y - 70 })
+  const [l, r] =
+    hands.length >= 2
+      ? [hands[0], hands[1]]
+      : [
+          { x: x - 60, y: y - 170 },
+          { x: x + 60, y: y - 170 },
+        ]
+  landmarks[15] = toFrame(r)
+  landmarks[16] = toFrame(l)
+  return { landmarks }
+}
+
 const EMPTY: PlaygroundState = { objects: [], scores: [0, 0], timeLeft: null, say: '', showScoreboard: false }
 
 // A stage point as the camera frame would hold it: the picture is mirrored, as the blocks ask by default.
@@ -87,11 +149,17 @@ const handAt = ({ x, y, gesture }: HandPose) => {
 
 export class CameraAiRun {
   readonly vm: VirtualMachine
-  snapshot: CameraAiSnapshot = { cameraOn: false, hands: [], playground: EMPTY }
+  snapshot: CameraAiSnapshot = { cameraOn: false, hands: [], head: null, playground: EMPTY }
+  /** When each movement ('flap', 'nod', 'tilt') the extension recognised last happened, in ms. */
+  readonly motions: Record<string, number> = {}
   /** Every playground state the VM sent, oldest first. */
   readonly history: PlaygroundState[] = []
   private timer: ReturnType<typeof setInterval> | null = null
-  private vision: { hands: ReturnType<typeof handAt>[]; mirror: boolean } = { hands: [], mirror: true }
+  private vision: {
+    hands: ReturnType<typeof handAt>[]
+    pose: ReturnType<typeof bodyAt> | null
+    mirror: boolean
+  } = { hands: [], pose: null, mirror: true }
 
   private constructor(vm: VirtualMachine) {
     this.vm = vm
@@ -110,6 +178,9 @@ export class CameraAiRun {
       if (typeof command.device === 'string') return
       run.snapshot = { ...run.snapshot, cameraOn: Boolean(command.on) }
       events.emit(CAMERA_STATUS, { on: Boolean(command.on), ready: Boolean(command.on) })
+    })
+    events.on(MOTION, (motion: { kind: string }) => {
+      run.motions[motion.kind] = Date.now()
     })
     events.on(PLAYGROUND_UPDATE, (state: PlaygroundState) => {
       run.snapshot = { ...run.snapshot, playground: state }
@@ -138,9 +209,11 @@ export class CameraAiRun {
     this.vm.start()
     this.vm.greenFlag()
     this.timer = setInterval(() => {
-      const pose = this.snapshot.cameraOn ? player(this.snapshot) : null
-      this.snapshot = { ...this.snapshot, hands: pose ? [pose] : [] }
-      this.vision = { hands: pose ? [handAt(pose)] : [], mirror: true }
+      const shown = this.snapshot.cameraOn ? player(this.snapshot) : null
+      const frame: Frame = !shown ? { hands: [] } : 'hands' in shown ? shown : { hands: [shown] }
+      const head = frame.head ?? null
+      this.snapshot = { ...this.snapshot, hands: frame.hands, head }
+      this.vision = { hands: frame.hands.map(handAt), pose: head ? bodyAt(head, frame.hands) : null, mirror: true }
       this.vm.events.emit(VISION_RESULTS, { ...this.vision, t: Date.now() })
     }, FRAME_MS)
   }
@@ -166,9 +239,12 @@ export class CameraAiRun {
    */
   graded(): GradedSnapshot {
     const { playground, cameraOn } = this.snapshot
+    const now = Date.now()
     return {
       cameraOn,
       hands: handsOnStage(this.vision),
+      head: headOnStage(this.vision),
+      motions: Object.keys(this.motions).filter((kind) => now - this.motions[kind] <= MOTION_MS),
       objects: playground.objects,
       scores: playground.scores,
       say: playground.say,
@@ -193,4 +269,27 @@ export const reachFor =
   ({ playground }) => {
     const o = playground.objects.find((obj) => obj.name === name)
     return o ? { x: o.x, y: o.y, gesture } : { x: 0, y: 0, gesture }
+  }
+
+/** How long one flap of the arms takes, and how often the flapping player flaps. */
+const FLAP_MS = 300
+
+/**
+ * A player who flaps both arms every `every` ms: the hands go from high up to below the middle in 0.3 s,
+ * then rest low. The head stays in the middle.
+ * @param every Time between the starts of two flaps, in ms.
+ * @returns The player.
+ */
+export const flapper =
+  (every = 900): Player =>
+  () => {
+    const p = (Date.now() % every) / FLAP_MS
+    const y = p < 1 ? 140 - 220 * p : -80
+    return {
+      hands: [
+        { x: -110, y, gesture: 'open' },
+        { x: 110, y, gesture: 'open' },
+      ],
+      head: { x: 0, y: 60 },
+    }
   }
