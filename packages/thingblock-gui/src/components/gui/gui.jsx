@@ -12,6 +12,7 @@ import VM from '@thingblock/thingblock-vm';
 import Blocks from '../../containers/blocks.jsx';
 import CodeView from '../code-view/code-view.jsx';
 import SimPanel from '../../containers/sim-panel.jsx';
+import PlaygroundPanel from '../../containers/playground-panel.jsx';
 import {usePaneCollapsed} from '../../lib/pane-collapse';
 import SerialLog from '../serial-log/serial-log.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
@@ -149,6 +150,7 @@ const GUIComponent = props => {
         stageSizeMode,
         connectedBoard,
         selectedDeviceId,
+        cameraAiLoaded,
         generatedCode,
         settingsModalVisible,
         telemetryModalVisible,
@@ -498,6 +500,7 @@ const GUIComponent = props => {
                         >
                             <DeviceControls />
                             <PlatformInstallModal />
+                            {cameraAiLoaded && <PlaygroundPanel />}
                             {selectedDeviceId && <SimPanel roomy={codeCollapsed} />}
                             {selectedDeviceId && (
                                 <CodeView
@@ -591,6 +594,7 @@ GUIComponent.propTypes = {
     renderLogin: PropTypes.func,
     setTheme: PropTypes.func.isRequired,
     selectedDeviceId: PropTypes.string,
+    cameraAiLoaded: PropTypes.bool,
     generatedCode: PropTypes.string,
     settingsModalVisible: PropTypes.bool,
     showNewFeatureCallouts: PropTypes.bool,

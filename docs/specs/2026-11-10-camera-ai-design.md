@@ -53,7 +53,7 @@ Tọa độ: cả họ champierre đều quy camera 480×360 về hệ sân kh�
 5. **x, y là hai khối riêng**, hệ tọa độ sân chơi 480×360 gốc giữa, gương mặc định bật.
 6. **Phân loại dạy ngay trong editor** (ML2Scratch) với ngưỡng tin cậy và chu kỳ (TM2Scratch); mẫu học lưu trong tệp dự án.
 7. **Sẵn sàng / lỗi** hiện ở bảng Sân chơi, không thành khối; chỉ có khối mũ `khi camera sẵn sàng`.
-8. Khối mũ kích theo **sườn lên** (`isEdgeActivated`), đúng cơ chế hat của scratch-vm, để "khi cử chỉ nắm" chỉ chạy một lần mỗi lần nắm.
+8. Khối mũ là **hat sự kiện** (`isEdgeActivated: false`, extension tự gọi `runtime.startHats` khi cử chỉ xuất hiện, camera sẵn sàng, hết giờ). Không dùng hat sườn-lên của scratch-vm vì hat sườn-lên giữ một luồng sống mỗi khung hình, làm nút Chạy hiện "Dừng" ngay khi mở dự án. Giá trị menu dùng để khớp hat (`HAND`, `GESTURE`) lưu **chữ hoa** vì `startHats` so khớp chữ hoa; các khối báo/đúng-sai đọc không phân biệt hoa thường.
 
 ## 3. Kiến trúc
 
@@ -162,7 +162,7 @@ Quy ước loại: **M** mũ (hat) · **L** lệnh (command) · **B** báo (repo
 
 | opcode | Loại | Khối | Tham số |
 |---|---|---|---|
-| `whenGesture` | M | khi tay [1] làm [nắm] · when hand [1] shows [fist] | HAND menu `1`,`2`,`any`; GESTURE menu: nắm `fist`, mở `open`, ngón cái lên `thumbUp`, ngón cái xuống `thumbDown`, chữ V `victory`, chỉ lên `pointUp`, yêu `iLoveYou` |
+| `whenGesture` | M | khi tay [1] làm [nắm] · when hand [1] shows [fist] | HAND menu `ANY`,`1`,`2`,`LEFT`,`RIGHT`; GESTURE menu: nắm `FIST`, mở `OPEN`, ngón cái lên `THUMB_UP`, ngón cái xuống `THUMB_DOWN`, chữ V `VICTORY`, chỉ lên `POINT_UP`, yêu `I_LOVE_YOU` (giá trị báo của `handGesture` là bản chữ thường) |
 | `whenWave` | M | khi tay vẫy sang [trái] · when hand waves [left] | DIR menu: trái, phải, lên, xuống |
 | `handCount` | B | số bàn tay · hand count | — |
 | `handX` | B | x [cổ tay] tay [1] · x of [wrist] hand [1] | PART menu: cổ tay `wrist`, đầu ngón cái `thumbTip`, đầu ngón trỏ `indexTip`, đầu ngón giữa `middleTip`, lòng bàn tay `palm`; HAND `1`,`2` |
@@ -351,3 +351,27 @@ Luật chấm mới cho `checker/rules.ts`: `cử chỉ [X] → [hành động]`
 - MIT App Inventor extensions: PosenetExtension, FaceMeshExtension, PersonalImageClassifier — https://github.com/mit-cml/appinventor-extensions
 - NeoAiSport (ThingEdu, MIT): https://github.com/ThingEdu/NeoAiSport — số đo NEO One, luật game Bắt Dế / Hứng Mưa / Đỡ Bóng / Ball Dế, ổn định danh tính tay
 - NeoMakerViGate (MIT): https://github.com/tuanln/NeoMakerViGate — vẫy tay zero-crossing, so tư thế bằng góc khớp
+
+## 11. Trạng thái Spike 0 / bản demo (10/11/2026)
+
+Nhánh `feat/camera-ai-demo` (tách từ `docs/camera-ai-design` ← `origin/develop`). Đã chạy được end-to-end trong trình duyệt bằng Chromium + camera giả (ảnh cử chỉ mẫu của MediaPipe), kiểm bằng Playwright:
+
+- VM: extension builtin `cameraAi` (`packages/thingblock-vm/src/extensions/scratch3_camera_ai/`: `index.ts`, `vision-state.ts`, `playground.ts`), 26 khối: Camera 4 · Tay 6 · Sân chơi 8 · Điểm 7. 9 test tap (`test/unit/extension_camera_ai.ts`).
+- GUI: bảng **Sân chơi** (`containers/playground-panel.jsx`, `components/playground-panel/`) hiện khi extension được thêm; camera + GestureRecognizer chạy ở **luồng chính** (`lib/vision/hand-tracker.js`, GPU → CPU fallback) chứ chưa đưa vào Web Worker như §3.2 đề xuất — việc của M1. Mô hình tải bằng `scripts/fetch-ai-models.sh`, WASM chép qua webpack.
+- Ví dụ "Bắt Dế": `docs/specs/camera-ai-demo/bat-de.tb` (bóng theo ngón trỏ, chạm dế +1 điểm, đếm ngược 30 s, nắm tay thì dế nhảy). Chưa đưa vào `examples/index.json` vì bộ sinh ví dụ (`scripts/examples/dsl.mjs`) chưa biết khối extension.
+- Chưa làm: Tư thế, Mặt, Dạy máy, Vật thể, worker + watchdog, tệp phát lại, bài học, Tauri (quyền camera 3 hệ), đo fps trên laptop trường.
+
+### Gợi ý ví dụ từ Day of AI / App Inventor (khảo sát 10/11)
+
+Day of AI (MIT RAISE) không có bài dùng camera theo dõi thân/mặt/tay (chỉ Teachable Machine phân loại ảnh). Mẫu dùng được nằm ở MIT App Inventor và MIT Media Lab:
+
+| Ví dụ | Nguồn | Tín hiệu | Cần khối ThingBlock |
+|---|---|---|---|
+| Bóng rổ bằng mũi (bóng dính mũi, đưa vào rổ; há miệng xoá vết) | App Inventor FaceExtension, forum `p299D_baloncestoFace.aia` | `faceX/faceY mũi`, `whenExpression mouthOpen` | §4.4 Mặt (M2) |
+| Dẫn bóng qua chữ BRAVO | App Inventor, `p299D_letrasFace.aia` | mũi + há miệng | §4.4 |
+| AI Dance (điểm nhảy: tay lên trời, gối lên, T-pose) | YR Toolkit `aidance.html`, PosenetExtension | so toạ độ cổ tay/tai/gối | §4.3 Tư thế `poseX/poseY`, `whenPose` (M2) |
+| Dancing with AI (Scratch + PoseNet: RainbowVolleyball, FingerFoodNinja, CatcherModel, SnakeGame…) | dancingwithai.media.mit.edu | tay/ngón, tư thế | Tay (có), Tư thế (M2) |
+| Flappy Bird nhảy thật | không có mẫu chính thức; tự thiết kế | y vai/hông giảm nhanh so với trung bình vài khung | Tư thế + khối `whenJump` (đề xuất thêm vào §4.3) |
+
+Kết luận cho lộ trình: nhóm **Tư thế** và **Mặt** (M2) mở ra hầu hết các ví dụ trên; "Bắt Dế" và "Lái xe bằng tay" là đủ cho M1.
+
