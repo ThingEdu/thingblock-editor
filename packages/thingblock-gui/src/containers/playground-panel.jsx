@@ -7,6 +7,7 @@ import VM from '@thingblock/thingblock-vm';
 import PlaygroundPanelComponent from '../components/playground-panel/playground-panel.jsx';
 import {attachStream, listCameras, startCamera, stopCamera} from '../lib/vision/camera';
 import {HAND_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
+import {MOUSE, loadDeviceName, saveDeviceName} from '../lib/vision/camera-choice';
 import {trackMouse} from '../lib/vision/mouse-hand';
 import {replayHands} from '../lib/vision/replay';
 
@@ -32,9 +33,6 @@ const PICTURES = {
     bomb: '💣'
 };
 
-/** The device name that plays with the mouse instead of a camera; the "use camera" block's menu has it too. */
-const MOUSE = 'mouse';
-
 const EMPTY_PLAYGROUND = {objects: [], scores: [0, 0], timeLeft: null, say: '', showScoreboard: false};
 
 /** The gesture names drawn under a hand, by the tracker's gesture value; same ids as the blocks' menu. */
@@ -51,23 +49,6 @@ const gestureMessages = defineMessages({
     },
     i_love_you: {id: 'cameraAi.menu.iLoveYou', defaultMessage: 'I love you', description: 'Gesture name: the ILY sign'}
 });
-
-/** The camera this viewer picked last, by name; kept per browser, not in the project. */
-const DEVICE_KEY = 'thingblock.cameraAi.device';
-const loadDeviceName = () => {
-    try {
-        return localStorage.getItem(DEVICE_KEY) || 'default';
-    } catch (e) {
-        return 'default';
-    }
-};
-const saveDeviceName = name => {
-    try {
-        localStorage.setItem(DEVICE_KEY, name);
-    } catch (e) {
-        // Private windows may refuse storage; the choice then lasts only this session.
-    }
-};
 
 /**
  * Hand frames to play instead of the camera, set by development tools and tests on
