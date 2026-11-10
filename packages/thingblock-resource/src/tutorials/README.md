@@ -18,13 +18,15 @@ thoi-luong: 10
 
 - `ma`: định danh, trùng tên thư mục.
 - `ten`: tên bài hiện cho em học sinh.
-- `nhom`: nhóm bài (ví dụ `dau-ra`).
+- `nhom`: nhóm bài: `lam-quen`, `dau-ra`, `dong-co`, `dau-vao` hoặc `camera-ai`.
 - `thu-tu`: số thứ tự trong nhóm, phải là số. Hai bài cùng `nhom` không được trùng `thu-tu`.
-- `bo`: bo mạch của bài (ví dụ `thingbot`).
+- `bo`: bo mạch của bài (ví dụ `thingbot`), hoặc `khong` cho bài không cần mạch (bài Camera AI).
 - `thoi-luong`: số phút ước tính, phải là số.
 - `thiet-bi` (không bắt buộc): các thiết bị ngoài bài cần, cách nhau dấu phẩy, viết bằng tên thư mục trong
   `src/extensions/peripheral/` (ví dụ `thiet-bi: oled`). Mở bài là editor tự thêm các thiết bị này vào bảng khối,
   học sinh không phải tự tìm **Add Peripheral**.
+- `mo-rong` (không bắt buộc): phần mở rộng của editor mà bài cần, hiện chỉ có `cameraAi`. Mở bài là editor tự
+  nạp nhóm khối **Camera AI** và khung **Sân chơi**. Bài Camera AI viết `bo: khong` và `mo-rong: cameraAi`.
 
 ## Các bước
 
@@ -63,7 +65,26 @@ hiểu:
 | `kiểm: khoảng cách < 20 cm`                 | Thanh khoảng cách đang ở dưới 20 cm (`≤ > ≥` cũng được) |
 | `kiểm: giữ nút PS2 lên`                     | Học sinh đang giữ nút ▲ trên tay cầm PS2 ảo             |
 
-Ba luật cuối là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật
+### Luật Camera AI
+
+Bài có `mo-rong: cameraAi` chấm được trên khung **Sân chơi** (không cần mạch ảo). Một bước chỉ dùng một loại
+luật: toàn luật Camera AI hoặc toàn luật mạch ảo.
+
+| Viết                                      | Nghĩa                                                        |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| `kiểm: camera bật`                        | Camera (hoặc chế độ chuột) đang bật                          |
+| `kiểm: thấy bàn tay`                      | Sân chơi đang thấy ít nhất một bàn tay                       |
+| `kiểm: tay nắm` / `tay xòe` / `tay chữ V` | Học sinh đang làm cử chỉ này (cả `chỉ lên`, `giơ ngón cái`…) |
+| `kiểm: sân chơi có "sao"`                 | Trên sân chơi có vật tên `sao`                               |
+| `kiểm: "sao" chạm ngón trỏ`               | Vật `sao` chạm đầu ngón trỏ (cả `lòng bàn tay`, `cổ tay`)    |
+| `kiểm: điểm người chơi 1 ≥ 1`             | Điểm người chơi 1 (hoặc 2) so với số này (`< ≤ > ≥ =`)       |
+| `kiểm: sân chơi nói "Nắm tay"`            | Dòng chữ trên sân chơi có chứa chữ này                       |
+
+Luật `tay …` là việc học sinh làm. Khi chạy `kiem-thu/`, bộ kiểm thử dùng bàn tay tổng hợp: tay làm cử chỉ bước
+đó cần; bước có luật điểm thì tay lần lượt chạm từng vật trên sân chơi; bước khác thì tay đứng yên ở x 100,
+y -60 (xa chỗ các vật được tạo), nên luật `chạm` chỉ đạt khi chương trình thật sự đưa vật theo tay.
+
+Ba luật cuối của bảng mạch ảo là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật
 đầu ra trong cùng bước, ví dụ `giữ nút SW` và `L1 sáng`: bước đạt khi cả hai cùng đúng một lúc. Khi chạy
 `kiem-thu/`, bộ kiểm thử tự đặt mạch ảo cho các luật này (giữ nút, kéo thanh khoảng cách) trước khi chấm. Nút
 PS2 viết bằng tên (`lên`, `xuống`, `trái`, `phải`, `tam giác`, `tròn`, `nhân`, `vuông`, `L1`, `L2`, `R1`, `R2`,
@@ -95,6 +116,9 @@ cd packages/thingblock-resource
 node scripts/lessons/make-tb.mjs src/tutorials/bat-tat-den/kiem-thu/dung-2.project.json \
   src/tutorials/bat-tat-den/kiem-thu/dung-2.tb
 ```
+
+Lời giải Camera AI được chấm bằng VM thật đã dựng (`thingblock-vm/dist/node`), nên cần chạy
+`npm run build:libs` ở gốc trước `npm test`. Tệp `.tb` của bài `bo: khong` không lưu `board`.
 
 ## Dựng và kiểm tra
 

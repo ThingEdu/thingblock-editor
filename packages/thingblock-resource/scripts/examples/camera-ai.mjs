@@ -380,3 +380,20 @@ export const CAMERA_AI_EXAMPLES = [
     ],
   },
 ].map((example) => ({ source: 'ThingBlock Camera AI', ...example, group: GROUP, hardware: HARDWARE, device: null }))
+
+/** The block helpers, for the Camera AI lessons' `kiem-thu` fixtures. */
+export const cameraBlocks = {
+  addScore,
+  cameraOn,
+  forever,
+  ifThen,
+  moveRandom,
+  moveToHand,
+  say,
+  setScore,
+  spawn,
+  touching,
+  wait,
+  whenFlag,
+  whenGesture,
+}

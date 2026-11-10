@@ -64,6 +64,7 @@
     "gui.gui.variableTypeLabel": "Kiểu biến:",
     "gui.gui.variableTypeNumber": "Số nguyên",
     "gui.gui.variableTypeText": "Chữ",
+    "gui.lessonLibrary.group.cameraAi": "Camera AI (không cần mạch)",
     "gui.lessonLibrary.group.dauRa": "Đầu ra: đèn và còi",
     "gui.lessonLibrary.group.dauVao": "Đầu vào và màn OLED",
     "gui.lessonLibrary.group.dongCo": "Động cơ và servo",

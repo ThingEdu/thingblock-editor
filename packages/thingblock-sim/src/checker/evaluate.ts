@@ -254,6 +254,9 @@ export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[
         return checkDistance(rule.op, rule.cm, log)
       case 'ps2':
         return checkPs2(rule.button, log)
+      default:
+        // Camera AI rules are graded in the editor against the playground; the simulator never sees them.
+        return fail('Luật này chấm trên Sân chơi Camera AI, không trên mạch ảo.')
     }
   })
 }

@@ -23,11 +23,15 @@ const LESSON = {ma: 'den-nhap-nhay', ten: 'Đèn nhấp nháy', nhom: 'dau-ra', 
 
 const respond = body => Promise.resolve({ok: true, json: () => Promise.resolve(body)});
 
-const renderLibrary = (root, addPeripheral = jest.fn(() => Promise.resolve()), {projectChanged = false} = {}) => {
+const renderLibrary = (
+    root,
+    addPeripheral = jest.fn(() => Promise.resolve()),
+    {projectChanged = false, extensionManager} = {}
+) => {
     const devices = {getTutorialsOrigin: () => (root ? `${root}/tutorials` : null), addPeripheral};
     const project = {load: jest.fn(() => Promise.resolve())};
     const store = configureStore()({
-        scratchGui: {vm: {devices, project}, projectChanged},
+        scratchGui: {vm: {devices, project, extensionManager}, projectChanged},
         locales: {isRtl: false}
     });
     const view = renderWithIntl(
@@ -99,6 +103,33 @@ test('a boardless lesson opens without selecting a device', async () => {
     expect(store.getActions().map(action => action.type)).not.toContain('scratch-gui/board/SET_DEVICE');
     expect(open.type).toBe('scratch-gui/lesson/OPEN');
     expect(close.type).toMatch(/CLOSE_MODAL/);
+});
+
+test('a Camera AI lesson opens without a board and loads the extension it names', async () => {
+    const camera = {...LESSON, bo: 'khong', nhom: 'camera-ai', moRong: ['cameraAi']};
+    global.fetch = jest.fn(url => respond(url.endsWith('index.json') ? INDEX : camera));
+    const extensionManager = {
+        isExtensionLoaded: jest.fn(() => false),
+        loadExtensionURL: jest.fn(() => Promise.resolve())
+    };
+    const {container, getByText, project, store} = renderLibrary(ROOT, jest.fn(() => Promise.resolve()), {extensionManager});
+    await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(extensionManager.loadExtensionURL).toHaveBeenCalledWith('cameraAi'));
+    expect(project.load.mock.calls[0][0].board).toBeNull();
+    expect(store.getActions().map(action => action.type)).not.toContain('scratch-gui/board/SET_DEVICE');
+});
+
+test('an extension already in the editor is not loaded twice', async () => {
+    const camera = {...LESSON, bo: 'khong', moRong: ['cameraAi']};
+    global.fetch = jest.fn(url => respond(url.endsWith('index.json') ? INDEX : camera));
+    const extensionManager = {isExtensionLoaded: jest.fn(() => true), loadExtensionURL: jest.fn()};
+    const {container, getByText, store} = renderLibrary(ROOT, jest.fn(() => Promise.resolve()), {extensionManager});
+    await waitFor(() => expect(getByText('Đèn nhấp nháy')).toBeInTheDocument());
+    fireEvent.click(container.querySelector('[data-lesson="den-nhap-nhay"]'));
+    await waitFor(() => expect(store.getActions().map(a => a.type)).toContain('scratch-gui/lesson/OPEN'));
+    expect(extensionManager.isExtensionLoaded).toHaveBeenCalledWith('cameraAi');
+    expect(extensionManager.loadExtensionURL).not.toHaveBeenCalled();
 });
 
 test('opening a lesson adds the peripherals it needs, after selecting its board', async () => {

@@ -19,8 +19,56 @@ export type Rule =
   | { kind: 'switch'; held: boolean }
   | { kind: 'distance'; op: DistanceOp; cm: number }
   | { kind: 'ps2'; button: string }
+  | CameraRule
+
+/**
+ * Rules about the Camera AI playground. They are graded in the editor against what the playground shows,
+ * not in the simulator, so a step's rules are all of this kind or none of it.
+ */
+export type CameraRule =
+  | { kind: 'cameraOn' }
+  | { kind: 'handSeen' }
+  | { kind: 'gesture'; gesture: CameraGesture }
+  | { kind: 'object'; name: string }
+  | { kind: 'touch'; name: string; part: HandPart }
+  | { kind: 'score'; player: 1 | 2; op: CompareOp; n: number }
+  | { kind: 'say'; text: string }
 
 export type DistanceOp = '<' | '≤' | '>' | '≥'
+export type CompareOp = DistanceOp | '='
+export type CameraGesture = 'fist' | 'open' | 'victory' | 'point_up' | 'thumb_up' | 'thumb_down' | 'i_love_you'
+export type HandPart = 'indexTip' | 'palm' | 'wrist'
+
+export const CAMERA_RULE_KINDS: readonly string[] = [
+  'cameraOn',
+  'handSeen',
+  'gesture',
+  'object',
+  'touch',
+  'score',
+  'say',
+]
+
+export const isCameraRule = (rule: Rule): rule is CameraRule => CAMERA_RULE_KINDS.includes(rule.kind)
+
+/** Gestures a lesson names after `tay`, by their Vietnamese name, to the value the blocks report. */
+export const CAMERA_GESTURES: Record<string, CameraGesture> = {
+  nắm: 'fist',
+  xòe: 'open',
+  xoè: 'open',
+  'chữ v': 'victory',
+  'chỉ lên': 'point_up',
+  'giơ ngón cái': 'thumb_up',
+  'chúc ngón cái': 'thumb_down',
+  'i love you': 'i_love_you',
+}
+
+/** Hand parts a lesson names after `chạm`, to the part the blocks use. */
+export const HAND_PARTS: Record<string, HandPart> = {
+  'ngón trỏ': 'indexTip',
+  'lòng bàn tay': 'palm',
+  'cổ tay': 'wrist',
+}
 
 /** Words a lesson may name a PS2 button by: the pad's symbol or a Vietnamese name, to the PS2X constant. */
 export const PS2_BUTTONS: Record<string, string> = {
@@ -135,6 +183,25 @@ export function parseRule(text: string): Rule {
     if (!button) throw new RuleSyntaxError(text, `nút PS2 được hiểu: ${Object.keys(PS2_BUTTONS).join(', ')}`)
     return { kind: 'ps2', button }
   }
+  if (t === 'camera bật') return { kind: 'cameraOn' }
+  if (t === 'thấy bàn tay') return { kind: 'handSeen' }
+  if ((m = /^tay (.+)$/.exec(t))) {
+    const gesture = CAMERA_GESTURES[m[1]] as CameraGesture | undefined
+    if (!gesture) throw new RuleSyntaxError(text, `cử chỉ được hiểu: ${Object.keys(CAMERA_GESTURES).join(', ')}`)
+    return { kind: 'gesture', gesture }
+  }
+  if ((m = new RegExp(String.raw`^điểm người chơi ([12]) ?(<|≤|>|≥|=) ?(-?\d+)$`).exec(t))) {
+    return { kind: 'score', player: m[1] === '1' ? 1 : 2, op: m[2] as CompareOp, n: Number(m[3]) }
+  }
+  // Object names and spoken text keep the author's casing: they are what the program writes.
+  const quoted = text.normalize('NFC').trim()
+  if ((m = /^sân chơi có\s+"(.+)"$/i.exec(quoted))) return { kind: 'object', name: m[1] }
+  if ((m = /^sân chơi nói\s+"(.+)"$/i.exec(quoted))) return { kind: 'say', text: m[1] }
+  if ((m = /^"(.+)"\s+chạm\s+(.+)$/i.exec(quoted))) {
+    const part = HAND_PARTS[normalize(m[2])] as HandPart | undefined
+    if (!part) throw new RuleSyntaxError(text, `bộ phận được hiểu: ${Object.keys(HAND_PARTS).join(', ')}`)
+    return { kind: 'touch', name: m[1], part }
+  }
   // The quoted text keeps the author's casing: it is what the learner should see on the screen.
   // Optional placement after the quote: `ở y 16` (the line the text starts on, in pixels) and
   // `cỡ 12x16` (the glyph cell the text size block names).
@@ -159,6 +226,7 @@ export function parseRule(text: string): Rule {
     'các dạng được hiểu: "L1 sáng/tắt", "còi kêu/tắt", "L1 nhấp nháy, chu kỳ X giây ± Y%", ' +
       '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N%", "servo S1 ở G độ ± D", "servo S1 quét từ A đến B độ", ' +
       '\'OLED hiện "…"\', \'OLED hiện đúng "…"\', \'OLED hiện "…" ở y N cỡ 12x16\', ' +
-      '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên"',
+      '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên"; Camera AI: "camera bật", "thấy bàn tay", ' +
+      '"tay nắm", \'sân chơi có "tên"\', \'"tên" chạm ngón trỏ\', "điểm người chơi 1 ≥ N", \'sân chơi nói "…"\'',
   )
 }

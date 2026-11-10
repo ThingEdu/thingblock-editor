@@ -16,7 +16,7 @@ import { Order } from '../../../thingblock-blocks/src/generators/arduino/order'
 import { SimGenerator } from '../../../thingblock-blocks/src/generators/sim'
 import type { RuleResult } from '../../../thingblock-sim/src/checker/evaluate'
 import { inputsFor } from '../../../thingblock-sim/src/checker/inputs'
-import type { Rule } from '../../../thingblock-sim/src/checker/rules'
+import { isCameraRule, type Rule } from '../../../thingblock-sim/src/checker/rules'
 import { Watcher, type CheckReport } from '../../../thingblock-sim/src/checker/watch'
 import { loadProject, type Sb3Project } from '../../../thingblock-sim/src/headless'
 import { Session } from '../../../thingblock-sim/src/session'
@@ -79,14 +79,21 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   return { passed: allOk(report), results: report.results }
 }
 
+const parse = (ma: string) =>
+  parseLesson(readFileSync(join(TUTORIALS, ma, 'bai.vi.md'), 'utf8'), {
+    dirName: ma,
+    lang: 'vi',
+    files: readdirSync(join(TUTORIALS, ma)),
+  }).lesson
+// Camera AI steps are graded on the playground, by camera-lessons.test.ts; a lesson made only of them is left to it.
+const isCameraLesson = (ma: string) => parse(ma).steps.some((s) => s.rules.some(isCameraRule))
 const lessonDirs = readdirSync(TUTORIALS, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
+  .filter((d) => d.isDirectory() && !isCameraLesson(d.name))
   .map((d) => d.name)
 
 describe.each(lessonDirs)('lesson %s', (ma) => {
   const dir = join(TUTORIALS, ma)
-  const files = readdirSync(dir)
-  const { lesson } = parseLesson(readFileSync(join(dir, 'bai.vi.md'), 'utf8'), { dirName: ma, lang: 'vi', files })
+  const lesson = parse(ma)
   const graded = lesson.steps.map((s, i) => ({ step: s, n: i + 1 })).filter(({ step }) => step.rules.length)
   const rulesOf = (n: number): Rule[] => {
     const found = graded.find((g) => g.n === n)

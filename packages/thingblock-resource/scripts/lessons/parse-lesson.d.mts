@@ -25,12 +25,14 @@ export interface Step {
 export interface Lesson {
   ma: string
   ten: string
-  nhom: 'lam-quen' | 'dau-ra' | 'dong-co' | 'dau-vao'
+  nhom: 'lam-quen' | 'dau-ra' | 'dong-co' | 'dau-vao' | 'camera-ai'
   thuTu: number
   bo: string
   batDau: string | null
   /** Extra packs the editor adds when the lesson opens (`thiet-bi:`). */
   thietBi: string[]
+  /** Editor extensions the editor loads when the lesson opens (`mo-rong:`), e.g. `cameraAi`. */
+  moRong: string[]
   thoiLuong: number | null
   lang: string
   steps: Step[]

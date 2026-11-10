@@ -17,6 +17,13 @@ const REQUIRED = [
     'gui.lessonLibrary.group.dauRa',
     'gui.lessonLibrary.group.dongCo',
     'gui.lessonLibrary.group.dauVao',
+    'gui.lessonLibrary.group.cameraAi',
+    'gui.exampleLibrary.groupCameraAi',
+    // Playing Camera AI without a webcam.
+    'gui.playgroundPanel.mouse',
+    'gui.playgroundPanel.useMouse',
+    'gui.playgroundPanel.mouseHint',
+    'cameraAi.menu.mouse',
     'gui.gui.addPeripheral',
     // Live mode and Arduino pin blocks, which the VM resolves from the editor's messages.
     'thingbotTelemetrix.controlDC',

@@ -48,6 +48,7 @@ Chúc mừng!
       bo: 'thingbot',
       batDau: null,
       thietBi: [],
+      moRong: [],
       thoiLuong: 10,
       lang: 'vi',
     })
@@ -91,6 +92,29 @@ Chúc mừng!
   it('reads the peripherals the lesson needs, for the editor to add when it opens', () => {
     const md = `${FRONT.replace('bo: thingbot', 'bo: thingbot\nthiet-bi: oled, ultrasonic')}\n## B\n`
     expect(parseLesson(md, ctx).lesson.thietBi).toEqual(['oled', 'ultrasonic'])
+  })
+
+  it('reads a Camera AI lesson: no board, the extension to load, and playground rules', () => {
+    const md = `${FRONT.replace('bo: thingbot', 'bo: khong\nmo-rong: cameraAi').replace('nhom: dau-ra', 'nhom: camera-ai')}
+## Bật camera
+kiểm: camera bật
+kiểm: "sao" chạm ngón trỏ
+`
+    const { lesson } = parseLesson(md, ctx)
+    expect(lesson).toMatchObject({ bo: 'khong', nhom: 'camera-ai', moRong: ['cameraAi'] })
+    expect(lesson.steps[0].rules).toEqual([{ kind: 'cameraOn' }, { kind: 'touch', name: 'sao', part: 'indexTip' }])
+  })
+
+  it.each([
+    ['unknown mo-rong', FRONT.replace('bo: thingbot', 'bo: thingbot\nmo-rong: camera'), /mo-rong "camera"/],
+    ['a Camera AI rule without mo-rong', `${FRONT}\n## B\nkiểm: camera bật\n`, /mo-rong: cameraAi/],
+    [
+      'a step mixing Camera AI and board rules',
+      `${FRONT.replace('bo: thingbot', 'bo: thingbot\nmo-rong: cameraAi')}\n## B\nkiểm: camera bật\nkiểm: L1 sáng\n`,
+      /không trộn/,
+    ],
+  ])('fails the build on %s', (_name, md, pattern) => {
+    expect(() => parseLesson(md, ctx)).toThrow(pattern)
   })
 
   it.each([

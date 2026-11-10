@@ -2,16 +2,18 @@
 // rules and an optional `chỉ vào:` tour anchor. The build turns it into JSON the editor renders, and
 // every authoring mistake fails here, not on a learner's screen.
 import { readdirSync } from 'node:fs'
-import { parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
+import { isCameraRule, parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
-const GROUPS = ['lam-quen', 'dau-ra', 'dong-co', 'dau-vao']
+const GROUPS = ['lam-quen', 'dau-ra', 'dong-co', 'dau-vao', 'camera-ai']
 const HINT_START = /^>\s*gợi ý:\s*(.+)$/i
 const REQUIRED = ['ma', 'ten', 'nhom', 'thu-tu', 'bo']
 /** Peripheral packs a lesson can name in `thiet-bi:`, by folder name. */
 const PERIPHERALS = readdirSync(new URL('../../src/extensions/peripheral/', import.meta.url), { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
+/** Editor extensions a lesson can name in `mo-rong:`; they run in the editor, not on a board. */
+const EXTENSIONS = ['cameraAi']
 
 export class LessonError extends Error {
   /** @param {{line: number, message: string}[]} problems Every authoring problem found, with its line. */
@@ -106,6 +108,18 @@ export function parseLesson(markdown, ctx) {
     }
   }
 
+  const moRong = meta['mo-rong']
+    ? meta['mo-rong']
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : []
+  for (const id of moRong) {
+    if (!EXTENSIONS.includes(id)) {
+      problems.push({ line: metaLine['mo-rong'], message: `mo-rong "${id}" không thuộc ${EXTENSIONS.join('|')}` })
+    }
+  }
+
   for (const key of ['thu-tu', 'thoi-luong']) {
     if (meta[key] && !/^\d+$/.test(meta[key])) {
       problems.push({ line: metaLine[key], message: `${key} phải là số` })
@@ -159,7 +173,14 @@ export function parseLesson(markdown, ctx) {
       flushParagraph()
       flushList()
       try {
-        step.rules.push(parseRule(m[1]))
+        const rule = parseRule(m[1])
+        // Camera AI rules are graded on the playground, the others in the simulator: one place per step.
+        if (step.rules.length && isCameraRule(step.rules[0]) !== isCameraRule(rule)) {
+          problems.push({ line: lineNo, message: 'một bước không trộn luật Camera AI với luật mạch ảo' })
+        } else if (isCameraRule(rule) && !moRong.includes('cameraAi')) {
+          problems.push({ line: lineNo, message: 'luật Camera AI cần "mo-rong: cameraAi" trong front matter' })
+        }
+        step.rules.push(rule)
       } catch (e) {
         problems.push({
           line: lineNo,
@@ -226,6 +247,7 @@ export function parseLesson(markdown, ctx) {
       bo: meta.bo,
       batDau: meta['bat-dau'] ?? null,
       thietBi,
+      moRong,
       thoiLuong: meta['thoi-luong'] ? Number(meta['thoi-luong']) : null,
       lang: ctx.lang,
       steps,

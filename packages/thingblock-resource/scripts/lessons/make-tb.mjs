@@ -19,5 +19,6 @@ if (existsSync(lessonFile)) {
     .map((s) => s.trim())
     .filter(Boolean)
 }
-const project = completeProject(JSON.parse(readFileSync(input, 'utf8')), device, devices)
+// `bo: khong` lessons (Camera AI) run without a board, so their fixtures save none.
+const project = completeProject(JSON.parse(readFileSync(input, 'utf8')), device === 'khong' ? null : device, devices)
 writeFileSync(output, await toTb(project))

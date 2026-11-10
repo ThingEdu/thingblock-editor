@@ -44,6 +44,13 @@ const GROUP_TITLES = {
             description="Lesson group"
             id="gui.lessonLibrary.group.dauVao"
         />
+    ),
+    'camera-ai': (
+        <FormattedMessage
+            defaultMessage="Camera AI (no board)"
+            description="Lesson group: lessons with the webcam and the Camera AI blocks, which need no board"
+            id="gui.lessonLibrary.group.cameraAi"
+        />
     )
 };
 const GROUP_ORDER = Object.keys(GROUP_TITLES);
@@ -98,6 +105,12 @@ const LessonLibrary = ({projectChanged, vm, onClose, onOpen}) => {
                 for (const id of lesson.thietBi || []) {
                     vm.devices.addPeripheral(id).catch(e => log.warn(`Lesson ${ma}: cannot add "${id}"`, e));
                 }
+                // Editor extensions such as Camera AI, which run without a board.
+                for (const id of lesson.moRong || []) {
+                    if (vm.extensionManager.isExtensionLoaded(id)) continue;
+                    vm.extensionManager.loadExtensionURL(id)
+                        .catch(e => log.warn(`Lesson ${ma}: cannot load extension "${id}"`, e));
+                }
             })
             .catch(e => {
                 log.warn(`Lesson ${ma}: cannot open`, e);
@@ -134,6 +147,10 @@ LessonLibrary.propTypes = {
             addPeripheral: PropTypes.func.isRequired,
             getTutorialsOrigin: PropTypes.func.isRequired
         }).isRequired,
+        extensionManager: PropTypes.shape({
+            isExtensionLoaded: PropTypes.func.isRequired,
+            loadExtensionURL: PropTypes.func.isRequired
+        }),
         project: PropTypes.shape({
             load: PropTypes.func.isRequired
         }).isRequired

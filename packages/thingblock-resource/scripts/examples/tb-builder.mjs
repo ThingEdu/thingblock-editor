@@ -299,7 +299,7 @@ export function packsOf(blocks, device) {
  * its own saves: the target fields the validator requires, the placeholder costume, `extensions` and
  * `board`. Fields already present are kept.
  * @param {object} project A project.json object, possibly minimal.
- * @param {string} device The board id the project targets.
+ * @param {string|null} device The board id the project targets; null for a boardless (Camera AI) project.
  * @param {string[]} [extraPeripherals] Packs to add to `board.peripherals` even when no block uses them.
  * @returns {object} A complete project.json object.
  */
@@ -356,7 +356,9 @@ export function completeProject(project, device = 'thingbot', extraPeripherals =
     monitors: project.monitors ?? [],
     extensions: project.extensions ?? extensions,
     meta: project.meta ?? { semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-resource/scripts/lessons' },
-    board: project.board ?? { device, peripherals: [...new Set([...peripherals, ...extraPeripherals])] },
+    ...(project.board || device
+      ? { board: project.board ?? { device, peripherals: [...new Set([...peripherals, ...extraPeripherals])] } }
+      : {}),
   }
 }
 

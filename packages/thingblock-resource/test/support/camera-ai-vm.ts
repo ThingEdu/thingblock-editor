@@ -8,6 +8,7 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
+import { handsOnStage, type CameraSnapshot as GradedSnapshot } from '../../../thingblock-sim/src/checker/camera'
 
 const require = createRequire(import.meta.url)
 const VM_BUNDLE = join(__dirname, '../../../thingblock-vm/dist/node/thingblock-vm.js')
@@ -90,6 +91,7 @@ export class CameraAiRun {
   /** Every playground state the VM sent, oldest first. */
   readonly history: PlaygroundState[] = []
   private timer: ReturnType<typeof setInterval> | null = null
+  private vision: { hands: ReturnType<typeof handAt>[]; mirror: boolean } = { hands: [], mirror: true }
 
   private constructor(vm: VirtualMachine) {
     this.vm = vm
@@ -138,7 +140,8 @@ export class CameraAiRun {
     this.timer = setInterval(() => {
       const pose = this.snapshot.cameraOn ? player(this.snapshot) : null
       this.snapshot = { ...this.snapshot, hands: pose ? [pose] : [] }
-      this.vm.events.emit(VISION_RESULTS, { hands: pose ? [handAt(pose)] : [], mirror: true, t: Date.now() })
+      this.vision = { hands: pose ? [handAt(pose)] : [], mirror: true }
+      this.vm.events.emit(VISION_RESULTS, { ...this.vision, t: Date.now() })
     }, FRAME_MS)
   }
 
@@ -155,6 +158,21 @@ export class CameraAiRun {
       await new Promise((resolve) => setTimeout(resolve, FRAME_MS))
     }
     return done(this.snapshot)
+  }
+
+  /**
+   * What a lesson's Camera AI rules are graded on, built as the editor's lesson panel builds it.
+   * @returns The snapshot of the camera, the hands on the stage and the playground.
+   */
+  graded(): GradedSnapshot {
+    const { playground, cameraOn } = this.snapshot
+    return {
+      cameraOn,
+      hands: handsOnStage(this.vision),
+      objects: playground.objects,
+      scores: playground.scores,
+      say: playground.say,
+    }
   }
 
   stop(): void {
