@@ -133,24 +133,115 @@ export const gestureForKey = key => {
 /** How often the mouse hand reports, like a camera at 30 frames per second. */
 const FRAME_MS = 33;
 
+/** Frame height over frame width: camera frames are 4:3. */
+const ASPECT = 0.75;
+
+/**
+ * Where each of MediaPipe's 33 pose landmarks sits, relative to the nose, for someone facing the camera
+ * with the arms down: x and y both in frame widths (y down), so the figure keeps its shape on a 4:3 frame.
+ * Index 2 is the person's left eye, on the viewer's right.
+ */
+const BODY = [
+    [0, 0], [0.012, -0.02], [0.026, -0.02], [0.04, -0.02], [-0.012, -0.02], [-0.026, -0.02], [-0.04, -0.02],
+    [0.06, -0.01], [-0.06, -0.01], [0.02, 0.03], [-0.02, 0.03],
+    [0.12, 0.13], [-0.12, 0.13], [0.17, 0.25], [-0.17, 0.25], [0.19, 0.36], [-0.19, 0.36],
+    [0.2, 0.39], [-0.2, 0.39], [0.19, 0.4], [-0.19, 0.4], [0.18, 0.38], [-0.18, 0.38],
+    [0.08, 0.42], [-0.08, 0.42], [0.08, 0.62], [-0.08, 0.62], [0.08, 0.82], [-0.08, 0.82],
+    [0.08, 0.85], [-0.08, 0.85], [0.1, 0.86], [-0.1, 0.86]
+];
+/** The head's landmarks (nose, eyes, ears, mouth), which lean and nod about the neck. */
+const HEAD_POINTS = 11;
+const NECK = [0, 0.1];
+/** How far a nod dips the head, in frame widths. */
+const NOD_DEPTH = 0.06;
+
+/**
+ * The body the pose model would report for a pointer at a point of the playground: the nose on the pointer.
+ * @param {object} body Where the pointer is and what the head does.
+ * @param {number} body.x Pointer x across the playground as the viewer sees it, 0 … 1.
+ * @param {number} body.y Pointer y down the playground, 0 … 1.
+ * @param {number} [body.tilt] How far the head leans, in degrees; + lowers the viewer's right side.
+ * @param {number} [body.nod] How far through a nod the head is dipped, 0 … 1.
+ * @param {?Array<{x: number, y: number}>} [body.wrists] Where the two wrists are (viewer's left first), when
+ *   the arms are raised; null for arms down.
+ * @param {boolean} body.mirror Whether the picture is shown mirrored.
+ * @returns {{landmarks: Array<{x: number, y: number, z: number, visibility: number}>}} The pose.
+ */
+export const mousePose = ({x, y, tilt = 0, nod = 0, wrists = null, mirror}) => {
+    const a = rad(tilt);
+    const c = Math.cos(a);
+    const sn = Math.sin(a);
+    const landmarks = BODY.map(([bx, by], i) => {
+        let px = bx;
+        let py = by;
+        if (i < HEAD_POINTS) {
+            py += nod * NOD_DEPTH;
+            const dx = px - NECK[0];
+            const dy = py - NECK[1];
+            px = NECK[0] + (dx * c) - (dy * sn);
+            py = NECK[1] + (dx * sn) + (dy * c);
+        }
+        const vx = x + px;
+        const vy = y + (py / ASPECT);
+        return {x: vx, y: vy, z: 0, visibility: i <= 22 ? 0.99 : 0.3};
+    });
+    if (wrists) {
+        // Viewer's right is the person's left (even index); each arm reaches its raised hand.
+        const [left, right] = wrists;
+        const arm = (shoulder, elbow, wrist, hand) => {
+            const s0 = landmarks[shoulder];
+            landmarks[wrist] = {...landmarks[wrist], x: hand.x, y: hand.y};
+            landmarks[elbow] = {...landmarks[elbow], x: (s0.x + hand.x) / 2, y: (s0.y + hand.y) / 2};
+        };
+        arm(11, 13, 15, right);
+        arm(12, 14, 16, left);
+    }
+    return {landmarks: landmarks.map(p => ({...p, x: mirror ? 1 - p.x : p.x}))};
+};
+
+/** A flap of both arms with the space bar: how long it lasts and where the hands go, top to middle. */
+const FLAP_MS = 350;
+const FLAP_FROM = 0.15;
+const FLAP_TO = 0.65;
+const FLAP_X = [0.3, 0.7];
+
+/**
+ * Both hands partway through a flap, as the viewer sees them.
+ * @param {number} p How far through the flap, 0 … 1.
+ * @returns {Array<{x: number, y: number}>} The fingertips, viewer's left first.
+ */
+export const flapPoints = p => FLAP_X.map(fx => ({x: fx, y: FLAP_FROM + ((FLAP_TO - FLAP_FROM) * p)}));
+
+/** How far a lean with the arrow keys goes, and how long a nod with the down arrow takes. */
+const KEY_TILT = 25;
+const NOD_MS = 400;
+
 /**
  * Report a mouse hand over an element until stopped: one frame every FRAME_MS while the pointer is over
- * the element, and frames with no hand while it is away.
+ * the element, and frames with no hand while it is away. While the project uses the head and body blocks,
+ * the pointer moves the head instead: the arrow keys lean it (left, right) and nod it (down). The space bar
+ * flaps both arms down. Keys count only while the pointer is on the playground, so typing in the blocks is
+ * left alone.
  * @param {HTMLElement} element The playground the pointer moves over.
- * @param {function(object): void} onResults Called with `{hands, t}` for every frame.
+ * @param {function(object): void} onResults Called with `{hands, pose, t}` for every frame.
  * @param {function(): boolean} isMirrored Whether the picture is mirrored now.
+ * @param {function(): boolean} [wantPose] Whether the project uses the head and body blocks.
  * @returns {{stop: function(): void}} Stops reporting and releases the listeners.
  */
-export const trackMouse = (element, onResults, isMirrored) => {
+export const trackMouse = (element, onResults, isMirrored, wantPose = () => false) => {
     let point = null;
     let held = false;
     let gesture = 'open';
+    let tilt = 0;
+    let nodAt = -Infinity;
+    let flapAt = -Infinity;
     const onMove = e => {
         point = pointerPosition(e, element.getBoundingClientRect());
     };
     const onLeave = () => {
         point = null;
         held = false;
+        tilt = 0;
     };
     const onDown = e => {
         onMove(e);
@@ -164,10 +255,19 @@ export const trackMouse = (element, onResults, isMirrored) => {
         gesture = nextGesture(gesture);
     };
     const onKey = e => {
-        // Only while the pointer is on the playground, so typing in the blocks is left alone.
         if (!point || e.ctrlKey || e.metaKey || e.altKey) return;
         const picked = gestureForKey(e.key);
         if (picked) gesture = picked;
+        else if (e.key === 'ArrowLeft') tilt = -KEY_TILT;
+        else if (e.key === 'ArrowRight') tilt = KEY_TILT;
+        else if (e.key === 'ArrowDown' && !e.repeat) nodAt = Date.now();
+        else if (e.key === ' ' && !e.repeat) flapAt = Date.now();
+        else return;
+        // The page would scroll on the arrows and the space bar.
+        e.preventDefault();
+    };
+    const onKeyUp = e => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') tilt = 0;
     };
     element.addEventListener('pointermove', onMove);
     element.addEventListener('pointerleave', onLeave);
@@ -175,11 +275,31 @@ export const trackMouse = (element, onResults, isMirrored) => {
     window.addEventListener('pointerup', onUp);
     element.addEventListener('contextmenu', onMenu);
     window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKeyUp);
     const timer = setInterval(() => {
-        const hands = point ?
-            [mouseHand({...point, gesture: held ? 'fist' : gesture, mirror: isMirrored()})] :
-            [];
-        onResults({hands, t: Date.now()});
+        const now = Date.now();
+        const mirror = isMirrored();
+        const body = wantPose();
+        const flapping = now - flapAt < FLAP_MS;
+        let hands = [];
+        let wrists = null;
+        if (flapping) {
+            const tips = flapPoints((now - flapAt) / FLAP_MS);
+            hands = tips.map(tip => mouseHand({...tip, gesture: 'open', mirror}));
+            // The pose's wrists go with the hands: below the fingertips.
+            wrists = tips.map(tip => ({x: tip.x, y: tip.y + (HAND_SIZE * 0.8)}));
+        } else if (point && !body) {
+            hands = [mouseHand({...point, gesture: held ? 'fist' : gesture, mirror})];
+        }
+        const nodP = (now - nodAt) / NOD_MS;
+        const pose = body && point ? mousePose({
+            ...point,
+            tilt,
+            nod: nodP >= 0 && nodP < 1 ? Math.sin(Math.PI * nodP) : 0,
+            wrists,
+            mirror
+        }) : null;
+        onResults({hands, pose, t: now});
     }, FRAME_MS);
     return {
         stop () {
@@ -190,6 +310,7 @@ export const trackMouse = (element, onResults, isMirrored) => {
             window.removeEventListener('pointerup', onUp);
             element.removeEventListener('contextmenu', onMenu);
             window.removeEventListener('keydown', onKey);
+            window.removeEventListener('keyup', onKeyUp);
         }
     };
 };

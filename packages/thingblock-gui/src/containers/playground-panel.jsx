@@ -6,7 +6,7 @@ import VM from '@thingblock/thingblock-vm';
 
 import PlaygroundPanelComponent from '../components/playground-panel/playground-panel.jsx';
 import {attachStream, listCameras, startCamera, stopCamera} from '../lib/vision/camera';
-import {HAND_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
+import {HAND_CONNECTIONS, POSE_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
 import {MOUSE, loadDeviceName, saveDeviceName} from '../lib/vision/camera-choice';
 import {trackMouse} from '../lib/vision/mouse-hand';
 import {replayHands} from '../lib/vision/replay';
@@ -31,6 +31,37 @@ const PICTURES = {
     basket: '🧺',
     star: '⭐',
     bomb: '💣'
+};
+
+/** A bamboo's stalks are this wide on the stage (the VM's playground uses the same width to judge touches). */
+const BAMBOO_WIDTH = 46;
+
+/**
+ * Draw a bamboo: two green stalks, from the top and from the bottom of the stage, with the opening
+ * between them at the object's y.
+ * @param {CanvasRenderingContext2D} ctx The canvas.
+ * @param {object} o The bamboo object, in stage units.
+ * @param {number} width The canvas width in CSS pixels.
+ * @param {number} height The canvas height in CSS pixels.
+ */
+const drawBamboo = (ctx, o, width, height) => {
+    const scale = width / STAGE_WIDTH;
+    const w = BAMBOO_WIDTH * scale;
+    const cx = ((o.x / STAGE_WIDTH) + 0.5) * width;
+    const gapTop = (0.5 - ((o.y + (o.size / 2)) / STAGE_HEIGHT)) * height;
+    const gapBottom = (0.5 - ((o.y - (o.size / 2)) / STAGE_HEIGHT)) * height;
+    const stalk = (top, bottom) => {
+        if (bottom <= top) return;
+        ctx.fillStyle = '#4d7c0f';
+        ctx.fillRect(cx - (w / 2), top, w, bottom - top);
+        ctx.fillStyle = '#84cc16';
+        ctx.fillRect(cx - (w / 2) + (w * 0.15), top, w * 0.3, bottom - top);
+        // Nodes every 40 stage units, as on a real stalk.
+        ctx.fillStyle = '#365314';
+        for (let y = top + (20 * scale); y < bottom; y += 40 * scale) ctx.fillRect(cx - (w / 2), y, w, 3 * scale);
+    };
+    stalk(0, gapTop);
+    stalk(gapBottom, height);
 };
 
 const EMPTY_PLAYGROUND = {objects: [], scores: [0, 0], timeLeft: null, say: '', showScoreboard: false};
@@ -126,10 +157,43 @@ const draw = (canvas, results, mirror, playground, labels) => {
         }
     }
 
+    // The body: the upper skeleton and a ring around the head, in the extension's cyan.
+    if (results && results.pose) {
+        const pts = results.pose.landmarks;
+        const px = p => (mirror ? 1 - p.x : p.x) * width;
+        const py = p => p.y * height;
+        const seen = p => !(p.visibility < 0.5);
+        ctx.strokeStyle = 'rgba(34, 211, 238, 0.9)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        for (const [a, b] of POSE_CONNECTIONS) {
+            if (!seen(pts[a]) || !seen(pts[b])) continue;
+            ctx.moveTo(px(pts[a]), py(pts[a]));
+            ctx.lineTo(px(pts[b]), py(pts[b]));
+        }
+        ctx.stroke();
+        const nose = pts[0];
+        if (seen(nose)) {
+            const ears = Math.hypot(px(pts[7]) - px(pts[8]), py(pts[7]) - py(pts[8]));
+            ctx.beginPath();
+            ctx.arc(px(nose), py(nose), Math.max(12, ears * 0.75), 0, Math.PI * 2);
+            ctx.stroke();
+            // The line of the eyes shows the lean.
+            ctx.beginPath();
+            ctx.moveTo(px(pts[2]), py(pts[2]));
+            ctx.lineTo(px(pts[5]), py(pts[5]));
+            ctx.stroke();
+        }
+    }
+
     // Objects, as pictures sized in stage units.
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (const o of playground.objects) {
+        if (o.kind === 'bamboo') {
+            drawBamboo(ctx, o, width, height);
+            continue;
+        }
         const x = ((o.x / STAGE_WIDTH) + 0.5) * width;
         const y = (0.5 - (o.y / STAGE_HEIGHT)) * height;
         ctx.font = `${Math.round(o.size * scale)}px serif`;
@@ -159,6 +223,8 @@ const PlaygroundPanel = ({vm}) => {
     const resultsRef = useRef(null);
     const playgroundRef = useRef(EMPTY_PLAYGROUND);
     const mirrorRef = useRef(true);
+    // Whether the project uses the head and body blocks, so the body tracker should run.
+    const poseWantedRef = useRef(false);
     const startingRef = useRef(false);
     // Bumped by every start and stop; a start whose number is stale was stopped while it waited.
     const runRef = useRef(0);
@@ -241,7 +307,7 @@ const PlaygroundPanel = ({vm}) => {
         if (frames || mouse) {
             trackerRef.current = frames ?
                 replayHands(frames, handleResults) :
-                trackMouse(stageRef.current, handleResults, () => mirrorRef.current);
+                trackMouse(stageRef.current, handleResults, () => mirrorRef.current, () => poseWantedRef.current);
             startingRef.current = false;
             fpsRef.current = {count: 0, since: performance.now()};
             setStatus('ready');
@@ -255,7 +321,10 @@ const PlaygroundPanel = ({vm}) => {
             streamRef.current = stream;
             await attachStream(videoRef.current, stream);
             if (stale()) return;
-            tracker = await trackHands(videoRef.current, handleResults, {base: assetBase()});
+            tracker = await trackHands(videoRef.current, handleResults, {
+                base: assetBase(),
+                wantPose: () => poseWantedRef.current
+            });
             if (stale()) return;
             trackerRef.current = tracker;
             fpsRef.current = {count: 0, since: performance.now()};
@@ -301,6 +370,9 @@ const PlaygroundPanel = ({vm}) => {
     // Blocks drive the camera through the VM's event bus; the VM describes the playground the same way.
     useEffect(() => {
         const handleCommand = command => {
+            if (typeof command.pose === 'boolean') poseWantedRef.current = command.pose;
+            // A head block asking for the body tracker: a running camera picks it up on its next frame.
+            if (command.pose && !('on' in command)) return;
             if (typeof command.device === 'string') {
                 chooseCamera(command.device);
             } else if (command.on) {

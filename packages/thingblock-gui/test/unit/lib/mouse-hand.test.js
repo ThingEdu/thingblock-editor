@@ -1,7 +1,9 @@
 import {
     MOUSE_GESTURES,
+    flapPoints,
     gestureForKey,
     mouseHand,
+    mousePose,
     nextGesture,
     pointerPosition,
     trackMouse
@@ -93,6 +95,48 @@ describe('pointer mapping', () => {
     });
 });
 
+describe('mousePose', () => {
+    const NOSE = 0;
+    const LEFT_EYE = 2;
+    const RIGHT_EYE = 5;
+    test('has the 33 landmarks of a MediaPipe pose, the nose on the pointer and the shoulders below', () => {
+        const {landmarks} = mousePose({x: 0.4, y: 0.3, mirror: false});
+        expect(landmarks).toHaveLength(33);
+        near(landmarks[NOSE].x, 0.4);
+        near(landmarks[NOSE].y, 0.3);
+        expect(landmarks[11].y).toBeGreaterThan(0.4);
+        expect(landmarks[NOSE].visibility).toBeGreaterThan(0.5);
+    });
+
+    test('a lean right lowers the eye on the viewer\'s right; mirroring stores the frame point', () => {
+        const eyes = p => [p.landmarks[LEFT_EYE], p.landmarks[RIGHT_EYE]].sort((a, b) => a.x - b.x);
+        const [l, r] = eyes(mousePose({x: 0.5, y: 0.4, tilt: 25, mirror: false}));
+        expect(r.y).toBeGreaterThan(l.y);
+        const mirrored = mousePose({x: 0.3, y: 0.4, mirror: true});
+        near(mirrored.landmarks[NOSE].x, 0.7);
+    });
+
+    test('a nod dips the head towards the shoulders, which stay', () => {
+        const up = mousePose({x: 0.5, y: 0.4, mirror: false}).landmarks;
+        const down = mousePose({x: 0.5, y: 0.4, nod: 1, mirror: false}).landmarks;
+        expect(down[NOSE].y - up[NOSE].y).toBeGreaterThan(0.05);
+        near(down[11].y, up[11].y);
+    });
+
+    test('raised arms put the wrists where the flapping hands are', () => {
+        const wrists = [{x: 0.3, y: 0.2}, {x: 0.7, y: 0.2}];
+        const {landmarks} = mousePose({x: 0.5, y: 0.4, wrists, mirror: false});
+        const both = [landmarks[15], landmarks[16]].sort((a, b) => a.x - b.x);
+        near(both[0].x, 0.3);
+        near(both[1].y, 0.2);
+    });
+
+    test('a flap takes both hands from the top to the middle', () => {
+        expect(flapPoints(0).map(p => p.y)).toEqual([0.15, 0.15]);
+        expect(flapPoints(1)[0].y).toBeCloseTo(0.65);
+    });
+});
+
 describe('trackMouse', () => {
     beforeEach(() => jest.useFakeTimers());
     afterEach(() => jest.useRealTimers());
@@ -147,6 +191,45 @@ describe('trackMouse', () => {
         window.dispatchEvent(new KeyboardEvent('keydown', {key: '4'}));
         jest.advanceTimersByTime(40);
         expect(last()).toBe('thumb_up');
+        tracker.stop();
+    });
+
+    test('the space bar flaps both hands down, from the top half to below the middle', () => {
+        const {element, frames, tracker, fire} = setup();
+        fire(element, 'pointermove', {clientX: 50, clientY: 50});
+        jest.advanceTimersByTime(40);
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: ' '}));
+        jest.advanceTimersByTime(40);
+        const first = frames[frames.length - 1].hands;
+        expect(first).toHaveLength(2);
+        jest.advanceTimersByTime(280);
+        const later = frames[frames.length - 1].hands;
+        expect(later).toHaveLength(2);
+        expect(later[0].landmarks[0].y - first[0].landmarks[0].y).toBeGreaterThan(0.3);
+        jest.advanceTimersByTime(200);
+        expect(frames[frames.length - 1].hands).toHaveLength(1);
+        tracker.stop();
+    });
+
+    test('in a head game the pointer moves the head, and the arrows lean it', () => {
+        const element = document.createElement('div');
+        element.getBoundingClientRect = () => ({left: 0, top: 0, width: 200, height: 100});
+        document.body.appendChild(element);
+        const frames = [];
+        const tracker = trackMouse(element, r => frames.push(r), () => false, () => true);
+        element.dispatchEvent(new MouseEvent('pointermove', {bubbles: true, clientX: 100, clientY: 40}));
+        jest.advanceTimersByTime(40);
+        const frame = frames[frames.length - 1];
+        expect(frame.hands).toEqual([]);
+        near(frame.pose.landmarks[0].x, 0.5);
+        near(frame.pose.landmarks[0].y, 0.4);
+        const key = new KeyboardEvent('keydown', {key: 'ArrowRight', cancelable: true});
+        window.dispatchEvent(key);
+        expect(key.defaultPrevented).toBe(true);
+        jest.advanceTimersByTime(40);
+        const [l, r] = [2, 5].map(i => frames[frames.length - 1].pose.landmarks[i]).sort((a, b) => a.x - b.x);
+        expect(r.y).toBeGreaterThan(l.y);
+        window.dispatchEvent(new KeyboardEvent('keyup', {key: 'ArrowRight'}));
         tracker.stop();
     });
 
