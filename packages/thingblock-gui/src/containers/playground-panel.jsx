@@ -5,12 +5,14 @@ import {connect} from 'react-redux';
 import VM from '@thingblock/thingblock-vm';
 
 import PlaygroundPanelComponent from '../components/playground-panel/playground-panel.jsx';
-import {attachStream, startCamera, stopCamera} from '../lib/vision/camera';
+import {attachStream, listCameras, startCamera, stopCamera} from '../lib/vision/camera';
 import {HAND_CONNECTIONS, trackHands} from '../lib/vision/hand-tracker';
+import {replayHands} from '../lib/vision/replay';
 
 /** The event names shared with the VM's Camera AI extension (see thingblock-vm event-name.ts). */
 const CAMERA_COMMAND = 'CAMERA_AI_CAMERA_COMMAND';
 const CAMERA_STATUS = 'CAMERA_AI_CAMERA_STATUS';
+const CAMERA_DEVICES = 'CAMERA_AI_CAMERA_DEVICES';
 const VISION_RESULTS = 'CAMERA_AI_VISION_RESULTS';
 const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE';
 const PLAYGROUND_COMMAND = 'CAMERA_AI_PLAYGROUND_COMMAND';
@@ -45,6 +47,34 @@ const gestureMessages = defineMessages({
     },
     i_love_you: {id: 'cameraAi.menu.iLoveYou', defaultMessage: 'I love you', description: 'Gesture name: the ILY sign'}
 });
+
+/** The camera this viewer picked last, by name; kept per browser, not in the project. */
+const DEVICE_KEY = 'thingblock.cameraAi.device';
+const loadDeviceName = () => {
+    try {
+        return localStorage.getItem(DEVICE_KEY) || 'default';
+    } catch (e) {
+        return 'default';
+    }
+};
+const saveDeviceName = name => {
+    try {
+        localStorage.setItem(DEVICE_KEY, name);
+    } catch (e) {
+        // Private windows may refuse storage; the choice then lasts only this session.
+    }
+};
+
+/**
+ * Hand frames to play instead of the camera, set by development tools and tests on
+ * `window.thingblockCameraReplay`; never read in production builds.
+ * @returns {Array<object>|null} The frames, or null to use the camera.
+ */
+const replayFrames = () => {
+    if (process.env.NODE_ENV === 'production') return null;
+    const frames = window.thingblockCameraReplay;
+    return Array.isArray(frames) && frames.length > 0 ? frames : null;
+};
 
 /** Where the model's assets are served from; the desktop app loads the page from a file, so relative. */
 const assetBase = () => {
@@ -153,6 +183,26 @@ const PlaygroundPanel = ({vm}) => {
     const [mirror, setMirror] = useState(true);
     const [fps, setFps] = useState(0);
     const [playground, setPlayground] = useState(EMPTY_PLAYGROUND);
+    const [cameras, setCameras] = useState([]);
+    const [deviceName, setDeviceName] = useState(loadDeviceName);
+    const deviceNameRef = useRef(deviceName);
+    const camerasRef = useRef(cameras);
+
+    // Names become known once a camera was allowed, and change when a phone connects or leaves.
+    const refreshCameras = useCallback(async () => {
+        const found = await listCameras();
+        camerasRef.current = found;
+        setCameras(found);
+        vm.events.emit(CAMERA_DEVICES, found.map(c => c.name));
+    }, [vm]);
+
+    useEffect(() => {
+        refreshCameras();
+        const devices = navigator.mediaDevices;
+        if (!devices || !devices.addEventListener) return;
+        devices.addEventListener('devicechange', refreshCameras);
+        return () => devices.removeEventListener('devicechange', refreshCameras);
+    }, [refreshCameras]);
 
     const emitStatus = useCallback((on, ready, err) => {
         const payload = {on, ready};
@@ -200,8 +250,18 @@ const PlaygroundPanel = ({vm}) => {
         emitStatus(true, false);
         let stream = null;
         let tracker = null;
+        const frames = replayFrames();
+        if (frames) {
+            trackerRef.current = replayHands(frames, handleResults);
+            startingRef.current = false;
+            fpsRef.current = {count: 0, since: performance.now()};
+            setStatus('ready');
+            emitStatus(true, true);
+            return;
+        }
         try {
-            stream = await startCamera();
+            const chosen = camerasRef.current.find(c => c.name === deviceNameRef.current);
+            stream = await startCamera(chosen ? chosen.id : null);
             if (stale()) return;
             streamRef.current = stream;
             await attachStream(videoRef.current, stream);
@@ -210,6 +270,7 @@ const PlaygroundPanel = ({vm}) => {
             if (stale()) return;
             trackerRef.current = tracker;
             fpsRef.current = {count: 0, since: performance.now()};
+            refreshCameras();
             setStatus('ready');
             emitStatus(true, true);
         } catch (err) {
@@ -229,12 +290,25 @@ const PlaygroundPanel = ({vm}) => {
                 startingRef.current = false;
             }
         }
-    }, [emitStatus, handleResults]);
+    }, [emitStatus, handleResults, refreshCameras]);
+
+    const chooseCamera = useCallback(name => {
+        deviceNameRef.current = name;
+        setDeviceName(name);
+        saveDeviceName(name);
+        // A running camera switches now; an idle one uses the choice when it starts.
+        if (trackerRef.current || startingRef.current) {
+            stop();
+            start();
+        }
+    }, [start, stop]);
 
     // Blocks drive the camera through the VM's event bus; the VM describes the playground the same way.
     useEffect(() => {
         const handleCommand = command => {
-            if (command.on) {
+            if (typeof command.device === 'string') {
+                chooseCamera(command.device);
+            } else if (command.on) {
                 if (typeof command.mirror === 'boolean') {
                     mirrorRef.current = command.mirror;
                     setMirror(command.mirror);
@@ -254,7 +328,7 @@ const PlaygroundPanel = ({vm}) => {
             vm.events.off(CAMERA_COMMAND, handleCommand);
             vm.events.off(PLAYGROUND_UPDATE, handlePlayground);
         };
-    }, [vm, start, stop]);
+    }, [vm, start, stop, chooseCamera]);
 
     // The camera stops with the panel.
     useEffect(() => () => stop(), [stop]);
@@ -284,7 +358,9 @@ const PlaygroundPanel = ({vm}) => {
 
     return (
         <PlaygroundPanelComponent
+            cameras={cameras}
             canvasRef={canvasRef}
+            deviceName={deviceName}
             error={error}
             fps={fps}
             mirror={mirror}
@@ -293,6 +369,7 @@ const PlaygroundPanel = ({vm}) => {
             videoRef={videoRef}
             onCameraOff={stop}
             onCameraOn={start}
+            onChooseCamera={chooseCamera}
             onClear={handleClear}
             onToggleMirror={handleToggleMirror}
         />

@@ -55,6 +55,7 @@ export const PeripheralEvent = {
 export const CameraAiEvent = {
     CAMERA_COMMAND: 'CAMERA_AI_CAMERA_COMMAND', // (command: {on: boolean, mirror?: boolean})
     CAMERA_STATUS: 'CAMERA_AI_CAMERA_STATUS', // (status: {on: boolean, ready: boolean, error?: string})
+    CAMERA_DEVICES: 'CAMERA_AI_CAMERA_DEVICES', // (devices: string[]) the cameras' names, as the GUI found them
     VISION_RESULTS: 'CAMERA_AI_VISION_RESULTS', // (results: VisionResults)
     PLAYGROUND_UPDATE: 'CAMERA_AI_PLAYGROUND_UPDATE', // (state: PlaygroundState)
     PLAYGROUND_COMMAND: 'CAMERA_AI_PLAYGROUND_COMMAND' // (command: {type: 'reset'})

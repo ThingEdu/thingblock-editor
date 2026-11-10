@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useCallback} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
 import styles from './playground-panel.css';
@@ -40,6 +40,22 @@ const messages = defineMessages({
         id: 'gui.playgroundPanel.mirrorTip',
         defaultMessage: 'Flip the picture like a mirror',
         description: 'Tooltip of the mirror button'
+    },
+    device: {
+        id: 'gui.playgroundPanel.device',
+        defaultMessage: 'Choose a camera',
+        description: 'Label of the list of cameras on the playground panel'
+    },
+    defaultCamera: {
+        id: 'gui.playgroundPanel.defaultCamera',
+        defaultMessage: 'Default camera',
+        description: 'The browser default camera, first in the list of cameras'
+    },
+    phoneHint: {
+        id: 'gui.playgroundPanel.phoneHint',
+        defaultMessage: 'No webcam? Use a phone: with an iPhone and a Mac turn on Continuity Camera; ' +
+            'on Android or Windows install DroidCam or Iriun, then choose that camera here.',
+        description: 'Shown when the computer has no camera or the camera is off'
     },
     clear: {
         id: 'gui.playgroundPanel.clear',
@@ -149,12 +165,15 @@ Button.propTypes = {
  * @returns {React.ReactElement} The panel.
  */
 const PlaygroundPanel = ({
+    cameras,
     canvasRef,
+    deviceName,
     error,
     fps,
     mirror,
     onCameraOff,
     onCameraOn,
+    onChooseCamera,
     onClear,
     onToggleMirror,
     playground,
@@ -175,6 +194,9 @@ const PlaygroundPanel = ({
     }
 
     const scoreboard = playground && playground.showScoreboard;
+    const known = cameras.some(c => c.name === deviceName);
+    const showPhoneHint = status === 'off' || (status === 'error' && error && error.name === 'NotFoundError');
+    const handleDeviceChange = useCallback(e => onChooseCamera(e.target.value), [onChooseCamera]);
 
     return (
         <div className={styles.playgroundPanel}>
@@ -200,6 +222,23 @@ const PlaygroundPanel = ({
                         tip={intl.formatMessage(messages.cameraOnTip)}
                         onClick={onCameraOn}
                     />
+                )}
+                {cameras.length > 1 && (
+                    <select
+                        aria-label={intl.formatMessage(messages.device)}
+                        className={styles.device}
+                        title={intl.formatMessage(messages.device)}
+                        value={known ? deviceName : 'default'}
+                        onChange={handleDeviceChange}
+                    >
+                        <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
+                        {cameras.map(c => (
+                            <option
+                                key={c.id}
+                                value={c.name}
+                            >{c.name}</option>
+                        ))}
+                    </select>
                 )}
                 <Button
                     icon="mirror"
@@ -231,6 +270,9 @@ const PlaygroundPanel = ({
                 {placeholder && (
                     <div className={classNames(styles.placeholder, {[styles.problem]: status === 'error'})}>
                         {placeholder}
+                        {showPhoneHint && (
+                            <div className={styles.hint}>{intl.formatMessage(messages.phoneHint)}</div>
+                        )}
                     </div>
                 )}
                 {scoreboard && (
@@ -253,12 +295,15 @@ const PlaygroundPanel = ({
 };
 
 PlaygroundPanel.propTypes = {
+    cameras: PropTypes.arrayOf(PropTypes.shape({id: PropTypes.string, name: PropTypes.string})).isRequired,
     canvasRef: PropTypes.shape({current: PropTypes.instanceOf(Element)}).isRequired,
+    deviceName: PropTypes.string.isRequired,
     error: PropTypes.shape({name: PropTypes.string, message: PropTypes.string}),
     fps: PropTypes.number,
     mirror: PropTypes.bool,
     onCameraOff: PropTypes.func.isRequired,
     onCameraOn: PropTypes.func.isRequired,
+    onChooseCamera: PropTypes.func.isRequired,
     onClear: PropTypes.func.isRequired,
     onToggleMirror: PropTypes.func.isRequired,
     playground: PropTypes.shape({

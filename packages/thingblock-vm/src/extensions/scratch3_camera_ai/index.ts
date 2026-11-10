@@ -57,6 +57,8 @@ class CameraAiExtension implements Extension {
     // Whether each object touched each target when last checked, keyed `name/target`.
     _touchState: Record<string, boolean> = {};
     _wasReady = false;
+    // The cameras' names the GUI last reported, for the "use camera" menu.
+    _cameraNames: string[] = [];
 
     constructor (runtime: any) { // TODO: type Runtime for extension
         this.runtime = runtime;
@@ -77,6 +79,9 @@ class CameraAiExtension implements Extension {
             const ready = this.vision.cameraReady;
             if (ready && !this._wasReady) this._startHats('whenCameraReady');
             this._wasReady = ready;
+        });
+        this.runtime.events.on(CameraAiEvent.CAMERA_DEVICES, (names: string[]) => {
+            this._cameraNames = names;
         });
         this.runtime.events.on(RuntimeEvent.PROJECT_STOP_ALL, () => this.playground.stop());
         // A new project starts with an empty playground.
@@ -165,6 +170,14 @@ class CameraAiExtension implements Extension {
                     opcode: 'cameraOff',
                     blockType: BlockType.COMMAND,
                     text: msg('cameraOff', 'turn camera off', 'Stop the webcam')
+                },
+                {
+                    opcode: 'cameraSelect',
+                    blockType: BlockType.COMMAND,
+                    text: msg('cameraSelect', 'use camera [DEVICE]', 'Choose which camera to use'),
+                    arguments: {
+                        DEVICE: {type: ArgumentType.STRING, menu: 'DEVICE', defaultValue: 'default'}
+                    }
                 },
                 {
                     opcode: 'whenCameraReady',
@@ -398,6 +411,11 @@ class CameraAiExtension implements Extension {
                 }
             ],
             menus: {
+                // Saved by name rather than by device id: ids differ on every computer, names often match.
+                DEVICE: {
+                    acceptReporters: true,
+                    items: 'getCameraMenu'
+                },
                 MIRROR: {
                     acceptReporters: false,
                     items: [
@@ -493,6 +511,17 @@ class CameraAiExtension implements Extension {
 
     cameraOn ({MIRROR}: {MIRROR: ArgValue}) {
         this.runtime.events.emit(CameraAiEvent.CAMERA_COMMAND, {on: true, mirror: MIRROR !== 'normal'});
+    }
+
+    getCameraMenu (): MenuItem[] {
+        return [
+            item('default', 'defaultCamera', 'default camera'),
+            ...this._cameraNames.map(name => ({text: name, value: name}))
+        ];
+    }
+
+    cameraSelect ({DEVICE}: {DEVICE: ArgValue}) {
+        this.runtime.events.emit(CameraAiEvent.CAMERA_COMMAND, {device: String(DEVICE)});
     }
 
     cameraOff () {
