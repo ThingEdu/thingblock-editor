@@ -67,7 +67,7 @@ export default [
         )
     },
     {
-        name: 'ThingEdges',
+        name: 'Thing Smart',
         extensionId: 'thingEdges',
         iconURL: thingEdgesIconURL,
         insetIconURL: thingEdgesInsetIconURL,

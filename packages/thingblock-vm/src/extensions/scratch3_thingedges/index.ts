@@ -353,7 +353,7 @@ class ThingEdgesExtension implements Extension {
             id: EXTENSION_ID,
             name: formatMessage({
                 id: 'thingEdges.name',
-                default: 'Smart home',
+                default: 'Thing Smart',
                 description: 'Name of the ThingEdges extension'
             }),
             blockIconURI,
