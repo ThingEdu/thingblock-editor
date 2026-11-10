@@ -3,8 +3,7 @@
  *
  * Logic and numbers ported from ThingEdu/thingbot-sim `src/belt.ts` (https://github.com/ThingEdu/thingbot-sim,
  * commit bde12a2); its drawing stays in the editor's panel.
- * thingbot-sim is AGPL-3.0; its author, Le Ngoc Tuan (ThingEdu), licensed this part to ThingBlock under MIT
- * on 2026-11-10.
+ * thingbot-sim is AGPL-3.0-only, the same licence as this package.
  *
  * The IR eye is a reflectance module (the kind under the Cobot chassis) on the ThingBot sensor port, signal on
  * IO4, read by `analogRead(4)` as 0…4095: the more infrared the thing in front reflects, the bigger the number.
