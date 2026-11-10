@@ -58,19 +58,10 @@
           "next": null,
           "parent": "b2",
           "inputs": {
-            "BRIGHTNESS": [
-              1,
-              [
-                4,
-                "30"
-              ]
-            ]
+            "BRIGHTNESS": [1, [4, "30"]]
           },
           "fields": {
-            "LED": [
-              "LED_1",
-              null
-            ]
+            "LED": ["LED_1", null]
           },
           "shadow": false,
           "topLevel": false
@@ -110,9 +101,7 @@
     }
   ],
   "monitors": [],
-  "extensions": [
-    "thingBotC3"
-  ],
+  "extensions": ["thingBotC3"],
   "meta": {
     "semver": "3.0.0",
     "vm": "14.1.0",

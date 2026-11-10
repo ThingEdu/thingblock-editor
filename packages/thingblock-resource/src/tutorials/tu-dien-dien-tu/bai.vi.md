@@ -48,7 +48,7 @@ ThingBot dùng điện nhỏ, từ pin hoặc từ dây USB nối máy tính, n�
 
 ## Chân IO: dây thần kinh có số
 
-Bộ não nối ra ngoài bằng nhiều sợi dây gọi là **chân**. Mỗi chân có một số riêng: **IO0**, **IO3**, **IO4**… "IO" là viết tắt của tiếng Anh *Input/Output*, nghĩa là "vào/ra".
+Bộ não nối ra ngoài bằng nhiều sợi dây gọi là **chân**. Mỗi chân có một số riêng: **IO0**, **IO3**, **IO4**… "IO" là viết tắt của tiếng Anh _Input/Output_, nghĩa là "vào/ra".
 
 - **Đời thường:** như **dây thần kinh** nối não với ngón tay. Hoặc như các ổ cắm trên ổ điện kéo dài có đánh số, mỗi ổ cắm một đồ dùng.
 - **Ở ThingBot:** nút **SW** nối vào chân **IO3**. Cảm biến cắm vào các cổng có chân **IO0/IO1** và **IO4/IO5**.
@@ -80,8 +80,8 @@ Khi khối hỏi "chân số mấy", em chỉ cần nhìn chữ in cạnh cổng
 
 Có hai kiểu tin mà não đọc được:
 
-- **Kiểu bật/tắt** (gọi là **số**, tiếng Anh *digital*): chỉ có hai giá trị, như **công tắc đèn**: bật hoặc tắt, không có "nửa bật".
-- **Kiểu mức** (gọi là **tương tự**, tiếng Anh *analog*): có nhiều mức liền nhau, như **núm vặn âm lượng** của loa hay **vòi nước** mở to mở nhỏ.
+- **Kiểu bật/tắt** (gọi là **số**, tiếng Anh _digital_): chỉ có hai giá trị, như **công tắc đèn**: bật hoặc tắt, không có "nửa bật".
+- **Kiểu mức** (gọi là **tương tự**, tiếng Anh _analog_): có nhiều mức liền nhau, như **núm vặn âm lượng** của loa hay **vòi nước** mở to mở nhỏ.
 
 **Ở ThingBot:** nút **SW** là kiểu bật/tắt. Một điều lạ: khi em bấm, chân IO3 xuống **0 V**. Khối đọc nút đã tính sẵn chuyện này và đảo lại, nên bấm thì khối trả về **đúng**, em không cần nhớ.
 
