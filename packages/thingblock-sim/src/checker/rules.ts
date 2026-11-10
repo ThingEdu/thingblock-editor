@@ -19,6 +19,10 @@ export type Rule =
   | { kind: 'switch'; held: boolean }
   | { kind: 'distance'; op: DistanceOp; cm: number }
   | { kind: 'ps2'; button: string }
+  | { kind: 'ball'; dark: boolean }
+  | { kind: 'irRead'; pin: number }
+  | { kind: 'sorted'; streak: number }
+  | { kind: 'rejected'; count: number }
 
 export type DistanceOp = '<' | '≤' | '>' | '≥'
 
@@ -135,6 +139,14 @@ export function parseRule(text: string): Rule {
     if (!button) throw new RuleSyntaxError(text, `nút PS2 được hiểu: ${Object.keys(PS2_BUTTONS).join(', ')}`)
     return { kind: 'ps2', button }
   }
+  if ((m = /^chọn bóng (tối|sáng) màu$/.exec(t))) return { kind: 'ball', dark: m[1] === 'tối' }
+  if ((m = /^đọc mắt hồng ngoại io ?(\d+)$/.exec(t))) return { kind: 'irRead', pin: Number(m[1]) }
+  if ((m = /^phân loại đúng (\d+) (?:quả )?trứng liền$/.exec(t))) {
+    const streak = Number(m[1])
+    if (streak < 1) throw new RuleSyntaxError(text, 'cần ít nhất 1 quả trứng')
+    return { kind: 'sorted', streak }
+  }
+  if ((m = /^gạt (\d+) (?:quả )?trứng hỏng$/.exec(t))) return { kind: 'rejected', count: Number(m[1]) }
   // The quoted text keeps the author's casing: it is what the learner should see on the screen.
   // Optional placement after the quote: `ở y 16` (the line the text starts on, in pixels) and
   // `cỡ 12x16` (the glyph cell the text size block names).
@@ -159,6 +171,7 @@ export function parseRule(text: string): Rule {
     'các dạng được hiểu: "L1 sáng/tắt", "còi kêu/tắt", "L1 nhấp nháy, chu kỳ X giây ± Y%", ' +
       '"M1 tiến/lùi/dừng", "M1 tốc độ ≥ N%", "servo S1 ở G độ ± D", "servo S1 quét từ A đến B độ", ' +
       '\'OLED hiện "…"\', \'OLED hiện đúng "…"\', \'OLED hiện "…" ở y N cỡ 12x16\', ' +
-      '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên"',
+      '"giữ/nhả nút SW", "khoảng cách < N cm", "giữ nút PS2 lên", "chọn bóng tối/sáng màu", ' +
+      '"đọc mắt hồng ngoại IO4", "phân loại đúng N trứng liền", "gạt N trứng hỏng"',
   )
 }
