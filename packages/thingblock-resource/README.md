@@ -34,7 +34,10 @@ src/
     peripheral/servo/                   worked peripheral: manifest, blocks, generator, toolbox, libs/
     peripheral/ps2/                     PS2 controller blocks, codegen, icon, and vendored PS2X library
     peripheral/thingbot-core/           ThingBot's hidden peripheral: its blocks, generator, toolbox
+    peripheral/cobot-core/              CoBot's hidden peripheral (`cobotC3`): wheels, line eyes, lights
+    peripheral/colourSensor/            TCS34725 colour sensor on I2C, for any board; CoBot activates it itself
     devices/thingbot/                   worked device: ESP32-C3 manifest, icon, and live-mode firmware/
+    devices/cobot/                      CoBot line-following robot: ESP32-C3 manifest and assets/icon.svg
 ```
 
 The build wraps everything under one served root that preserves that layout:
@@ -76,12 +79,12 @@ reads it from `vm.devices.getExamplesOrigin()`.
 The `.tb` files are generated, not hand-edited:
 
 ```sh
-node scripts/examples/build-examples.mjs     # rewrite src/examples/thingbot/*.tb + index.json
+node scripts/examples/build-examples.mjs     # rewrite src/examples/{thingbot,cobot}/*.tb + index.json
 npx tsx scripts/check-examples.mjs            # generate each sketch with the real generators and compile it
 ```
 
-`scripts/examples/lessons-k12.mjs` writes the K12 and FanRoc programs with the block helpers in
-`dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons. `check-examples`
+`scripts/examples/lessons-k12.mjs` writes the K12 and FanRoc programs and `cobot.mjs` the CoBot ones, with
+the block helpers in `dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons. `check-examples`
 needs `arduino-cli` (`ARDUINO_CLI`) and the ESP32 core (`ARDUINO_DIRECTORIES_DATA`), so it is run by hand;
 `test/examples.test.ts` covers the rest in `npm test` (every block registered, field values valid, inputs
 type-compatible, sketch generated).

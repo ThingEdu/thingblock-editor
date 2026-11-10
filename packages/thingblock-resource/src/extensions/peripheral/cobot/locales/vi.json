@@ -10,25 +10,5 @@
         "LOW": "tắt"
       }
     }
-  },
-  "cobot_readColour": {
-    "message0": "đọc cảm biến màu %1",
-    "options": {
-      "CHANNEL": {
-        "0": "đỏ",
-        "1": "lục",
-        "2": "lam",
-        "3": "độ sáng"
-      }
-    }
-  },
-  "cobot_colourLight": {
-    "message0": "đèn cảm biến màu %1",
-    "options": {
-      "STATE": {
-        "HIGH": "bật",
-        "LOW": "tắt"
-      }
-    }
   }
 }

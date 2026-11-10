@@ -1,6 +1,6 @@
 /**
- * Cobot sensor simulator codegen, call for call with `generator.ts`. The rig sets each reading: an IR
- * sensor on GPIO n is the board's `adc<n>` input, a colour channel the `adccolour_<channel>` input.
+ * Cobot IR sensor simulator codegen, call for call with `generator.ts`. The rig sets each reading: an IR
+ * sensor on GPIO n is the board's `adc<n>` input.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
 import type { RegisterSimGenerators } from '../../../shared/types'
@@ -17,9 +17,4 @@ export const registerSimGenerators: RegisterSimGenerators = (generator, Order) =
     Order.ATOMIC,
   ]
   generator.forBlock.cobot_irLight = (block) => `$.digitalWrite(21, ${level(block)});\n`
-  generator.forBlock.cobot_colourLight = (block) => `$.digitalWrite(20, ${level(block)});\n`
-  generator.forBlock.cobot_readColour = (block) => {
-    const channel = Math.min(3, Math.max(0, Number(fieldValue(block, 'CHANNEL', '3')) || 0))
-    return [`$.analogRead("colour_${channel}")`, Order.ATOMIC]
-  }
 }

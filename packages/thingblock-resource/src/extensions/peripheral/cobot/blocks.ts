@@ -1,8 +1,8 @@
 /**
- * Cobot sensor blocks: the four analog IR reflectance sensors under the Cobot chassis and the TCS34725
- * colour sensor on its I2C bus. Pin numbers follow makerviet/cobot-arduino (`SENSOR_1_PIN` … `SENSOR_4_PIN`,
- * `IR_LED_ON`, `W_LED_ON`). The IR read takes the GPIO itself, so the same block reads a single IR module
- * plugged into a ThingBot sensor port (IO4 or IO0).
+ * Cobot IR sensor blocks: the four analog IR reflectance sensors of the Cobot chassis. Pin numbers follow
+ * makerviet/cobot-arduino (`SENSOR_1_PIN` … `SENSOR_4_PIN`, `IR_LED_ON`). The IR read takes the GPIO
+ * itself, so the same block reads a single IR module plugged into a ThingBot sensor port (IO4 or IO0).
+ * The colour sensor is its own pack, `colourSensor`.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
 import { withTranslations } from '../../../shared/localize'
@@ -18,14 +18,6 @@ export const IR_SENSORS: [string, string][] = [
   ['2 · IO3', '3'],
   ['3 · IO1', '1'],
   ['4 · IO0', '0'],
-]
-
-/** Colour sensor channels: value is the index into `getRawData`'s r, g, b, c outputs. */
-export const COLOUR_CHANNELS: [string, string][] = [
-  ['red', '0'],
-  ['green', '1'],
-  ['blue', '2'],
-  ['brightness', '3'],
 ]
 
 const onOff = {
@@ -53,28 +45,6 @@ const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
     init(this: Block) {
       this.jsonInit({
         message0: 'turn Cobot IR lights %1',
-        args0: [onOff],
-        colour: COLOUR,
-        secondaryColour: SECONDARY_COLOUR,
-        extensions: ['shape_statement'],
-      })
-    },
-  }
-  Blockly.Blocks.cobot_readColour = {
-    init(this: Block) {
-      this.jsonInit({
-        message0: 'read colour sensor %1',
-        args0: [{ type: 'field_dropdown', name: 'CHANNEL', options: COLOUR_CHANNELS }],
-        colour: COLOUR,
-        secondaryColour: SECONDARY_COLOUR,
-        extensions: ['output_number'],
-      })
-    },
-  }
-  Blockly.Blocks.cobot_colourLight = {
-    init(this: Block) {
-      this.jsonInit({
-        message0: 'turn colour sensor light %1',
         args0: [onOff],
         colour: COLOUR,
         secondaryColour: SECONDARY_COLOUR,

@@ -43,11 +43,14 @@ interface Project {
   board: { device: string; peripherals: string[] }
 }
 
-const EXAMPLES_DIR = join(__dirname, '..', 'src', 'examples', 'thingbot')
-const index = JSON.parse(readFileSync(join(EXAMPLES_DIR, 'index.json'), 'utf8')) as {
-  groups: string[]
-  examples: Example[]
-}
+const EXAMPLES_ROOT = join(__dirname, '..', 'src', 'examples')
+/** Each device folder and how many examples it ships. */
+const FOLDERS: Record<string, number> = { thingbot: 36, cobot: 5 }
+const indexOf = (folder: string) =>
+  JSON.parse(readFileSync(join(EXAMPLES_ROOT, folder, 'index.json'), 'utf8')) as {
+    groups: string[]
+    examples: Example[]
+  }
 
 const peripheralManifests = import.meta.glob<{ default: PeripheralManifest }>(
   '../src/extensions/peripheral/*/manifest.ts',
@@ -136,22 +139,26 @@ const outputType = (opcode: string): string => {
   return CORE_OUTPUT[opcode] ?? 'Number'
 }
 
-const loadProject = async (file: string): Promise<Project> => {
-  const zip = await JSZip.loadAsync(readFileSync(join(EXAMPLES_DIR, file)))
+const loadProjectIn = async (folder: string, file: string): Promise<Project> => {
+  const zip = await JSZip.loadAsync(readFileSync(join(EXAMPLES_ROOT, folder, file)))
   const json = zip.file('project.json')
   if (!json) throw new Error(`${file}: no project.json`)
   return JSON.parse(await json.async('string')) as Project
 }
 
-describe('bundled examples', () => {
-  it('lists 36 examples with unique ids, each with a file and a known group', () => {
-    expect(index.examples).toHaveLength(36)
-    expect(new Set(index.examples.map((e) => e.id)).size).toBe(36)
+describe.each(Object.entries(FOLDERS))('bundled %s examples', (folder, count) => {
+  const index = indexOf(folder)
+  const loadProject = (file: string) => loadProjectIn(folder, file)
+
+  it(`lists ${count} examples with unique ids, each with a file and a known group`, () => {
+    expect(index.examples).toHaveLength(count)
+    expect(new Set(index.examples.map((e) => e.id)).size).toBe(count)
     for (const example of index.examples) {
       expect(index.groups).toContain(example.group)
-      expect(existsSync(join(EXAMPLES_DIR, example.file))).toBe(true)
+      expect(example.device).toBe(folder)
+      expect(existsSync(join(EXAMPLES_ROOT, folder, example.file))).toBe(true)
     }
-    const files = readdirSync(EXAMPLES_DIR).filter((f) => f.endsWith('.tb'))
+    const files = readdirSync(join(EXAMPLES_ROOT, folder)).filter((f) => f.endsWith('.tb'))
     expect(files.sort()).toEqual(index.examples.map((e) => e.file).sort())
   })
 
@@ -217,13 +224,16 @@ describe('bundled examples', () => {
       })
     })
   }
+})
 
+describe('served examples', () => {
   it('copies every example into the served pack with one merged index', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
-    const merged = copyExamples(join(__dirname, '..', 'src', 'examples'), out)
-    expect(merged.examples).toHaveLength(36)
+    const merged = copyExamples(EXAMPLES_ROOT, out)
+    expect(merged.examples).toHaveLength(36 + 5)
+    expect(merged.groups).toContain('CoBot')
     for (const example of merged.examples as Example[]) {
-      expect(example.file.startsWith('thingbot/')).toBe(true)
+      expect(example.file.startsWith(`${example.device}/`)).toBe(true)
       expect(existsSync(join(out, example.file))).toBe(true)
     }
     expect(JSON.parse(readFileSync(join(out, 'index.json'), 'utf8'))).toEqual(merged)

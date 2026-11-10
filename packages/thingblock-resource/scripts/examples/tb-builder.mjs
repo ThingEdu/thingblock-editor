@@ -40,7 +40,7 @@ const CORE_PREFIXES = new Set([
 ])
 
 /** Peripherals a device activates on its own (its manifest `extensions`); not saved in `board`. */
-const DEVICE_AUTO_PERIPHERALS = { thingbot: ['thingBotC3', 'ps2'] }
+const DEVICE_AUTO_PERIPHERALS = { thingbot: ['thingBotC3', 'ps2'], cobot: ['cobotC3', 'colourSensor'] }
 
 /** The placeholder costume every ThingBlock save references (the editor ships the asset itself). */
 const COSTUME = {
