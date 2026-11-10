@@ -1,5 +1,10 @@
 {
     "thingEdges.connect": "kết nối ThingEdges Desktop",
+    "thingEdges.statusBlock": "trạng thái ThingEdges",
+    "thingEdges.status.connected": "đã kết nối: {where}",
+    "thingEdges.status.waiting": "chưa được cho phép: dùng khối kết nối",
+    "thingEdges.status.signedOut": "đăng nhập tài khoản của em vào ThingEdges Desktop",
+    "thingEdges.status.searching": "mở ThingEdges Desktop trên máy này",
     "thingEdges.ir.back": "quay lại",
     "thingEdges.ir.channel_down": "kênh trước",
     "thingEdges.ir.channel_up": "kênh tiếp",

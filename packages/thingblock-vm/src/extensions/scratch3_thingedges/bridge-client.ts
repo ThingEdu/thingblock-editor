@@ -2,8 +2,9 @@
  * Client of the ThingEdges Desktop local bridge: an HTTP server on 127.0.0.1 (first free port of
  * 47380..47389) that lists and controls the smart-home devices of the location open in ThingEdges Desktop.
  *
- * The bridge answers only after an adult allows this app once in the Desktop window; the token it hands
- * out is kept in the given storage so the child is not asked again.
+ * Someone must be signed in to ThingEdges Desktop with their own ThingEdges account. The bridge answers only
+ * after an adult allows this app once in the Desktop window; the token it hands out is bound to that account
+ * and kept in the given storage, so the child is not asked again while the same account is signed in.
  */
 
 export const FIRST_PORT = 47380;
@@ -66,6 +67,10 @@ export class BridgeClient {
     private readonly _store: KeyValueStore | null;
     /** Base URL of the bridge once found, e.g. http://127.0.0.1:47380 */
     baseUrl: string | null = null;
+    /** Whether an account is signed in to the Desktop, as of the last discovery. */
+    signedIn = false;
+    /** Account and location names; the bridge tells them only to a paired app. */
+    account: string | null = null;
     location: string | null = null;
 
     constructor (fetchImpl: FetchLike, store: KeyValueStore | null) {
@@ -101,6 +106,8 @@ export class BridgeClient {
                 const info = await response.json();
                 if (info?.name !== 'ThingEdges Desktop' || info?.api !== 1) continue;
                 this.baseUrl = base;
+                this.signedIn = info.signedIn === true;
+                this.account = typeof info.account === 'string' ? info.account : null;
                 this.location = typeof info.location === 'string' ? info.location : null;
                 return info.paired === true;
             } catch {
@@ -112,6 +119,7 @@ export class BridgeClient {
     }
 
     // Asks ThingEdges Desktop for access; resolves once the adult answers in the Desktop window.
+    // Refused with 503 while nobody is signed in to the Desktop or no location is open.
     async pair (appName: string): Promise<void> {
         const reply = await this._request('POST', '/v1/pair', {app: appName}, false);
         if (typeof reply?.token !== 'string') throw new BridgeError(500, 'The bridge returned no token');

@@ -46,15 +46,21 @@ const IR_KEYS: {key: string, text: string}[] = [
 /**
  * Smart-home devices of ThingEdges Desktop as blocks: lights, switches, outlets, air conditioners, TVs and
  * IR remotes of the location open in ThingEdges Desktop on the same computer, so children can program
- * the real house. Blocks run in the editor (host mode); nothing is compiled to a board.
+ * the real house. The Desktop must be signed in to a personal ThingEdges account; access granted there
+ * belongs to that account. Blocks run in the editor (host mode); nothing is compiled to a board.
  */
 class ThingEdgesExtension implements Extension {
     runtime;
     _client: BridgeClient;
     _devices: BridgeDevice[] = [];
     _states: Record<string, DeviceState> = {};
-    /** 'searching' until a bridge answers, 'waiting' while the adult has not allowed this app yet. */
-    _status: 'searching' | 'waiting' | 'connected' = 'searching';
+    /**
+     * 'searching' until a bridge answers, 'signedOut' while nobody is signed in to the Desktop, 'waiting' while
+     * the signed-in account has not allowed this app yet.
+     */
+    _status: 'searching' | 'signedOut' | 'waiting' | 'connected' = 'searching';
+    /** Bumped on every (re)connection so that polling loops of an earlier connection stop. */
+    _session = 0;
     _timers: ReturnType<typeof setTimeout>[] = [];
     _disposed = false;
     _pairing: Promise<void> | null = null;
@@ -75,29 +81,39 @@ class ThingEdgesExtension implements Extension {
         if (!this._disposed) this._timers.push(setTimeout(task, ms));
     }
 
+    // Watches the Desktop until this app is paired with the signed-in account: it notices the Desktop starting,
+    // someone signing in, and an account that allowed this app before signing back in.
     _start () {
+        const session = this._session;
         const discover = async () => {
+            if (session !== this._session || this._status === 'connected') return;
             const paired = await this._client.discover();
-            if (paired === null) {
-                this._status = 'searching';
-                this._later(discover, DISCOVERY_RETRY_MS);
+            // connect() may have paired while discovery was waiting for an answer.
+            if (session !== this._session || this.isConnected()) return;
+            if (paired) {
+                await this._connected();
                 return;
             }
-            if (paired) await this._connected();
-            else this._status = 'waiting';
+            if (paired === null) this._status = 'searching';
+            else this._status = this._client.signedIn ? 'waiting' : 'signedOut';
+            this._later(discover, DISCOVERY_RETRY_MS);
         };
         discover();
     }
 
     async _connected () {
+        if (this._status === 'connected') return;
         this._status = 'connected';
+        const session = ++this._session;
         await this.refreshDevices();
         const poll = async () => {
+            if (session !== this._session) return;
             await this.pollStates();
             this._later(poll, STATE_POLL_MS);
         };
         poll();
         const refresh = async () => {
+            if (session !== this._session) return;
             await this.refreshDevices();
             this._later(refresh, DEVICE_REFRESH_MS);
         };
@@ -127,13 +143,16 @@ class ThingEdgesExtension implements Extension {
         }
     }
 
-    // A 401 means the adult revoked access in ThingEdges Desktop; anything else is a transient failure.
+    // A 401 means access was revoked or another account signed in; a 503 means the Desktop signed out.
+    // Anything else is a transient failure.
     _lost (error: unknown) {
-        if (error instanceof BridgeError && error.status === 401) {
-            this._status = 'waiting';
-            this._devices = [];
-            this._states = {};
-        }
+        if (!(error instanceof BridgeError) || (error.status !== 401 && error.status !== 503)) return;
+        if (this._status !== 'connected') return;
+        this._status = error.status === 401 ? 'waiting' : 'signedOut';
+        this._devices = [];
+        this._states = {};
+        this._session++;
+        this._start();
     }
 
     // Block: asks ThingEdges Desktop for access; the adult answers there.
@@ -142,8 +161,16 @@ class ThingEdgesExtension implements Extension {
         if (this._pairing) return this._pairing;
         this._pairing = (async () => {
             try {
-                if (!this._client.baseUrl && await this._client.discover() === null) return;
+                const paired = await this._client.discover();
+                if (paired === null) return;
+                if (paired) return await this._connected();
+                if (!this._client.signedIn) {
+                    this._status = 'signedOut';
+                    console.warn('thingEdges.connect: sign in to ThingEdges Desktop with a ThingEdges account first');
+                    return;
+                }
                 await this._client.pair(APP_NAME);
+                await this._client.discover();
                 await this._connected();
             } catch (error) {
                 console.warn('thingEdges.connect: ThingEdges Desktop did not allow this app', error);
@@ -156,6 +183,38 @@ class ThingEdgesExtension implements Extension {
 
     isConnected (): boolean {
         return this._status === 'connected';
+    }
+
+    // Block: tells the child what to do next, or which account and home the blocks control.
+    status (): string {
+        switch (this._status) {
+        case 'connected': {
+            const where = [this._client.account, this._client.location].filter(Boolean).join(' · ');
+            return formatMessage({
+                id: 'thingEdges.status.connected',
+                default: 'connected: {where}',
+                description: 'Status when the blocks control the devices; where is "account · location"'
+            }, {where});
+        }
+        case 'waiting':
+            return formatMessage({
+                id: 'thingEdges.status.waiting',
+                default: 'not allowed yet: use the connect block',
+                description: 'Status when the signed-in account has not allowed ThingBlock yet'
+            });
+        case 'signedOut':
+            return formatMessage({
+                id: 'thingEdges.status.signedOut',
+                default: 'sign in to ThingEdges Desktop with your account',
+                description: 'Status when nobody is signed in to ThingEdges Desktop'
+            });
+        default:
+            return formatMessage({
+                id: 'thingEdges.status.searching',
+                default: 'open ThingEdges Desktop on this computer',
+                description: 'Status when ThingEdges Desktop is not running'
+            });
+        }
     }
 
     // ─── Menus (read from the cached device list, as menus must answer synchronously) ───
@@ -309,6 +368,15 @@ class ThingEdgesExtension implements Extension {
                         id: 'thingEdges.connect',
                         default: 'connect to ThingEdges Desktop',
                         description: 'Ask ThingEdges Desktop for access to the devices'
+                    })
+                },
+                {
+                    opcode: 'status',
+                    blockType: BlockType.REPORTER,
+                    text: formatMessage({
+                        id: 'thingEdges.statusBlock',
+                        default: 'ThingEdges status',
+                        description: 'Reporter telling whether the blocks reach ThingEdges Desktop'
                     })
                 },
                 '---',
