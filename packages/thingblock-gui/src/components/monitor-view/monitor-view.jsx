@@ -4,7 +4,9 @@ import classNames from 'classnames';
 import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
 import ActionMenu from '../action-menu/action-menu.jsx';
 import clearIcon from './icon--clear.svg';
-import placeholderIcon from './icon--placeholder.svg';
+import autoscrollIcon from './icon--autoscroll.svg';
+import terminalIcon from './icon--terminal.svg';
+import timestampIcon from './icon--timestamp.svg';
 import styles from './monitor-view.css';
 
 const MIN_HEIGHT = 48;
@@ -26,10 +28,15 @@ const messages = defineMessages({
         defaultMessage: 'Monitor actions',
         description: 'Tooltip of the floating button that opens the serial monitor actions'
     },
-    placeholderAction: {
-        id: 'gui.serialLog.placeholderAction',
-        defaultMessage: 'Action {number}',
-        description: 'Tooltip of a serial monitor action button that has no function yet'
+    autoscroll: {
+        id: 'gui.serialLog.autoscroll',
+        defaultMessage: 'Auto-scroll',
+        description: 'Tooltip of the serial monitor action that turns auto-scrolling to new output on or off'
+    },
+    timestamps: {
+        id: 'gui.serialLog.timestamps',
+        defaultMessage: 'Timestamps',
+        description: 'Tooltip of the serial monitor action that shows or hides the time of each line'
     },
     clearMonitor: {
         id: 'gui.serialLog.clearMonitor',
@@ -225,7 +232,7 @@ const MonitorView = ({
                     )}
                     <ActionMenu
                         className={styles.fab}
-                        img={placeholderIcon}
+                        img={terminalIcon}
                         title={intl.formatMessage(messages.actions)}
                         moreButtons={[
                             {
@@ -233,8 +240,8 @@ const MonitorView = ({
                                 title: intl.formatMessage(messages.clearMonitor),
                                 onClick: onClear
                             },
-                            {img: placeholderIcon, title: intl.formatMessage(messages.placeholderAction, {number: 2})},
-                            {img: placeholderIcon, title: intl.formatMessage(messages.placeholderAction, {number: 3})}
+                            {img: autoscrollIcon, title: intl.formatMessage(messages.autoscroll)},
+                            {img: timestampIcon, title: intl.formatMessage(messages.timestamps)}
                         ]}
                         onClick={noop}
                     />

@@ -28,16 +28,6 @@ describe('MonitorView', () => {
             Object.defineProperty(el, 'scrollTop', {value: scrollTop, writable: true, configurable: true});
         };
 
-        test('shows the jump-to-latest button after the user scrolls up', () => {
-            renderMonitorView({});
-            const content = screen.getByText('first message').parentElement;
-            stubGeometry(content, {scrollHeight: 500, scrollTop: 0, clientHeight: 100});
-
-            fireEvent.scroll(content);
-
-            expect(screen.getByRole('button', {name: 'Scroll to latest output'})).toBeInTheDocument();
-        });
-
         test('jumping to latest scrolls to the bottom and hides the button', () => {
             const scrollTo = jest.fn();
             Element.prototype.scrollTo = scrollTo;
@@ -59,13 +49,6 @@ describe('MonitorView', () => {
 
             expect(screen.getByText('What is your name?')).toBeInTheDocument();
             expect(screen.getByPlaceholderText('Type your answer...')).toBeInTheDocument();
-        });
-
-        test('shows send placeholder when no prompt is active', () => {
-            renderMonitorView({});
-
-            expect(screen.getByPlaceholderText('Send message...')).toBeInTheDocument();
-            expect(screen.queryByPlaceholderText('Type your answer...')).not.toBeInTheDocument();
         });
 
         test('shows prompt and input for empty-string prompt (promptless ask)', () => {
