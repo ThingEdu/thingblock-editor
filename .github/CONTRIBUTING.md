@@ -1,66 +1,68 @@
-## Contributing
-The development of Scratch is an ongoing process, and we love to have people in the Scratch and open source communities help us along the way.
+# Contributing to ThingBlock Editor
 
-### Ways to Help
+Thanks for helping build ThingBlock, a block-based firmware IDE for Arduino-compatible hardware. This document
+covers how to report problems and how to get a change merged. By taking part you agree to follow our
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
-* **Documenting bugs**
-  * If you've identified a bug in Scratch you should first check to see if it's been filed as an issue, if not you can file one.  Make sure you follow the issue template.
-  * It's important that we can consistently reproduce issues. When writing an issue, be sure to follow our [reproduction step guidelines](https://github.com/LLK/scratch-gui/wiki/Writing-good-repro-steps).
-    * Some issues are marked "Needs Repro". Adding a comment with good reproduction steps to those issues is a great way to help.
-  * If you don't have an issue in mind already, you can look through the [Bugs & Glitches forum.](https://scratch.mit.edu/discuss/3/) Look for users reporting problems, reproduce the problem yourself, and file new issues following our guidelines. 
+## Reporting bugs and suggesting features
 
-* **Fixing bugs**
-  * You can request to fix a bug in a comment on the issue if you at mention the repo coordinator, who for this repo is @cwillisf.
-    * If the issue is marked "Help Wanted" you can go ahead and start working on it!
-  * **We will only accept Pull Requests for bugs that have an issue filed that has a priority label** 
-    * If you're interested in fixing a bug with no issue, file the issue first and wait for it to have a priority added to it.
-  
-  * We are not looking for Pull Requests ("PR") for every issue and may deny a PR if it doesn't fit our criteria.
-    * We are far more likely to accept a PR if it is for an issue marked with Help Wanted.
-    * We will not accept PRs for issues marked with "Needs Discussion" or "Needs Design."
-    * Wait until the Repo Coordinator assigns the issue to you before you begin work or submit a PR.
+- Search [existing issues](https://github.com/ThingEdu/thingblock-editor/issues) before opening a new one.
+- For a bug, give steps that reproduce it, what you expected and what happened, and your OS, browser or desktop
+  app version, and board.
+- For a feature, describe the problem it solves before the solution. Larger changes should be discussed in an
+  issue before any code is written.
 
-### Learning Git and Github
+## Development setup
 
-If you want to work on fixing issues, you should be familiar with Git and Github.
+The repository is an npm workspaces monorepo; see [README.md](../README.md) for what each package does.
 
-* [Learn Git branching](https://learngitbranching.js.org/) includes an introduction to basic git commands and useful branching features.
-* Here's a general introduction to [contributing to an open source project](https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github).
+```sh
+npm ci           # install all workspace dependencies
+npm run build    # build every package
+npm test         # test every package
+```
 
-**Important:** we follow the [Github Flow process](https://guides.github.com/introduction/flow/) as our development process.
+Per-package commands run from the package folder, or from the root with `--workspace=packages/<name>`.
+Board-facing features also need the [ThingBlock Link](https://github.com/ThingEdu/thingblock-link) helper running
+locally.
 
-### How to Fix Bugs
-1. Identify which Github issue you are working on. Leave a comment on the issue to let us (and other contributors) know you're working on it.
-2. Make sure you have a fork of this repo (see [Github's forking a repo](https://help.github.com/en/github/getting-started-with-github/fork-a-repo) for details)
-3. Switch to the `develop` branch, and pull down the latest changes from upstream
-4. Run the code, and reproduce the problem
-5. Create your branch from the `develop` branch
-6. Make code changes to fix the problem
-7. Run `npm test` to make sure that your changes pass our tests
-8. Commit your changes
-9. Push your branch to your fork
-10. Create your pull request
-    1. Make sure to follow the template in the PR description
-    1. Remember to check the “[Allow edits from maintainers](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork)” box
+## Making a change
 
-When submitting pull requests keep in mind:
-* please be patient -- it can take a while to find time to review them
-* try to change the least amount of code necessary to fix the bug
-* the code can't be radically changed without significant coordination with the Scratch Team, so these types of changes should be avoided
-* if you find yourself changing a substantial amount of code or considering radical changes, please ask for clarification -- we may have envisioned a different approach, or underestimated the amount of effort
+1. Fork the repository and branch from `develop`.
+2. Keep the change focused on one issue; don't refactor or restyle code you weren't asked to touch.
+3. Follow the conventions of the package you work in (language, bundler, test framework, style). New packages use
+   TypeScript, Vite and Vitest.
+4. When fixing a bug, start with a test that reproduces it.
+5. Make sure `npm run build`, `npm test` and the package's lint pass.
+6. Update documentation that your change affects, including `AGENTS.md`.
+7. Open a pull request against `develop` and fill in the template.
 
-### Suggestions
-![Block sketch](https://user-images.githubusercontent.com/3431616/77192550-1dcebe00-6ab3-11ea-9606-8ecd8500c958.png)
+### English for development
 
-Please note: **_we are unlikely to accept PRs with new features that haven't been thought through and discussed as a group_**.
+Everything a developer or lesson author types is English: identifiers, keys and values, file and folder names,
+comments, commit messages and error messages. Vietnamese is used only for learner-facing content, such as lesson
+text and the translations in `src/locales/vi.json`.
 
-Why? Because we have a strong belief in the value of keeping things simple for new users. It's been said that the Scratch Team spends about one hour of design discussion for every pixel in Scratch. To learn more about our design philosophy, see [the Scratch Developers page](https://scratch.mit.edu/developers), or [this paper](http://web.media.mit.edu/~mres/papers/Scratch-CACM-final.pdf).
+### User-visible strings
 
-We welcome suggestions! If you want to suggest a feature, please post in our [suggestions forum](https://scratch.mit.edu/discuss/1/). Your suggestion will be helped if you include a mockup design; this can be simple, even hand-drawn.
+GUI strings go through `react-intl` with the English text as `defaultMessage`; add the Vietnamese translation to
+the package's `src/locales/vi.json`. Don't hardcode English in JSX.
 
-### Other resources
-Beyond this repo, there are also some other resources that you might want to take a look at:
-* [Community Guidelines](https://github.com/LLK/scratch-www/wiki/Community-Guidelines) (we find it important to maintain a constructive and welcoming community, just like on Scratch)
-* [Open Source forum](https://scratch.mit.edu/discuss/49/) on Scratch
-* [Suggestions forum](https://scratch.mit.edu/discuss/1/) on Scratch
-* [Bugs & Glitches forum](https://scratch.mit.edu/discuss/3/) on Scratch
+### Commit messages
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/) (for example
+`fix(gui): keep the tab strip aligned with the workspace`). A husky hook runs commitlint and rejects commits that
+don't conform.
+
+### AI-assisted contributions
+
+You may use AI tools, but you remain responsible for every line you submit. Don't submit code you can't explain
+and defend in review.
+
+## Releases
+
+Packages are published only by the CI release pipeline. Never publish manually; `prepublishOnly` blocks it.
+
+## License
+
+By contributing, you agree that your contributions are licensed under the repository's [license](../LICENSE).
