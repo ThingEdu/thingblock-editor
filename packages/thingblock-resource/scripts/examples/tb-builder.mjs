@@ -65,9 +65,10 @@ const COMMENT_OFFSET_X = 420
  * @param {string|null} [spec.device] Target device id (default `thingbot`); null for a project that
  *   runs in the editor without a board (Camera AI), which saves no `board`.
  * @param {string} [spec.note] Workspace comment shown at the top-left (the lesson summary).
+ * @param {number} [spec.noteHeight] The note's height, when its lines need more than the default.
  * @returns {object} The `project.json` content, ready to zip.
  */
-export function toProject({ stacks, variables = [], lists = [], device = 'thingbot', note }) {
+export function toProject({ stacks, variables = [], lists = [], device = 'thingbot', note, noteHeight }) {
   const blocks = {}
   const comments = {}
   let counter = 0
@@ -208,7 +209,7 @@ export function toProject({ stacks, variables = [], lists = [], device = 'thingb
 
   let y0 = 40
   if (note) {
-    const height = Math.max(100, 22 * Math.ceil(note.length / 60))
+    const height = noteHeight ?? Math.max(100, 22 * Math.ceil(note.length / 60))
     comments[nextId('c')] = { blockId: null, x: 40, y: 40, width: 640, height, minimized: false, text: note }
     y0 = 40 + height + 40
   }

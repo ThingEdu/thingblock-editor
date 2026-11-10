@@ -379,7 +379,15 @@ export const CAMERA_AI_EXAMPLES = [
       ),
     ],
   },
-].map((example) => ({ source: 'ThingBlock Camera AI', ...example, group: GROUP, hardware: HARDWARE, device: null }))
+].map((example) => ({
+  source: 'ThingBlock Camera AI',
+  ...example,
+  // Every line of the note wraps at about 60 characters, so it is sized to show all of them.
+  noteHeight: 22 * example.note.split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / 60)), 0) + 24,
+  group: GROUP,
+  hardware: HARDWARE,
+  device: null,
+}))
 
 /** The block helpers, for the Camera AI lessons' `kiem-thu` fixtures. */
 export const cameraBlocks = {

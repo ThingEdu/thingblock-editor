@@ -20,14 +20,14 @@ Máy không có webcam? Không sao. Ở khung Sân chơi, chọn **Chuột (khô
 
 ## Bật camera
 
-1. Mở nhóm **Sự kiện**, kéo khối **Khi bấm vào lá cờ xanh** ra vùng lập trình.
+1. Mở nhóm **Sự kiện**, kéo khối **Khi bấm vào** 🏁 (lá cờ xanh) ra vùng lập trình.
 2. Mở nhóm **Camera AI**, kéo khối **bật camera soi gương** vào dưới nó.
-3. Bấm lá cờ xanh để chạy.
+3. Bấm nút **Chạy** ở phía trên khung Sân chơi.
 
 Trình duyệt sẽ hỏi có cho dùng camera không. Em bấm **Cho phép**.
 
 > gợi ý: "Soi gương" là lật hình như khi em soi gương: em giơ tay phải, hình cũng giơ tay bên phải.
-> gợi ý: Không có webcam thì chọn **Chuột (không cần webcam)** trong danh sách camera ở khung Sân chơi, rồi bấm lá cờ xanh lại.
+> gợi ý: Không có webcam thì chọn **Chuột (không cần webcam)** trong danh sách camera ở khung Sân chơi, rồi bấm **Chạy** lại.
 
 kiểm: camera bật
 
@@ -49,7 +49,7 @@ Giờ làm cây đũa thần. Thêm vào dưới **bật camera soi gương**:
 2. Khối **liên tục** (nhóm **Điều khiển**), bên trong đặt **đưa sao tới x: … y: …**.
 3. Thả khối **x của ngón trỏ tay bất kỳ** vào ô x, khối **y của ngón trỏ tay bất kỳ** vào ô y.
 
-Bấm lá cờ xanh, rồi đưa ngón trỏ đi khắp sân chơi.
+Bấm **Chạy**, rồi đưa ngón trỏ đi khắp sân chơi.
 
 > gợi ý: Sân chơi là một tấm bản đồ: x từ -240 (trái) đến 240 (phải), y từ -180 (dưới) đến 180 (trên). Khối **x của ngón trỏ** cho biết ngón trỏ đang ở cột nào.
 > gợi ý: Tên trong khối **đưa … tới** phải giống hệt tên lúc tạo: **sao**.
@@ -63,7 +63,7 @@ kiểm: "sao" chạm ngón trỏ
 
 1. Kéo khối **khi tay bất kỳ làm cử chỉ nắm tay** ra chỗ trống.
 2. Đặt khối **nói Nắm tay** vào dưới nó.
-3. Bấm lá cờ xanh, rồi nắm tay lại.
+3. Bấm **Chạy**, rồi nắm tay lại.
 
 > gợi ý: Chơi bằng chuột thì giữ chuột trái là nắm tay. Bấm chuột phải hoặc phím 1–7 để đổi sang cử chỉ khác.
 > gợi ý: Khối này là khối mũ: nó tự chạy mỗi lần bàn tay vừa đổi sang nắm tay, em không cần lặp.

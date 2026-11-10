@@ -18,13 +18,13 @@ Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần web
 
 ## Quả bóng và con dế
 
-Dưới **Khi bấm vào lá cờ xanh** và **bật camera soi gương**, thêm:
+Dưới **Khi bấm vào** 🏁 và **bật camera soi gương**, thêm:
 
 1. **tạo bóng tên bong tại x: 0 y: 0 cỡ 44**
 2. **tạo dế tên de tại x: 120 y: 60 cỡ 70**
 3. **liên tục** chứa **đưa bong tới x: (x của ngón trỏ tay bất kỳ) y: (y của ngón trỏ tay bất kỳ)**
 
-Bấm lá cờ xanh. Quả bóng phải đi theo ngón trỏ, con dế ngồi yên ở góc trên bên phải.
+Bấm **Chạy**. Quả bóng phải đi theo ngón trỏ, con dế ngồi yên ở góc trên bên phải.
 
 > gợi ý: Tên vật viết không dấu (**bong**, **de**) cho dễ gõ; trên sân chơi vẫn hiện hình quả bóng và con dế.
 > gợi ý: Bước này giống ngôi sao ở bài 1, chỉ đổi ngôi sao thành bóng.
@@ -47,7 +47,7 @@ Trong **liên tục**, dưới khối **đưa bong tới**, thêm khối **nếu
 - Điều kiện: **de chạm ngón trỏ tay bất kỳ?**
 - Bên trong: **cộng 1 điểm cho người chơi 1**, rồi **đưa de tới x: (lấy ngẫu nhiên từ -200 đến 200) y: (lấy ngẫu nhiên từ -140 đến 140)**, rồi **đợi 0.3 giây**.
 
-Bấm lá cờ xanh và bắt dế. Bảng điểm hiện ở góc trên sân chơi.
+Bấm **Chạy** và bắt dế. Bảng điểm hiện ở góc trên sân chơi.
 
 > gợi ý: Thiếu khối **đưa de tới** thì dế không nhảy đi: ngón trỏ vẫn nằm trên dế nên mỗi vòng lặp lại cộng thêm điểm.
 > gợi ý: **Lấy ngẫu nhiên** nằm ở nhóm **Các phép toán**. Máy tự chọn một số, không ai biết trước dế sẽ nhảy đi đâu.
