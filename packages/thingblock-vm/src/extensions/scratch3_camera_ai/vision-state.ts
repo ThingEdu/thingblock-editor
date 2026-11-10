@@ -13,6 +13,36 @@ export interface Landmark {
     x: number
     y: number
     z?: number
+    // How sure the pose model is that this point is in the picture, 0…1; hand landmarks have none.
+    visibility?: number
+}
+
+/** A person's body as MediaPipe's pose landmarker reports it: 33 landmarks in its order. */
+export interface Pose {
+    landmarks: Landmark[]
+}
+
+/** Pose landmark indices the blocks use. */
+export const POSE = {
+    nose: 0,
+    leftEye: 2,
+    rightEye: 5,
+    leftShoulder: 11,
+    rightShoulder: 12,
+    leftWrist: 15,
+    rightWrist: 16
+} as const;
+
+/** Below this visibility a pose landmark is treated as not seen. */
+const MIN_VISIBILITY = 0.5;
+
+/** The head on the stage: where the nose is, how far it leans (degrees, + to the right), how big it looks. */
+export interface Head {
+    x: number
+    y: number
+    tilt: number
+    // About half the head's width on the stage, for touching.
+    radius: number
 }
 
 /** MediaPipe's canned gesture categories; `none` when it recognises nothing. */
@@ -32,6 +62,8 @@ export interface Hand {
 
 export interface VisionResults {
     hands: Hand[]
+    // The body, when the project uses the head and body blocks and the tracker found someone.
+    pose?: Pose | null
     // The camera is shown mirrored, so x grows to the viewer's right.
     mirror: boolean
     // When the frame was captured, in ms.
@@ -134,6 +166,34 @@ export class VisionState {
         if (selector === 'any') return this.hands();
         const h = this.hand(selector);
         return h ? [h] : [];
+    }
+
+    // The body of the latest fresh frame, or null when none was tracked.
+    pose (): Pose | null {
+        const r = this._results;
+        if (!r || !r.pose || this._now() - r.t > STALE_MS) return null;
+        return r.pose;
+    }
+
+    // A pose landmark on the stage, or null when the model did not see it.
+    posePoint (index: number): {x: number, y: number} | null {
+        const pose = this.pose();
+        const p = pose && pose.landmarks[index];
+        if (!p || (p.visibility ?? 1) < MIN_VISIBILITY) return null;
+        return this.toStage(p.x, p.y);
+    }
+
+    // The head on the stage, from the nose and the eyes; null when no head is seen.
+    head (): Head | null {
+        const nose = this.posePoint(POSE.nose);
+        if (!nose) return null;
+        const a = this.posePoint(POSE.leftEye);
+        const b = this.posePoint(POSE.rightEye);
+        if (!a || !b) return {...nose, tilt: 0, radius: 30};
+        // The eye on the left of the stage to the one on the right: the right side lower means a lean right.
+        const [p, q] = a.x <= b.x ? [a, b] : [b, a];
+        const tilt = Math.round((Math.atan2(p.y - q.y, q.x - p.x) * 180) / Math.PI);
+        return {...nose, tilt, radius: Math.max(20, Math.hypot(q.x - p.x, q.y - p.y) * 1.6)};
     }
 
     // The named part of a hand on the stage, or null without that hand.

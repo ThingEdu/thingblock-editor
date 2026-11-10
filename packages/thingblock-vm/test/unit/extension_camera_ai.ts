@@ -2,7 +2,8 @@ import {test} from 'tap';
 import {EventEmitter} from 'events';
 import CameraAiExtension from '../../src/extensions/scratch3_camera_ai/index.ts';
 import {VisionState} from '../../src/extensions/scratch3_camera_ai/vision-state.ts';
-import type {Hand, Landmark} from '../../src/extensions/scratch3_camera_ai/vision-state.ts';
+import type {Hand, Landmark, Pose} from '../../src/extensions/scratch3_camera_ai/vision-state.ts';
+import {FlapDetector, NodDetector, TiltTracker} from '../../src/extensions/scratch3_camera_ai/motion.ts';
 import {Playground} from '../../src/extensions/scratch3_camera_ai/playground.ts';
 import type {PlaygroundState} from '../../src/extensions/scratch3_camera_ai/playground.ts';
 import {CameraAiEvent, RuntimeEvent} from '../../src/event/event-name.ts';
@@ -22,6 +23,7 @@ const makeExtension = () => {
     const hats: HatCall[] = [];
     const runtime = {
         events: new EventEmitter(),
+        targets: [] as {blocks: {_blocks: Record<string, {opcode: string, fields: Record<string, {value: string}>}>}}[],
         redraws: 0,
         requestRedraw () {
             this.redraws += 1;
@@ -32,8 +34,8 @@ const makeExtension = () => {
         }
     };
     const ext = new CameraAiExtension(runtime);
-    const results = (hands: Hand[], mirror = true) =>
-        runtime.events.emit(CameraAiEvent.VISION_RESULTS, {hands, mirror, t: Date.now()});
+    const results = (hands: Hand[], mirror = true, extra: {pose?: Pose | null, t?: number} = {}) =>
+        runtime.events.emit(CameraAiEvent.VISION_RESULTS, {hands, mirror, t: extra.t ?? Date.now(), pose: extra.pose});
     return {ext, runtime, results, hats};
 };
 
@@ -109,7 +111,7 @@ test('camera blocks ask the GUI and reflect its status; ready starts its hat onc
     ext.cameraOn({MIRROR: 'mirror'});
     ext.cameraOn({MIRROR: 'normal'});
     ext.cameraOff();
-    t.same(commands, [{on: true, mirror: true}, {on: true, mirror: false}, {on: false}]);
+    t.same(commands, [{on: true, mirror: true, pose: false}, {on: true, mirror: false, pose: false}, {on: false}]);
 
     t.notOk(ext.cameraIsOn());
     runtime.events.emit(CameraAiEvent.CAMERA_STATUS, {on: true, ready: false});
@@ -336,5 +338,159 @@ test('getInfo lists every opcode with an implementation and event hats only', t 
         t.type((ext as unknown as Record<string, unknown>)[block.opcode as string], 'function', block.opcode);
         if (block.blockType === 'hat') t.equal(block.isEdgeActivated, false, `${block.opcode} is an event hat`);
     }
+    t.end();
+});
+
+/**
+ * A body facing the camera, in normalized frame coordinates (not mirrored here): the nose at (x, y), the eyes
+ * level unless `tilt` (degrees, + lowers the eye on the frame's right), shoulders 0.15 below the nose.
+ */
+const poseAt = (x: number, y: number, tilt = 0, noseDrop = 0): Pose => {
+    const landmarks: Landmark[] = Array.from({length: 33}, () => ({x, y: y + 0.4, visibility: 0.9}));
+    // Frames are 4:3, so a frame-height unit is 3/4 of a frame-width unit.
+    const dy = Math.tan((tilt * Math.PI) / 180) * 0.04;
+    landmarks[0] = {x, y: y + noseDrop, visibility: 0.99};
+    landmarks[2] = {x: x - 0.03, y: y - 0.02 - dy, visibility: 0.99};
+    landmarks[5] = {x: x + 0.03, y: y - 0.02 + dy, visibility: 0.99};
+    landmarks[11] = {x: x - 0.12, y: y + 0.15, visibility: 0.99};
+    landmarks[12] = {x: x + 0.12, y: y + 0.15, visibility: 0.99};
+    return {landmarks};
+};
+
+test('the head is where the nose is on the stage, leaning by the line of the eyes', t => {
+    const vision = new VisionState(() => 0);
+    vision.update({hands: [], mirror: false, t: 0, pose: poseAt(0.75, 0.25)});
+    const head = vision.head();
+    t.same([head?.x, head?.y, head?.tilt], [120, 90, 0]);
+    // Not mirrored: the frame's right is the stage's right, so the right eye lower is a lean right.
+    vision.update({hands: [], mirror: false, t: 0, pose: poseAt(0.5, 0.5, 30)});
+    t.ok((vision.head()?.tilt ?? 0) >= 25);
+    // Mirrored: the same picture leans the other way on the stage.
+    vision.update({hands: [], mirror: true, t: 0, pose: poseAt(0.5, 0.5, 30)});
+    t.ok((vision.head()?.tilt ?? 0) <= -25);
+    const hidden = poseAt(0.5, 0.5);
+    hidden.landmarks[0].visibility = 0.1;
+    vision.update({hands: [], mirror: true, t: 0, pose: hidden});
+    t.equal(vision.head(), null, 'a nose the model did not see is no head');
+    t.end();
+});
+
+test('a flap is both hands dropping from the upper half within 0.4 s, counted once', t => {
+    const flap = new FlapDetector();
+    const at = (y: number): [{x: number, y: number}, {x: number, y: number}] => [{x: -100, y}, {x: 100, y}];
+    t.notOk(flap.update(0, at(120)));
+    t.notOk(flap.update(100, at(80)));
+    t.ok(flap.update(250, at(10)), 'dropped 110 in 0.25 s');
+    t.notOk(flap.update(300, at(-60)), 'the same swing does not count twice');
+    // Too slow: the drop takes longer than the window.
+    const slow = new FlapDetector();
+    t.notOk(slow.update(0, at(120)));
+    t.notOk(slow.update(300, at(80)));
+    t.notOk(slow.update(700, at(0)));
+    // Hands starting low (lower half) are not a flap.
+    const low = new FlapDetector();
+    t.notOk(low.update(0, at(-10)));
+    t.notOk(low.update(200, at(-150)));
+    // One hand moving is not a flap.
+    const one = new FlapDetector();
+    t.notOk(one.update(0, [{x: -100, y: 120}, {x: 100, y: 120}]));
+    t.notOk(one.update(200, [{x: -100, y: 0}, {x: 100, y: 120}]));
+    t.end();
+});
+
+test('a nod goes down and back up; holding the head low is not a nod', t => {
+    const nod = new NodDetector();
+    t.notOk(nod.update(0, 60, 15));
+    t.notOk(nod.update(150, 40, 15));
+    t.ok(nod.update(300, 58, 15), 'down 20 then up 18');
+    const hold = new NodDetector();
+    t.notOk(hold.update(0, 60, 15));
+    t.notOk(hold.update(200, 40, 15));
+    t.notOk(hold.update(600, 41, 15));
+    t.end();
+});
+
+test('a lean starts once, with hysteresis', t => {
+    const tilt = new TiltTracker();
+    t.equal(tilt.update(5), null);
+    t.equal(tilt.update(-20), 'left');
+    t.equal(tilt.update(-12), null, 'still leaning left');
+    t.equal(tilt.lean, 'left');
+    t.equal(tilt.update(3), null);
+    t.equal(tilt.lean, 'straight');
+    t.equal(tilt.update(16), 'right');
+    t.equal(tilt.update(null), null);
+    t.equal(tilt.lean, 'straight');
+    t.end();
+});
+
+test('head blocks read the pose, ask the GUI for the body tracker, and start their hats', t => {
+    const {ext, runtime, results, hats} = makeExtension();
+    const commands: object[] = [];
+    runtime.events.on(CameraAiEvent.CAMERA_COMMAND, (c: object) => commands.push(c));
+    const motions: object[] = [];
+    runtime.events.on(CameraAiEvent.MOTION, (m: object) => motions.push(m));
+
+    ext.cameraOn({MIRROR: 'mirror'});
+    t.same(commands, [{on: true, mirror: true, pose: false}], 'a project without head blocks needs no body tracker');
+    t.equal(ext.headSeen(), false);
+    t.same(commands[1], {pose: true}, 'a head block asks for it');
+    ext.headX();
+    t.equal(commands.length, 2, 'once');
+
+    const now = Date.now();
+    results([], true, {pose: poseAt(0.5, 0.5, -30), t: now});
+    t.equal(ext.headSeen(), true);
+    t.equal(ext.headTilted({DIR: 'RIGHT'}), true, 'mirrored: the frame\'s left eye lower leans right on the stage');
+    t.same(hats.filter(([op]) => op === 'cameraAi_whenHeadTilt'), [['cameraAi_whenHeadTilt', {DIR: 'right'}]]);
+
+    // A nod: the nose dips towards the shoulders and comes back.
+    results([], true, {pose: poseAt(0.5, 0.5), t: now + 100});
+    results([], true, {pose: poseAt(0.5, 0.5, 0, 0.06), t: now + 250});
+    results([], true, {pose: poseAt(0.5, 0.5), t: now + 400});
+    t.equal(hats.filter(([op]) => op === 'cameraAi_whenNod').length, 1);
+
+    // Two hands swinging down from the top start the flap hat.
+    const two = (y: number) => [handAt(0.3, y), handAt(0.7, y)];
+    results(two(0.15), true, {t: now + 500});
+    results(two(0.6), true, {t: now + 750});
+    t.equal(hats.filter(([op]) => op === 'cameraAi_whenFlap').length, 1);
+    t.same(motions.map(m => (m as {kind: string}).kind), ['tilt', 'nod', 'flap']);
+
+    ext.spawn({KIND: 'star', NAME: 'sao', X: 0, Y: 0, SIZE: 40});
+    results([], true, {pose: poseAt(0.5, 0.5), t: Date.now()});
+    t.equal(ext.headTouching({NAME: 'sao'}), true);
+    t.end();
+});
+
+test('cameraOn asks for the body tracker when the project has a head block or a head target', t => {
+    const {ext, runtime} = makeExtension();
+    const commands: {pose?: boolean}[] = [];
+    runtime.events.on(CameraAiEvent.CAMERA_COMMAND, (c: {pose?: boolean}) => commands.push(c));
+    runtime.targets.push({blocks: {_blocks: {a: {opcode: 'cameraAi_menu_TARGET', fields: {TARGET: {value: 'HEAD'}}}}}});
+    ext.cameraOn({MIRROR: 'mirror'});
+    runtime.targets[0] = {blocks: {_blocks: {a: {opcode: 'cameraAi_whenFlap', fields: {}}}}};
+    ext.cameraOn({MIRROR: 'mirror'});
+    t.same(commands.map(c => c.pose), [true, true]);
+    t.end();
+});
+
+test('objects touch each other; a bamboo touches only on its stalks, not in its opening', t => {
+    const pg = new Playground(() => {}, () => {}, () => 0);
+    pg.spawn('de', 'cricket', 0, 0, 40);
+    pg.spawn('tre', 'bamboo', 0, 0, 120);
+    t.notOk(pg.touchingObject('de', 'tre'), 'in the middle of the opening');
+    pg.moveTo('de', 0, 50);
+    t.ok(pg.touchingObject('de', 'tre'), 'against the upper stalk');
+    pg.moveTo('de', 100, 50);
+    t.notOk(pg.touchingObject('de', 'tre'), 'beside the column');
+    pg.spawn('ro', 'basket', 100, 70, 60);
+    t.ok(pg.touchingObject('de', 'ro'));
+    t.notOk(pg.atEdge('tre', 'top'), 'a bamboo reaches top and bottom by design; only its sides count');
+    pg.setGravity(300);
+    pg.step(0.5);
+    t.equal(pg.object('tre')?.y, 0, 'gravity does not pull a bamboo');
+    t.ok((pg.object('de')?.y ?? 50) < 50);
+    pg.removeAll();
     t.end();
 });

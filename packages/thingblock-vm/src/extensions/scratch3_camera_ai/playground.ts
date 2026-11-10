@@ -10,7 +10,14 @@
 import {STAGE_HEIGHT, STAGE_WIDTH} from './vision-state';
 
 /** What an object looks like; the GUI draws each kind as a picture. */
-export type ObjectKind = 'ball' | 'cricket' | 'drop' | 'basket' | 'star' | 'bomb';
+export type ObjectKind = 'ball' | 'cricket' | 'drop' | 'basket' | 'star' | 'bomb' | 'bamboo';
+
+/**
+ * A bamboo is a wall of two stalks, from the top of the stage and from the bottom, with an opening between
+ * them: its `y` is the middle of the opening and its `size` the opening's height. It is planted, so gravity
+ * does not pull it. Every other kind is a round picture `size` wide.
+ */
+export const BAMBOO_WIDTH = 46;
 
 export interface PlaygroundObject {
     name: string
@@ -51,6 +58,24 @@ const limitX = (x: number) => Math.max(-STAGE_WIDTH / 2, Math.min(STAGE_WIDTH / 
 const limitY = (y: number) => Math.max(-STAGE_HEIGHT / 2, Math.min(STAGE_HEIGHT / 2, y));
 const clampX = (x: number) => limitX(Math.round(x));
 const clampY = (y: number) => limitY(Math.round(y));
+
+// How far a round picture reaches, counted a little inside its drawn edge.
+const roundRadius = (o: PlaygroundObject) => (o.size / 2) * 0.8;
+
+/**
+ * Whether a circle reaches an object: within a round object's picture, or on a bamboo's stalks (beside
+ * its column and outside its opening).
+ * @param o The object.
+ * @param x The circle's centre x.
+ * @param y The circle's centre y.
+ * @param r The circle's radius.
+ * @returns Whether they touch.
+ */
+const hits = (o: PlaygroundObject, x: number, y: number, r: number): boolean => {
+    if (o.kind !== 'bamboo') return Math.hypot(o.x - x, o.y - y) <= (o.size / 2) + r;
+    if (Math.abs(x - o.x) > (BAMBOO_WIDTH / 2) + r) return false;
+    return y + r > o.y + (o.size / 2) || y - r < o.y - (o.size / 2);
+};
 
 export class Playground {
     _objects: Map<string, PlaygroundObject> = new Map();
@@ -106,7 +131,7 @@ export class Playground {
     step (dt: number) {
         let moved = false;
         for (const o of this._objects.values()) {
-            if (this._gravity !== 0) o.vy -= this._gravity * dt;
+            if (this._gravity !== 0 && o.kind !== 'bamboo') o.vy -= this._gravity * dt;
             if (o.vx === 0 && o.vy === 0) continue;
             const x = limitX(o.x + (o.vx * dt));
             const y = limitY(o.y + (o.vy * dt));
@@ -186,18 +211,28 @@ export class Playground {
      * @param name
      * @param point
      */
-    touching (name: string, point: {x: number, y: number} | null): boolean {
+    touching (name: string, point: {x: number, y: number} | null, radius = 0): boolean {
         const o = this._objects.get(name);
         if (!o || !point) return false;
-        const reach = (o.size / 2) + TOUCH_MARGIN;
-        return Math.hypot(o.x - point.x, o.y - point.y) <= reach;
+        return hits(o, point.x, point.y, radius + TOUCH_MARGIN);
+    }
+
+    // Whether two objects' pictures overlap; a little forgiving, so a near miss is not a hit.
+    touchingObject (a: string, b: string): boolean {
+        const p = this._objects.get(a);
+        const q = this._objects.get(b);
+        if (!p || !q || p === q) return false;
+        if (q.kind === 'bamboo') return hits(q, p.x, p.y, roundRadius(p));
+        return hits(p, q.x, q.y, roundRadius(q));
     }
 
     // Whether the object's picture reaches a side of the stage.
     atEdge (name: string, edge: Edge): boolean {
         const o = this._objects.get(name);
         if (!o) return false;
-        const half = o.size / 2;
+        // A bamboo always reaches the top and the bottom; only its sides count.
+        if (o.kind === 'bamboo' && (edge === 'top' || edge === 'bottom')) return false;
+        const half = o.kind === 'bamboo' ? BAMBOO_WIDTH / 2 : o.size / 2;
         switch (edge) {
         case 'top': return o.y + half >= STAGE_HEIGHT / 2;
         case 'bottom': return o.y - half <= -STAGE_HEIGHT / 2;

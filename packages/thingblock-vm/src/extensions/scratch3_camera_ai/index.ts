@@ -3,7 +3,9 @@ import BlockType from '../../extension-support/block-type';
 import formatMessage from 'format-message';
 import {CameraAiEvent, RuntimeEvent} from '../../event/event-name';
 import type {Extension, ExtensionInfo, MenuItem} from '../extension';
-import {GESTURES, HAND_SELECTORS, VisionState, toGesture, toSelector} from './vision-state';
+import {GESTURES, HAND_SELECTORS, POSE, VisionState, toGesture, toSelector} from './vision-state';
+import {FlapDetector, NodDetector, TILT_ON, TiltTracker} from './motion';
+import type {Lean} from './motion';
 import type {HandSelector, VisionResults} from './vision-state';
 import {EDGES, Playground} from './playground';
 import type {Edge, ObjectKind, PlaygroundState} from './playground';
@@ -15,10 +17,22 @@ type ArgValue = string | number;
  * What "when [object] touches [target]" can watch: a part of any hand, or a side of the stage.
  * Upper case because hat fields match that way.
  */
-const TOUCH_TARGETS = ['INDEX_TIP', 'PALM', 'WRIST', 'TOP', 'BOTTOM', 'LEFT', 'RIGHT'] as const;
+const TOUCH_TARGETS = ['INDEX_TIP', 'PALM', 'WRIST', 'HEAD', 'TOP', 'BOTTOM', 'LEFT', 'RIGHT'] as const;
 type TouchTarget = typeof TOUCH_TARGETS[number];
 const TARGET_PART: Partial<Record<TouchTarget, string>> = {INDEX_TIP: 'indexTip', PALM: 'palm', WRIST: 'wrist'};
 const TARGET_EDGE: Partial<Record<TouchTarget, Edge>> = {TOP: 'top', BOTTOM: 'bottom', LEFT: 'left', RIGHT: 'right'};
+
+/**
+ * Blocks that need the body tracker. The GUI runs that second model only for a project that has one of
+ * them, so hand games stay as light as before.
+ */
+const POSE_OPCODES = ['headX', 'headY', 'headTilt', 'headTilted', 'headSeen', 'headTouching', 'whenHeadTilt',
+    'whenNod', 'whenFlap'].map(op => `cameraAi_${op}`);
+
+const toLean = (value: ArgValue): Lean => {
+    const v = String(value).toLowerCase();
+    return v === 'left' || v === 'right' ? v : 'straight';
+};
 
 const toEdge = (value: ArgValue): Edge | null => {
     const v = String(value).toLowerCase();
@@ -59,6 +73,11 @@ class CameraAiExtension implements Extension {
     _wasReady = false;
     // The cameras' names the GUI last reported, for the "use camera" menu.
     _cameraNames: string[] = [];
+    // Whether the GUI was asked to run the body tracker.
+    _poseAsked = false;
+    _flap = new FlapDetector();
+    _nod = new NodDetector();
+    _tilt = new TiltTracker();
 
     constructor (runtime: any) { // TODO: type Runtime for extension
         this.runtime = runtime;
@@ -71,6 +90,7 @@ class CameraAiExtension implements Extension {
         this.runtime.events.on(CameraAiEvent.VISION_RESULTS, (results: VisionResults) => {
             this.vision.update(results);
             this._fireGestureHats();
+            this._fireMotionHats(results.t);
             this._fireTouchHats();
         });
         this.runtime.events.on(CameraAiEvent.CAMERA_STATUS, (status: {on: boolean, ready: boolean}) => {
@@ -120,7 +140,67 @@ class CameraAiExtension implements Extension {
         this._gestureState = next;
     }
 
+    // Flaps, nods and leans start their hats once each time they happen, and tell the GUI (lesson checks).
+    _fireMotionHats (t: number) {
+        const motion = (kind: string, dir?: Lean) =>
+            this.runtime.events.emit(CameraAiEvent.MOTION, dir ? {kind, dir, t} : {kind, t});
+
+        if (this._flap.update(t, this._flapPoints())) {
+            this._startHats('whenFlap');
+            motion('flap');
+        }
+
+        const head = this.vision.head();
+        const shoulders = this._shoulders();
+        // The nose's height over the shoulders, so leaning in or stepping back is not a nod.
+        const above = head ? head.y - (shoulders ? shoulders.y : 0) : null;
+        const drop = shoulders ? Math.max(10, shoulders.width * 0.12) : Math.max(10, (head ? head.radius : 0) * 0.4);
+        if (this._nod.update(t, above, drop)) {
+            this._startHats('whenNod');
+            motion('nod');
+        }
+
+        const lean = this._tilt.update(head ? head.tilt : null);
+        if (lean) {
+            this._startHats('whenHeadTilt', {DIR: lean});
+            motion('tilt', lean);
+        }
+    }
+
+    // The two hands a flap is judged on: two tracked hands, or else the body's wrists, which stay found when a
+    // fast swing blurs the hands.
+    _flapPoints (): [{x: number, y: number}, {x: number, y: number}] | null {
+        const a = this.vision.partPosition('1', 'palm');
+        const b = this.vision.partPosition('2', 'palm');
+        if (a && b) return [a, b];
+        const l = this.vision.posePoint(POSE.leftWrist);
+        const r = this.vision.posePoint(POSE.rightWrist);
+        return l && r ? [l, r] : null;
+    }
+
+    _shoulders (): {y: number, width: number} | null {
+        const l = this.vision.posePoint(POSE.leftShoulder);
+        const r = this.vision.posePoint(POSE.rightShoulder);
+        return l && r ? {y: (l.y + r.y) / 2, width: Math.hypot(l.x - r.x, l.y - r.y)} : null;
+    }
+
+    _wantsPose (): boolean {
+        type Stored = {opcode: string, fields: Record<string, {value: unknown}>};
+        const targets: {blocks: {_blocks: Record<string, Stored>}}[] = this.runtime.targets;
+        return targets.some(target => Object.values(target.blocks._blocks).some(b =>
+            POSE_OPCODES.includes(b.opcode) ||
+            (b.opcode === 'cameraAi_menu_TARGET' && b.fields.TARGET && b.fields.TARGET.value === 'HEAD')));
+    }
+
+    // A head or body block ran while the body tracker was off: ask the GUI to start it.
+    _needPose () {
+        if (this._poseAsked) return;
+        this._poseAsked = true;
+        this.runtime.events.emit(CameraAiEvent.CAMERA_COMMAND, {pose: true});
+    }
+
     _touches (name: string, target: TouchTarget): boolean {
+        if (target === 'HEAD') return this._headTouching(name);
         const part = TARGET_PART[target];
         if (part) return this._touchingPart(name, part, 'any');
         const edge = TARGET_EDGE[target];
@@ -245,6 +325,65 @@ class CameraAiExtension implements Extension {
                         GESTURE: {type: ArgumentType.STRING, menu: 'GESTURE', defaultValue: 'OPEN'}
                     }
                 },
+                {
+                    opcode: 'whenFlap',
+                    blockType: BlockType.HAT,
+                    isEdgeActivated: false,
+                    text: msg('whenFlap', 'when both hands flap down', 'Hat: both hands come down together, fast')
+                },
+                '---',
+                // ── Head and body ──
+                {
+                    opcode: 'headX',
+                    blockType: BlockType.REPORTER,
+                    text: msg('headX', 'x of head', 'Stage x of the head (the nose)')
+                },
+                {
+                    opcode: 'headY',
+                    blockType: BlockType.REPORTER,
+                    text: msg('headY', 'y of head', 'Stage y of the head (the nose)')
+                },
+                {
+                    opcode: 'headTilt',
+                    blockType: BlockType.REPORTER,
+                    text: msg('headTilt', 'head tilt', 'How far the head leans, in degrees; negative to the left')
+                },
+                {
+                    opcode: 'headTilted',
+                    blockType: BlockType.BOOLEAN,
+                    text: msg('headTilted', 'head tilted [DIR]?', 'Whether the head leans left, right or not at all'),
+                    arguments: {
+                        DIR: {type: ArgumentType.STRING, menu: 'LEAN', defaultValue: 'LEFT'}
+                    }
+                },
+                {
+                    opcode: 'whenHeadTilt',
+                    blockType: BlockType.HAT,
+                    isEdgeActivated: false,
+                    text: msg('whenHeadTilt', 'when head tilts [DIR]', 'Hat: the head starts leaning to a side'),
+                    arguments: {
+                        DIR: {type: ArgumentType.STRING, menu: 'SIDE', defaultValue: 'LEFT'}
+                    }
+                },
+                {
+                    opcode: 'whenNod',
+                    blockType: BlockType.HAT,
+                    isEdgeActivated: false,
+                    text: msg('whenNod', 'when head nods', 'Hat: the head goes down and up')
+                },
+                {
+                    opcode: 'headSeen',
+                    blockType: BlockType.BOOLEAN,
+                    text: msg('headSeen', 'head seen?', 'Whether the camera sees a head')
+                },
+                {
+                    opcode: 'headTouching',
+                    blockType: BlockType.BOOLEAN,
+                    text: msg('headTouching', '[NAME] touching head?', 'Whether an object is on the head'),
+                    arguments: {
+                        NAME: {type: ArgumentType.STRING, defaultValue: 'ball'}
+                    }
+                },
                 '---',
                 // ── Playground ──
                 {
@@ -307,6 +446,15 @@ class CameraAiExtension implements Extension {
                         NAME: {type: ArgumentType.STRING, defaultValue: 'ball'},
                         PART: {type: ArgumentType.STRING, menu: 'PART', defaultValue: 'indexTip'},
                         HAND: {type: ArgumentType.STRING, menu: 'HAND', defaultValue: 'ANY'}
+                    }
+                },
+                {
+                    opcode: 'objectTouching',
+                    blockType: BlockType.BOOLEAN,
+                    text: msg('objectTouching', '[NAME] touching object [OTHER]?', 'Whether two objects overlap'),
+                    arguments: {
+                        NAME: {type: ArgumentType.STRING, defaultValue: 'ball'},
+                        OTHER: {type: ArgumentType.STRING, defaultValue: 'basket'}
                     }
                 },
                 {
@@ -467,7 +615,8 @@ class CameraAiExtension implements Extension {
                         item('drop', 'drop', 'raindrop'),
                         item('basket', 'basket', 'basket'),
                         item('star', 'star', 'star'),
-                        item('bomb', 'bomb', 'bomb')
+                        item('bomb', 'bomb', 'bomb'),
+                        item('bamboo', 'bamboo', 'bamboo with a gap')
                     ]
                 },
                 EDGE: {
@@ -486,10 +635,26 @@ class CameraAiExtension implements Extension {
                         item('INDEX_TIP', 'targetIndexTip', 'an index finger'),
                         item('PALM', 'targetPalm', 'a palm'),
                         item('WRIST', 'targetWrist', 'a wrist'),
+                        item('HEAD', 'targetHead', 'the head'),
                         item('TOP', 'targetTop', 'the top edge'),
                         item('BOTTOM', 'targetBottom', 'the bottom edge'),
                         item('LEFT', 'targetLeft', 'the left edge'),
                         item('RIGHT', 'targetRight', 'the right edge')
+                    ]
+                },
+                LEAN: {
+                    acceptReporters: false,
+                    items: [
+                        item('LEFT', 'leanLeft', 'left'),
+                        item('RIGHT', 'leanRight', 'right'),
+                        item('STRAIGHT', 'leanStraight', 'straight')
+                    ]
+                },
+                SIDE: {
+                    acceptReporters: false,
+                    items: [
+                        item('LEFT', 'leanLeft', 'left'),
+                        item('RIGHT', 'leanRight', 'right')
                     ]
                 },
                 PLAYER: {
@@ -513,7 +678,9 @@ class CameraAiExtension implements Extension {
     // ─── Camera ───
 
     cameraOn ({MIRROR}: {MIRROR: ArgValue}) {
-        this.runtime.events.emit(CameraAiEvent.CAMERA_COMMAND, {on: true, mirror: MIRROR !== 'normal'});
+        this._poseAsked = this._wantsPose();
+        this.runtime.events.emit(CameraAiEvent.CAMERA_COMMAND,
+            {on: true, mirror: MIRROR !== 'normal', pose: this._poseAsked});
     }
 
     getCameraMenu (): MenuItem[] {
@@ -573,6 +740,65 @@ class CameraAiExtension implements Extension {
         return this.vision.handsMatching(toSelector(HAND)).some(h => h.gesture === wanted);
     }
 
+    // ─── Head and body ───
+
+    _headTouching (name: string): boolean {
+        const head = this.vision.head();
+        return head ? this.playground.touching(name, head, head.radius) : false;
+    }
+
+    headX () {
+        this._needPose();
+        const head = this.vision.head();
+        return head ? head.x : 0;
+    }
+
+    headY () {
+        this._needPose();
+        const head = this.vision.head();
+        return head ? head.y : 0;
+    }
+
+    headTilt () {
+        this._needPose();
+        const head = this.vision.head();
+        return head ? head.tilt : 0;
+    }
+
+    headTilted ({DIR}: {DIR: ArgValue}) {
+        this._needPose();
+        const head = this.vision.head();
+        if (!head) return false;
+        switch (toLean(DIR)) {
+        case 'left': return head.tilt <= -TILT_ON;
+        case 'right': return head.tilt >= TILT_ON;
+        default: return Math.abs(head.tilt) < TILT_ON;
+        }
+    }
+
+    headSeen () {
+        this._needPose();
+        return this.vision.head() !== null;
+    }
+
+    headTouching ({NAME}: {NAME: ArgValue}) {
+        this._needPose();
+        return this._headTouching(String(NAME));
+    }
+
+    // Event hats: started from _fireMotionHats.
+    whenHeadTilt () {
+        return true;
+    }
+
+    whenNod () {
+        return true;
+    }
+
+    whenFlap () {
+        return true;
+    }
+
     // ─── Playground ───
 
     spawn ({KIND, NAME, X, Y, SIZE}: {KIND: ArgValue, NAME: ArgValue, X: ArgValue, Y: ArgValue, SIZE: ArgValue}) {
@@ -604,6 +830,10 @@ class CameraAiExtension implements Extension {
 
     touching ({NAME, PART, HAND}: {NAME: ArgValue, PART: ArgValue, HAND: ArgValue}) {
         return this._touchingPart(String(NAME), String(PART), toSelector(HAND));
+    }
+
+    objectTouching ({NAME, OTHER}: {NAME: ArgValue, OTHER: ArgValue}) {
+        return this.playground.touchingObject(String(NAME), String(OTHER));
     }
 
     atEdge ({NAME, EDGE}: {NAME: ArgValue, EDGE: ArgValue}) {
