@@ -133,7 +133,7 @@ test('playground objects move, report and touch a hand part', t => {
     t.equal(ext.objX({NAME: 'bong'}), 240, 'clamped to the stage');
     t.equal(ext.objY({NAME: 'bong'}), -180);
     t.equal(updates.length, 2);
-    t.same(updates[1].objects, [{name: 'bong', kind: 'ball', x: 240, y: -180, size: 60}]);
+    t.same(updates[1].objects, [{name: 'bong', kind: 'ball', x: 240, y: -180, size: 60, vx: 0, vy: 0}]);
 
     // Index tip at the bottom-right corner of the mirrored picture, i.e. camera-left.
     results([handAt(0.0, 1.0)]);
@@ -200,6 +200,99 @@ test('stop clears the countdown and the message but keeps the objects', t => {
 
     runtime.events.emit(CameraAiEvent.PLAYGROUND_COMMAND, {type: 'reset'});
     t.equal(ext.playground.state().objects.length, 0, 'the panel can clear everything');
+    t.end();
+});
+
+test('velocity and gravity move objects each step and stop them at the sides', t => {
+    const updates: PlaygroundState[] = [];
+    const pg = new Playground(s => updates.push(s), () => {}, () => 0);
+    pg.spawn('ball', 'ball', 0, 100, 40);
+    pg.setVelocity('ball', 60, 0);
+    pg.step(0.5);
+    t.same([pg.object('ball')!.x, pg.object('ball')!.y], [30, 100]);
+
+    // Slow motion adds up across small steps instead of rounding away.
+    pg.setVelocity('ball', 10, 0);
+    for (let i = 0; i < 30; i++) pg.step(1 / 30);
+    t.equal(Math.round(pg.object('ball')!.x), 40);
+    t.equal(updates[updates.length - 1].objects[0].x, 40, 'the GUI sees whole numbers');
+
+    // Gravity pulls y down, faster every step, until the floor stops it.
+    pg.setVelocity('ball', 0, 0);
+    pg.setGravity(300);
+    pg.step(0.1);
+    t.equal(pg.object('ball')!.vy, -30);
+    t.equal(pg.object('ball')!.y, 97);
+    for (let i = 0; i < 100; i++) pg.step(0.1);
+    t.equal(pg.object('ball')!.y, -180);
+    t.equal(pg.object('ball')!.vy, 0, 'rests on the floor');
+    t.ok(pg.atEdge('ball', 'bottom'));
+    t.notOk(pg.atEdge('ball', 'top'));
+
+    // The picture, not only its centre, counts as touching a side.
+    pg.moveTo('ball', 225, 0);
+    t.ok(pg.atEdge('ball', 'right'));
+    t.notOk(pg.atEdge('ball', 'left'));
+    t.notOk(pg.atEdge('missing', 'left'));
+
+    // Stop freezes everything where it is.
+    pg.setVelocity('ball', 50, 50);
+    pg.stop();
+    t.equal(pg.gravity(), 0);
+    t.same([pg.object('ball')!.vx, pg.object('ball')!.vy], [0, 0]);
+    t.end();
+});
+
+test('the playground steps itself while something moves and stops when nothing does', async t => {
+    const pg = new Playground(() => {});
+    pg.spawn('ball', 'ball', 0, 0, 40);
+    pg.setVelocity('ball', 600, 0);
+    await new Promise(resolve => setTimeout(resolve, 120));
+    const x = pg.object('ball')!.x;
+    t.ok(x > 20 && x <= 240, `moved on its own to ${x}`);
+    t.ok(pg._ticker !== null, 'still ticking while it moves');
+    pg.setVelocity('ball', 0, 0);
+    await new Promise(resolve => setTimeout(resolve, 80));
+    t.equal(pg._ticker, null, 'the clock stops once nothing moves');
+    pg.setGravity(300);
+    t.ok(pg._ticker !== null, 'gravity keeps the clock running');
+    pg.reset();
+    t.equal(pg._ticker, null);
+    t.end();
+});
+
+test('"when … touches …" starts once per contact, matched on the object name and the target', t => {
+    const {ext, results, hats} = makeExtension();
+    ext.spawn({KIND: 'ball', NAME: 'bong', X: 0, Y: 0, SIZE: 40});
+    t.same(hats, []);
+
+    // A hand (every part at one point) arrives on the ball: one start per part, for that object only.
+    results([handAt(0.5, 0.5)]);
+    t.same(hats, [
+        ['cameraAi_whenTouching', {TEXT: 'bong', TARGET: 'INDEX_TIP'}],
+        ['cameraAi_whenTouching', {TEXT: 'bong', TARGET: 'PALM'}],
+        ['cameraAi_whenTouching', {TEXT: 'bong', TARGET: 'WRIST'}]
+    ]);
+    results([handAt(0.5, 0.5)]);
+    t.equal(hats.length, 3, 'held contact starts nothing more');
+    results([handAt(0.0, 0.0)]);
+    results([handAt(0.5, 0.5)]);
+    t.equal(hats.length, 6, 'leaving and coming back starts it again');
+
+    // The ball moves to the floor: the bottom-edge hat starts once.
+    hats.length = 0;
+    ext.moveTo({NAME: 'bong', X: 0, Y: -170});
+    t.same(hats, [['cameraAi_whenTouching', {TEXT: 'bong', TARGET: 'BOTTOM'}]]);
+    t.ok(ext.atEdge({NAME: 'bong', EDGE: 'bottom'}));
+    t.notOk(ext.atEdge({NAME: 'bong', EDGE: 'up'}), 'an unknown edge is never touched');
+    ext.moveTo({NAME: 'bong', X: 0, Y: -171});
+    t.equal(hats.length, 1);
+
+    // A removed object touches nothing; respawned on the floor, it touches again.
+    ext.remove({NAME: 'bong'});
+    ext.spawn({KIND: 'ball', NAME: 'bong', X: 0, Y: -170, SIZE: 40});
+    t.equal(hats.length, 2);
+    ext.playground.stop();
     t.end();
 });
 

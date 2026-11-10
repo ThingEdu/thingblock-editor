@@ -4,12 +4,26 @@ import formatMessage from 'format-message';
 import {CameraAiEvent, RuntimeEvent} from '../../event/event-name';
 import type {Extension, ExtensionInfo, MenuItem} from '../extension';
 import {GESTURES, HAND_SELECTORS, VisionState, toGesture, toSelector} from './vision-state';
-import type {VisionResults} from './vision-state';
-import {Playground} from './playground';
-import type {ObjectKind, PlaygroundState} from './playground';
+import type {HandSelector, VisionResults} from './vision-state';
+import {EDGES, Playground} from './playground';
+import type {Edge, ObjectKind, PlaygroundState} from './playground';
 
 // A block argument as Scratch delivers it: a field's string, or a reporter's number.
 type ArgValue = string | number;
+
+/**
+ * What "when [object] touches [target]" can watch: a part of any hand, or a side of the stage.
+ * Upper case because hat fields match that way.
+ */
+const TOUCH_TARGETS = ['INDEX_TIP', 'PALM', 'WRIST', 'TOP', 'BOTTOM', 'LEFT', 'RIGHT'] as const;
+type TouchTarget = typeof TOUCH_TARGETS[number];
+const TARGET_PART: Partial<Record<TouchTarget, string>> = {INDEX_TIP: 'indexTip', PALM: 'palm', WRIST: 'wrist'};
+const TARGET_EDGE: Partial<Record<TouchTarget, Edge>> = {TOP: 'top', BOTTOM: 'bottom', LEFT: 'left', RIGHT: 'right'};
+
+const toEdge = (value: ArgValue): Edge | null => {
+    const v = String(value).toLowerCase();
+    return (EDGES as string[]).includes(v) ? v as Edge : null;
+};
 
 // eslint-disable-next-line @stylistic/max-len
 const blockIconURI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSI4IiBmaWxsPSIjN2MzYWVkIi8+CiAgPGcgc3Ryb2tlPSJ3aGl0ZSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjIiPgogICAgPHJlY3QgeD0iNyIgeT0iMTMiIHdpZHRoPSIyMCIgaGVpZ2h0PSIxNSIgcng9IjMiLz4KICAgIDxwYXRoIGQ9Ik0yNyAxOGw3LTR2MTJsLTctNHoiLz4KICAgIDxjaXJjbGUgY3g9IjE3IiBjeT0iMjAuNSIgcj0iNCIvPgogIDwvZz4KPC9zdmc+Cg==';
@@ -40,6 +54,8 @@ class CameraAiExtension implements Extension {
     playground: Playground;
     // Whether each hand selector showed each gesture on the last frame, keyed `selector/gesture`.
     _gestureState: Record<string, boolean> = {};
+    // Whether each object touched each target when last checked, keyed `name/target`.
+    _touchState: Record<string, boolean> = {};
     _wasReady = false;
 
     constructor (runtime: any) { // TODO: type Runtime for extension
@@ -53,6 +69,7 @@ class CameraAiExtension implements Extension {
         this.runtime.events.on(CameraAiEvent.VISION_RESULTS, (results: VisionResults) => {
             this.vision.update(results);
             this._fireGestureHats();
+            this._fireTouchHats();
         });
         this.runtime.events.on(CameraAiEvent.CAMERA_STATUS, (status: {on: boolean, ready: boolean}) => {
             this.vision.setCamera(Boolean(status.on), Boolean(status.ready));
@@ -69,6 +86,8 @@ class CameraAiExtension implements Extension {
 
     _emitPlayground (state: PlaygroundState) {
         this.runtime.events.emit(CameraAiEvent.PLAYGROUND_UPDATE, state);
+        // Objects moved (by a block or by gravity), so they may have reached a hand or a side.
+        this._fireTouchHats();
     }
 
     _startHats (opcode: string, fields: Record<string, string> = {}) {
@@ -89,6 +108,35 @@ class CameraAiExtension implements Extension {
             }
         }
         this._gestureState = next;
+    }
+
+    _touches (name: string, target: TouchTarget): boolean {
+        const part = TARGET_PART[target];
+        if (part) return this._touchingPart(name, part, 'any');
+        const edge = TARGET_EDGE[target];
+        return edge ? this.playground.atEdge(name, edge) : false;
+    }
+
+    _touchingPart (name: string, part: string, selector: HandSelector): boolean {
+        // Any hand touching counts, not only the first one seen.
+        const selectors = selector === 'any' ? ['1', '2'] as const : [selector];
+        return selectors.some(s => this.playground.touching(name, this.vision.partPosition(s, part)));
+    }
+
+    // A "when … touches …" hat runs once each time its object reaches its target.
+    _fireTouchHats () {
+        const next: Record<string, boolean> = {};
+        for (const o of this.playground.state().objects) {
+            for (const target of TOUCH_TARGETS) {
+                const key = `${o.name}/${target}`;
+                next[key] = this._touches(o.name, target);
+                if (next[key] && !this._touchState[key]) {
+                    // The hat's object name is a text shadow, whose field is TEXT.
+                    this._startHats('whenTouching', {TEXT: o.name, TARGET: target});
+                }
+            }
+        }
+        this._touchState = next;
     }
 
     // ─── Extension metadata ───
@@ -244,6 +292,46 @@ class CameraAiExtension implements Extension {
                     }
                 },
                 {
+                    opcode: 'atEdge',
+                    blockType: BlockType.BOOLEAN,
+                    text: msg('atEdge', '[NAME] touching [EDGE] edge?',
+                        'Whether an object reaches a side of the stage'),
+                    arguments: {
+                        NAME: {type: ArgumentType.STRING, defaultValue: 'ball'},
+                        EDGE: {type: ArgumentType.STRING, menu: 'EDGE', defaultValue: 'bottom'}
+                    }
+                },
+                {
+                    opcode: 'whenTouching',
+                    blockType: BlockType.HAT,
+                    isEdgeActivated: false,
+                    text: msg('whenTouching', 'when [NAME] touches [TARGET]',
+                        'Hat: an object reaches a hand part or a side'),
+                    arguments: {
+                        NAME: {type: ArgumentType.STRING, defaultValue: 'ball'},
+                        TARGET: {type: ArgumentType.STRING, menu: 'TARGET', defaultValue: 'INDEX_TIP'}
+                    }
+                },
+                {
+                    opcode: 'setVelocity',
+                    blockType: BlockType.COMMAND,
+                    text: msg('setVelocity', 'set speed of [NAME] to x: [VX] y: [VY]',
+                        'Give an object a velocity, in stage units per second'),
+                    arguments: {
+                        NAME: {type: ArgumentType.STRING, defaultValue: 'ball'},
+                        VX: {type: ArgumentType.NUMBER, defaultValue: 0},
+                        VY: {type: ArgumentType.NUMBER, defaultValue: -150}
+                    }
+                },
+                {
+                    opcode: 'setGravity',
+                    blockType: BlockType.COMMAND,
+                    text: msg('setGravity', 'set gravity to [G]', 'How fast objects fall; 0 turns gravity off'),
+                    arguments: {
+                        G: {type: ArgumentType.NUMBER, defaultValue: 300}
+                    }
+                },
+                {
                     opcode: 'say',
                     blockType: BlockType.COMMAND,
                     text: msg('say', 'say [TEXT]', 'Show a line of text on the playground'),
@@ -359,6 +447,28 @@ class CameraAiExtension implements Extension {
                         item('bomb', 'bomb', 'bomb')
                     ]
                 },
+                EDGE: {
+                    acceptReporters: false,
+                    items: [
+                        item('top', 'edgeTop', 'top'),
+                        item('bottom', 'edgeBottom', 'bottom'),
+                        item('left', 'edgeLeft', 'left'),
+                        item('right', 'edgeRight', 'right')
+                    ]
+                },
+                // A shadow input, not a field: the hat then matches on its object name and its target together.
+                TARGET: {
+                    acceptReporters: true,
+                    items: [
+                        item('INDEX_TIP', 'targetIndexTip', 'an index finger'),
+                        item('PALM', 'targetPalm', 'a palm'),
+                        item('WRIST', 'targetWrist', 'a wrist'),
+                        item('TOP', 'targetTop', 'the top edge'),
+                        item('BOTTOM', 'targetBottom', 'the bottom edge'),
+                        item('LEFT', 'targetLeft', 'the left edge'),
+                        item('RIGHT', 'targetRight', 'the right edge')
+                    ]
+                },
                 PLAYER: {
                     acceptReporters: true,
                     items: [
@@ -448,20 +558,34 @@ class CameraAiExtension implements Extension {
 
     objX ({NAME}: {NAME: ArgValue}) {
         const o = this.playground.object(String(NAME));
-        return o ? o.x : 0;
+        return o ? Math.round(o.x) : 0;
     }
 
     objY ({NAME}: {NAME: ArgValue}) {
         const o = this.playground.object(String(NAME));
-        return o ? o.y : 0;
+        return o ? Math.round(o.y) : 0;
     }
 
     touching ({NAME, PART, HAND}: {NAME: ArgValue, PART: ArgValue, HAND: ArgValue}) {
-        const selector = toSelector(HAND);
-        // Any hand touching counts, not only the first one seen.
-        const selectors = selector === 'any' ? ['1', '2'] as const : [selector];
-        return selectors.some(s => this.playground.touching(
-            String(NAME), this.vision.partPosition(s, String(PART))));
+        return this._touchingPart(String(NAME), String(PART), toSelector(HAND));
+    }
+
+    atEdge ({NAME, EDGE}: {NAME: ArgValue, EDGE: ArgValue}) {
+        const edge = toEdge(EDGE);
+        return edge ? this.playground.atEdge(String(NAME), edge) : false;
+    }
+
+    // Event hat: started from _fireTouchHats.
+    whenTouching () {
+        return true;
+    }
+
+    setVelocity ({NAME, VX, VY}: {NAME: ArgValue, VX: ArgValue, VY: ArgValue}) {
+        this.playground.setVelocity(String(NAME), Number(VX) || 0, Number(VY) || 0);
+    }
+
+    setGravity ({G}: {G: ArgValue}) {
+        this.playground.setGravity(Number(G) || 0);
     }
 
     say ({TEXT}: {TEXT: ArgValue}) {
