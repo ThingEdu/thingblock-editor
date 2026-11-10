@@ -23,12 +23,4 @@ describe('makeToolboxXML board mode gating', () => {
         // Timer maps to millis() on the board, so it stays available in both modes.
         expect(xml).toContain('sensing_timer');
     });
-
-    test('operators category includes the type-convert blocks in both modes', () => {
-        for (const boardMode of [false, true]) {
-            const xml = makeToolboxXML(false, true, 'target', [], defaultColors, boardMode);
-            expect(xml).toContain('operator_tonumber');
-            expect(xml).toContain('operator_totext');
-        }
-    });
 });

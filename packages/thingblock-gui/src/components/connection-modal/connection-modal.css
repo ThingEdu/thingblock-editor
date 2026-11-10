@@ -260,6 +260,12 @@
     height: 64px;
 }
 
+.board-list-error {
+    padding: 0.5rem 1rem;
+    color: $error-primary;
+    text-align: center;
+}
+
 .activityArea {
     height: 165px;
     background-color: $looks-light-transparent;

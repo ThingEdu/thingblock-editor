@@ -30,7 +30,7 @@ const makeFake = sockets => class FakeSocket {
 
 test('scan streams devices, stop cancels', async t => {
     const sockets = [];
-    const backend = new HelperBleBackend({url: 'ws://test/io', WebSocket: makeFake(sockets)});
+    const backend = new HelperBleBackend({url: 'ws://test/ws/ble', WebSocket: makeFake(sockets)});
     const devices = [];
     const stop = backend.scan({services: ['svc']}, {onDevice: d => devices.push(d)});
 
@@ -42,8 +42,8 @@ test('scan streams devices, stop cancels', async t => {
     t.same(sock.sent[0].payload.services, ['svc'], 'forwards the service filter');
     const scanId = sock.sent[0].id;
 
-    sock.recv({id: scanId, type: 'bleDevice', payload: {deviceId: 'd1', name: 'ThingBot', rssi: -40}});
-    t.equal(devices.length, 1, 'onDevice fired per bleDevice frame');
+    sock.recv({id: scanId, type: 'device', payload: {deviceId: 'd1', name: 'ThingBot', rssi: -40}});
+    t.equal(devices.length, 1, 'onDevice fired per device frame');
     t.equal(devices[0].id, 'd1', 'device id mapped from payload');
     t.equal(devices[0].rssi, -40, 'rssi carried through');
 
@@ -55,7 +55,7 @@ test('scan streams devices, stop cancels', async t => {
 
 test('connect, write (base64), subscribe, notify, read', async t => {
     const sockets = [];
-    const backend = new HelperBleBackend({url: 'ws://test/io', WebSocket: makeFake(sockets)});
+    const backend = new HelperBleBackend({url: 'ws://test/ws/ble', WebSocket: makeFake(sockets)});
 
     const connecting = backend.connect({id: 'd1'});
     const sock = sockets[0];
@@ -83,7 +83,7 @@ test('connect, write (base64), subscribe, notify, read', async t => {
     await subscribing;
 
     // btoa(String.fromCharCode(2, 6, 1)) === 'AgYB'
-    sock.recv({type: 'bleNotify', payload: {deviceId: 'd1', characteristic: 'rx', data: 'AgYB'}});
+    sock.recv({id: '', type: 'notify', payload: {deviceId: 'd1', characteristic: 'rx', data: 'AgYB'}});
     t.equal(received.length, 1, 'notification routed to the subscriber');
     t.same(Array.from(received[0]), [2, 6, 1], 'notification bytes base64-decoded');
 
@@ -96,9 +96,9 @@ test('connect, write (base64), subscribe, notify, read', async t => {
     t.end();
 });
 
-test('bleDisconnected fires the connection callback', async t => {
+test('disconnected fires the connection callback', async t => {
     const sockets = [];
-    const backend = new HelperBleBackend({url: 'ws://test/io', WebSocket: makeFake(sockets)});
+    const backend = new HelperBleBackend({url: 'ws://test/ws/ble', WebSocket: makeFake(sockets)});
 
     let dropped = false;
     const connecting = backend.connect({id: 'd1'}, () => {
@@ -110,7 +110,7 @@ test('bleDisconnected fires the connection callback', async t => {
     sock.recv({id: sock.sent[0].id, type: 'result', payload: {deviceId: 'd1'}});
     await connecting;
 
-    sock.recv({type: 'bleDisconnected', payload: {deviceId: 'd1'}});
+    sock.recv({id: '', type: 'disconnected', payload: {deviceId: 'd1'}});
     t.ok(dropped, 'onDisconnect called on an unsolicited disconnect');
     t.end();
 });
@@ -128,7 +128,7 @@ test('a socket error rejects an in-flight request', async t => {
             if (this.onerror) this.onerror();
         }
     };
-    const backend = new HelperBleBackend({url: 'ws://down/io', WebSocket: FakeErroring});
+    const backend = new HelperBleBackend({url: 'ws://down/ws/ble', WebSocket: FakeErroring});
     const connecting = backend.connect({id: 'd1'});
     sockets[0].fail();
     await t.rejects(connecting, /cannot reach/, 'connect rejects when the socket errors');

@@ -45,6 +45,8 @@ const DeviceControls = ({
     dialogOpen = false,
     scanning = false,
     boards = null,
+    connectingBoard = null,
+    connectError = null,
     deviceIconURL,
     uploading = false,
     uploadStatus = null,
@@ -112,6 +114,8 @@ const DeviceControls = ({
                 <BoardListDialog
                     scanning={scanning}
                     boards={boards}
+                    connectingBoard={connectingBoard}
+                    connectError={connectError}
                     deviceIconURL={deviceIconURL}
                     onScan={onScan}
                     onConnectBoard={onConnectBoard}
@@ -137,7 +141,12 @@ DeviceControls.propTypes = {
         id: PropTypes.string,
         name: PropTypes.string
     })),
+    connectError: PropTypes.string,
     connectedBoard: PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string
+    }),
+    connectingBoard: PropTypes.shape({
         id: PropTypes.string,
         name: PropTypes.string
     }),

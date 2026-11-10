@@ -4,10 +4,10 @@ import type Runtime from '../../engine/runtime';
 import type {ConnectionTarget, StreamCallbacks} from '../types';
 
 /**
- * Default address of the native helper's WebSocket server (thingblock-link). The helper listens on
+ * Default address of the native helper's WebSocket endpoint (thingblock-link). The helper listens on
  * loopback, a secure context, so no TLS is needed.
  */
-const DEFAULT_URL = 'ws://localhost:3030/';
+const DEFAULT_URL = 'ws://127.0.0.1:3030/ws/arduino';
 
 /**
  * The WebSocket OPEN readyState (spec-fixed value, identical across implementations). Fire-and-forget
@@ -17,7 +17,7 @@ const DEFAULT_URL = 'ws://localhost:3030/';
 const WS_OPEN = 1;
 
 export interface LinkSessionOptions {
-    /** The helper WebSocket URL (defaults to `ws://localhost:3030/`). */
+    /** The helper WebSocket URL (defaults to `ws://127.0.0.1:3030/ws/arduino`). */
     url?: string
     /** The WebSocket constructor (defaults to the global one). */
     WebSocket?: typeof WebSocket
@@ -53,9 +53,9 @@ type HelperError = Error & {code?: string};
  * One socket carries every operation. A request's `id` correlates it with its streamed responses
  * (`log` / `progress` / `monitorData`) and its single terminal reply (`result` or `error`).
  *
- * The selected port is helper-side session state — the helper records it on its own socket, with no
- * daemon round-trip — so a dropped socket means the helper has forgotten the port. The close handler
- * treats that as a disconnect to keep `connectedTarget` honest.
+ * The connected port is helper-side session state on this socket, so a dropped socket means the
+ * helper has forgotten the port. The close handler treats that as a disconnect to keep
+ * `connectedTarget` honest.
  *
  * The WebSocket and its URL are injectable so the VM's tests can drive a fake socket with no server.
  */
@@ -102,11 +102,12 @@ export default class LinkSession {
 
     /**
      * The helper's HTTP origin, derived from the WebSocket URL: the same helper process serves the WS
-     * and its HTTP routes (`/resources`, `/api/...`) on one listener, so the origin is the WS origin
-     * with the scheme swapped (ws→http / wss→https).
+     * and its HTTP routes (`/resources`, `/api/...`) on one listener, so the origin is the WS URL's
+     * host with the scheme swapped (ws→http / wss→https).
      */
     get httpOrigin (): string {
-        return this.url.replace(/^ws/, 'http').replace(/\/$/, '');
+        const {protocol, host} = new URL(this.url);
+        return `${protocol.replace(/^ws/, 'http')}//${host}`;
     }
 
     /**
@@ -135,7 +136,7 @@ export default class LinkSession {
      * Send one request envelope and resolve with its terminal `result` payload (or reject on `error`).
      * Opens the socket on first use. When `callbacks` is given, streamed `log`/`progress` frames for
      * this request are routed to it until the terminal reply settles the promise.
-     * @param type - the request type (e.g. 'listBoards').
+     * @param type - the request type (e.g. 'compile').
      * @param payload - the request payload.
      * @param callbacks - streaming callbacks for this request, already defaulted via `withDefaults`;
      *   omitted for non-streaming requests.
@@ -223,7 +224,7 @@ export default class LinkSession {
      * Route an inbound frame to its pending request. Terminal `result`/`error` settle the request;
      * streaming `log`/`progress` frames go to the request's callbacks without settling. `monitorData`
      * frames (which arrive on the open monitor's id past its terminal `result`) emit `SERIAL_DATA` on
-     * the runtime; a late `error` on that id tears the monitor down. `event` frames are ignored.
+     * the runtime; a late `error` on that id tears the monitor down.
      * @param raw - the JSON text frame.
      */
     private handleMessage (raw: string): void {
@@ -279,7 +280,7 @@ export default class LinkSession {
 
     /**
      * Reject every in-flight request when the socket closes, and reset so the next request reconnects.
-     * The helper's selected port is session state on this socket, so a close also drops the link —
+     * The helper's connected port is session state on this socket, so a close also drops the link —
      * surface that as a disconnect.
      */
     private handleClose (): void {

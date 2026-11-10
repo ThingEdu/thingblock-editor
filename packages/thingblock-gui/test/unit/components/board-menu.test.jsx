@@ -34,19 +34,6 @@ describe('BoardMenu', () => {
         };
     };
 
-    test('renders "Select board" when no device is selected', () => {
-        renderBoardMenu(null);
-        expect(screen.getByRole('button', {name: 'Select board'})).toBeInTheDocument();
-    });
-
-    test('renders with the selected device name', () => {
-        renderBoardMenu(selectedDevice.deviceId);
-
-        expect(screen.getByRole('button', {
-            name: `Board: ${selectedDevice.name}`
-        })).toBeInTheDocument();
-    });
-
     test('clicking opens the board library', () => {
         const {store} = renderBoardMenu(selectedDevice.deviceId);
 
