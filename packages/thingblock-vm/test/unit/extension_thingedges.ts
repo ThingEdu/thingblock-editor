@@ -18,9 +18,13 @@ const devices = [
     {id: 'th', name: 'Nhiệt kế', kind: 'sensor', room: null, channels: [{element: 1, label: 'Kênh 1'}], capabilities: ['sensor']}
 ];
 
-/** A bridge on the second port of the range; records every request it receives. */
-const fakeBridge = ({paired = true, port = FIRST_PORT + 1, controlStatus = 200} = {}) => {
+/**
+ * A bridge on the second port of the range; records every request it receives. Like ThingEdges Desktop, it
+ * refuses everything but /v1/info while nobody is signed in, and names the account only to a paired app.
+ */
+const fakeBridge = ({paired = true, port = FIRST_PORT + 1, controlStatus = 200, signedIn = true} = {}) => {
     const calls: {url: string, method: string, body?: unknown, auth?: string}[] = [];
+    let session = signedIn;
     let states: Record<string, unknown> = {
         light1: {on: {1: true}, brightness: 40},
         sw2: {on: {1: false, 2: true}},
@@ -33,8 +37,16 @@ const fakeBridge = ({paired = true, port = FIRST_PORT + 1, controlStatus = 200} 
         const reply = (status: number, body: unknown) => Promise.resolve({status, json: () => Promise.resolve(body)});
         if (!url.startsWith(`http://127.0.0.1:${port}/`)) return Promise.reject(new Error('ECONNREFUSED'));
         const path = url.slice(`http://127.0.0.1:${port}`.length);
-        if (path === '/v1/info') return reply(200, {name: 'ThingEdges Desktop', api: 1, location: 'Nhà', paired});
-        if (path === '/v1/pair') return reply(200, {token: TOKEN});
+        const tokenValid = session && call.auth === `Bearer ${TOKEN}` && paired;
+        if (path === '/v1/info') {
+            return reply(200, {name: 'ThingEdges Desktop', api: 1, signedIn: session, paired: tokenValid,
+                ...(tokenValid ? {account: 'An', location: 'Nhà'} : {})});
+        }
+        if (!session) return reply(503, {error: 'Sign in to ThingEdges Desktop first'});
+        if (path === '/v1/pair') {
+            paired = true;
+            return reply(200, {token: TOKEN});
+        }
         if (call.auth !== `Bearer ${TOKEN}`) return reply(401, {error: 'Pair first'});
         if (path === '/v1/devices') return reply(200, {devices});
         if (path === '/v1/states') return reply(200, {states});
@@ -43,6 +55,8 @@ const fakeBridge = ({paired = true, port = FIRST_PORT + 1, controlStatus = 200} 
     };
     return {fetch, calls, setStates: (next: Record<string, unknown>) => {
         states = next;
+    }, setSignedIn: (value: boolean) => {
+        session = value;
     }};
 };
 
@@ -170,6 +184,7 @@ test('a revoked token drops the devices and asks to connect again', async t => {
     await ext.refreshDevices();
     store.setItem('thingedges.bridgeToken', 'ffffffffffffffffffffffffffffffff');
     await ext.pollStates();
+    ext.dispose();
     t.equal(ext._status, 'waiting');
     t.same(ext._devices, []);
     t.equal(store.getItem('thingedges.bridgeToken'), null, 'the rejected token is forgotten');
@@ -186,4 +201,51 @@ test('getInfo declares every opcode the extension implements', t => {
         if (typeof menu.items === 'string') t.type((ext as unknown as Record<string, unknown>)[menu.items], 'function', name);
     }
     t.end();
+});
+
+test('a signed-out Desktop is not asked for access and the status says to sign in', async t => {
+    const bridge = fakeBridge({paired: false, signedIn: false});
+    const ext = new ThingEdgesExtension({}, {fetch: bridge.fetch, store: memoryStore(), autoStart: false});
+    await ext.connect();
+    t.equal(ext._status, 'signedOut');
+    t.notOk(bridge.calls.some(c => c.url.endsWith('/v1/pair')), 'no pairing request while signed out');
+    t.equal(ext.status(), 'sign in to ThingEdges Desktop with your account');
+
+    bridge.setSignedIn(true);
+    await ext.connect();
+    ext.dispose();
+    t.ok(ext.isConnected());
+    t.equal(ext.status(), 'connected: An · Nhà', 'the status names the account and the home');
+});
+
+test('signing out of the Desktop drops the devices; signing back in reconnects without asking again', async t => {
+    const bridge = fakeBridge();
+    const {ext} = await connectedExtension(bridge);
+    ext._start = () => {}; // the test drives discovery itself
+    bridge.setSignedIn(false);
+    await ext.pollStates();
+    t.equal(ext._status, 'signedOut');
+    t.same(ext._devices, []);
+
+    bridge.setSignedIn(true);
+    await ext.connect();
+    ext.dispose();
+    t.ok(ext.isConnected());
+    t.equal(bridge.calls.filter(c => c.url.endsWith('/v1/pair')).length, 0, 'the stored token is still good for this account');
+});
+
+test('discovery keeps watching until the signed-in account allowed this app', async t => {
+    const bridge = fakeBridge({paired: false, signedIn: false});
+    const ext = new ThingEdgesExtension({}, {fetch: bridge.fetch, store: memoryStore({'thingedges.bridgeToken': TOKEN}), autoStart: false});
+    const retries: (() => void)[] = [];
+    ext._later = task => {
+        retries.push(task);
+    };
+    ext._start();
+    await new Promise(resolve => setImmediate(resolve));
+    t.equal(ext._status, 'signedOut');
+    bridge.setSignedIn(true);
+    retries.shift()?.();
+    await new Promise(resolve => setImmediate(resolve));
+    t.equal(ext._status, 'waiting', 'signed in, but this account has not allowed ThingBlock');
 });
