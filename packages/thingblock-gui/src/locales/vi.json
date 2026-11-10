@@ -13,8 +13,6 @@
     "gui.boardLibrary.noBoard.description": "Chạy trên trình duyệt, không cần mạch.",
     "gui.boardLibrary.noBoard.name": "Không dùng mạch",
     "gui.boardListDialog.title": "Kết nối mạch",
-    "gui.codeView.title": "Mã Arduino",
-    "gui.codeView.toggle": "Hiện hoặc ẩn mã Arduino sinh từ khối lệnh",
     "gui.connection.auto-scanning.scanBeginMessage": "Bấm nút trên thiết bị của em.",
     "gui.connection.auto-scanning.updatePeripheralButton": "Cập nhật thiết bị",
     "gui.connection.auto-scanning.updatePeripheralHint": "Dùng \"Cập nhật thiết bị\" để cài firmware qua cáp USB.",
