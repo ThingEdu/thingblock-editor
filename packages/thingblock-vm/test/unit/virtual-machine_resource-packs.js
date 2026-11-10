@@ -37,7 +37,7 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
 test('getExamplesOrigin sits next to the extensions under the same resource root', t => {
     const vm = new VirtualMachine();
 
-    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:3030/resources/examples', 'link mode');
+    t.equal(vm.devices.getExamplesOrigin(), 'http://127.0.0.1:3030/resources/examples', 'link mode');
     vm.link.setLinkMode('cloud');
     t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:8080/resources/examples', 'cloud mode');
 
@@ -310,7 +310,7 @@ test('flashFirmware rejects an unknown image id', async t => {
 test('getTutorialsOrigin sits next to the extensions under the same resource root', t => {
     const vm = new VirtualMachine();
 
-    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:3030/resources/tutorials', 'link mode');
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://127.0.0.1:3030/resources/tutorials', 'link mode');
     vm.link.setLinkMode('cloud');
     t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:8080/resources/tutorials', 'cloud mode');
 
