@@ -14,7 +14,7 @@ const messages = defineMessages({
     defaultProjectTitle: {
         id: 'gui.gui.defaultProjectTitle',
         description: 'Default title for project',
-        defaultMessage: 'Scratch Project'
+        defaultMessage: 'ThingBlock Project'
     }
 });
 
@@ -28,6 +28,12 @@ const TitledHOC = function (WrappedComponent) {
             this.handleReceivedProjectTitle(this.props.projectTitle);
         }
         componentDidUpdate (prevProps) {
+            // A new project still carrying the default title follows a language change, so it isn't
+            // left (and saved) under the previous language's name.
+            if (this.props.intl.locale !== prevProps.intl.locale &&
+                this.props.reduxProjectTitle === prevProps.intl.formatMessage(messages.defaultProjectTitle)) {
+                this.handleReceivedProjectTitle();
+            }
             if (this.props.projectTitle !== prevProps.projectTitle) {
                 this.handleReceivedProjectTitle(this.props.projectTitle);
             }

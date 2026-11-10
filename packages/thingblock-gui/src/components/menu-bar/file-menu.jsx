@@ -14,7 +14,10 @@ import useMenuNavigation from '../../hooks/use-menu-navigation';
 
 import sharedMessages from '../../lib/shared-messages';
 
+const saveShortcut = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘S' : 'Ctrl+S';
+
 import {saveProjectAsCopy} from '../../reducers/project-state';
+import {openExampleLibrary} from '../../reducers/modals';
 
 const fileMenu = defineMessage({
     id: 'gui.aria.fileMenu',
@@ -27,6 +30,7 @@ const FileMenu = ({
     canSave,
     canCreateCopy,
     canRemix,
+    onClickExamples,
     onClickNew,
     onClickSave,
     onClickSaveAsCopy,
@@ -140,25 +144,51 @@ const FileMenu = ({
                 )}
                 <MenuSection>
                     <MenuItem
+                        onClick={onClickExamples}
+                        isDataMenuItem
+                        onParentKeyDown={handleKeyDownOpenMenu}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Examples..."
+                            description="Menu bar item for opening the library of bundled example projects"
+                            id="gui.menuBar.examples"
+                        />
+                    </MenuItem>
+                    <MenuItem
                         onClick={onStartSelectingFileUpload}
                         isDataMenuItem
                         onParentKeyDown={handleKeyDownOpenMenu}
                     >
                         {intl.formatMessage(sharedMessages.loadFromComputerTitle)}
                     </MenuItem>
-                    <SB3Downloader>{(className, downloadProjectCallback) => (
-                        <MenuItem
-                            className={className}
-                            onClick={getSaveToComputerHandler(downloadProjectCallback)}
-                            isDataMenuItem
-                            onParentKeyDown={handleKeyDownOpenMenu}
-                        >
-                            <FormattedMessage
-                                defaultMessage="Save to your computer"
-                                description="Menu bar item for downloading a project to your computer" // eslint-disable-line @stylistic/max-len
-                                id="gui.menuBar.downloadToComputer"
-                            />
-                        </MenuItem>
+                    <SB3Downloader>{(className, downloadProjectCallback, saveProjectAsCallback) => (
+                        <React.Fragment>
+                            <MenuItem
+                                className={className}
+                                onClick={getSaveToComputerHandler(downloadProjectCallback)}
+                                isDataMenuItem
+                                onParentKeyDown={handleKeyDownOpenMenu}
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Save"
+                                    description="Menu bar item for saving the project to its file on the computer (asks where the first time)" // eslint-disable-line @stylistic/max-len
+                                    id="gui.menuBar.saveToFile"
+                                />
+                                <span className={styles.menuShortcut}>{saveShortcut}</span>
+                            </MenuItem>
+                            <MenuItem
+                                className={className}
+                                onClick={getSaveToComputerHandler(saveProjectAsCallback)}
+                                isDataMenuItem
+                                onParentKeyDown={handleKeyDownOpenMenu}
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Save as…"
+                                    description="Menu bar item for saving the project to a new file chosen on the computer" // eslint-disable-line @stylistic/max-len
+                                    id="gui.menuBar.saveToFileAs"
+                                />
+                            </MenuItem>
+                        </React.Fragment>
                     )}</SB3Downloader>
                 </MenuSection>
             </MenuBarMenu>
@@ -172,6 +202,7 @@ FileMenu.propTypes = {
     canCreateCopy: PropTypes.bool.isRequired,
     canRemix: PropTypes.bool.isRequired,
     onStartSelectingFileUpload: PropTypes.func.isRequired,
+    onClickExamples: PropTypes.func,
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onClickRemix: PropTypes.func,
@@ -186,6 +217,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
+    onClickExamples: () => dispatch(openExampleLibrary()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy())
 });
 

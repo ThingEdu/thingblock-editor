@@ -10,6 +10,11 @@ export interface BoardManifest {
     id: string
     iconURL: string
     Device: new (runtime: Runtime) => Device
+    /**
+     * Left out of the board picker. The device stays registered, so a project saved on it still loads
+     * and builds; it just isn't offered for new projects.
+     */
+    hidden?: boolean
 }
 
 /**

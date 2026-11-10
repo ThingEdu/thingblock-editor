@@ -34,9 +34,19 @@ test('getResourceOrigin derives the helper HTTP base in link mode, null otherwis
     t.end();
 });
 
+test('getExamplesOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getExamplesOrigin(), 'http://127.0.0.1:3030/resources/examples', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getExamplesOrigin(), 'http://localhost:8080/resources/examples', 'cloud mode');
+
+    t.end();
+});
+
 test('registerDeviceManifest exposes the pack device through getDeviceList', t => {
     const vm = new VirtualMachine();
-    const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
+    const base = 'http://127.0.0.1:3030/resources/extensions/devices/thingbot';
 
     vm.devices.registerDeviceManifest(sampleManifest, base);
 
@@ -53,7 +63,7 @@ test('registerDeviceManifest exposes the pack device through getDeviceList', t =
 
 test('registerDeviceManifest is idempotent on a duplicate id', t => {
     const vm = new VirtualMachine();
-    const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
+    const base = 'http://127.0.0.1:3030/resources/extensions/devices/thingbot';
 
     vm.devices.registerDeviceManifest(sampleManifest, base);
     const count = vm.devices.getDeviceList().filter(d => d.deviceId === 'thingbot').length;
@@ -67,7 +77,7 @@ test('registerDeviceManifest is idempotent on a duplicate id', t => {
 
 test('ManifestDevice maps compile and upload config from the manifest', t => {
     const vm = new VirtualMachine();
-    const base = 'http://localhost:3030/resources/extensions/devices/thingbot';
+    const base = 'http://127.0.0.1:3030/resources/extensions/devices/thingbot';
 
     vm.devices.registerDeviceManifest(sampleManifest, base);
     const device = vm.devices.deviceRegistry.get('thingbot');
@@ -198,7 +208,7 @@ const firmwareManifest = Object.assign({}, sampleManifest, {
 
 test('getDeviceFirmware lists what the pack declared', t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     const list = vm.devices.getDeviceFirmware('thingbot');
 
@@ -210,7 +220,7 @@ test('getDeviceFirmware lists what the pack declared', t => {
 
 test('getDeviceFirmware is empty for a device that declares none', t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(sampleManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(sampleManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     t.same(vm.devices.getDeviceFirmware('thingbot'), [], 'no images, no menu entry');
     t.end();
@@ -218,7 +228,7 @@ test('getDeviceFirmware is empty for a device that declares none', t => {
 
 test('flashFirmware sends flashFirmware with the pack-relative image', async t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     // `LinkSession.request(type, payload, callbacks, cancellable)` is the single send path every
     // request goes through; `flash()` uses it too. Stubbing it keeps the test off the socket. The
@@ -244,7 +254,7 @@ test('flashFirmware sends flashFirmware with the pack-relative image', async t =
 
 test('flashFirmware reopens the monitor even when the flash rejects', async t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     let reopened = false;
     vm.link.backend.session.request = () => Promise.reject(new Error('flash failed'));
@@ -266,7 +276,7 @@ test('flashFirmware reopens the monitor even when the flash rejects', async t =>
 
 test('flashFirmware does not fail the flash when the monitor fails to reopen', async t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     let reopenAttempted = false;
     vm.link.backend.session.request = () => Promise.resolve({});
@@ -287,12 +297,35 @@ test('flashFirmware does not fail the flash when the monitor fails to reopen', a
 
 test('flashFirmware rejects an unknown image id', async t => {
     const vm = new VirtualMachine();
-    vm.devices.registerDeviceManifest(firmwareManifest, 'http://localhost:3030/resources/extensions/devices/thingbot');
+    vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
 
     await t.rejects(
         vm.link.flashFirmware('thingbot', 'no-such-image'),
         /no firmware "no-such-image"/,
         'names the missing id rather than failing silently'
     );
+    t.end();
+});
+
+test('getTutorialsOrigin sits next to the extensions under the same resource root', t => {
+    const vm = new VirtualMachine();
+
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://127.0.0.1:3030/resources/tutorials', 'link mode');
+    vm.link.setLinkMode('cloud');
+    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:8080/resources/tutorials', 'cloud mode');
+
+    t.end();
+});
+
+test('a board applied while packs are still loading waits for its peripherals', async t => {
+    const vm = new VirtualMachine();
+    // The device pack has registered but its peripheral pack has not yet: the helper index lists device
+    // packs first, so a project restored on startup can land in this window.
+    vm.devices.registerDeviceManifest({...sampleManifest, extensions: ['thingBotC3']},
+        'http://127.0.0.1:3030/resources/extensions/devices/thingbot');
+
+    await vm.devices.applyBoard({device: 'thingbot', peripherals: []});
+    t.same(vm.devices._pendingBoard, {device: 'thingbot', peripherals: []},
+        'the board is held until every pack is registered');
     t.end();
 });

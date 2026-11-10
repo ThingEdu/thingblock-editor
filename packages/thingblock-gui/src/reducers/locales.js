@@ -1,5 +1,33 @@
 import {isRtl} from 'scratch-l10n';
-import editorMessages from 'scratch-l10n/locales/editor-msgs';
+import scratchEditorMessages from 'scratch-l10n/locales/editor-msgs';
+import thingblockMessagesVi from '../locales/vi.json';
+
+// scratch-l10n strings ThingBlock words differently, in every language but Vietnamese (vi.json has
+// its own). A message missing from a locale shows its English `defaultMessage`, so these are English.
+const thingblockOverrides = {
+    // scratch-l10n names a new project "Scratch Project" ("Projet Scratch", …), which became the
+    // saved file's name.
+    'gui.gui.defaultProjectTitle': 'ThingBlock Project'
+};
+
+/**
+ * The editor's messages: scratch-l10n's, with ThingBlock's wording on top.
+ * ThingBlock's own GUI strings have no entry in scratch-l10n: English comes from each message's
+ * `defaultMessage`, Vietnamese from src/locales/vi.json (edited by hand, keyed by message id).
+ * @param {object} scratchMessages - scratch-l10n's messages by locale.
+ * @param {object} viMessages - ThingBlock's Vietnamese messages.
+ * @returns {object} messages by locale.
+ */
+const withThingBlockMessages = (scratchMessages, viMessages) => {
+    const messages = {};
+    for (const [locale, localeMessages] of Object.entries(scratchMessages)) {
+        messages[locale] = {...localeMessages, ...thingblockOverrides};
+    }
+    messages.vi = {...scratchMessages.vi, ...thingblockOverrides, ...viMessages};
+    return messages;
+};
+
+const editorMessages = withThingBlockMessages(scratchEditorMessages, thingblockMessagesVi);
 
 const UPDATE_LOCALES = 'scratch-gui/locales/UPDATE_LOCALES';
 const SELECT_LOCALE = 'scratch-gui/locales/SELECT_LOCALE';
@@ -65,6 +93,7 @@ const initLocale = function (currentState, locale) {
 export {
     reducer as default,
     initialState as localesInitialState,
+    withThingBlockMessages,
     initLocale,
     selectLocale,
     setLocales

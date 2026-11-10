@@ -20,6 +20,40 @@ const AlertLevels = {
 
 const alerts = [
     {
+        alertId: 'savedToFile',
+        alertType: AlertTypes.STANDARD,
+        clearList: ['savedToFile', 'saveToFileError'],
+        closeButton: true,
+        content: ({path}) => (
+            <FormattedMessage
+                defaultMessage="Saved: {path}"
+                description="Message shown after the project was written to a file the user chose"
+                id="gui.alerts.savedToFile"
+                values={{path}}
+            />
+        ),
+        iconURL: successImage,
+        level: AlertLevels.SUCCESS,
+        maxDisplaySecs: 6
+    },
+    {
+        alertId: 'saveToFileError',
+        alertType: AlertTypes.STANDARD,
+        clearList: ['savedToFile', 'saveToFileError'],
+        closeButton: true,
+        content: ({message}) => (
+            <FormattedMessage
+                defaultMessage="Couldn’t save the project: {message}"
+                description="Message shown when writing the project to a file failed"
+                id="gui.alerts.saveToFileError"
+                values={{message}}
+            />
+        ),
+        iconURL: failImage,
+        level: AlertLevels.WARN,
+        maxDisplaySecs: 10
+    },
+    {
         alertId: 'createSuccess',
         alertType: AlertTypes.STANDARD,
         clearList: ['createSuccess', 'creating', 'createCopySuccess', 'creatingCopy',

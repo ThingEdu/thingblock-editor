@@ -1,6 +1,8 @@
 /** Ultrasonic distance sensor block: TRIG/ECHO pins plus a unit dropdown, reporting a number. */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
 
 const COLOUR = '#D39DDB'
 const SECONDARY_COLOUR = '#BA55D3'
@@ -15,7 +17,7 @@ const pinField = (name: string, value: number) => ({
   precision: 1,
 })
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.ultrasonic_readDistance = {
     init(this: Block) {
       this.jsonInit({
@@ -39,3 +41,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

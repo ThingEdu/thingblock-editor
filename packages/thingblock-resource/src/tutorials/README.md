@@ -1,0 +1,107 @@
+# Viết bài học
+
+Mỗi bài là một thư mục `src/tutorials/<ma>/` chứa `bai.vi.md` (và ảnh dùng trong bài, nếu có). Lệnh
+`npm run build` biên dịch các bài thành JSON trong `dist/thingblock-resource/tutorials/`.
+
+## Đầu bài (front matter)
+
+```markdown
+---
+ma: bat-tat-den
+ten: Bật tắt đèn
+nhom: dau-ra
+thu-tu: 1
+bo: thingbot
+thoi-luong: 10
+---
+```
+
+- `ma`: định danh, trùng tên thư mục.
+- `ten`: tên bài hiện cho em học sinh.
+- `nhom`: nhóm bài (ví dụ `dau-ra`).
+- `thu-tu`: số thứ tự trong nhóm, phải là số. Hai bài cùng `nhom` không được trùng `thu-tu`.
+- `bo`: bo mạch của bài (ví dụ `thingbot`).
+- `thoi-luong`: số phút ước tính, phải là số.
+- `thiet-bi` (không bắt buộc): các thiết bị ngoài bài cần, cách nhau dấu phẩy, viết bằng tên thư mục trong
+  `src/extensions/peripheral/` (ví dụ `thiet-bi: oled`). Mở bài là editor tự thêm các thiết bị này vào bảng khối,
+  học sinh không phải tự tìm **Add Peripheral**.
+
+## Các bước
+
+Mỗi dòng `## Tên bước` mở một bước. Bước đầu là lời chào (không chấm điểm) và bước cuối là lời kết. Chỉ dùng
+`##`; tiêu đề `###` bị báo lỗi. Nội dung bước là Markdown thường: đoạn văn, danh sách, chữ đậm (`**đậm**` hoặc `__đậm__`, như nhau), chữ nghiêng (`*nghiêng*` hoặc `_nghiêng_`, như nhau), ảnh (tệp ảnh
+phải nằm trong thư mục của bài).
+
+Bài gọi khối bằng nhãn tiếng Việt đang hiện trong bảng khối (chọn ngôn ngữ Tiếng Việt), in **đậm**, ví dụ **khi Arduino khởi động**, **đặt đèn L1 độ sáng 100**.
+
+### Gợi ý
+
+Dòng `> gợi ý: ...` thêm một gợi ý cho bước. Nhiều dòng `> gợi ý:` liền nhau là nhiều gợi ý riêng, hiện lần lượt
+từng cái.
+
+### Luật chấm
+
+Dòng `kiểm: ...` đặt một luật mà mạch ảo phải thoả để bước được tính là đạt. Một bước có thể có nhiều luật
+(phải thoả tất cả). Bước không có `kiểm:` thì không chấm. Chữ hoa, chữ thường không phân biệt. Các dạng được
+hiểu:
+
+| Viết                                        | Nghĩa                                                   |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `kiểm: L1 sáng` / `L2 tắt`                  | Đèn L1 hoặc L2 đang sáng / tắt                          |
+| `kiểm: còi kêu` / `còi tắt`                 | Còi đang kêu / tắt                                      |
+| `kiểm: L1 nhấp nháy, chu kỳ 1 giây`         | Đèn chớp đều với chu kỳ này, sai số mặc định 20%        |
+| `kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 10%` | Như trên với sai số tự chọn; chu kỳ tối đa 1,5 giây     |
+| `kiểm: M1 tiến` / `lùi` / `dừng`            | Động cơ M1 (M1 đến M4) quay tiến / lùi / đứng yên       |
+| `kiểm: M1 tốc độ ≥ 50%`                     | Tốc độ động cơ từ mức này trở lên (phần trăm)           |
+| `kiểm: servo S1 ở 90 độ ± 5`                | Servo S1 (S1 đến S5) ở góc này; sai số mặc định 5 độ    |
+| `kiểm: OLED hiện "Xin chào"`                | Màn OLED có chứa chữ này                                |
+| `kiểm: OLED hiện đúng "Xin chào"`           | Màn OLED hiện đúng chữ này, không thêm gì               |
+| `kiểm: OLED hiện "ThingBot" ở y 16`         | Chữ này được in bắt đầu từ dòng y = 16                  |
+| `kiểm: OLED hiện "Xin chao" cỡ 12x16`       | Chữ này được in ở cỡ 12x16 (khối set oled text size)    |
+| `kiểm: servo S1 quét từ 0 đến 180 độ`       | Servo đã đi tới gần cả hai góc; sai số mặc định 5 độ    |
+| `kiểm: giữ nút SW` / `nhả nút SW`           | Học sinh đang giữ / đã nhả nút SW trên mạch ảo          |
+| `kiểm: khoảng cách < 20 cm`                 | Thanh khoảng cách đang ở dưới 20 cm (`≤ > ≥` cũng được) |
+| `kiểm: giữ nút PS2 lên`                     | Học sinh đang giữ nút ▲ trên tay cầm PS2 ảo             |
+
+Ba luật cuối là việc học sinh làm trên mạch ảo, không phải việc chương trình làm. Ghép chúng với một luật
+đầu ra trong cùng bước, ví dụ `giữ nút SW` và `L1 sáng`: bước đạt khi cả hai cùng đúng một lúc. Khi chạy
+`kiem-thu/`, bộ kiểm thử tự đặt mạch ảo cho các luật này (giữ nút, kéo thanh khoảng cách) trước khi chấm. Nút
+PS2 viết bằng tên (`lên`, `xuống`, `trái`, `phải`, `tam giác`, `tròn`, `nhân`, `vuông`, `L1`, `L2`, `R1`, `R2`,
+`select`, `start`) hoặc ký hiệu trên tay cầm ảo (`▲ ▼ ◀ ▶ △ ○ ✕ □`).
+
+Số thập phân viết bằng dấu phẩy hoặc dấu chấm đều được. Gõ sai dạng luật thì `npm run build` dừng và báo
+`tệp:dòng`.
+
+## Lời giải kiểm thử
+
+Bài có luật `kiểm:` cần các dự án `.tb` trong `kiem-thu/` để thử rằng chấm điểm không sai. Thư mục này không
+được đưa vào bản dựng. Số `<n>` là thứ tự bước trong bài, tính từ 1 và tính cả bước chào.
+
+- `dung.tb`: lời giải phải đạt **mọi** bước có luật.
+- `dung-<n>.tb`: lời giải đạt riêng bước n, ưu tiên hơn `dung.tb` cho bước đó. Dùng khi hai bước loại trừ
+  nhau (ví dụ `den-nhap-nhay`: chu kỳ 1 giây và chu kỳ 0,5 giây không thể cùng đạt nên có `dung-2.tb` và
+  `dung-3.tb`, không có `dung.tb`).
+- `sai-<n>.tb`: phản ví dụ phải **trượt** bước n.
+
+Cạnh mỗi `.tb` giữ tệp `*.project.json` cùng tên để người xem đọc được nội dung.
+
+### Tạo tệp `.tb`
+
+- Cách thường: dựng chương trình trong editor, chọn **Lưu dự án**, rồi chép tệp vào `kiem-thu/` với đúng tên.
+- Cách viết tay: soạn `*.project.json` rồi gói lại bằng công cụ của gói:
+
+```sh
+cd packages/thingblock-resource
+node scripts/lessons/make-tb.mjs src/tutorials/bat-tat-den/kiem-thu/dung-2.project.json \
+  src/tutorials/bat-tat-den/kiem-thu/dung-2.tb
+```
+
+## Dựng và kiểm tra
+
+```sh
+cd packages/thingblock-resource
+node scripts/build-lessons.mjs
+```
+
+Dựng thành công in `Built N lesson(s)` và ghi `dist/thingblock-resource/tutorials/index.json`. Nếu có lỗi,
+lệnh thoát với mã 1 và in từng lỗi dạng `tệp:dòng: thông điệp`.

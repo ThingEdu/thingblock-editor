@@ -1,0 +1,32 @@
+{
+  "viaBanhMi_pwmInit": {
+    "message0": "khởi động PWM trên VIA BanhMi"
+  },
+  "viaBanhMi_setMotor": {
+    "message0": "động cơ %1 chạy %2 tốc độ %3",
+    "options": {
+      "DIRECTION": {
+        "forward": "tiến",
+        "backward": "lùi"
+      }
+    }
+  },
+  "viaBanhMi_setServo": {
+    "message0": "đặt servo %1 góc %2"
+  },
+  "viaBanhMi_initMPU": {
+    "message0": "khởi động MPU dải gia tốc %1 dải con quay %2 băng thông %3"
+  },
+  "viaBanhMi_mpuReadData": {
+    "message0": "MPU đọc dữ liệu"
+  },
+  "viaBanhMi_mpuAcceleration": {
+    "message0": "MPU gia tốc trục %1 (m/s^2)"
+  },
+  "viaBanhMi_mpuGyro": {
+    "message0": "MPU tốc độ quay trục %1 (°/s)"
+  },
+  "viaBanhMi_mpuTemperature": {
+    "message0": "MPU nhiệt độ (°C)"
+  }
+}

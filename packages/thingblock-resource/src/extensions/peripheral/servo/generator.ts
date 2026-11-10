@@ -6,12 +6,22 @@
  */
 import type { RegisterGenerators } from '../../../shared/types'
 
+const SERVO_INCLUDE = [
+  '#if defined(ARDUINO_ARCH_ESP32)',
+  '#include <ESP32Servo.h>',
+  '#else',
+  '#include <Servo.h>',
+  '#endif',
+].join('\n')
+
 export const registerGenerators: RegisterGenerators = (generator, Order) => {
   generator.forBlock.servo_setangle = (block) => {
     const pin = generator.valueToCode(block, 'PIN', Order.ATOMIC) || '9'
     const angle = generator.valueToCode(block, 'ANGLE', Order.NONE) || '90'
     const name = `servo_${pin}`
-    generator.includes.set('servo', '#include <Servo.h>')
+    // ESP32 boards need ESP32Servo (the Arduino Servo library has no working ESP32 support on core 3.x);
+    // its `Servo` class has the same API, so only the header differs.
+    generator.includes.set('servo', SERVO_INCLUDE)
     generator.globals.set(name, `Servo ${name};`)
     generator.setups.set(`${name}_attach`, `${name}.attach(${pin});`)
     return `${name}.write(${angle});\n`

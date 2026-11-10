@@ -1,0 +1,140 @@
+{
+  "oled_init": {
+    "message0": "khởi động OLED rộng %1 cao %2 địa chỉ I2C %3 chip %4"
+  },
+  "oled_drawLine": {
+    "message0": "OLED vẽ đường x0: %1 y0: %2, x1: %3 y1: %4 màu %5",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_drawRect": {
+    "message0": "OLED vẽ hình chữ nhật x: %1 y: %2 rộng %3 cao %4 màu %5",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_fillRect": {
+    "message0": "OLED tô hình chữ nhật x: %1 y: %2 rộng %3 cao %4 màu %5",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_drawCircle": {
+    "message0": "OLED vẽ hình tròn x: %1 y: %2 bán kính %3 màu %4",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_fillCircle": {
+    "message0": "OLED tô hình tròn x: %1 y: %2 bán kính %3 màu %4",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_drawRoundRect": {
+    "message0": "OLED vẽ hình chữ nhật bo góc x: %1 y: %2 rộng %3 cao %4 bán kính %5 màu %6",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_fillRoundRect": {
+    "message0": "OLED tô hình chữ nhật bo góc x: %1 y: %2 rộng %3 cao %4 bán kính %5 màu %6",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_drawTriangle": {
+    "message0": "OLED vẽ tam giác x0: %1 y0: %2, x1: %3 y1: %4, x2: %5 y2: %6 màu %7",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_fillTriangle": {
+    "message0": "OLED tô tam giác x0: %1 y0: %2, x1: %3 y1: %4, x2: %5 y2: %6 màu %7",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen",
+        "SSD1306_INVERSE": "đảo màu"
+      }
+    }
+  },
+  "oled_setText": {
+    "message0": "đặt chữ OLED cỡ %1 màu %2 màu nền %3",
+    "options": {
+      "COLOUR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen"
+      },
+      "BGCOLOR": {
+        "SSD1306_WHITE": "trắng",
+        "SSD1306_BLACK": "đen"
+      }
+    }
+  },
+  "oled_setCursor": {
+    "message0": "đặt con trỏ OLED x: %1 y: %2"
+  },
+  "oled_print": {
+    "message0": "OLED in %1 %2",
+    "options": {
+      "EOL": {
+        "warp": "xuống dòng",
+        "noWarp": "không xuống dòng"
+      }
+    }
+  },
+  "oled_clear": {
+    "message0": "xoá OLED"
+  },
+  "oled_refresh": {
+    "message0": "hiện lên màn OLED"
+  },
+  "oled_startScroll": {
+    "message0": "OLED bắt đầu cuộn %1 y0: %2 y1: %3",
+    "options": {
+      "TYPE": {
+        "0": "sang phải",
+        "1": "sang trái",
+        "2": "chéo phải",
+        "3": "chéo trái"
+      }
+    }
+  },
+  "oled_stopScroll": {
+    "message0": "OLED dừng cuộn"
+  }
+}

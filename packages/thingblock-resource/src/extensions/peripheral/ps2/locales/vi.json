@@ -1,0 +1,26 @@
+{
+  "ps2_init": {
+    "message0": "khởi động tay cầm PS2 chân DIN %1 DOUT %2 CS %3 CLK %4"
+  },
+  "ps2_readData": {
+    "message0": "đọc dữ liệu tay cầm PS2"
+  },
+  "ps2_getButton": {
+    "message0": "nút %1 của PS2 đang bấm?",
+    "options": {
+      "BUTTON": {
+        "PSB_PAD_UP": "lên",
+        "PSB_PAD_DOWN": "xuống",
+        "PSB_PAD_LEFT": "trái",
+        "PSB_PAD_RIGHT": "phải",
+        "PSB_TRIANGLE": "tam giác",
+        "PSB_CIRCLE": "tròn",
+        "PSB_CROSS": "chéo X",
+        "PSB_SQUARE": "vuông"
+      }
+    }
+  },
+  "ps2_GetJoystick": {
+    "message0": "cần điều khiển PS2 %1"
+  }
+}

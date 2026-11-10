@@ -38,6 +38,25 @@ function parseXml(xmlText: string): Element {
   return Blockly.utils.xml.textToDom(xmlText)
 }
 
+describe('clearWorkspaceAndLoadFromXml — data type preservation', () => {
+  it('keeps the datatype attribute as the variable data type', () => {
+    clearWorkspaceAndLoadFromXml(
+      parseXml(`
+        <xml>
+          <variables>
+            <variable id="f" type="" islocal="false" datatype="float">speed</variable>
+            <variable id="n" type="" islocal="false">count</variable>
+          </variables>
+        </xml>
+      `),
+      workspace,
+    )
+
+    expect((workspace.getVariableMap().getVariableById('f') as ScratchVariableModel).dataType).toBe('float')
+    expect((workspace.getVariableMap().getVariableById('n') as ScratchVariableModel).dataType).toBe('')
+  })
+})
+
 describe('clearWorkspaceAndLoadFromXml — isLocal and isCloud preservation', () => {
   it('creates a local variable with isLocal=true', () => {
     clearWorkspaceAndLoadFromXml(

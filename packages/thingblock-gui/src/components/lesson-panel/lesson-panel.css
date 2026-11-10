@@ -1,0 +1,137 @@
+@import "../../css/units.css";
+@import "../../css/colors.css";
+
+.panel {
+    flex: 0 0 280px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid $ui-black-transparent;
+    background: $ui-white;
+    overflow: hidden;
+}
+
+.collapsed {
+    flex-basis: 2.5rem;
+    align-items: center;
+    padding-top: 0.5rem;
+    gap: 0.5rem;
+}
+
+.collapsed-label {
+    writing-mode: vertical-rl;
+    font-size: 0.75rem;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid $ui-black-transparent;
+}
+
+.title {
+    flex: 1;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.collapse-button,
+.close-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.progress-track {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+}
+
+.progress-cell {
+    flex: 1;
+    height: 6px;
+    background: $ui-black-transparent;
+}
+
+.progress-passed {
+    background: #0b8043;
+}
+
+.progress-current {
+    outline: 2px solid $motion-primary;
+}
+
+.content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: $space;
+}
+
+.content img {
+    max-width: 100%;
+}
+
+.step-title {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+.hint {
+    background: $ui-black-transparent;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.hint-button {
+    cursor: pointer;
+}
+
+.verdict {
+    margin: $space;
+    padding: $space;
+    border-radius: $space;
+    background: $ui-black-transparent;
+}
+
+.failed {
+    background: #fff6d6;
+}
+
+.passed {
+    background: #e3f9e5;
+}
+
+.blocked,
+.error {
+    background: $ui-black-transparent;
+}
+
+.verdict-message {
+    margin-top: 0.25rem;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-top: 1px solid $ui-black-transparent;
+}
+
+.next-ready {
+    background: $motion-primary;
+    color: $ui-white;
+}

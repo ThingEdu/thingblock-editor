@@ -4,7 +4,10 @@
 .serial-log {
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
+    /* On a short window the monitor gives way first (down to its header and input row), so the
+       simulator and the code view above it stay usable. */
+    flex-shrink: 3;
+    min-height: 5.5rem;
     margin-top: $space;
     background-color: $ui-white;
     border-radius: $space;
@@ -20,6 +23,35 @@
     flex: 1;
     min-height: 0;
     margin-top: 0;
+}
+
+/* Closed, the monitor is only its header strip; a program asking for input opens it again. */
+.collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.collapsed .header {
+    border-bottom: none;
+    border-radius: $space;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+}
+
+.toggle:hover {
+    color: $motion-primary;
 }
 
 .resize-handle {

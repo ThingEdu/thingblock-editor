@@ -3,12 +3,17 @@
  * acceleration/gyro/temperature reporters). Registered against the editor's injected Blockly.
  */
 import type { Block } from '@thingblock/thingblock-blocks'
+import { withTranslations } from '../../../shared/localize'
 import type { RegisterBlocks } from '../../../shared/types'
+import vi from './locales/vi.json'
+
+// Number inputs also take variable reporters, whose output scratch-blocks types as String.
+const NUMBER_INPUT = ['Number', 'String']
 
 const PWM_COLOUR = '#FF0000'
 const MPU_COLOUR = '#0066CC'
 
-export const registerBlocks: RegisterBlocks = (Blockly) => {
+const registerEnglishBlocks: RegisterBlocks = (Blockly) => {
   Blockly.Blocks.viaBanhMi_pwmInit = {
     init(this: Block) {
       this.jsonInit({
@@ -43,7 +48,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
               ['backward', 'backward'],
             ],
           },
-          { type: 'input_value', name: 'SPEED', check: 'Number' },
+          { type: 'input_value', name: 'SPEED', check: NUMBER_INPUT },
         ],
         colour: PWM_COLOUR,
         extensions: ['shape_statement'],
@@ -68,7 +73,7 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
               ['6', '6'],
             ],
           },
-          { type: 'input_value', name: 'ANGLE', check: 'Number' },
+          { type: 'input_value', name: 'ANGLE', check: NUMBER_INPUT },
         ],
         colour: PWM_COLOUR,
         extensions: ['shape_statement'],
@@ -183,3 +188,6 @@ export const registerBlocks: RegisterBlocks = (Blockly) => {
     },
   }
 }
+
+/** The pack's blocks, in the editor's language (English, or Vietnamese from `locales/vi.json`). */
+export const registerBlocks: RegisterBlocks = withTranslations(registerEnglishBlocks, { vi })

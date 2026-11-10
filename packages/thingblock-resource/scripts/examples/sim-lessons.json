@@ -1,0 +1,1068 @@
+{
+  "source": "ThingEdu/thingbot-sim master 19d76f3 src/lessons/baiN.ts (field example)",
+  "lessons": {
+    "bai-1": {
+      "no": 1,
+      "title": "Làm quen ThingBot",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150
+            }
+          ]
+        }
+      }
+    },
+    "bai-2": {
+      "no": 2,
+      "title": "Đèn nhấp nháy",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_setLed",
+                  "fields": {
+                    "LED": "LED_1"
+                  },
+                  "inputs": {
+                    "BRIGHTNESS": {
+                      "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 100
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "control_wait",
+                      "inputs": {
+                        "DURATION": {
+                          "shadow": {
+                            "type": "math_positive_number",
+                            "fields": {
+                              "NUM": 0.5
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "thingBotC3_setLed",
+                          "fields": {
+                            "LED": "LED_1"
+                          },
+                          "inputs": {
+                            "BRIGHTNESS": {
+                              "shadow": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "control_wait",
+                              "inputs": {
+                                "DURATION": {
+                                  "shadow": {
+                                    "type": "math_positive_number",
+                                    "fields": {
+                                      "NUM": 0.5
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-3": {
+      "no": 3,
+      "title": "Nút bấm điều khiển đèn",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "control_if_else",
+                  "inputs": {
+                    "CONDITION": {
+                      "block": {
+                        "type": "thingBotC3_switch"
+                      }
+                    },
+                    "SUBSTACK": {
+                      "block": {
+                        "type": "thingBotC3_setLed",
+                        "fields": {
+                          "LED": "LED_1"
+                        },
+                        "inputs": {
+                          "BRIGHTNESS": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "SUBSTACK2": {
+                      "block": {
+                        "type": "thingBotC3_setLed",
+                        "fields": {
+                          "LED": "LED_1"
+                        },
+                        "inputs": {
+                          "BRIGHTNESS": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-4": {
+      "no": 4,
+      "title": "Màn hình OLED",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init",
+                  "next": {
+                    "block": {
+                      "type": "oled_init",
+                      "fields": {
+                        "ADDR": "0x3c",
+                        "CHIP": "SSD1306"
+                      },
+                      "inputs": {
+                        "W": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 128
+                            }
+                          }
+                        },
+                        "H": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 64
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "oled_print",
+                          "fields": {
+                            "EOL": "warp"
+                          },
+                          "inputs": {
+                            "DATA": {
+                              "shadow": {
+                                "type": "text",
+                                "fields": {
+                                  "TEXT": "Xin chao"
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "oled_setCursor",
+                              "inputs": {
+                                "X": {
+                                  "shadow": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "Y": {
+                                  "shadow": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 16
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "oled_print",
+                                  "fields": {
+                                    "EOL": "warp"
+                                  },
+                                  "inputs": {
+                                    "DATA": {
+                                      "shadow": {
+                                        "type": "text",
+                                        "fields": {
+                                          "TEXT": "ThingBot"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "oled_refresh"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 470
+            }
+          ]
+        }
+      }
+    },
+    "bai-5": {
+      "no": 5,
+      "title": "Servo quét",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_moveServoAngle",
+                  "fields": {
+                    "SERVO": "1"
+                  },
+                  "inputs": {
+                    "ANGLE": {
+                      "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 0
+                        }
+                      }
+                    },
+                    "SECONDS": {
+                      "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 1
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "thingBotC3_moveServoAngle",
+                      "fields": {
+                        "SERVO": "1"
+                      },
+                      "inputs": {
+                        "ANGLE": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 180
+                            }
+                          }
+                        },
+                        "SECONDS": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-6": {
+      "no": 6,
+      "title": "Cảm biến khoảng cách",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "control_if_else",
+                  "inputs": {
+                    "CONDITION": {
+                      "block": {
+                        "type": "operator_lt",
+                        "inputs": {
+                          "OPERAND1": {
+                            "shadow": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": ""
+                              }
+                            },
+                            "block": {
+                              "type": "ultrasonic_readDistance",
+                              "fields": {
+                                "TRIG": 0,
+                                "ECHO": 4,
+                                "UNIT": "CM"
+                              }
+                            }
+                          },
+                          "OPERAND2": {
+                            "shadow": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": "20"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "SUBSTACK": {
+                      "block": {
+                        "type": "thingBotC3_setLed",
+                        "fields": {
+                          "LED": "LED_1"
+                        },
+                        "inputs": {
+                          "BRIGHTNESS": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "SUBSTACK2": {
+                      "block": {
+                        "type": "thingBotC3_setLed",
+                        "fields": {
+                          "LED": "LED_1"
+                        },
+                        "inputs": {
+                          "BRIGHTNESS": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "control_wait",
+                      "inputs": {
+                        "DURATION": {
+                          "shadow": {
+                            "type": "math_positive_number",
+                            "fields": {
+                              "NUM": 0.05
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-7": {
+      "no": 7,
+      "title": "Động cơ DC",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_setMotor",
+                  "fields": {
+                    "MOTOR": "1",
+                    "DIRECTION": "forward"
+                  },
+                  "inputs": {
+                    "SPEED": {
+                      "shadow": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 60
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "control_wait",
+                      "inputs": {
+                        "DURATION": {
+                          "shadow": {
+                            "type": "math_positive_number",
+                            "fields": {
+                              "NUM": 2
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "thingBotC3_setMotor",
+                          "fields": {
+                            "MOTOR": "1",
+                            "DIRECTION": "backward"
+                          },
+                          "inputs": {
+                            "SPEED": {
+                              "shadow": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 60
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "control_wait",
+                              "inputs": {
+                                "DURATION": {
+                                  "shadow": {
+                                    "type": "math_positive_number",
+                                    "fields": {
+                                      "NUM": 2
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-8": {
+      "no": 8,
+      "title": "Xe đi thẳng – rẽ",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init",
+                  "next": {
+                    "block": {
+                      "type": "thingBotC3_setMotor",
+                      "fields": {
+                        "MOTOR": "1",
+                        "DIRECTION": "forward"
+                      },
+                      "inputs": {
+                        "SPEED": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 50
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "thingBotC3_setMotor",
+                          "fields": {
+                            "MOTOR": "2",
+                            "DIRECTION": "forward"
+                          },
+                          "inputs": {
+                            "SPEED": {
+                              "shadow": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 50
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "control_wait",
+                              "inputs": {
+                                "DURATION": {
+                                  "shadow": {
+                                    "type": "math_positive_number",
+                                    "fields": {
+                                      "NUM": 2
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "thingBotC3_setMotor",
+                                  "fields": {
+                                    "MOTOR": "1",
+                                    "DIRECTION": "forward"
+                                  },
+                                  "inputs": {
+                                    "SPEED": {
+                                      "shadow": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "thingBotC3_setMotor",
+                                      "fields": {
+                                        "MOTOR": "2",
+                                        "DIRECTION": "forward"
+                                      },
+                                      "inputs": {
+                                        "SPEED": {
+                                          "shadow": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 0
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 470
+            }
+          ]
+        }
+      }
+    },
+    "bai-9": {
+      "no": 9,
+      "title": "Tay cầm điều khiển",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init",
+                  "next": {
+                    "block": {
+                      "type": "thingBotC3_initPS2"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 190,
+              "next": {
+                "block": {
+                  "type": "ps2_readData",
+                  "next": {
+                    "block": {
+                      "type": "control_if_else",
+                      "inputs": {
+                        "CONDITION": {
+                          "block": {
+                            "type": "ps2_getButton",
+                            "fields": {
+                              "BUTTON": "PSB_PAD_UP"
+                            }
+                          }
+                        },
+                        "SUBSTACK": {
+                          "block": {
+                            "type": "thingBotC3_setMotor",
+                            "fields": {
+                              "MOTOR": "1",
+                              "DIRECTION": "forward"
+                            },
+                            "inputs": {
+                              "SPEED": {
+                                "shadow": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 50
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "thingBotC3_setMotor",
+                                "fields": {
+                                  "MOTOR": "2",
+                                  "DIRECTION": "forward"
+                                },
+                                "inputs": {
+                                  "SPEED": {
+                                    "shadow": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 50
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "SUBSTACK2": {
+                          "block": {
+                            "type": "control_if_else",
+                            "inputs": {
+                              "CONDITION": {
+                                "block": {
+                                  "type": "ps2_getButton",
+                                  "fields": {
+                                    "BUTTON": "PSB_PAD_DOWN"
+                                  }
+                                }
+                              },
+                              "SUBSTACK": {
+                                "block": {
+                                  "type": "thingBotC3_setMotor",
+                                  "fields": {
+                                    "MOTOR": "1",
+                                    "DIRECTION": "backward"
+                                  },
+                                  "inputs": {
+                                    "SPEED": {
+                                      "shadow": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 50
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "thingBotC3_setMotor",
+                                      "fields": {
+                                        "MOTOR": "2",
+                                        "DIRECTION": "backward"
+                                      },
+                                      "inputs": {
+                                        "SPEED": {
+                                          "shadow": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 50
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "SUBSTACK2": {
+                                "block": {
+                                  "type": "thingBotC3_setMotor",
+                                  "fields": {
+                                    "MOTOR": "1",
+                                    "DIRECTION": "forward"
+                                  },
+                                  "inputs": {
+                                    "SPEED": {
+                                      "shadow": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "thingBotC3_setMotor",
+                                      "fields": {
+                                        "MOTOR": "2",
+                                        "DIRECTION": "forward"
+                                      },
+                                      "inputs": {
+                                        "SPEED": {
+                                          "shadow": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 0
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "control_wait",
+                          "inputs": {
+                            "DURATION": {
+                              "shadow": {
+                                "type": "math_positive_number",
+                                "fields": {
+                                  "NUM": 0.02
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "bai-10": {
+      "no": 10,
+      "title": "Dự án: xe tránh vật cản",
+      "example": {
+        "blocks": {
+          "languageVersion": 0,
+          "blocks": [
+            {
+              "type": "event_whenarduinobegin",
+              "x": 30,
+              "y": 30,
+              "next": {
+                "block": {
+                  "type": "thingBotC3_init"
+                }
+              }
+            },
+            {
+              "type": "event_whenarduinoloop",
+              "x": 30,
+              "y": 150,
+              "next": {
+                "block": {
+                  "type": "control_if_else",
+                  "inputs": {
+                    "CONDITION": {
+                      "block": {
+                        "type": "operator_lt",
+                        "inputs": {
+                          "OPERAND1": {
+                            "shadow": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": ""
+                              }
+                            },
+                            "block": {
+                              "type": "ultrasonic_readDistance",
+                              "fields": {
+                                "TRIG": 0,
+                                "ECHO": 4,
+                                "UNIT": "CM"
+                              }
+                            }
+                          },
+                          "OPERAND2": {
+                            "shadow": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": "25"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "SUBSTACK": {
+                      "block": {
+                        "type": "thingBotC3_setMotor",
+                        "fields": {
+                          "MOTOR": "1",
+                          "DIRECTION": "forward"
+                        },
+                        "inputs": {
+                          "SPEED": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 50
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "thingBotC3_setMotor",
+                            "fields": {
+                              "MOTOR": "2",
+                              "DIRECTION": "backward"
+                            },
+                            "inputs": {
+                              "SPEED": {
+                                "shadow": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 50
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "SUBSTACK2": {
+                      "block": {
+                        "type": "thingBotC3_setMotor",
+                        "fields": {
+                          "MOTOR": "1",
+                          "DIRECTION": "forward"
+                        },
+                        "inputs": {
+                          "SPEED": {
+                            "shadow": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 50
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "thingBotC3_setMotor",
+                            "fields": {
+                              "MOTOR": "2",
+                              "DIRECTION": "forward"
+                            },
+                            "inputs": {
+                              "SPEED": {
+                                "shadow": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 50
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "control_wait",
+                      "inputs": {
+                        "DURATION": {
+                          "shadow": {
+                            "type": "math_positive_number",
+                            "fields": {
+                              "NUM": 0.05
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

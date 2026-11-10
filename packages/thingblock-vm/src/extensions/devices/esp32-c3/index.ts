@@ -10,6 +10,9 @@ import type {BoardManifest} from '..';
 const manifest: BoardManifest = {
     id: 'esp32c3',
     iconURL,
+    // Retired from the board picker in 0.6: ThingBlock ships for ThingBot (itself an ESP32-C3) and
+    // VIA Banh Mi. Old ESP32-C3 projects still load and build.
+    hidden: true,
     Device: Esp32C3
 };
 

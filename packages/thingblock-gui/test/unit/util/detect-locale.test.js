@@ -1,4 +1,5 @@
 import {detectLocale} from '../../../src/lib/detect-locale.js';
+import {savePreference} from '../../../src/lib/user-preferences.js';
 
 const supportedLocales = ['en', 'es', 'pt-br', 'de', 'it'];
 
@@ -79,5 +80,30 @@ describe('detectLocale', () => {
     test('if multiple, uses the first locale', () => {
         mockWindowLocation.search = '?locale=de&locale=en';
         expect(detectLocale(supportedLocales)).toEqual('de');
+    });
+
+    test('prefers the language the user chose last time over the browser language', () => {
+        mockWindowLocation.search = '';
+        mockWindowNavigator.language = 'en-US';
+        savePreference('locale', 'de');
+        try {
+            expect(detectLocale(supportedLocales)).toEqual('de');
+            // An explicit URL parameter still wins.
+            mockWindowLocation.search = '?locale=it';
+            expect(detectLocale(supportedLocales)).toEqual('it');
+        } finally {
+            localStorage.clear();
+        }
+    });
+
+    test('ignores a saved language that is not supported', () => {
+        mockWindowLocation.search = '';
+        mockWindowNavigator.language = 'en-US';
+        savePreference('locale', 'sv');
+        try {
+            expect(detectLocale(supportedLocales)).toEqual('en');
+        } finally {
+            localStorage.clear();
+        }
     });
 });
