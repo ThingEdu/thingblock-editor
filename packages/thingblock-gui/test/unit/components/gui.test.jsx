@@ -23,7 +23,8 @@ jest.mock('../../../src/containers/peripheral-library.jsx', () => stub('peripher
 jest.mock('../../../src/containers/drag-layer.jsx', () => stub('drag-layer'));
 jest.mock('../../../src/components/menu-bar/menu-bar.jsx', () => stub('menu-bar'));
 jest.mock('../../../src/components/code-view/code-view.jsx', () => stub('code-view'));
-jest.mock('../../../src/components/serial-log/serial-log.jsx', () => stub('serial-log'));
+jest.mock('../../../src/containers/host-monitor.jsx', () => stub('host-monitor'));
+jest.mock('../../../src/containers/board-monitor.jsx', () => stub('board-monitor'));
 
 const vm = {
     events: {on: () => {}, off: () => {}},

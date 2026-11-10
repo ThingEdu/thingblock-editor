@@ -118,9 +118,12 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `reducers/locales.js`.
 - Integration tests (`test/integration/`) require a browser environment via Jest + jsdom; they are slow and
   should not be run unnecessarily. Smoke tests (`test/smoke/`) require a live server.
-- **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is now a firmware device panel
-  (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
-  collapsible serial/input panel). The VM still runs one implicit device target, but no sprite UI renders.
+- **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is `components/side-panel`. With a
+  board selected it shows `CodeView` and `containers/board-monitor.jsx` (board serial, baud rate); with none it
+  shows only `containers/host-monitor.jsx` (block print output, "ask and wait"). Each pane can be hidden from the
+  panel's menu. Both monitors own their state and render `components/monitor-view`. `containers/sim-panel.jsx` is
+  not rendered while the simulator is being redesigned. The VM still runs one implicit device target, but no sprite
+  UI renders.
 - `thingblock-gui`'s webpack build (and dev server) compiles `@thingblock/thingblock-vm` from source through its
   `webpack` export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
   resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `thingblock-vm` source — needs

@@ -2,20 +2,23 @@ import React from 'react';
 import {IntlProvider} from 'react-intl';
 import {fireEvent, render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom';
-import SerialLog from '../../../src/components/serial-log/serial-log';
+import MonitorView from '../../../src/components/monitor-view/monitor-view';
 
-describe('SerialLog', () => {
-    const renderSerialLog = props => render(
+describe('MonitorView', () => {
+    const view = props => (
         <IntlProvider locale="en">
-            <SerialLog
+            <MonitorView
                 logs={[
                     {message: 'first message'},
                     {message: 'second message'}
                 ]}
+                onClear={jest.fn()}
+                onSend={jest.fn()}
                 {...props}
             />
         </IntlProvider>
     );
+    const renderMonitorView = props => render(view(props));
 
     describe('auto-scroll', () => {
         // jsdom has no layout, so the scrollable element's geometry must be stubbed.
@@ -26,7 +29,7 @@ describe('SerialLog', () => {
         };
 
         test('shows the jump-to-latest button after the user scrolls up', () => {
-            renderSerialLog({});
+            renderMonitorView({});
             const content = screen.getByText('first message').parentElement;
             stubGeometry(content, {scrollHeight: 500, scrollTop: 0, clientHeight: 100});
 
@@ -38,7 +41,7 @@ describe('SerialLog', () => {
         test('jumping to latest scrolls to the bottom and hides the button', () => {
             const scrollTo = jest.fn();
             Element.prototype.scrollTo = scrollTo;
-            renderSerialLog({});
+            renderMonitorView({});
             const content = screen.getByText('first message').parentElement;
             stubGeometry(content, {scrollHeight: 500, scrollTop: 0, clientHeight: 100});
             fireEvent.scroll(content);
@@ -50,30 +53,30 @@ describe('SerialLog', () => {
         });
     });
 
-    describe('prompt prompt', () => {
+    describe('prompt', () => {
         test('shows prompt text and answer placeholder when prompt prop is set', () => {
-            renderSerialLog({prompt: 'What is your name?'});
+            renderMonitorView({prompt: 'What is your name?'});
 
             expect(screen.getByText('What is your name?')).toBeInTheDocument();
             expect(screen.getByPlaceholderText('Type your answer...')).toBeInTheDocument();
         });
 
         test('shows send placeholder when no prompt is active', () => {
-            renderSerialLog({});
+            renderMonitorView({});
 
             expect(screen.getByPlaceholderText('Send message...')).toBeInTheDocument();
             expect(screen.queryByPlaceholderText('Type your answer...')).not.toBeInTheDocument();
         });
 
         test('shows prompt and input for empty-string prompt (promptless ask)', () => {
-            renderSerialLog({prompt: ''});
+            renderMonitorView({prompt: ''});
 
             expect(screen.getByPlaceholderText('Type your answer...')).toBeInTheDocument();
         });
 
         test('calls onSend with empty string when prompt is active and input is empty', () => {
             const onSend = jest.fn();
-            renderSerialLog({prompt: 'What?', onSend});
+            renderMonitorView({prompt: 'What?', onSend});
 
             fireEvent.click(screen.getByRole('button', {name: 'Send'}));
 
@@ -82,48 +85,34 @@ describe('SerialLog', () => {
 
         test('does not call onSend when no prompt and input is empty', () => {
             const onSend = jest.fn();
-            renderSerialLog({onSend});
+            renderMonitorView({onSend});
 
             fireEvent.click(screen.getByRole('button', {name: 'Send'}));
 
             expect(onSend).not.toHaveBeenCalled();
         });
 
-        test('calls onBaudChange with a number when a new rate is picked', () => {
-            const onBaudChange = jest.fn();
-            renderSerialLog({baudRate: 9600, onBaudChange});
-
-            fireEvent.change(screen.getByRole('combobox', {name: 'Serial monitor baud rate'}), {
-                target: {value: '115200'}
-            });
-
-            expect(onBaudChange).toHaveBeenCalledWith(115200);
-        });
-
         test('clears pre-existing input value when prompt becomes active', () => {
-            const {rerender} = render(
-                <IntlProvider locale="en">
-                    <SerialLog
-                        logs={[]}
-                        prompt={null}
-                    />
-                </IntlProvider>
-            );
+            const {rerender} = renderMonitorView({logs: []});
 
             fireEvent.change(screen.getByPlaceholderText('Send message...'), {
                 target: {value: 'half-typed text'}
             });
 
-            rerender(
-                <IntlProvider locale="en">
-                    <SerialLog
-                        logs={[]}
-                        prompt="Are you ready?"
-                    />
-                </IntlProvider>
-            );
+            rerender(view({logs: [], prompt: 'Are you ready?'}));
 
             expect(screen.getByPlaceholderText('Type your answer...')).toHaveValue('');
         });
+    });
+
+    test('calls onBaudChange with a number when a new rate is picked', () => {
+        const onBaudChange = jest.fn();
+        renderMonitorView({baudRate: 9600, onBaudChange});
+
+        fireEvent.change(screen.getByRole('combobox', {name: 'Serial monitor baud rate'}), {
+            target: {value: '115200'}
+        });
+
+        expect(onBaudChange).toHaveBeenCalledWith(115200);
     });
 });

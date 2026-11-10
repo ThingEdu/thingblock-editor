@@ -6,7 +6,7 @@ const REQUIRED = [
     'gui.menuBar.selectBoard',
     'gui.menuBar.lessonsLibrary',
     'gui.menuBar.debug',
-    'gui.serialLog.monitor',
+    'gui.serialLog.clearMonitor',
     'gui.sharedMessages.loadFromComputerTitle',
     'gui.sharedMessages.replaceProjectWarning',
     'gui.lessonPanel.failed',

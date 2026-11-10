@@ -1,10 +1,10 @@
 @import "../../css/units.css";
 @import "../../css/colors.css";
 
-.serial-log {
+.monitor {
     display: flex;
     flex-direction: column;
-    /* On a short window the monitor gives way first (down to its header and input row), so the
+    /* On a short window the monitor gives way first (down to its input row), so the
        simulator and the code view above it stay usable. */
     flex-shrink: 3;
     min-height: 5.5rem;
@@ -18,41 +18,16 @@
     /* height controlled via inline style from JS */
 }
 
-/* Host mode has no code view, so the monitor fills the panel instead of using a fixed height. */
+/* With no code view beside it, the monitor fills the panel instead of using a fixed height. */
 .fill {
     flex: 1;
     min-height: 0;
     margin-top: 0;
 }
 
-/* Closed, the monitor is only its header strip; a program asking for input opens it again. */
-.collapsed {
-    flex: 0 0 auto;
-    min-height: 0;
-}
 
-.collapsed .header {
-    border-bottom: none;
-    border-radius: $space;
-}
 
-.toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    height: 100%;
-    padding: 0;
-    background: none;
-    border: none;
-    font: inherit;
-    font-weight: 600;
-    color: inherit;
-    cursor: pointer;
-}
 
-.toggle:hover {
-    color: $motion-primary;
-}
 
 .resize-handle {
     position: absolute;
@@ -88,27 +63,7 @@
     border-radius: $space;
 }
 
-.header {
-    height: $stage-menu-height;
-    background-color: $ui-primary;
-    color: $text-primary;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0 $space;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid $ui-black-transparent;
-    flex-shrink: 0;
-    user-select: none;
-    border-radius: $space $space 0 0;
-}
 
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: calc($space / 2);
-    margin-left: auto;
-}
 
 .baud-select {
     font-family: inherit;
@@ -127,31 +82,9 @@
     border-color: $motion-primary;
 }
 
-.baud-select:disabled {
-    color: $text-primary-transparent;
-    cursor: default;
-}
 
-.clear-button {
-    background: none;
-    border: none;
-    padding: calc($space / 2);
-    color: $text-primary;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    border-radius: calc($space / 2);
-    line-height: 1;
-}
 
-.clear-button:hover:not(:disabled) {
-    color: $motion-primary;
-}
 
-.clear-button:disabled {
-    color: $text-primary-transparent;
-    cursor: default;
-}
 
 .content-wrap {
     position: relative;
@@ -165,6 +98,8 @@
     flex: 1;
     overflow-y: auto;
     padding: $space;
+    /* Keep lines clear of the floating action button. */
+    padding-right: 3.75rem;
     font-family: "Courier New", Courier, monospace;
     font-size: 0.75rem;
     line-height: 1.6;
@@ -227,6 +162,8 @@
 
 .input {
     flex: 1;
+    /* Inputs keep an intrinsic width by default; let it give way so Send stays visible. */
+    min-width: 0;
     border: 1px solid $ui-black-transparent;
     border-radius: calc($space / 2);
     padding: calc($space * 0.75) $space;
@@ -256,4 +193,10 @@
 
 .send-button:hover {
     background-color: $motion-tertiary;
+}
+
+.fab {
+    position: absolute;
+    right: $space;
+    bottom: $space;
 }
