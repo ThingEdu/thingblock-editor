@@ -3,6 +3,7 @@
  * Grade lesson rules against what the virtual hardware logged. Messages are for the learner: they say
  * what the board did, never "wrong".
  */
+import { ballByReading, BELT_INPUT, IR_DARK, IR_INPUT } from '../hal/rig'
 import { DEFAULT_DISTANCE_CM, DISTANCE_INPUT, ps2Input } from '../hal/sensors'
 import type { LogEntry } from '../runtime'
 import type { DistanceOp, LightName, MotorName, Rule, ServoName } from './rules'
@@ -229,6 +230,65 @@ const checkPs2 = (button: string, log: readonly LogEntry[]): RuleResult =>
     ? PASS
     : fail(`Em hãy giữ nút ${PS2_SYMBOL[button] ?? button} trên tay cầm PS2 ảo.`)
 
+const checkBall = (dark: boolean, log: readonly LogEntry[]): RuleResult => {
+  const reading = lastInput(log, IR_INPUT)
+  const ball = reading === undefined ? undefined : ballByReading(reading)
+  if (ball && ball.ir < IR_DARK === dark) return PASS
+  return dark
+    ? fail('Em hãy đặt một quả bóng tối màu (xanh dương hoặc đen) trước mắt hồng ngoại: chọn ở thanh Bóng.')
+    : fail('Em hãy đặt một quả bóng sáng màu (trắng, vàng hoặc đỏ) trước mắt hồng ngoại: chọn ở thanh Bóng.')
+}
+
+const checkIrRead = (pin: number, log: readonly LogEntry[]): RuleResult => {
+  const read = new Set(log.filter((e) => e.dev === 'read').map((e) => e.key))
+  if (read.has(`adc${pin}`)) return PASS
+  const other = [...read].map((key) => /^adc(\d+)$/.exec(key)?.[1]).find((p) => p !== undefined)
+  if (other !== undefined) {
+    return fail(`Chương trình đang đọc chân IO${other}. Mắt hồng ngoại cắm ở IO${pin}.`)
+  }
+  return fail(`Chương trình chưa đọc mắt hồng ngoại ở IO${pin}.`)
+}
+
+/**
+ * Each egg the belt sorted, in order.
+ * @param log The session's event log.
+ * @returns Whether each went to the right bin, which bin, and whether it was bad.
+ */
+const sortedEggs = (log: readonly LogEntry[]): { right: boolean; fate: string; bad: boolean }[] =>
+  log
+    .filter((e) => e.dev === 'belt')
+    .map((e) => {
+      const bad = e.value === 'bad'
+      return { right: (e.key === 'reject') === bad, fate: e.key, bad }
+    })
+
+const NO_BELT = 'Mạch ảo chưa có băng chuyền trứng trước mắt hồng ngoại.'
+
+const checkSorted = (streak: number, log: readonly LogEntry[]): RuleResult => {
+  if (!lastInput(log, BELT_INPUT)) return fail(NO_BELT)
+  const eggs = sortedEggs(log)
+  if (!eggs.length) {
+    return fail('Chưa có quả trứng nào tới cần gạt hay cuối băng. Động cơ M1 phải chạy tiến để kéo băng chuyền.')
+  }
+  let run = 0
+  while (run < eggs.length && eggs[eggs.length - 1 - run].right) run++
+  if (run >= streak) return PASS
+  const mistake = eggs.slice(0, eggs.length - run).pop()
+  const why = !mistake
+    ? ''
+    : mistake.bad
+      ? ' Quả sai gần nhất: trứng hỏng lọt vào thùng trứng tốt.'
+      : ' Quả sai gần nhất: trứng tốt bị gạt vào thùng loại.'
+  return fail(`Mới có ${run} quả trứng liền nhau vào đúng thùng. Bài cần ${streak} quả.${why}`)
+}
+
+const checkRejected = (count: number, log: readonly LogEntry[]): RuleResult => {
+  if (!lastInput(log, BELT_INPUT)) return fail(NO_BELT)
+  const rejected = sortedEggs(log).filter((e) => e.bad && e.fate === 'reject').length
+  if (rejected >= count) return PASS
+  return fail(`Cần gạt mới đẩy được ${rejected} quả trứng hỏng vào thùng loại. Bài cần ${count} quả.`)
+}
+
 export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[]): RuleResult[] {
   return rules.map((rule) => {
     switch (rule.kind) {
@@ -254,6 +314,14 @@ export function evaluateLogRules(rules: readonly Rule[], log: readonly LogEntry[
         return checkDistance(rule.op, rule.cm, log)
       case 'ps2':
         return checkPs2(rule.button, log)
+      case 'ball':
+        return checkBall(rule.dark, log)
+      case 'irRead':
+        return checkIrRead(rule.pin, log)
+      case 'sorted':
+        return checkSorted(rule.streak, log)
+      case 'rejected':
+        return checkRejected(rule.count, log)
       default:
         // Camera AI rules are graded in the editor against the playground; the simulator never sees them.
         return fail('Luật này chấm trên Sân chơi Camera AI, không trên mạch ảo.')

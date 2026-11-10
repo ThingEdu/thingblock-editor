@@ -1,5 +1,5 @@
 {
-  "source": "ThingEdu/thingbot-sim master 19d76f3 src/lessons/baiN.ts (field example)",
+  "source": "ThingEdu/thingbot-sim master bde12a2 src/lessons/baiN.ts (field example)",
   "lessons": {
     "bai-1": {
       "no": 1,
@@ -390,7 +390,7 @@
     },
     "bai-6": {
       "no": 6,
-      "title": "Cảm biến khoảng cách",
+      "title": "Mắt hồng ngoại",
       "example": {
         "blocks": {
           "languageVersion": 0,
@@ -425,11 +425,9 @@
                               }
                             },
                             "block": {
-                              "type": "ultrasonic_readDistance",
+                              "type": "cobot_readIr",
                               "fields": {
-                                "TRIG": 0,
-                                "ECHO": 4,
-                                "UNIT": "CM"
+                                "PIN": "4"
                               }
                             }
                           },
@@ -437,7 +435,7 @@
                             "shadow": {
                               "type": "text",
                               "fields": {
-                                "TEXT": "20"
+                                "TEXT": "1500"
                               }
                             }
                           }
@@ -911,7 +909,7 @@
     },
     "bai-10": {
       "no": 10,
-      "title": "Dự án: xe tránh vật cản",
+      "title": "Dự án: dây chuyền phân loại",
       "example": {
         "blocks": {
           "languageVersion": 0,
@@ -922,14 +920,51 @@
               "y": 30,
               "next": {
                 "block": {
-                  "type": "thingBotC3_init"
+                  "type": "thingBotC3_init",
+                  "next": {
+                    "block": {
+                      "type": "thingBotC3_setMotor",
+                      "fields": {
+                        "MOTOR": "1",
+                        "DIRECTION": "forward"
+                      },
+                      "inputs": {
+                        "SPEED": {
+                          "shadow": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 40
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "thingBotC3_setServoAngle",
+                          "fields": {
+                            "SERVO": "1"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "shadow": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
             {
               "type": "event_whenarduinoloop",
               "x": 30,
-              "y": 150,
+              "y": 270,
               "next": {
                 "block": {
                   "type": "control_if_else",
@@ -946,11 +981,9 @@
                               }
                             },
                             "block": {
-                              "type": "ultrasonic_readDistance",
+                              "type": "cobot_readIr",
                               "fields": {
-                                "TRIG": 0,
-                                "ECHO": 4,
-                                "UNIT": "CM"
+                                "PIN": "4"
                               }
                             }
                           },
@@ -958,7 +991,7 @@
                             "shadow": {
                               "type": "text",
                               "fields": {
-                                "TEXT": "25"
+                                "TEXT": "1500"
                               }
                             }
                           }
@@ -967,36 +1000,16 @@
                     },
                     "SUBSTACK": {
                       "block": {
-                        "type": "thingBotC3_setMotor",
+                        "type": "thingBotC3_setServoAngle",
                         "fields": {
-                          "MOTOR": "1",
-                          "DIRECTION": "forward"
+                          "SERVO": "1"
                         },
                         "inputs": {
-                          "SPEED": {
+                          "ANGLE": {
                             "shadow": {
                               "type": "math_number",
                               "fields": {
-                                "NUM": 50
-                              }
-                            }
-                          }
-                        },
-                        "next": {
-                          "block": {
-                            "type": "thingBotC3_setMotor",
-                            "fields": {
-                              "MOTOR": "2",
-                              "DIRECTION": "backward"
-                            },
-                            "inputs": {
-                              "SPEED": {
-                                "shadow": {
-                                  "type": "math_number",
-                                  "fields": {
-                                    "NUM": 50
-                                  }
-                                }
+                                "NUM": 90
                               }
                             }
                           }
@@ -1005,36 +1018,16 @@
                     },
                     "SUBSTACK2": {
                       "block": {
-                        "type": "thingBotC3_setMotor",
+                        "type": "thingBotC3_setServoAngle",
                         "fields": {
-                          "MOTOR": "1",
-                          "DIRECTION": "forward"
+                          "SERVO": "1"
                         },
                         "inputs": {
-                          "SPEED": {
+                          "ANGLE": {
                             "shadow": {
                               "type": "math_number",
                               "fields": {
-                                "NUM": 50
-                              }
-                            }
-                          }
-                        },
-                        "next": {
-                          "block": {
-                            "type": "thingBotC3_setMotor",
-                            "fields": {
-                              "MOTOR": "2",
-                              "DIRECTION": "forward"
-                            },
-                            "inputs": {
-                              "SPEED": {
-                                "shadow": {
-                                  "type": "math_number",
-                                  "fields": {
-                                    "NUM": 50
-                                  }
-                                }
+                                "NUM": 0
                               }
                             }
                           }

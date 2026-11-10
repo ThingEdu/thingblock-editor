@@ -203,3 +203,67 @@ test('draws the board at one scale whether or not the display is shown', () => {
     // The room is sized from the widest drawing either way.
     expect(without.aspect).toBeCloseTo(withOled.aspect, 10);
 });
+
+const beltState = {
+    moved: 120,
+    rejectedBad: 2,
+    passedGood: 5,
+    rejectedGood: 0,
+    passedBad: 1,
+    ir: 900,
+    gate: 90,
+    eggs: [{id: 1, x: 196, bad: true, fate: null, fall: 0}, {id: 0, x: 200, bad: false, fate: 'pass', fall: 0.3}]
+};
+
+test('shows the balls for the IR eye when the program reads IO4, and says which one is in front', () => {
+    const onBallChange = jest.fn();
+    const {getByRole, getByText, queryByRole, rerender} = renderPanel(
+        <SimPanel
+            {...props}
+            usesIr={false}
+            snapshot={null}
+        />
+    );
+    expect(queryByRole('button', {name: 'Black'})).toBeNull();
+    rerender(
+        <SimPanel
+            {...props}
+            usesIr
+            ball="red"
+            snapshot={null}
+            onBallChange={onBallChange}
+        />
+    );
+    expect(getByRole('button', {name: 'Red'}).getAttribute('aria-pressed')).toBe('true');
+    expect(getByText('IO4 = 2300')).toBeTruthy();
+    fireEvent.click(getByRole('button', {name: 'Black'}));
+    expect(onBallChange).toHaveBeenCalledWith('black');
+});
+
+test('with the egg belt the balls give way to the belt drawing and its reading', () => {
+    const onBeltChange = jest.fn();
+    const drawn = [];
+    // jsdom has no 2D canvas: a context that records the text the belt draws and ignores the rest.
+    HTMLCanvasElement.prototype.getContext.mockImplementation(() => new Proxy({}, {
+        get: (target, key) => (key === 'fillText' ? text => drawn.push(text) : () => {}),
+        set: () => true
+    }));
+    jest.spyOn(HTMLCanvasElement.prototype, 'clientWidth', 'get').mockReturnValue(370);
+    jest.spyOn(HTMLCanvasElement.prototype, 'clientHeight', 'get').mockReturnValue(190);
+    const {getByRole, getByText, queryByRole} = renderPanel(
+        <SimPanel
+            {...props}
+            belt
+            usesIr
+            snapshot={{...snapshot(null), belt: beltState}}
+            usesOled={false}
+            onBeltChange={onBeltChange}
+        />
+    );
+    expect(queryByRole('button', {name: 'Black'})).toBeNull();
+    expect(getByText('IO4 = 900')).toBeTruthy();
+    expect(getByRole('img', {name: /Egg sorting belt: Pushed out 2 bad eggs · let through 5 good eggs · 1 wrong/})).toBeTruthy();
+    expect(drawn).toEqual(expect.arrayContaining(['Servo S1 90°', 'IR eye IO4 = 900', 'Reject bin', 'Good eggs']));
+    fireEvent.click(getByRole('checkbox', {name: 'Egg belt'}));
+    expect(onBeltChange).toHaveBeenCalledWith(false);
+});

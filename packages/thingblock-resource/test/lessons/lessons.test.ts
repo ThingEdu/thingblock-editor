@@ -4,8 +4,9 @@
 /**
  * Every shipped lesson proves itself: its `kiem-thu/dung*.tb` passes each graded step and each
  * `sai-<n>.tb` fails step n, graded as the editor grades a learner: the rules are checked after every
- * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time. A step
- * with input rules runs with the rig set the way the step tells the learner to set it.
+ * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time (30 s for the
+ * egg belt, which needs that long to carry six eggs past the gate). A step with input rules runs with the
+ * rig set the way the step tells the learner to set it.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -28,6 +29,7 @@ const PERIPHERALS = readdirSync(join(__dirname, '../../src/extensions/peripheral
 /** Packs the ThingBot board puts in the palette by itself (its device manifest's `extensions`). */
 const BOARD_PACKS = ['thingBotC3', 'ps2']
 const WINDOW_US = 5_000_000
+const BELT_WINDOW_US = 30_000_000
 /** The worker's tick, in milliseconds. */
 const TICK_MS = 16
 
@@ -69,7 +71,8 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   const allOk = (r: CheckReport | null) => r?.results.every((x) => x.ok) ?? false
   let report: CheckReport | null = null
   session.running = true
-  for (let t = 0; t < WINDOW_US && !allOk(report); ) {
+  const limit = rules.some((r) => r.kind === 'sorted' || r.kind === 'rejected') ? BELT_WINDOW_US : WINDOW_US
+  for (let t = 0; t < limit && !allOk(report); ) {
     const snapshot = session.tick(TICK_MS)
     report = watcher.after(session) ?? report
     if (snapshot.phase === 'halted') break

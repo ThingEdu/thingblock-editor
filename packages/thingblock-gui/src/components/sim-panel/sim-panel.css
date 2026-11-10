@@ -270,3 +270,51 @@
     background: #2462c4;
     color: #ffffff;
 }
+
+.balls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+/* A ball swatch; its colour comes from the --ball custom property. */
+.ball {
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 2px solid $ui-black-transparent;
+    background: var(--ball);
+    cursor: pointer;
+}
+
+.ball-none {
+    background: repeating-linear-gradient(45deg, #ffffff, #ffffff 3px, #e0e0e0 3px, #e0e0e0 6px);
+}
+
+.ball[aria-pressed="true"] {
+    border-color: #2462c4;
+    box-shadow: 0 0 0 2px #2462c4;
+}
+
+.belt-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+}
+
+.belt {
+    display: block;
+    width: 100%;
+    aspect-ratio: 370 / 190;
+    border-top: 1px solid $ui-black-transparent;
+}
+
+/* Shown instead of the virtual board when the selected board has no simulator. */
+.unavailable {
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: $text-primary;
+}

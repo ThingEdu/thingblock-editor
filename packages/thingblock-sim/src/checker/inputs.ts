@@ -1,9 +1,10 @@
 // packages/thingblock-sim/src/checker/inputs.ts
 /**
  * The rig settings that make a step's input rules hold ("giữ nút SW", "khoảng cách < 20 cm", "giữ nút PS2
- * lên"). The editor leaves them to the learner; the lesson fixtures apply them before grading a solution
+ * lên", "chọn bóng tối màu"), and the egg belt for the sorting rules. The editor leaves them to the learner; the lesson fixtures apply them before grading a solution
  * headless, so a solution is graded in the situation the step describes.
  */
+import { BALLS, BELT_INPUT, IR_INPUT } from '../hal/rig'
 import { DISTANCE_INPUT, ps2Input } from '../hal/sensors'
 import type { Rule } from './rules'
 import { SWITCH_GPIO } from './thingbot-map'
@@ -26,7 +27,10 @@ export function inputsFor(rules: readonly Rule[]): Record<string, number> {
       inputs[DISTANCE_INPUT] = near
         ? Math.max(DISTANCE_MIN_CM, Math.floor(rule.cm / 2))
         : Math.min(DISTANCE_MAX_CM, Math.max(rule.cm * 2, rule.cm + 1))
-    }
+    } else if (rule.kind === 'ball') {
+      // The darkest or the brightest ball (BALLS runs brightest first): the one furthest from the threshold.
+      inputs[IR_INPUT] = (rule.dark ? BALLS[BALLS.length - 1] : BALLS[0]).ir
+    } else if (rule.kind === 'sorted' || rule.kind === 'rejected') inputs[BELT_INPUT] = 1
   }
   return inputs
 }

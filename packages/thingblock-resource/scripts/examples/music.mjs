@@ -35,16 +35,19 @@ const song = ({ id, title, level = 1, bpm, origin, description, labels, tune }) 
   group: MUSIC,
   level,
   source: origin,
-  hardware: ['Còi trên mạch'],
+  hardware: ['Còi có sẵn trên mạch'],
   description,
   note:
     `Âm nhạc · ${title}\n` +
-    'Mỗi khối "chơi nốt" là một nốt nhạc: tên nốt (Do, Re, Mi…), quãng (số càng lớn càng cao) và độ dài tính bằng phách. ' +
-    `Nhịp ${bpm} BPM: mỗi phách dài ${(60 / bpm).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} giây. ` +
+    'Thiệp chúc mừng có nhạc, đồ chơi biết hát đều phát nhạc bằng một chiếc còi nhỏ giống còi trên mạch ThingBot. ' +
+    'Não ra lệnh, mạch công suất cấp điện cho còi.\n' +
+    'Mỗi khối «chơi nốt» là một nốt nhạc: tên nốt viết bằng chữ cái (C là Đô, D là Rê, E là Mi, F là Fa, G là Son, A là La, B là Si), ' +
+    'quãng (số càng lớn nốt càng cao) và độ dài tính bằng phách. Phách là một tiếng đếm đều như "một, hai, một, hai". ' +
+    `Nhịp (tempo) ${bpm} BPM nghĩa là ${bpm} phách mỗi phút, nên mỗi phách dài ${(60 / bpm).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} giây. ` +
     'Thử đổi nhịp, đổi nốt hoặc thêm câu nhạc của riêng em!',
   variables: [],
   stacks: [
-    whenBegin(init(), note(`Nhịp ${bpm}: số càng lớn nhạc càng nhanh.`, tempo(bpm))),
+    whenBegin(init(), note(`Nhịp ${bpm} BPM: ${bpm} phách mỗi phút. Số càng lớn nhạc càng nhanh.`, tempo(bpm))),
     whenLoop(...melody(labels, tune), note('Nghỉ 2 phách rồi chơi lại từ đầu.', rest(2))),
   ],
 })
@@ -55,7 +58,7 @@ export const MUSIC_LESSONS = [
     title: 'Kìa con bướm vàng',
     bpm: 120,
     origin: 'Giai điệu dân gian Pháp "Frère Jacques"',
-    description: 'Bài hát thiếu nhi quen thuộc: mỗi câu nhạc lặp lại hai lần, rất dễ nhớ.',
+    description: 'Bài hát thiếu nhi quen thuộc ở lớp mẫu giáo: mỗi câu nhạc lặp lại hai lần, rất dễ nhớ.',
     labels: [
       'Kìa con bướm vàng (2 lần)',
       'Xòe đôi cánh (2 lần)',
@@ -71,7 +74,7 @@ export const MUSIC_LESSONS = [
     title: 'Ngôi sao lấp lánh (Twinkle Twinkle Little Star)',
     bpm: 110,
     origin: 'Giai điệu dân gian Pháp "Ah! vous dirai-je, maman"',
-    description: 'Giai điệu đi lên rồi đi xuống từng bậc, hợp để học tên các nốt Do Re Mi.',
+    description: 'Bài hát ru quen thuộc; giai điệu đi lên rồi đi xuống từng bậc, hợp để học tên các nốt Đô Rê Mi.',
     labels: ['Câu 1', 'Câu 2', 'Câu 3', 'Câu 4', 'Câu 5', 'Câu 6'],
     tune:
       'C4 C4 G4 G4 A4 A4 G4:2 | F4 F4 E4 E4 D4 D4 C4:2 | G4 G4 F4 F4 E4 E4 D4:2 | ' +
@@ -82,7 +85,7 @@ export const MUSIC_LESSONS = [
     title: 'Chúc mừng sinh nhật (Happy Birthday)',
     bpm: 120,
     origin: 'Giai điệu "Good Morning to All" (Mildred và Patty Hill, 1893)',
-    description: 'Nhạc chúc mừng sinh nhật; có nốt ngắn 0,25 phách và nốt dài 2 phách.',
+    description: 'Nhạc cho buổi tiệc sinh nhật; có nốt ngắn 0,25 phách và nốt dài 2 phách.',
     labels: ['Câu 1', 'Câu 2', 'Câu 3 (lên cao)', 'Câu 4'],
     tune:
       'G4:0.75 G4:0.25 A4 G4 C5 B4:2 | G4:0.75 G4:0.25 A4 G4 D5 C5:2 | ' +
@@ -93,7 +96,7 @@ export const MUSIC_LESSONS = [
     title: 'Cá mập con (Baby Shark)',
     bpm: 115,
     origin: 'Bài hát truyền thống (giai điệu dân gian, không phải bản thu âm nào)',
-    description: 'Một câu nhạc lặp ba lần rồi kết, nhiều nốt Sol đi liền nhau.',
+    description: 'Bài hát vui nhộn cho cả lớp vận động; một câu nhạc lặp ba lần rồi kết, nhiều nốt Son đi liền nhau.',
     labels: ['Lần 1', 'Lần 2', 'Lần 3', 'Kết'],
     tune:
       'D4 E4 G4:0.5 G4:0.5 G4:0.5 G4:0.25 G4:0.5 G4:0.25 G4:0.5 | ' +
@@ -106,7 +109,8 @@ export const MUSIC_LESSONS = [
     level: 2,
     bpm: 140,
     origin: 'James Lord Pierpont, 1857',
-    description: 'Điệp khúc Jingle Bells; có nốt chấm dôi 1,5 phách và nốt móc đơn 0,5 phách.',
+    description:
+      'Nhạc Giáng sinh quen thuộc; có nốt dài 1,5 phách (nốt chấm dôi) và nốt ngắn 0,5 phách (nốt móc đơn).',
     labels: ['Jingle bells (1)', 'Jingle all the way', 'Câu tiếp', 'Jingle bells (2)', 'Câu kết'],
     tune:
       'E4 E4 E4:2 E4 E4 E4:2 | E4 G4 C4:1.5 D4:0.5 E4:4 | F4 F4 F4:1.5 F4:0.5 F4 E4 E4 E4:0.5 E4:0.5 | ' +
@@ -118,7 +122,8 @@ export const MUSIC_LESSONS = [
     level: 2,
     bpm: 120,
     origin: 'Ludwig van Beethoven, Giao hưởng số 9 (1824)',
-    description: 'Giai điệu đi từng bậc liền nhau; hai câu giống nhau, chỉ khác nốt kết.',
+    description:
+      'Bản nhạc nổi tiếng của Beethoven; giai điệu đi từng bậc liền nhau, hai câu giống nhau, chỉ khác nốt kết.',
     labels: ['Câu 1', 'Câu 2 (kết trên Re)', 'Câu 3', 'Câu 4 (kết trên Do)'],
     tune:
       'E4 E4 F4 G4 G4 F4 E4 D4 | C4 C4 D4 E4 E4:1.5 D4:0.5 D4:2 | ' +

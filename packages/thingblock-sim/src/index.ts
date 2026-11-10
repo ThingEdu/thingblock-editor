@@ -1,5 +1,6 @@
 export { createBoard, type Board, type Scope } from './board'
 export { cpp } from './cpp'
+export { BALLS, BELT_INPUT, IR_DARK, IR_INPUT, IR_PIN, NO_BALL_IR, type BeltState, type Egg } from './hal/rig'
 export { DEFAULT_DISTANCE_CM, DISTANCE_INPUT, PS2_NAMES, ps2Input } from './hal/sensors'
 export { compileProgram, loadProject, type Sb3Project } from './headless'
 export { BoardTrap, Clock, COST, EventLog, Runner, type LogEntry, type Phase, type Program } from './runtime'

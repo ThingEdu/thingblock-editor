@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {defineMessages, useIntl} from 'react-intl';
 
+import {BALLS, ballById} from './balls.js';
+import EggBelt from './egg-belt.jsx';
 import styles from './sim-panel.css';
 import ThingBotBoard, {boardExtent, oledActiveArea} from './thingbot-board.jsx';
 
@@ -111,6 +113,51 @@ const messages = defineMessages({
         id: 'gui.simPanel.restarted',
         defaultMessage: 'The simulator stopped responding and was restarted. Press Run to start again.',
         description: 'Shown when the virtual board hung (a program that never gives control back) and was replaced'
+    },
+    ball: {
+        id: 'gui.simPanel.ball',
+        defaultMessage: 'Ball',
+        description: 'Label of the row of balls the learner can put in front of the virtual IR eye on IO4'
+    },
+    irReading: {
+        id: 'gui.simPanel.irReading',
+        defaultMessage: 'IO4 = {value}',
+        description: 'The number the virtual IR eye on IO4 reads (0 to 4095)'
+    },
+    eggBelt: {
+        id: 'gui.simPanel.eggBelt',
+        defaultMessage: 'Egg belt',
+        description: 'Checkbox that puts the egg sorting belt in front of the virtual IR eye instead of a ball'
+    },
+    ballNone: {
+        id: 'gui.simPanel.ball.none',
+        defaultMessage: 'No ball',
+        description: 'Ball choice: nothing in front of the IR eye'
+    },
+    ballWhite: {
+        id: 'gui.simPanel.ball.white',
+        defaultMessage: 'White',
+        description: 'Ball choice: a white ball'
+    },
+    ballYellow: {
+        id: 'gui.simPanel.ball.yellow',
+        defaultMessage: 'Yellow',
+        description: 'Ball choice: a yellow ball'
+    },
+    ballRed: {
+        id: 'gui.simPanel.ball.red',
+        defaultMessage: 'Red',
+        description: 'Ball choice: a red ball'
+    },
+    ballBlue: {
+        id: 'gui.simPanel.ball.blue',
+        defaultMessage: 'Blue',
+        description: 'Ball choice: a blue ball'
+    },
+    ballBlack: {
+        id: 'gui.simPanel.ball.black',
+        defaultMessage: 'Black',
+        description: 'Ball choice: a black ball'
     },
     gamepad: {
         id: 'gui.simPanel.gamepad',
@@ -238,6 +285,16 @@ ControlButton.propTypes = {
     primary: PropTypes.bool,
     tip: PropTypes.string.isRequired
 };
+/** What each ball is called, by id. */
+const BALL_NAMES = {
+    none: messages.ballNone,
+    white: messages.ballWhite,
+    yellow: messages.ballYellow,
+    red: messages.ballRed,
+    blue: messages.ballBlue,
+    black: messages.ballBlack
+};
+
 const DISTANCE_MIN_CM = 2;
 const DISTANCE_MAX_CM = 400;
 
@@ -340,6 +397,11 @@ const overlayStyle = (box, extent) => ({
 });
 
 const SimPanel = ({
+    ball = 'white',
+    belt = false,
+    onBallChange = () => {},
+    onBeltChange = () => {},
+    usesIr,
     distance,
     muted,
     onToggleMute = () => {},
@@ -396,6 +458,10 @@ const SimPanel = ({
     const handleSpeedChange = useCallback(e => onSpeedChange(Number(e.target.value)), [onSpeedChange]);
     const handleDistanceChange = useCallback(e => onDistanceChange(Number(e.target.value)), [onDistanceChange]);
     const inputs = (snapshot && snapshot.inputs) || {};
+    const handleBeltChange = useCallback(e => onBeltChange(e.target.checked), [onBeltChange]);
+    const handleBallClick = useCallback(e => onBallChange(e.currentTarget.dataset.ball), [onBallChange]);
+    const beltState = belt && snapshot ? snapshot.belt : null;
+    const irValue = belt ? (beltState && beltState.ir) : ballById(ball).ir;
 
     return (
         <div
@@ -525,6 +591,42 @@ const SimPanel = ({
                         <span className={styles.value}>{`${distance} cm`}</span>
                     </label>
                 )}
+                {(usesIr || inputs.ir || belt) && (
+                    <div className={styles.control}>
+                        {!belt && <span>{intl.formatMessage(messages.ball)}</span>}
+                        {!belt && (
+                            <div className={styles.balls}>
+                                {BALLS.map(b => (
+                                    <button
+                                        aria-label={intl.formatMessage(BALL_NAMES[b.id])}
+                                        aria-pressed={b.id === ball}
+                                        className={classNames(styles.ball, {[styles.ballNone]: !b.color})}
+                                        data-ball={b.id}
+                                        key={b.id}
+                                        style={b.color ? {'--ball': b.color} : null}
+                                        title={intl.formatMessage(BALL_NAMES[b.id])}
+                                        type="button"
+                                        onClick={handleBallClick}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        <label className={styles.beltToggle}>
+                            <input
+                                checked={belt}
+                                type="checkbox"
+                                onChange={handleBeltChange}
+                            />
+                            <span>{intl.formatMessage(messages.eggBelt)}</span>
+                        </label>
+                        {typeof irValue === 'number' && (
+                            <span className={styles.value}>
+                                {intl.formatMessage(messages.irReading, {value: irValue})}
+                            </span>
+                        )}
+                    </div>
+                )}
+                {beltState && <EggBelt belt={beltState} />}
                 {inputs.ps2 && (
                     <div className={styles.control}>
                         <span>{intl.formatMessage(messages.gamepad)}</span>
@@ -555,6 +657,11 @@ const SimPanel = ({
 };
 
 SimPanel.propTypes = {
+    ball: PropTypes.string,
+    belt: PropTypes.bool,
+    onBallChange: PropTypes.func,
+    onBeltChange: PropTypes.func,
+    usesIr: PropTypes.bool,
     muted: PropTypes.bool,
     onToggleMute: PropTypes.func,
     restarted: PropTypes.bool,
@@ -571,7 +678,8 @@ SimPanel.propTypes = {
         error: PropTypes.string,
         pwm: PropTypes.arrayOf(PropTypes.number),
         pwmHz: PropTypes.number,
-        inputs: PropTypes.shape({ultrasonic: PropTypes.bool, ps2: PropTypes.bool}),
+        inputs: PropTypes.shape({ultrasonic: PropTypes.bool, ps2: PropTypes.bool, ir: PropTypes.bool}),
+        belt: PropTypes.object,
         oled: PropTypes.shape({
             width: PropTypes.number,
             height: PropTypes.number,
