@@ -5,6 +5,8 @@ import thingbotTelemetrixIconURL from './thingbotTelemetrix/thingbot-telemetrix.
 import thingbotTelemetrixInsetIconURL from './thingbotTelemetrix/thingbot-telemetrix-small.svg';
 import cameraAiIconURL from './cameraAi/camera-ai.svg';
 import cameraAiInsetIconURL from './cameraAi/camera-ai-small.svg';
+import thingEdgesIconURL from './thingEdges/thingedges.svg';
+import thingEdgesInsetIconURL from './thingEdges/thingedges-small.svg';
 
 export default [
     {
@@ -63,5 +65,19 @@ export default [
                 id="gui.extension.thingbotTelemetrix.scanBeginMessage"
             />
         )
+    },
+    {
+        name: 'Thing Smart',
+        extensionId: 'thingEdges',
+        iconURL: thingEdgesIconURL,
+        insetIconURL: thingEdgesInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="Program the lights, switches and IR remotes of ThingEdges Desktop on this computer."
+                description="Description for the ThingEdges extension"
+                id="gui.extension.thingEdges.description"
+            />
+        ),
+        featured: true
     }
 ];
