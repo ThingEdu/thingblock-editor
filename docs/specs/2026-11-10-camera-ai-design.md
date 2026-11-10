@@ -375,3 +375,54 @@ Day of AI (MIT RAISE) không có bài dùng camera theo dõi thân/mặt/tay (ch
 
 Kết luận cho lộ trình: nhóm **Tư thế** và **Mặt** (M2) mở ra hầu hết các ví dụ trên; "Bắt Dế" và "Lái xe bằng tay" là đủ cho M1.
 
+
+## 12. Đề xuất bộ ví dụ "AI Sport" cho gói Camera AI (10/11/2026)
+
+Tiêu chí chọn: chơi bằng cơ thể, có điểm và đồng hồ, mỗi trò dạy đúng một ý lập trình, dựng được bằng ≤ 15 khối. Nguồn gốc ghi rõ để làm mục Nguồn khi phát hành. Mã ví dụ `sp-xx`, đặt cạnh `ai-xx` trong `examples/index.json`.
+
+### 12.1 Chơi được ngay với nhóm Tay (bản demo)
+
+| Mã | Trò | Cách chơi | Khối chính | Dạy gì | Gốc |
+|---|---|---|---|---|---|
+| sp-01 | Bắt Dế | ngón trỏ chạm dế, dế nhảy chỗ khác, 30 s | `handX/handY`, `touching`, `addScore`, `startTimer` | vòng lặp + điều kiện | NeoAiSport |
+| sp-02 | Hứng Mưa bằng tay | rổ theo cổ tay, giọt rơi từ trên, hứng được +1, rơi đáy −1 | `spawn drop`, biến `y` giảm mỗi khung, `touching basket` | biến, toạ độ | NeoAiSport |
+| sp-03 | Đỡ Bóng | bóng rơi theo trọng lực, lòng bàn tay chạm thì bật lên; rớt đáy là thua; tính số lần đỡ | biến `vy`, `moveTo`, `touching palm` | mô phỏng vật lý bằng khối | NeoAiSport |
+| sp-04 | Bóng chuyền 2 người | tay trái/phải sân, bóng bay qua lại, chạm tay đổi hướng, rơi bên nào bên đó mất điểm | `HAND left/right`, `addScore PLAYER 1/2` | 2 người chơi, điểm riêng | Dancing with AI RainbowVolleyball |
+| sp-05 | Hái sao né bom | sao ⭐ và bom 💣 xuất hiện ngẫu nhiên, lướt ngón trỏ qua sao +1, qua bom −3 | `pick random`, `spawn star/bomb`, `touching indexTip` | ngẫu nhiên, điểm âm | Dancing with AI FingerFoodNinja |
+| sp-06 | Oẳn tù tì | máy chọn ngẫu nhiên, đếm 3-2-1, người ra nắm/mở/chữ V, so kết quả | `whenGesture FIST/OPEN/VICTORY`, `handGesture`, `say` | menu cử chỉ, so sánh chuỗi | mới |
+| sp-07 | Phản xạ cử chỉ | màn hình hiện tên cử chỉ, làm đúng càng nhanh càng nhiều điểm trong 30 s | `handIsGesture`, `timeLeft`, `addScore` | thời gian, bộ đếm | mới |
+| sp-08 | Khúc côn cầu trên không | mỗi người một bàn tay làm vợt, bóng bật tường, vào khung thành đối phương +1 | 2 tay, bật tường bằng đổi dấu `vx`/`vy` | vật lý phản xạ | mới |
+
+Để sp-02/03/04/08 viết gọn, nên thi công sớm ba khối đã có trong §4.7: `setVelocity`, `setGravity`, `whenTouching` (hat), và `touching` nhận mục tiêu mép trên/dưới/trái/phải. Không có ba khối này vẫn dựng được bằng biến, nhưng chương trình dài gấp đôi.
+
+### 12.2 Cần nhóm Tư thế (M2)
+
+| Mã | Trò | Cách chơi | Khối chính | Gốc |
+|---|---|---|---|---|
+| sp-09 | Flappy nhảy thật | nhảy tại chỗ để chim bay lên, né ống | `whenJump` (mới, §4.3), `poseY hông` | ý anh Tuấn |
+| sp-10 | Ball Dế đá penalty | vung cổ chân nhanh = sút, hướng theo chân; thủ môn Dế bay ngẫu nhiên; 5 lượt | `poseX/poseY cổ chân T/P`, tốc độ = hiệu toạ độ 2 khung | NeoAiSport |
+| sp-11 | Hứng Mưa bằng đầu | rổ theo mũi, nghiêng người để hứng | `poseX mũi` | NeoAiSport |
+| sp-12 | Né chướng ngại | thanh chắn chạy tới: thấp thì nhảy, cao thì ngồi xổm, lệch thì nghiêng trái/phải | `whenJump`, `isPose ngồi xổm`, `poseX vai` | mới |
+| sp-13 | Tập thể dục đếm nhịp | đếm squat / jumping jack đúng tư thế, chấm biên độ | `jointAngle gối`, `isPose tay lên cao` | mới |
+| sp-14 | AI Dance | nhạc chạy, màn hiện tư thế mẫu, giữ đúng ≥ 1 s được điểm | `poseMatch`, `whenPose` | YR Toolkit AI Dance |
+
+### 12.3 Cần nhóm Mặt (M2)
+
+| Mã | Trò | Cách chơi | Khối chính | Gốc |
+|---|---|---|---|---|
+| sp-15 | Bóng rổ bằng mũi | bóng dính mũi, đưa vào rổ; há miệng chơi lại | `faceX/faceY mũi`, `whenExpression mouthOpen` | App Inventor FaceExtension |
+| sp-16 | Lái xe nghiêng đầu | xe chạy, nghiêng đầu trái/phải để lách, há miệng phanh | `headTilt`, `whenHeadTilt` | mới |
+| sp-17 | Thổi nến / cười ghi điểm | mức cười càng cao bóng bay càng nhanh | `expressionLevel smile` | mới |
+
+### 12.4 Ghép ThingBot (sau M2)
+
+| Mã | Trò | Ý tưởng |
+|---|---|---|
+| sp-18 | Thủ môn ThingBot | người đá (sp-10), xe ThingBot lao sang trái/phải chặn bóng thật trên bàn |
+| sp-19 | Đèn phạt việt vị | LED L1 nháy khi người bước qua vạch (x vai vượt ngưỡng) |
+
+### 12.5 Đề xuất thứ tự làm
+
+1. Thi công `setVelocity`, `setGravity`, `whenTouching`, `touching` mép → dựng sp-02, sp-03, sp-04, sp-06 ngay trên bản demo (mỗi trò ≤ 15 khối).
+2. M2 Tư thế: thêm `whenJump` và `poseSpeed` (tốc độ bộ phận, đơn vị/giây) để sp-09, sp-10, sp-12 không phải tự tính hiệu toạ độ.
+3. Mỗi trò kèm tệp phát lại landmark để bộ chấm chạy không cần camera (§5), và ghi Nguồn (NeoAiSport MIT, Dancing with AI, App Inventor) trong NOTICE.
