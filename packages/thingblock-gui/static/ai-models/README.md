@@ -1,6 +1,6 @@
 # Mô hình Camera AI
 
-Các tệp `.task` ở đây không được commit (xem `.gitignore`); tải bằng `scripts/fetch-ai-models.sh`.
+Các tệp `.task` ở đây không được commit (xem `.gitignore`); tải bằng `scripts/fetch-ai-models.mjs`.
 Mô hình tư thế (`pose_landmarker_lite.task`) chỉ được nạp khi dự án dùng khối đầu/thân hoặc khối "khi hai tay vỗ xuống".
 Runtime WASM của MediaPipe được webpack chép từ `node_modules/@mediapipe/tasks-vision/wasm` sang `static/mediapipe/wasm`.
 

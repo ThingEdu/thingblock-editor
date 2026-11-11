@@ -28,5 +28,5 @@ npm-*
 # for act
 .secrets
 
-# Camera AI models are downloaded by scripts/fetch-ai-models.sh
+# Camera AI models are downloaded by scripts/fetch-ai-models.mjs
 /static/ai-models/*.task
