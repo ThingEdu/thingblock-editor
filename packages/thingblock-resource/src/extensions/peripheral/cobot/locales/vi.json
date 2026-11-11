@@ -3,7 +3,7 @@
     "message0": "đọc mắt hồng ngoại %1"
   },
   "cobot_irLight": {
-    "message0": "đèn hồng ngoại Cobot %1",
+    "message0": "%1 đèn hồng ngoại Cobot",
     "options": {
       "STATE": {
         "HIGH": "bật",

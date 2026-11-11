@@ -62,9 +62,23 @@ describe('colour sensor generator', () => {
     gen.forBlock.colourSensor_read(makeBlock({ CHANNEL: '0' }))
     gen.forBlock.colourSensor_is(makeBlock({ COLOUR: '1' }))
     expect(gen.includes.get('colourSensor')).toBe('#include <Wire.h>\n#include <Adafruit_TCS34725.h>')
-    expect(gen.setups.get('colourSensor')).toBe('colourTcs.begin();')
+    expect(gen.setups.get('colourSensor')).toBe('colourTcs.begin();  // khởi động cảm biến màu')
     expect(gen.globals.get('colourSensor')).toContain('TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X')
     expect(gen.forBlock.colourSensor_init(makeBlock())).toBe('')
+  })
+
+  it('explains each colour rule in Vietnamese, as the learner reads it in the code panel', () => {
+    const gen = arduino()
+    gen.forBlock.colourSensor_init(makeBlock())
+    const code = gen.globals.get('colourSensor') ?? ''
+    expect(code).toContain('// Đoán màu đang thấy, trả về mã: 0 đen, 1 đỏ, 2 xanh lá, 3 xanh dương, 4 vàng, 5 trắng.')
+    expect(code).toContain('return 0;  // quá ít ánh sáng hắt về: đen')
+    expect(code).toContain('return 4;  // đỏ và xanh lá cùng nhiều: vàng')
+    // Comments never swallow code: every statement line still ends in `;`, `{` or `}` before any comment.
+    for (const line of code.split('\n')) {
+      const statement = line.split('//')[0].trim()
+      if (statement) expect(statement).toMatch(/[;{}]$|^#define /)
+    }
   })
 
   it('reads the data registers without the library wait', () => {

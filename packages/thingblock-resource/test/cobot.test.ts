@@ -45,7 +45,9 @@ describe('cobot generator', () => {
     registerGenerators(gen as unknown as ArduinoGenerator, Order)
     expect(gen.forBlock.cobot_irLight(makeBlock({ STATE: 'HIGH' }))).toBe('digitalWrite(21, HIGH);\n')
     expect(gen.forBlock.cobot_irLight(makeBlock({ STATE: 'LOW' }))).toBe('digitalWrite(21, LOW);\n')
-    expect(gen.setups.get('cobot_ir_light')).toBe('pinMode(21, OUTPUT);')
+    expect(gen.setups.get('cobot_ir_light')).toBe(
+      'pinMode(21, OUTPUT);  // IO21 cấp điện cho đèn hồng ngoại của các mắt trên xe Cobot',
+    )
   })
 })
 

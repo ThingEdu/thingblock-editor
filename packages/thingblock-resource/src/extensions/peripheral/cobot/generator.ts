@@ -20,7 +20,10 @@ export const registerGenerators: RegisterGenerators = (generator, Order) => {
   ]
 
   generator.forBlock.cobot_irLight = (block) => {
-    generator.setups.set('cobot_ir_light', `pinMode(${IR_LED_PIN}, OUTPUT);`)
+    generator.setups.set(
+      'cobot_ir_light',
+      `pinMode(${IR_LED_PIN}, OUTPUT);  // IO${IR_LED_PIN} cấp điện cho đèn hồng ngoại của các mắt trên xe Cobot`,
+    )
     return `digitalWrite(${IR_LED_PIN}, ${level(block)});\n`
   }
 }

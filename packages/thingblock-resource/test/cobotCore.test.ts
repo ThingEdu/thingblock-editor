@@ -96,13 +96,37 @@ describe('CoBot generator', () => {
     expect(EYE_PINS).toEqual([4, 3, 1, 0])
     const globals = arduino()
     globals.forBlock.cobotC3_init(makeBlock())
-    const code = globals.globals.get('cobot_board')
-    expect(code).toContain(
-      '#define COBOT_LEFT_A 2\n#define COBOT_LEFT_B 10\n#define COBOT_RIGHT_A 6\n#define COBOT_RIGHT_B 5',
+    const code = globals.globals.get('cobot_board') ?? ''
+    // Each define carries a Vietnamese comment for the learner, so match the line up to it.
+    for (const line of [
+      '#define COBOT_LEFT_A 2 ',
+      '#define COBOT_LEFT_B 10 ',
+      '#define COBOT_RIGHT_A 6 ',
+      '#define COBOT_RIGHT_B 5 ',
+      '#define COBOT_IR_LIGHT 21 ',
+      '#define COBOT_WHITE_LIGHT 20 ',
+      'const uint8_t cobotEyePins[4] = {4, 3, 1, 0};',
+      'int cobotLineThreshold = 2000;',
+    ])
+      expect(code).toContain(line)
+  })
+
+  it('explains the generated code in Vietnamese, as the learner reads it in the code panel', () => {
+    const gen = arduino()
+    gen.forBlock.cobotC3_init(makeBlock())
+    const code = gen.globals.get('cobot_board') ?? ''
+    const comments = code.split('\n').filter((line) => line.includes('//'))
+    expect(comments.length).toBeGreaterThanOrEqual(12)
+    expect(code).toContain('// Quay một bánh với tốc độ -100..100 %: tiến thì cấp xung chân A, lùi thì chân B.')
+    expect(code).toContain('// Mẫu 4 mắt, từ mắt 1 tới mắt 4: "1" là thấy vạch.')
+    expect(gen.setups.get('cobot_board')).toContain(
+      'digitalWrite(COBOT_IR_LIGHT, HIGH);  // bật đèn hồng ngoại để 4 mắt nhìn được vạch',
     )
-    expect(code).toContain('#define COBOT_IR_LIGHT 21\n#define COBOT_WHITE_LIGHT 20')
-    expect(code).toContain('const uint8_t cobotEyePins[4] = {4, 3, 1, 0};')
-    expect(code).toContain('int cobotLineThreshold = 2000;')
+    // Comments never swallow code: every statement line still ends in `;`, `{` or `}` before any comment.
+    for (const line of code.split('\n')) {
+      const statement = line.split('//')[0].trim()
+      if (statement) expect(statement).toMatch(/[;{}]$|^#define /)
+    }
   })
 
   it('moves the car with signed wheel speeds', () => {
