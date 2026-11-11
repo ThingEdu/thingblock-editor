@@ -12,9 +12,11 @@ thoi-luong: 15
 
 Dế Xanh muốn bay mà không có cánh. Em sẽ làm đôi cánh cho dế: mỗi lần em vỗ hai tay xuống, dế bay lên.
 
-Đây là **bài tập tay và vai**: giơ hai tay cao quá đầu, rồi vỗ mạnh xuống ngang hông, như chim vỗ cánh. Đứng xa camera một chút để thấy cả hai tay. Dọn chỗ trống quanh em.
+Đây là **bài tập tay và vai**: giơ hai tay cao quá đầu, rồi vỗ mạnh xuống ngang hông, như chim vỗ cánh. Đứng xa camera một chút để thấy cả hai tay. Dọn chỗ trống quanh em. Làm chậm vài lần đầu; thấy chóng mặt hay mỏi vai thì dừng lại nghỉ.
 
 Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần webcam)**, để con trỏ trên sân chơi và bấm **phím cách** để vỗ hai tay.
+
+Bấm **Tiếp** để bắt đầu.
 
 ## Dế và trọng lực
 
@@ -55,7 +57,7 @@ AI tìm hai bàn tay. Khi tay vung nhanh, ảnh bị nhòe và AI có thể mấ
 
 Mỗi lượt vỗ khoảng 10 đến 20 lần là đủ. Mỏi vai thì nghỉ.
 
-> gợi ý: Thử thách: mở **Tập tin → Ví dụ → Camera AI → Dế Xanh bay** để thêm cây tre có khe và tính điểm.
+> gợi ý: Thử thách: mở **Tập tin → Ví dụ…**, nhóm **Camera AI (không cần mạch)**, trò **Dế Xanh bay** để thêm cây tre có khe và tính điểm.
 
 ## Xong rồi!
 

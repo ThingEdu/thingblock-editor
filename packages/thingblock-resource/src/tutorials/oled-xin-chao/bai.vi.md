@@ -28,7 +28,7 @@ Màn hình cần bốn khối theo đúng thứ tự, đều nằm trong nhóm *
 
 1. **khởi động OLED rộng 128 cao 64 địa chỉ I2C 0x78 (0x3c) chip SSD1306** để khởi động màn hình. Ô địa chỉ ghi hai số 0x78 và 0x3c: đó là cùng một số nhà viết theo hai kiểu, em để nguyên.
 2. **xoá OLED** để xoá hình logo mà màn hình tự vẽ lúc khởi động.
-3. **OLED in Xin chao** để viết chữ vào bộ nhớ.
+3. **OLED in Xin chao xuống dòng** để viết chữ vào bộ nhớ. Ô cuối của khối để nguyên **xuống dòng**.
 4. **hiện lên màn OLED** để đưa chữ ra màn hình thật.
 
 Khối **OLED in** giống em viết vào **giấy nháp**. Khối **hiện lên màn OLED** giống em chép bài từ giấy nháp lên **bảng** cho cả lớp xem. Viết nháp xong hết rồi mới đưa lên một lần, nên màn hình không bị nháy.
@@ -43,7 +43,7 @@ kiểm: OLED hiện "Xin chao"
 
 ## Dòng thứ hai
 
-**Con trỏ** là chỗ đầu bút đang đặt trên màn. In chữ xong, con trỏ đứng ngay sau chữ vừa in. Muốn xuống dòng, em phải tự nhấc bút đặt sang chỗ mới.
+**Con trỏ** là chỗ đầu bút đang đặt trên màn. Khối **OLED in … xuống dòng** in xong thì đưa bút xuống đầu dòng kế, sát ngay dưới chữ vừa in. Muốn chữ nằm chỗ khác, em tự nhấc bút đặt sang chỗ mới bằng khối **đặt con trỏ OLED**.
 
 Vị trí trên màn viết bằng hai số: **x** là đếm từ trái sang (0 là mép trái), **y** là đếm từ trên xuống (0 là mép trên).
 
@@ -57,7 +57,7 @@ Vị trí trên màn viết bằng hai số: **x** là đếm từ trái sang (0
 Trước khi in chữ thứ hai, thêm khối **đặt con trỏ OLED x: 0 y: 16** rồi **OLED in ThingBot**, đặt cả hai _trước_ khối **hiện lên màn OLED**.
 
 > gợi ý: Thứ tự đúng là: **khởi động OLED** → **xoá OLED** → **OLED in Xin chao** → **đặt con trỏ OLED** → **OLED in ThingBot** → **hiện lên màn OLED**.
-> gợi ý: Thiếu khối **đặt con trỏ OLED** thì "ThingBot" nằm ngay sau "Xin chao" trên cùng một dòng.
+> gợi ý: Thiếu khối **đặt con trỏ OLED** thì "ThingBot" nằm sát ngay dưới "Xin chao", ở y 8 chứ không phải y 16.
 
 kiểm: OLED hiện "Xin chao"
 kiểm: OLED hiện "ThingBot" ở y 16
@@ -88,4 +88,4 @@ Nên mạch giữ một **bản nháp** trong bộ nhớ:
 
 Em đã làm được bảng chào khách và biết ba việc cơ bản với OLED: khởi động, in chữ ở vị trí mình chọn, rồi **hiện lên màn OLED** để đưa bản nháp ra màn hình.
 
-Bài sau em sẽ cho màn hình hiện số đếm thay đổi liên tục, như đồng hồ đếm giờ.
+Thử thêm: cho màn hình hiện số đếm tăng dần trong **vòng lặp Arduino**, như đồng hồ đếm giờ. Nhớ **xoá OLED** trước mỗi lần in, nếu không số mới đè lên số cũ.

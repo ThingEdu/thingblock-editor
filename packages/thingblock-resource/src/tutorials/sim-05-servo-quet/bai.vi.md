@@ -23,7 +23,7 @@ Giống cơ thể người: servo là **khớp tay**. Em nhắm mắt vẫn giơ
 
 > gợi ý: Đáp án: **servo quay tới một góc rồi giữ nguyên**. Bên trong servo có bộ đo góc: nó tự quay tới góc em đặt rồi giữ chặt ở đó. Động cơ bánh xe thì quay mãi.
 
-Bấm sang bước sau để bắt đầu.
+Bấm **Tiếp** để bắt đầu.
 
 ## Mở barie: 90 độ
 
@@ -78,7 +78,7 @@ Mạch công suất đo độ dài xung trên thang **4096 bậc**: khoảng b�
 
 Trên robot thật, servo lấy điện từ **pin**: phải lắp pin và bật công tắc nguồn thì servo mới quay.
 
-Bước này không chấm, em đọc xong thì sang bước sau.
+Bước này không chấm, em đọc xong thì bấm **Tiếp**.
 
 ## Xong rồi!
 

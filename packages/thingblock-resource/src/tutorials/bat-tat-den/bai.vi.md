@@ -32,7 +32,7 @@ Mở nhóm **ThingBot** ở cột khối bên trái. Kéo khối **đặt đèn 
 
 Khối **khi Arduino khởi động** chạy các khối bên trong **đúng một lần**, ngay lúc bật máy. Giống buổi sáng em thức dậy là mở mắt ngay.
 
-Bấm **Chạy** ở bảng mô phỏng. Đèn L1 trên mạch ảo sẽ sáng.
+Bấm **Chạy** ở khung **Mô phỏng**. Đèn L1 trên mạch ảo sẽ sáng.
 
 > gợi ý: Khối **đặt đèn** có hai ô: ô đầu chọn **L1**, ô sau là độ sáng, để **100%** là sáng hết cỡ.
 > gợi ý: Khối phải nằm _bên trong_ khối **khi Arduino khởi động** thì mới chạy.
@@ -57,7 +57,7 @@ Thật ra mạch công suất không "rót nửa điện". Nó **bật và tắt
 - **50%**: đèn bật một nửa thời gian, tắt một nửa, nên trông mờ đi.
 - **0%**: đèn tắt suốt.
 
-Bật càng lâu thì càng sáng. Mạch công suất chia độ sáng thành 4096 bậc nhỏ, nên đèn có thể sáng rất mịn.
+Bật càng lâu thì càng sáng. Kỹ sư gọi cách "chớp thật nhanh" này là **PWM**. Mạch công suất chia mỗi lần chớp thành 4096 bậc nhỏ, nên đèn có thể sáng rất mịn.
 
 ## Xong rồi!
 

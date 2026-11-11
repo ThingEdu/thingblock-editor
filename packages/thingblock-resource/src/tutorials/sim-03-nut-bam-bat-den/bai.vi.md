@@ -22,7 +22,7 @@ Giống cơ thể người: nút SW là **làn da** của robot. Ai chạm vào 
 
 > gợi ý: Đáp án: **đầu vào**. Nút báo tin cho não ("đang bị bấm"), não không ra lệnh được cho nút. Báo tin cho não là đầu vào; nhận lệnh từ não là đầu ra.
 
-Bấm sang bước sau để bắt đầu.
+Bấm **Tiếp** để bắt đầu.
 
 ## Ghép khối
 
@@ -38,7 +38,7 @@ Bấm sang bước sau để bắt đầu.
 
 > gợi ý: Đáp án: **vì khởi động chỉ chạy một lần lúc bật máy**. Đặt ở khởi động thì não chỉ hỏi nút đúng một lần rồi thôi. Trong vòng lặp, não hỏi lại liên tục nên biết ngay khi em bấm.
 
-Bấm **Chạy**. Bước này không chấm, ghép xong em sang bước sau.
+Bấm **Chạy**. Bước này không chấm, ghép xong em bấm **Tiếp**.
 
 ## Giữ nút SW
 
@@ -56,7 +56,7 @@ kiểm: L1 sáng
 
 Thả nút ra. Đèn L1 phải **tắt**.
 
-Não hỏi nút **hàng nghìn lần mỗi giây**, vì vậy đèn đổi ngay khi em nhả.
+Não hỏi nút **hàng trăm lần mỗi giây**, vì vậy đèn đổi ngay khi em nhả.
 
 > gợi ý: Nhả nút mà đèn vẫn sáng? Chương trình mới có lệnh bật. Đặt **đặt đèn L1 độ sáng 0%** vào chỗ **nếu không thì**.
 
@@ -78,7 +78,7 @@ Vì sao là IO3 mà không phải chân khác? Chip não ESP32-C3 có nhiều ch
 - cổng cảm biến ở **IO0, IO1** và **IO4, IO5**,
 - hai dây I2C (để não nói chuyện với mạch công suất và màn hình) ở **IO8** và **IO9**.
 
-Bước này không chấm, em đọc xong thì sang bước sau.
+Bước này không chấm, em đọc xong thì bấm **Tiếp**.
 
 ## Thử thách: đèn mờ
 

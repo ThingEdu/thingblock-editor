@@ -74,4 +74,4 @@ Em đã biết ba cách quay servo:
 - **quay servo**: quay từ từ, chờ xong mới đi tiếp.
 - **bắt đầu quay servo**: quay nhiều servo cùng lúc, nhớ có **chờ các servo quay xong**.
 
-Thanh chắn bãi xe, cánh tay robot gắp đồ, cửa cho thú cưng tự mở đều dùng servo. Bài sau em sẽ dùng servo làm cánh tay gật đầu.
+Thanh chắn bãi xe, cánh tay robot gắp đồ, cửa cho thú cưng tự mở đều dùng servo. Bài sau em cho servo quét qua lại mãi, như cần gạt nước ô tô.

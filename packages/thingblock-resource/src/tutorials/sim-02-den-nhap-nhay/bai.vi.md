@@ -21,9 +21,9 @@ Giống cơ thể người: đèn là cách robot **nháy mắt ra hiệu**. Nã
 - Đèn trông như sáng mờ liên tục
 - Đèn tắt hẳn
 
-> gợi ý: Đáp án: **đèn trông như sáng mờ liên tục**. Não chạy mỗi vòng chỉ mất vài phần triệu giây, nhanh hơn mắt em rất nhiều. Khối đợi là cách "làm chậm" não cho vừa mắt người.
+> gợi ý: Đáp án: **đèn trông như sáng mờ liên tục**. Não chạy hết một vòng chưa tới một phần nghìn giây, nhanh hơn mắt em rất nhiều. Khối đợi là cách "làm chậm" não cho vừa mắt người.
 
-Bấm sang bước sau để bắt đầu.
+Bấm **Tiếp** để bắt đầu.
 
 ## Bật rồi tắt
 
@@ -59,9 +59,9 @@ Số trong khối là **độ sáng phần trăm**: **0** là tắt, **100** là
 
 Còn 50% thì sao? Mạch công suất bật tắt đèn **cực nhanh**: bật một nửa thời gian, tắt một nửa. Mắt em không kịp thấy, chỉ thấy đèn mờ.
 
-Vì sao chọn "đèn L1"? Mỗi đèn được **hàn sẵn** vào một chỗ trên mạch công suất khi làm mạch. Khối **đặt đèn** đã biết đèn L1 nằm ở đâu, nên em chỉ cần chọn đèn **1** hay **2**.
+Vì sao chọn "đèn L1"? Mỗi đèn được **hàn sẵn** vào một chỗ trên mạch công suất khi làm mạch. Khối **đặt đèn** đã biết đèn L1 nằm ở đâu, nên em chỉ cần chọn **L1** hay **L2**.
 
-Bước này không chấm, em đọc xong thì sang bước sau.
+Bước này không chấm, em đọc xong thì bấm **Tiếp**.
 
 ## Chớp nhanh gấp đôi
 
@@ -79,9 +79,9 @@ kiểm: L1 nhấp nháy, chu kỳ 0,5 giây ± 20%
 
 ## Thử thách: đèn L2
 
-Đổi cả hai khối **đặt đèn** sang đèn **2** và đặt lại hai ô **đợi** là **0.5**. Giờ đèn L2 nhấp nháy với chu kỳ 1 giây.
+Đổi cả hai khối **đặt đèn** sang **L2** và đặt lại hai ô **đợi** là **0.5**. Giờ đèn L2 nhấp nháy với chu kỳ 1 giây.
 
-> gợi ý: Bấm mũi tên ▾ trong khối **đặt đèn** để chọn đèn **2**.
+> gợi ý: Bấm mũi tên ▾ trong khối **đặt đèn** để chọn **L2**.
 > gợi ý: Khó hơn, không chấm: cho L1 và L2 **thay nhau** chớp như đèn xe cứu hoả. Lúc L1 bật thì L2 tắt.
 
 kiểm: L2 nhấp nháy, chu kỳ 1 giây ± 20%

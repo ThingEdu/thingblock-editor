@@ -24,7 +24,9 @@ Nhiệm vụ: làm **đèn báo bóng tối màu**. Bóng tối màu thì đèn 
 
 > gợi ý: Đáp án: **bóng trắng**. Màu trắng hắt lại gần hết ánh sáng, "con ngươi" nhận nhiều nên số lớn (khoảng 3500). Màu đen nuốt gần hết, số nhỏ (khoảng 300). Nhớ chiếc áo đen phơi nắng: nó nóng vì nuốt ánh sáng.
 
-Mở bài này là nhóm khối **Cobot** đã có sẵn trong bảng khối.
+Mở bài này là nhóm khối **Cobot IR** đã có sẵn trong bảng khối.
+
+Bấm **Tiếp** để bắt đầu.
 
 ## Đèn báo bóng tối màu
 
@@ -32,7 +34,7 @@ Trong **vòng lặp Arduino** (phần chạy đi chạy lại mãi):
 
 1. Kéo khối **nếu … thì … nếu không thì** (nhóm **Điều khiển**).
 2. Đặt khối **… < …** (nhóm **Các phép toán**) vào ô lục giác, gõ **1500** vào ô bên phải.
-3. Đặt khối **đọc mắt hồng ngoại 1 · IO4** (nhóm **Cobot**) vào ô bên trái của dấu **<**.
+3. Đặt khối **đọc mắt hồng ngoại 1 · IO4** (nhóm **Cobot IR**) vào ô bên trái của dấu **<**.
 4. Chỗ **thì** đặt **đặt đèn L1 độ sáng 100%**, chỗ **nếu không thì** đặt **đặt đèn L1 độ sáng 0%**.
 5. Thêm **đợi 0.05 giây** dưới khối **nếu**.
 

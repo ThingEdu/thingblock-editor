@@ -18,6 +18,8 @@ Bài này không cần mạch. Các khối nằm ở nhóm **Camera AI**, kết 
 
 Máy không có webcam? Không sao. Ở khung Sân chơi, chọn **Chuột (không cần webcam)**. Ngón trỏ sẽ đi theo con chuột.
 
+Bấm **Tiếp** để bắt đầu.
+
 ## Bật camera
 
 1. Mở nhóm **Sự kiện**, kéo khối **Khi bấm vào** 🏁 (lá cờ xanh) ra vùng lập trình.

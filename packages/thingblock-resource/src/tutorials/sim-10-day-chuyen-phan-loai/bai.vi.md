@@ -28,7 +28,9 @@ Em đã có đủ mảnh ghép:
 
 > gợi ý: Đáp án: **90 độ**. Cần gạt hạ xuống chắn đường, quả trứng lăn vào thùng loại. 0 độ là cần gạt nhấc lên, trứng đi qua: góc này dành cho trứng tốt.
 
-Mở bài này là nhóm khối **Cobot** đã có sẵn trong bảng khối, và mạch ảo có sẵn băng chuyền trứng.
+Mở bài này là nhóm khối **Cobot IR** đã có sẵn trong bảng khối, và mạch ảo có sẵn băng chuyền trứng.
+
+Bấm **Tiếp** để bắt đầu.
 
 ## Lắp máy phân loại
 
@@ -62,7 +64,7 @@ Thử đổi tốc độ M1 thành **100**, hoặc khối đợi thành **1 giâ
 
 ## Thử thách: còi báo trứng hỏng
 
-Máy soi trứng thật kêu lên cho người trông máy biết. Thêm **chơi nốt C quãng 5 trong 0.25 phách** vào chỗ **thì**, ngay sau khối **đặt servo S1 góc 90 độ**. Còi cũng là một **đầu ra** do mạch công suất cấp điện, giống đèn L1 và động cơ.
+Máy soi trứng thật kêu lên cho người trông máy biết. Thêm **chơi nốt C (Do) quãng 5 trong 0.25 phách** (nhóm **ThingBot**) vào chỗ **thì**, ngay sau khối **đặt servo S1 góc 90 độ**. Còi cũng là một **đầu ra** do mạch công suất cấp điện, giống đèn L1 và động cơ.
 
 > gợi ý: Nốt nhạc dài làm não bận lâu. Giữ nốt ngắn (0.25 phách) để não kịp nhìn quả trứng sau.
 
@@ -79,4 +81,4 @@ Em cũng đã biết ba điều kỹ sư robot dùng hằng ngày:
 - **0 và 1**: nút chỉ có bấm hay không, còn mắt hồng ngoại cho cả một con số;
 - **chân nào nối với gì**: đọc sơ đồ mạch để biết, ví dụ mắt hồng ngoại ở IO4.
 
-Bước tiếp: dùng **cảm biến màu** của Cobot để lựa đúng theo màu đỏ, lục, lam. Hoặc chọn bo ThingBot, ghép đúng các khối này rồi bấm **Nạp code** để chạy trên robot thật.
+Bước tiếp: dùng **cảm biến màu** của Cobot để lựa đúng theo màu đỏ, lục, lam. Hoặc chọn mạch ThingBot, ghép đúng các khối này rồi bấm **Nạp code** để chạy trên robot thật. Nhớ rút pin trước khi cắm dây mắt hồng ngoại và servo.

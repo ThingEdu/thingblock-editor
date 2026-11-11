@@ -15,7 +15,7 @@ Em đã từng chơi **xe điều khiển từ xa** chưa? Bài này em làm m�
 
 Tay cầm có nhiều nút. Mỗi nút chỉ có hai trạng thái: **đang bấm** hoặc **không bấm**, giống nút SW ở bài 3. Khác ở chỗ não nhận tin của nhiều nút cùng lúc, qua sóng radio.
 
-Bấm sang bước sau để bắt đầu.
+Bấm **Tiếp** để bắt đầu.
 
 ## Giữ ▲ để đi tới
 

@@ -18,6 +18,8 @@ Làm chậm thôi. Thấy chóng mặt, mỏi hay đau cổ thì dừng lại, n
 
 Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần webcam)**. Đầu đi theo con chuột. Giữ phím ← hoặc → để nghiêng đầu dần, phím ↑ để đầu thẳng lại, phím ↓ để gật đầu.
 
+Bấm **Tiếp** để bắt đầu.
+
 ## Ngôi sao trên đầu
 
 1. Kéo khối **Khi bấm vào** 🏁 (nhóm **Sự kiện**) ra vùng lập trình, thêm **bật camera soi gương**.
@@ -68,8 +70,8 @@ Khối **góc nghiêng đầu** cho biết đường đó nghiêng bao nhiêu đ
 
 Máy chỉ đoán từ ảnh. Tóc che mắt, phòng tối hay quay mặt đi thì nó có thể đoán sai.
 
-> gợi ý: Thử thách: thay **đưa sao tới** bằng **đưa sao tới x: (góc nghiêng đầu × 7) y: 100**. Ngôi sao chạy theo độ nghiêng, như trò "Thể dục cổ: nghiêng đầu hứng sao".
+> gợi ý: Thử thách: thay **đưa sao tới** bằng **đưa sao tới x: ((góc nghiêng đầu) \* 7) y: 100**. Ngôi sao chạy theo độ nghiêng, như trò "Thể dục cổ: nghiêng đầu hứng sao".
 
 ## Xong rồi!
 
-Em đã dùng AI Pose để biết đầu em ở đâu, nghiêng sang đâu và khi nào em gật. Mở **Tập tin → Ví dụ → Camera AI** để tập tiếp với "Thể dục cổ", "Gật đầu đếm nhịp" và "Ngồi xuống né bóng".
+Em đã dùng AI Pose để biết đầu em ở đâu, nghiêng sang đâu và khi nào em gật. Mở **Tập tin → Ví dụ…**, nhóm **Camera AI (không cần mạch)**, để tập tiếp với "Thể dục cổ: nghiêng đầu hứng sao", "Gật đầu đếm nhịp" và "Ngồi xuống né bóng". Nhớ làm chậm, chóng mặt thì dừng.

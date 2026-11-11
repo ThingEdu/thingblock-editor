@@ -16,6 +16,8 @@ Em sẽ dùng lại những gì đã học ở bài 1: bật camera, cho một v
 
 Máy không có webcam? Ở khung Sân chơi, chọn **Chuột (không cần webcam)**.
 
+Bấm **Tiếp** để bắt đầu.
+
 ## Quả bóng và con dế
 
 Dưới **Khi bấm vào** 🏁 và **bật camera soi gương**, thêm:
@@ -62,8 +64,8 @@ Câu hỏi đó là một **điều kiện**: câu trả lời chỉ có **đún
 
 Vì sao cần **đợi 0.3 giây**? Không đợi thì có lúc dế nhảy tới đúng chỗ ngón tay em, và em được điểm mà chưa kịp làm gì.
 
-> gợi ý: Thử thách: thêm **đếm ngược 30 giây** sau khi tạo dế, và khối mũ **khi hết giờ** với **nói (kết hợp "Hết giờ! Điểm: " với điểm người chơi 1)**.
+> gợi ý: Thử thách: thêm **đếm ngược 30 giây** sau khi tạo dế, và khối mũ **khi hết giờ** với **nói (kết hợp "Hết giờ! Điểm: " (điểm người chơi 1))**. Khối **kết hợp** (nhóm **Các phép toán**) nối hai đoạn chữ thành một.
 
 ## Xong rồi!
 
-Em đã làm một trò chơi AI thật sự: AI tìm ngón tay em, chương trình của em quyết định khi nào ghi điểm. Mở **Tập tin → Ví dụ → Camera AI** để chơi thêm Hứng Mưa, Đỡ Bóng, Hái sao né bom.
+Em đã làm một trò chơi AI thật sự: AI tìm ngón tay em, chương trình của em quyết định khi nào ghi điểm. Mở **Tập tin → Ví dụ…**, nhóm **Camera AI (không cần mạch)**, để chơi thêm Hứng Mưa, Đỡ Bóng, Hái sao né bom.

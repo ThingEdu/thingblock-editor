@@ -18,14 +18,14 @@ Giống cơ thể người: màn hình là **khuôn mặt** của robot, chỗ n
 
 Mở bài này là nhóm khối **OLED** đã có sẵn trong bảng khối.
 
-Bấm sang bước sau để bắt đầu.
+Bấm **Tiếp** để bắt đầu.
 
 ## Viết dòng đầu tiên
 
 Dưới **khởi động ThingBot** trong **khi Arduino khởi động**, xếp ba khối của nhóm **OLED**:
 
 1. **khởi động OLED rộng 128 cao 64 địa chỉ I2C 0x78 (0x3c) chip SSD1306**: đánh thức màn hình.
-2. **OLED in Xin chao**: viết chữ vào **bộ nhớ** của màn hình, như viết vào giấy nháp.
+2. **OLED in Xin chao xuống dòng**: viết chữ vào **bộ nhớ** của màn hình, như viết vào giấy nháp. Ô cuối để nguyên **xuống dòng**.
 3. **hiện lên màn OLED**: đưa giấy nháp lên bảng cho mọi người xem.
 
 **Đoán trước:** nếu thiếu khối **hiện lên màn OLED**, màn hình sẽ…
@@ -42,7 +42,7 @@ kiểm: OLED hiện "Xin chao"
 
 ## Dòng thứ hai
 
-Trước khối **hiện lên màn OLED**, thêm **đặt con trỏ OLED x: 0 y: 16** rồi **OLED in ThingBot**. Con trỏ là chỗ chữ tiếp theo sẽ được viết; nó đưa chữ thứ hai xuống dòng dưới.
+Trước khối **hiện lên màn OLED**, thêm **đặt con trỏ OLED x: 0 y: 16** rồi **OLED in ThingBot xuống dòng**. **Con trỏ** là chỗ chữ tiếp theo sẽ được viết, như đầu bút đang đặt trên giấy. Sau khối in có **xuống dòng**, bút đã ở đầu dòng kế, sát ngay dưới; khối **đặt con trỏ OLED** đưa bút xuống y 16 cho hai dòng thoáng hơn.
 
 x và y trên màn hình:
 
@@ -60,7 +60,7 @@ kiểm: OLED hiện "ThingBot"
 
 Cổng I2C có bốn chân:
 
-- **GND, VCC**: cấp điện cho màn hình.
+- **GND, 5V**: cấp điện cho màn hình.
 - **SDA**, nối chân **IO8** của não: chở dữ liệu (chữ, lệnh).
 - **SCL**, nối chân **IO9** của não: gõ nhịp cho dữ liệu đi đều.
 
@@ -70,7 +70,7 @@ Vậy sao não không gửi nhầm? Vì mỗi thiết bị có một **"số nh�
 
 Vì vậy em đừng dùng IO8, IO9 cho việc khác: chúng là "đường dây chung" của cả mạch.
 
-Bước này không chấm, em đọc xong thì sang bước sau.
+Bước này không chấm, em đọc xong thì bấm **Tiếp**.
 
 ## Thử thách: tên em
 
@@ -82,4 +82,4 @@ Cho màn hình hiện **tên em** (không dấu) ở dòng thứ ba: **đặt co
 
 Robot của em đã có **bảng tên**. Em biết ba việc với OLED: **khởi động**, **in chữ** ở chỗ mình chọn bằng x, y, và **hiện lên màn** để mọi người xem.
 
-Bài sau em sẽ cho servo quay.
+Bài 5 em sẽ cho servo quay.

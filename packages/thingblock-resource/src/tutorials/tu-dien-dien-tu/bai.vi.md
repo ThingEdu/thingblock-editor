@@ -9,7 +9,7 @@ thoi-luong: 20
 
 ## Từ điển bằng đồ vật quen thuộc
 
-Trong các bài học, em sẽ gặp những từ lạ: **chân IO**, **đầu vào**, **I2C**, **mạch công suất**, **servo**… Bài này giải thích từng từ bằng một đồ vật em đã thấy ở nhà, ngoài đường hay trong cơ thể mình.
+Trong các bài học, em sẽ gặp những từ lạ: **chân IO**, **đầu vào**, **I2C**, **mạch công suất**, **servo**, **ngưỡng**, **Sân chơi**… Bài này giải thích từng từ bằng một đồ vật em đã thấy ở nhà, ngoài đường hay trong cơ thể mình.
 
 Bài này không chấm điểm. Em đọc từng bước, trả lời câu **Đoán trước** trong đầu, rồi bấm **Gợi ý** để xem đáp án. Quên từ nào thì mở lại bài này để tra.
 
@@ -48,7 +48,7 @@ ThingBot dùng điện nhỏ, từ pin hoặc từ dây USB nối máy tính, n�
 
 ## Chân IO: dây thần kinh có số
 
-Bộ não nối ra ngoài bằng nhiều sợi dây gọi là **chân**. Mỗi chân có một số riêng: **IO0**, **IO3**, **IO4**… "IO" là viết tắt của tiếng Anh *Input/Output*, nghĩa là "vào/ra".
+Bộ não nối ra ngoài bằng nhiều sợi dây gọi là **chân**. Mỗi chân có một số riêng: **IO0**, **IO3**, **IO4**… "IO" là viết tắt của tiếng Anh _Input/Output_, nghĩa là "vào/ra".
 
 - **Đời thường:** như **dây thần kinh** nối não với ngón tay. Hoặc như các ổ cắm trên ổ điện kéo dài có đánh số, mỗi ổ cắm một đồ dùng.
 - **Ở ThingBot:** nút **SW** nối vào chân **IO3**. Cảm biến cắm vào các cổng có chân **IO0/IO1** và **IO4/IO5**.
@@ -80,8 +80,8 @@ Khi khối hỏi "chân số mấy", em chỉ cần nhìn chữ in cạnh cổng
 
 Có hai kiểu tin mà não đọc được:
 
-- **Kiểu bật/tắt** (gọi là **số**, tiếng Anh *digital*): chỉ có hai giá trị, như **công tắc đèn**: bật hoặc tắt, không có "nửa bật".
-- **Kiểu mức** (gọi là **tương tự**, tiếng Anh *analog*): có nhiều mức liền nhau, như **núm vặn âm lượng** của loa hay **vòi nước** mở to mở nhỏ.
+- **Kiểu bật/tắt** (gọi là **số**, tiếng Anh _digital_): chỉ có hai giá trị, như **công tắc đèn**: bật hoặc tắt, không có "nửa bật".
+- **Kiểu mức** (gọi là **tương tự**, tiếng Anh _analog_): có nhiều mức liền nhau, như **núm vặn âm lượng** của loa hay **vòi nước** mở to mở nhỏ.
 
 **Ở ThingBot:** nút **SW** là kiểu bật/tắt. Một điều lạ: khi em bấm, chân IO3 xuống **0 V**. Khối đọc nút đã tính sẵn chuyện này và đảo lại, nên bấm thì khối trả về **đúng**, em không cần nhớ.
 
@@ -96,7 +96,7 @@ Có hai kiểu tin mà não đọc được:
 
 Đèn và động cơ thật ra chỉ biết **bật** hoặc **tắt**. Vậy sao đèn L1 sáng được 30%?
 
-Mạch bật rồi tắt đèn **rất nhanh**, rất nhiều lần mỗi giây. Mắt em không kịp thấy chớp, chỉ thấy đèn mờ đi. Bật càng lâu trong mỗi lần chớp thì đèn càng sáng, động cơ càng quay nhanh. Người ta gọi cách này là **PWM**.
+Mạch bật rồi tắt đèn **rất nhanh**, rất nhiều lần mỗi giây. Mắt em không kịp thấy chớp, chỉ thấy đèn mờ đi. Bật càng lâu trong mỗi lần chớp thì đèn càng sáng, động cơ càng quay nhanh. Người ta gọi cách này là **PWM**. Một lần bật cộng một lần tắt gọi là một **chu kỳ**.
 
 - **Đời thường:** phim hoạt hình là nhiều bức ảnh đứng yên lật thật nhanh, mắt thấy như đang chạy. Hay em đạp xe: đạp một chút rồi thả, đạp nhiều hơn thì xe đi nhanh hơn.
 - **Ở ThingBot:** khối ghi độ sáng hay tốc độ bằng **%**. 0% là tắt hẳn, 100% là bật liên tục. Bên trong, mạch chia mỗi lần chớp thành 4096 phần nhỏ để chỉnh thật mịn.
@@ -119,7 +119,7 @@ Giờ em tự làm đèn mờ trên mạch ảo ở khung **Mô phỏng**:
 
 Đèn L1 sáng nhưng mờ hơn lúc 100%. Đó chính là "chớp thật nhanh": đèn bật khoảng 30% thời gian, tắt 70% còn lại.
 
-> gợi ý: Ô đầu của khối **đặt đèn** chọn đèn **1**, ô sau là độ sáng. Gõ **30** vào ô sau.
+> gợi ý: Ô đầu của khối **đặt đèn** chọn **L1**, ô sau là độ sáng. Gõ **30** vào ô sau.
 > gợi ý: Đổi thử thành 5 rồi 100 và bấm Chạy lại để so độ sáng.
 
 kiểm: L1 sáng
@@ -142,6 +142,22 @@ Chữ "0x" chỉ là cách người lập trình viết số, em đọc "0x3C" n
 
 > gợi ý: Đáp án: **cả hai cùng trả lời, tin bị lẫn**. Như hai bạn cùng tên trong lớp: cô gọi, hai bạn đứng lên một lúc. Mỗi thiết bị I2C phải có số nhà riêng.
 
+## Màn hình OLED: điểm ảnh và con trỏ
+
+Màn **OLED** là màn nhỏ cắm vào cổng I2C. Nó gồm **128 × 64** chấm sáng gọi là **điểm ảnh**: 128 chấm theo chiều ngang, 64 chấm theo chiều dọc. Màn chỉ có chữ **không dấu**.
+
+- **Đời thường:** như bảng đèn chạy chữ ở hiệu thuốc, hay bảng tỉ số sân bóng: mỗi chữ ghép từ nhiều bóng đèn nhỏ.
+- **Ở ThingBot:** vị trí viết bằng hai số, **x** đếm từ mép trái, **y** đếm từ mép trên; (0, 0) là góc trên bên trái. Chữ cỡ nhỏ **6x8** cao 8 điểm ảnh, cỡ **12x16** cao 16.
+
+**Con trỏ** là chỗ đầu bút đang đặt trên màn; khối **đặt con trỏ OLED x: … y: …** nhấc bút đặt sang chỗ mới. Khối **OLED in** viết vào **bản nháp** trong bộ nhớ, còn **hiện lên màn OLED** chép cả bản nháp ra màn một lần, nên màn không bị nháy.
+
+**Đoán trước:** em in chữ nhưng quên khối **hiện lên màn OLED**. Màn hình hiện gì?
+
+- Vẫn hiện chữ
+- Không hiện gì
+
+> gợi ý: Đáp án: **không hiện gì**. Chữ còn nằm trên bản nháp, chưa được chép ra màn. Như em viết nháp xong mà chưa chép lên bảng.
+
 ## Mạch công suất: cái loa phóng thanh
 
 Não chỉ "nói thầm": dòng điện ra từ chip rất nhỏ, không đủ làm quay động cơ hay kêu còi. **Mạch công suất** nghe lời thầm của não qua hai dây I2C, rồi đẩy điện đủ mạnh ra đèn, còi, động cơ và servo.
@@ -149,7 +165,7 @@ Não chỉ "nói thầm": dòng điện ra từ chip rất nhỏ, không đủ l
 - **Đời thường:** cô giáo nói nhỏ vào micro, **loa phóng thanh** làm cả sân trường nghe thấy. Hay như cần cẩu: người lái chỉ gạt một cần nhỏ, máy nâng cả khối bê tông.
 - **Ở ThingBot:** đèn **L1**, **L2**, **còi**, cổng động cơ **M1–M4** và cổng servo **S1–S5** đều do mạch công suất cấp điện.
 
-Vì thế mọi chương trình ThingBot đều có khối **khởi động ThingBot**: khối này đánh thức mạch công suất. Thiếu nó, đèn và động cơ đứng im dù chương trình đúng.
+Vì thế các bài ThingBot đều mở đầu bằng khối **khởi động ThingBot**: khối này đánh thức mạch công suất. Các khối đèn, động cơ, servo cũng tự đánh thức được mạch này, nhưng đặt khối đó đầu tiên là thói quen tốt: nhìn vào là biết chương trình chạy trên ThingBot.
 
 **Đoán trước:** robot thật đã nạp chương trình, đèn sáng, nhưng bánh xe không quay. Em kiểm tra gì trước?
 
@@ -186,13 +202,46 @@ Cảm biến siêu âm có hai "mắt" tròn. Một bên **kêu** một tiếng 
 
 > gợi ý: Đáp án: **có thể sai**. Tường cứng dội tiếng tốt, còn rèm, gối, thú bông hút bớt tiếng. Khi thử robot tránh vật cản, em nên dùng hộp giấy cứng làm vật cản.
 
-## Biến, vòng lặp và sự kiện
+## Mắt hồng ngoại và ngưỡng
 
-Ba từ này không phải linh kiện, nhưng bài nào cũng gặp:
+**Mắt hồng ngoại** có một bóng đèn hồng ngoại (mắt người không thấy) và một "con ngươi" đo ánh sáng hắt lại. Đồ màu sáng hắt lại nhiều, đồ màu tối "nuốt" ánh sáng.
+
+- **Đời thường:** em rọi đèn pin vào tờ giấy trắng thì chói, rọi vào áo đen thì không. Mắt hồng ngoại cũng chỉ thấy "hắt nhiều hay ít", **không thấy màu**.
+- **Ở ThingBot:** mắt cắm ở cổng cảm biến, chân tín hiệu **IO4**. Khối **đọc mắt hồng ngoại 1 · IO4** (nhóm **Cobot IR**) cho một số từ **0 đến 4095**: bóng trắng khoảng 3500, bóng đen khoảng 300. Xe Cobot có bốn mắt như vậy dưới gầm để dò vạch.
+
+**Ngưỡng** là con số dùng để chia đôi: trên ngưỡng là "sáng", dưới ngưỡng là "tối". Như vạch mức trên cốc đo: nước trên vạch là đủ, dưới vạch là thiếu. Các bài dùng ngưỡng **1500**.
+
+Muốn biết đỏ hay vàng thì cần **cảm biến màu**: nó có ba "con ngươi" đỏ, lục, lam, giống ba loại tế bào nhìn màu trong mắt người.
+
+**Đoán trước:** mắt đọc được 2300. Với ngưỡng 1500, não coi đó là sáng hay tối?
+
+- Sáng
+- Tối
+
+> gợi ý: Đáp án: **sáng**, vì 2300 lớn hơn 1500. Trên robot thật số đọc đổi theo khoảng cách và đèn trong phòng, nên kỹ sư đo từng vật rồi mới chọn ngưỡng.
+
+## Tay cầm PS2 và bộ thu
+
+**Tay cầm PS2** gửi lệnh bằng **sóng radio**, không cần dây. Một **bộ thu** nhỏ cắm ở cổng PS2 trên mạch nghe sóng đó rồi báo cho não.
+
+- **Đời thường:** như điều khiển tivi: em bấm ở xa, tivi có "tai" nhận lệnh. Bộ thu là đôi tai của robot.
+- **Ở ThingBot:** khối **khởi động tay cầm PS2 trên ThingBot** nối não với bộ thu. Trong vòng lặp, khối **đọc dữ liệu tay cầm PS2** hỏi bộ thu "nút nào đang bấm?", rồi khối **nút lên của PS2 đang bấm?** trả lời đúng hoặc sai. Mỗi nút chỉ có bấm hay không, kiểu bật/tắt.
+
+**Đoán trước:** em quên khối **đọc dữ liệu tay cầm PS2** trong vòng lặp. Bấm nút thì sao?
+
+- Xe vẫn chạy
+- Xe không phản ứng
+
+> gợi ý: Đáp án: **xe không phản ứng**. Não không hỏi thì bộ thu không báo, não cứ tưởng chưa ai bấm.
+
+## Biến, vòng lặp, sự kiện và điều kiện
+
+Bốn từ này không phải linh kiện, nhưng bài nào cũng gặp:
 
 - **Biến** là **cái hộp có dán tên** để não nhớ một con số: số điểm, số lần bấm nút. Như bảng tỉ số trên sân bóng, đổi số mỗi khi có bàn thắng.
-- **Vòng lặp** làm đi làm lại một việc. **khi Arduino khởi động** chạy **một lần** lúc bật máy, như em đánh răng buổi sáng. **vòng lặp Arduino** chạy **mãi mãi**, như kim đồng hồ quay hết vòng lại quay tiếp.
-- **Sự kiện** là "khi có chuyện gì đó thì làm": **khi** có người bấm chuông **thì** chuông kêu.
+- **Vòng lặp** làm đi làm lại một việc. **khi Arduino khởi động** chạy **một lần** lúc bật máy, như em đánh răng buổi sáng. **vòng lặp Arduino** chạy **mãi mãi**, như kim đồng hồ quay hết vòng lại quay tiếp. Ở bài Camera AI, khối **liên tục** cũng lặp mãi như vậy.
+- **Sự kiện** là "khi có chuyện gì đó thì làm": **khi** có người bấm chuông **thì** chuông kêu. Khối có mũ tròn ở trên (**khi Arduino khởi động**, **khi gật đầu**…) gọi là **khối mũ**: nó tự chạy khi chuyện đó xảy ra.
+- **Điều kiện** là câu hỏi chỉ có **đúng** hoặc **sai**: "nút có đang bấm không?". Khối **nếu … thì … nếu không thì** hỏi câu đó: đúng thì làm nhánh **thì**, sai thì làm nhánh **nếu không thì**.
 
 **Đoán trước:** muốn đèn nhấp nháy suốt đến khi tắt robot, em đặt khối bật/tắt đèn ở đâu?
 
@@ -203,10 +252,10 @@ Ba từ này không phải linh kiện, nhưng bài nào cũng gặp:
 
 ## Camera AI: máy học nhìn bàn tay
 
-**Trí tuệ nhân tạo (AI)** ở đây là một chương trình đã **học** từ rất nhiều ảnh bàn tay, nên nhìn qua webcam là nó tìm được bàn tay em. Nó đánh dấu **21 điểm** trên mỗi bàn tay: đầu ngón, các đốt ngón và cổ tay, rồi đoán em đang **nắm tay**, **xòe tay** hay **giơ ngón cái**.
+**Trí tuệ nhân tạo (AI)** ở đây là một chương trình đã **học** từ rất nhiều ảnh bàn tay, nên nhìn qua webcam là nó tìm được bàn tay em. Nó đánh dấu **21 điểm mốc** trên mỗi bàn tay: đầu ngón, các khớp ngón và cổ tay, rồi đoán **cử chỉ** (dáng bàn tay): **nắm tay**, **xoè tay**, **chữ V** hay **ngón cái lên**. Một AI thứ hai tên **Pose** (tư thế) tìm **33 điểm** trên người em: mũi, mắt, vai, cổ tay… để biết đầu em ở đâu, nghiêng hay gật.
 
 - **Đời thường:** em nhận ra bạn thân giữa đám đông vì đã nhìn mặt bạn rất nhiều lần. AI cũng vậy: nó không "hiểu" bàn tay như em, nó chỉ đã xem đủ nhiều ảnh để đoán đúng. Mở khóa điện thoại bằng khuôn mặt cũng là một kiểu AI như thế.
-- **Ở ThingBlock:** nhóm khối **Camera AI** dùng webcam của máy tính và vẽ trò chơi lên bảng **Sân chơi**. Hình ảnh chỉ xử lý trên máy em, không gửi đi đâu. Nhóm khối này nằm trong thư viện khối mở rộng khi **chưa chọn mạch**.
+- **Ở ThingBlock:** nhóm khối **Camera AI** dùng webcam của máy tính và vẽ trò chơi lên khung **Sân chơi**. Sân chơi là tấm bản đồ: x từ -240 (trái) đến 240 (phải), y từ -180 (dưới) đến 180 (trên). Khối **đặt trọng lực** kéo mọi vật rơi xuống như quả táo rụng. Hình ảnh chỉ xử lý trên máy em, không gửi đi đâu. Bài Camera AI chọn **không cần mạch**.
 
 **Đoán trước:** phòng tối, tay em đeo găng đen. AI có nhận ra tay dễ không?
 
@@ -215,14 +264,31 @@ Ba từ này không phải linh kiện, nhưng bài nào cũng gặp:
 
 > gợi ý: Đáp án: **khó hơn**. AI chỉ giỏi với những gì giống ảnh nó đã học. Ngồi chỗ đủ sáng, để cả bàn tay trong khung hình thì AI đoán chính xác hơn.
 
+## Mô phỏng và nạp chương trình
+
+**Mô phỏng** là mạch ThingBot **ảo** trong khung **Mô phỏng**. Bấm **Chạy** là chương trình chạy trên mạch ảo: em giữ nút SW, chọn quả bóng, giữ nút tay cầm bằng chuột và xem đèn, động cơ, servo làm theo.
+
+- **Đời thường:** như phi công tập trong buồng lái giả trước khi lái máy bay thật. Sai thì làm lại, không hỏng gì.
+- **Ở ThingBlock:** mạch ảo luôn "đủ pin" và dây luôn cắm đúng. Mạch thật thì không: pin yếu, dây lỏng, cắm nhầm cổng đều làm robot đứng im dù chương trình đúng.
+
+**Nạp chương trình** (nút **Nạp code**) là chép chương trình qua dây USB xuống mạch thật, để robot chạy không cần máy tính. Trước khi cắm hay rút dây cảm biến, servo trên mạch thật, em **rút pin** hoặc tắt công tắc nguồn.
+
+**Đoán trước:** chương trình chạy đúng trên mạch ảo, nạp xuống robot thật thì động cơ không quay. Em xem gì trước?
+
+- Pin, công tắc nguồn và dây cắm
+- Viết lại chương trình
+
+> gợi ý: Đáp án: **pin, công tắc nguồn và dây cắm**. Chương trình đã chạy đúng trên mạch ảo. Mạch ảo không bao giờ hết pin hay cắm nhầm, nên khác biệt phải nằm ở phần cứng.
+
 ## Xong rồi
 
 Giờ em đã có một cuốn từ điển nhỏ:
 
 - **Chip** là bộ não, **chân IO** là dây thần kinh có số.
 - **Đầu vào** báo tin cho não, **đầu ra** nhận lệnh từ não.
-- **I2C** là hai sợi dây và các số nhà. **Mạch công suất** là cái loa phóng thanh của não.
+- **I2C** là hai sợi dây và các số nhà. **Mạch công suất** là cái loa phóng thanh của não. **OLED** là bảng chữ 128 × 64 điểm ảnh.
 - **Động cơ** quay mãi, **servo** quay tới một góc rồi đứng lại.
-- **Cảm biến siêu âm** đo khoảng cách như con dơi. **Camera AI** đã học nhìn bàn tay.
+- **Cảm biến siêu âm** đo khoảng cách như con dơi. **Mắt hồng ngoại** thấy sáng hay tối, **ngưỡng** là vạch chia. **Tay cầm PS2** nói với robot qua bộ thu.
+- **Camera AI** đã học nhìn bàn tay và dáng người, vẽ trò chơi lên **Sân chơi**. **Mô phỏng** là mạch ảo để tập trước khi **nạp chương trình** xuống mạch thật.
 
 Bài tiếp theo: mở **ThingBot Sim 1: Làm quen ThingBot** để tự bật đèn đầu tiên trên mạch ảo.
