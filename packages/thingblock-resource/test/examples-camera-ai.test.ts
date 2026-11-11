@@ -150,7 +150,7 @@ describe('Camera AI examples', () => {
       fields?: Partial<Record<string, unknown[]>>
     }[]
     expect(blocks.some((b) => b.opcode === 'cameraAi_spawn' && b.fields?.KIND?.[0] === 'tre')).toBe(true)
-    expect(p.targets.flatMap((t) => Object.values(t.comments).map((c) => c.text))[0]).toMatch(/rô bốt Tre/)
+    expect(p.targets.flatMap((t) => Object.values(t.comments).map((c) => c.text))[0]).toMatch(/robot Tre/)
   })
 
   it.each(index.examples.map((e) => e.file))('%s uses only blocks the VM runs', async (file) => {

@@ -39,15 +39,16 @@ const song = ({ id, title, level = 1, bpm, origin, description, labels, tune }) 
   description,
   note:
     `Âm nhạc · ${title}\n` +
-    'Thiệp chúc mừng có nhạc, đồ chơi biết hát đều phát nhạc bằng một chiếc còi nhỏ giống còi trên mạch ThingBot. ' +
+    `Nhiệm vụ: làm đồ chơi biết hát, như thiệp sinh nhật có nhạc. Còi nhỏ trên mạch ThingBot chơi bài "${title}".\n` +
     'Não ra lệnh, mạch công suất cấp điện cho còi.\n' +
-    'Mỗi khối «chơi nốt» là một nốt nhạc: tên nốt viết bằng chữ cái (C là Đô, D là Rê, E là Mi, F là Fa, G là Son, A là La, B là Si), ' +
-    'quãng (số càng lớn nốt càng cao) và độ dài tính bằng phách. Phách là một tiếng đếm đều như "một, hai, một, hai". ' +
-    `Nhịp (tempo) ${bpm} BPM nghĩa là ${bpm} phách mỗi phút, nên mỗi phách dài ${(60 / bpm).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} giây. ` +
-    'Thử đổi nhịp, đổi nốt hoặc thêm câu nhạc của riêng em!',
+    'Mỗi khối «chơi nốt» là một nốt nhạc: tên nốt (C là Đô, D là Rê, E là Mi, F là Fa, G là Son, A là La, B là Si), ' +
+    'quãng (số càng lớn nốt càng cao) và độ dài tính bằng phách.\n' +
+    'Phách là một tiếng đếm đều, như "một, hai, một, hai". ' +
+    `Nhịp ${bpm} BPM là ${bpm} phách mỗi phút, nên mỗi phách dài ${(60 / bpm).toLocaleString('vi-VN', { maximumFractionDigits: 2 })} giây.\n` +
+    'Thử: đổi nhịp, đổi nốt, hoặc thêm câu nhạc của riêng em.',
   variables: [],
   stacks: [
-    whenBegin(init(), note(`Nhịp ${bpm} BPM: ${bpm} phách mỗi phút. Số càng lớn nhạc càng nhanh.`, tempo(bpm))),
+    whenBegin(init(), note(`Nhịp ${bpm} BPM: ${bpm} phách mỗi phút. Số càng lớn, nhạc càng nhanh.`, tempo(bpm))),
     whenLoop(...melody(labels, tune), note('Nghỉ 2 phách rồi chơi lại từ đầu.', rest(2))),
   ],
 })

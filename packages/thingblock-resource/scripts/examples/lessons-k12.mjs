@@ -63,7 +63,16 @@ const K12 = 'K12 cơ bản'
 const FANROC = 'FanRoc'
 
 // Wait for one full press of the SW button (press, then release) so one press counts once.
-const onePress = () => [waitUntil(pressed()), waitUntil(not(pressed())), wait(0.05)]
+const onePress = () => [
+  note('Đợi em bấm, rồi đợi em nhả tay. Giữ nút lâu cũng chỉ tính một lần.', waitUntil(pressed())),
+  waitUntil(not(pressed())),
+  wait(0.05),
+]
+
+/** The OLED hardware line every lesson with the screen repeats. */
+const OLED = 'Màn OLED (cắm cổng I2C)'
+/** The PS2 hardware line. */
+const PS2 = 'Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)'
 
 // Drive one wheel with a signed speed: the motor block takes 0..100, so the sign picks the direction.
 const driveWheel = (m, name) =>
@@ -80,18 +89,18 @@ export const K12_LESSONS = [
     level: 1,
     source: 'K1-M9 (#9) Đèn hội trăng rằm',
     hardware: ['Đèn L1, L2 có sẵn trên mạch'],
-    description: 'Đèn lồng Trung thu: hai đèn thay nhau sáng; học khối «lặp lại» có đếm số lần, đổi nhịp nhanh chậm.',
-    note: 'Bài 1 · Đèn hội trăng rằm (K1-M9)\nĐêm Trung thu, đèn lồng đung đưa lúc nhanh lúc chậm. Ở đây hai đèn L1, L2 trên mạch thay nhau sáng như vậy. Não ThingBot (chip ESP32-C3) ra lệnh, còn mạch công suất cấp điện cho đèn sáng.\nKhối «khi Arduino khởi động» chạy một lần lúc bật máy. Khối «vòng lặp Arduino» chạy xong lại quay về đầu, chạy mãi. Khối «lặp lại 6» làm cùng một việc đúng 6 lần rồi đi tiếp. Đổi số lần lặp và số giây đợi để đổi điệu múa của đèn.',
+    description: 'Đèn lồng Trung thu: hai đèn thay nhau sáng, lúc nhanh lúc chậm, bằng khối «lặp lại» có đếm số lần.',
+    note: 'Bài 1 · Đèn hội trăng rằm (K1-M9)\nNhiệm vụ: làm đèn lồng Trung thu. Hai đèn L1, L2 trên mạch thay nhau sáng, lúc nhanh lúc chậm.\nNão của ThingBot là chip ESP32-C3. Não ra lệnh, mạch công suất cấp điện cho đèn sáng.\nKhối «khi Arduino khởi động» chạy một lần lúc bật máy. Khối «vòng lặp Arduino» chạy xong lại quay về đầu, chạy mãi.\nKhối «lặp lại 6» làm cùng một việc đúng 6 lần rồi mới đi tiếp.\nThử: đổi số lần lặp và số giây đợi để đèn múa theo điệu của em.',
     variables: [],
     stacks: [
       whenBegin(init()),
       whenLoop(
         note(
-          'Nháy nhanh 6 lần: L1 sáng thì L2 tắt, rồi đổi ngược lại. Đợi 0.2 giây nên chớp nhanh.',
+          'Nháy nhanh 6 lần: L1 sáng thì L2 tắt, rồi đổi ngược lại. Đợi 0,2 giây nên chớp nhanh.',
           repeat(6, led(1, 100), led(2, 0), wait(0.2), led(1, 0), led(2, 100), wait(0.2)),
         ),
         note(
-          'Rồi đung đưa chậm 3 lần: hai đèn cùng sáng, cùng tắt, mỗi lần 0.8 giây.',
+          'Rồi đung đưa chậm 3 lần: hai đèn cùng sáng, cùng tắt, mỗi lần 0,8 giây.',
           repeat(3, led(1, 100), led(2, 100), wait(0.8), led(1, 0), led(2, 0), wait(0.8)),
         ),
       ),
@@ -104,13 +113,16 @@ export const K12_LESSONS = [
     level: 1,
     source: 'K2-M10 (#20) Người hùng quanh em',
     hardware: ['Còi có sẵn trên mạch', 'Đèn L1, L2'],
-    description: 'Còi xe cứu hỏa hai nốt cao thấp xen nhau, đèn chớp theo nhịp nhạc.',
-    note: 'Bài 2 · Còi báo động (K2-M10)\nXe cứu hỏa, xe cứu thương kêu hai nốt cao, thấp xen nhau để mọi người nghe từ xa và nhường đường. Còi trên mạch phát được nốt nhạc; não ra lệnh, mạch công suất cấp điện cho còi và đèn.\nNhịp (tempo) là độ nhanh của bản nhạc, đo bằng số phách mỗi phút (BPM). Phách là một tiếng đếm đều như "một, hai, một, hai". Nhịp càng lớn thì phách càng ngắn, nhạc càng nhanh. Thử đổi nhịp và nốt để làm tiếng còi của riêng em.',
+    description: 'Còi xe cứu hỏa: hai nốt cao, thấp kêu xen nhau, đèn chớp theo nhịp.',
+    note: 'Bài 2 · Còi báo động (K2-M10)\nNhiệm vụ: làm còi xe cứu hỏa. Hai nốt cao, thấp kêu xen nhau để mọi người nghe từ xa và nhường đường. Đèn chớp theo nhịp.\nCòi trên mạch phát được nốt nhạc. Não ra lệnh, mạch công suất cấp điện cho còi và đèn.\nPhách là một tiếng đếm đều, như "một, hai, một, hai". Nhịp (BPM) là số phách trong một phút. Nhịp càng lớn, nhạc càng nhanh.\nThử: đổi nhịp và đổi nốt để làm tiếng còi của riêng em.',
     variables: [],
     stacks: [
       whenBegin(init(), note('Nhịp 120 BPM: 120 phách mỗi phút, nên mỗi phách dài nửa giây.', tempo(120))),
       whenLoop(
-        repeat(4, led(1, 100), led(2, 0), playNote('A', 5, 0.5), led(1, 0), led(2, 100), playNote('E', 5, 0.5)),
+        note(
+          'Kêu 4 lượt: nốt La cao (A5) nửa phách với đèn L1, rồi nốt Mi (E5) nửa phách với đèn L2.',
+          repeat(4, led(1, 100), led(2, 0), playNote('A', 5, 0.5), led(1, 0), led(2, 100), playNote('E', 5, 0.5)),
+        ),
         led(1, 0),
         led(2, 0),
         note('Nghỉ 2 phách (im lặng 1 giây) rồi kêu lại.', rest(2)),
@@ -123,13 +135,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K3-M4 (#24) Đèn giao thông ngã tư',
-    hardware: [
-      'Đèn L1 (đèn đỏ), L2 (đèn xanh)',
-      'Nút SW (nút xin đường cho người đi bộ)',
-      'Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)',
-    ],
+    hardware: ['Đèn L1 (đèn đỏ), L2 (đèn xanh)', 'Nút SW (nút xin đường cho người đi bộ)', OLED],
     description: 'Đèn xanh, đỏ ở ngã tư có đếm ngược trên màn OLED; bấm SW để xin đường cho người đi bộ.',
-    note: 'Bài 3 · Đèn giao thông ngã tư (K3-M4)\nỞ ngã tư có cột đèn đếm ngược số giây, và nút để người đi bộ bấm xin qua đường. L1 là đèn đỏ, L2 là đèn xanh. Đang đèn xanh mà bấm nút SW thì đèn chuyển đỏ sớm.\nMàn OLED cắm cổng I2C: hai sợi dây để não nói chuyện với màn. Biến "giây" là một cái hộp có tên để não nhớ một con số: số giây còn lại. Mỗi giây, hộp bớt đi 1.',
+    note: 'Bài 3 · Đèn giao thông ngã tư (K3-M4)\nNhiệm vụ: làm cột đèn ngã tư có đếm ngược, và nút cho người đi bộ xin qua đường.\nL1 là đèn đỏ, L2 là đèn xanh. Đang đèn xanh mà bấm nút SW thì đèn đỏ tới sớm hơn.\nMàn OLED cắm cổng I2C: hai sợi dây để não "nói chuyện" với màn, như hai người dùng chung một sợi dây điện thoại lon.\nBiến là một cái hộp có tên để não nhớ một con số. Biến "giây" nhớ số giây còn lại; mỗi giây, hộp bớt đi 1.\nThử: đổi 10 và 8 thành số giây của ngã tư gần nhà em.',
     variables: [{ name: 'giây', type: 'int' }],
     stacks: [
       whenBegin(init(), oledInit(), oledText(4)),
@@ -137,15 +145,18 @@ export const K12_LESSONS = [
         note('Đèn xanh 10 giây. Bấm SW thì chỉ còn 3 giây cho xe kịp dừng.', led(2, 100)),
         led(1, 0),
         set('giây', 10),
-        repeatUntil(
-          eq(v('giây'), 0),
-          ifThen(and(pressed(), gt(v('giây'), 3)), set('giây', 3)),
-          oledClear(),
-          oledCursor(40, 16),
-          oledPrint(v('giây')),
-          oledRefresh(),
-          wait(1),
-          change('giây', -1),
+        note(
+          'Lặp cho tới khi "giây" bằng 0: mỗi lượt in số lên màn, đợi 1 giây, rồi bớt 1.',
+          repeatUntil(
+            eq(v('giây'), 0),
+            ifThen(and(pressed(), gt(v('giây'), 3)), set('giây', 3)),
+            oledClear(),
+            oledCursor(40, 16),
+            oledPrint(v('giây')),
+            oledRefresh(),
+            wait(1),
+            change('giây', -1),
+          ),
         ),
         note('Đèn đỏ 8 giây cho người đi bộ.', led(2, 0)),
         led(1, 100),
@@ -171,12 +182,12 @@ export const K12_LESSONS = [
     hardware: ['Nút SW (lưng thú cưng để vuốt ve)', 'Đèn L1, L2', 'Còi'],
     description:
       'Thú cưng điện tử: đếm số lần em vuốt (bấm SW) bằng biến; đủ 3 lần thì thú cưng vui, nháy đèn và hát.',
-    note: 'Bài 4 · Robot thú cưng (K1-M4)\nThú cưng điện tử, chó robot đồ chơi biết vui khi được vuốt ve. Ở đây mỗi lần em bấm nút SW là một lần vuốt. Nút SW giống làn da: nó báo cho não biết "có người chạm".\nĐể đếm, não phải nhớ. Biến "vuốt" là một cái hộp có tên, chứa một con số; mỗi lần bấm, số trong hộp tăng 1. Đủ 3 lần, thú cưng vui: đèn nháy, hát một câu nhạc, rồi hộp về 0 để đếm lại.',
+    note: 'Bài 4 · Robot thú cưng (K1-M4)\nNhiệm vụ: làm chú chó robot biết vui khi được vuốt ve. Mỗi lần em bấm nút SW là một lần vuốt.\nNút SW giống làn da: nó báo cho não biết "có người chạm".\nBiến là một cái hộp có tên để não nhớ một con số. Biến "vuốt" đếm số lần bấm.\nĐủ 3 lần, thú cưng vui: đèn nháy, còi hát một câu, rồi hộp về 0 để đếm lại.\nThử: đổi 3 thành 5, hay đổi câu hát.',
     variables: [{ name: 'vuốt', type: 'int' }],
     stacks: [
       whenBegin(init(), set('vuốt', 0)),
       whenLoop(
-        note('Đợi em bấm, rồi đợi em nhả tay. Nhờ vậy giữ nút lâu cũng chỉ đếm một lần.', waitUntil(pressed())),
+        note('Đợi em bấm, rồi đợi em nhả tay. Giữ nút lâu cũng chỉ tính một lần.', waitUntil(pressed())),
         waitUntil(not(pressed())),
         change('vuốt', 1),
         led(1, 100),
@@ -184,7 +195,10 @@ export const K12_LESSONS = [
         led(1, 0),
         ifThen(
           eq(v('vuốt'), 3),
-          note('Thú cưng vui!', repeat(3, led(1, 100), led(2, 100), wait(0.15), led(1, 0), led(2, 0), wait(0.15))),
+          note(
+            'Đủ 3 lần: thú cưng vui, hai đèn nháy 3 lần rồi hát Đô Mi Son.',
+            repeat(3, led(1, 100), led(2, 100), wait(0.15), led(1, 0), led(2, 0), wait(0.15)),
+          ),
           playNote('C', 5, 0.5),
           playNote('E', 5, 0.5),
           playNote('G', 5, 1),
@@ -199,9 +213,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K2-M4 (#14) Đồng hồ đếm giờ chơi',
-    hardware: ['Nút SW', 'Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn; thay cho ma trận LED)', 'Còi'],
+    hardware: ['Nút SW', OLED, 'Còi'],
     description: 'Đồng hồ đếm giờ chơi: bấm SW để đếm ngược 30 giây trên màn OLED; hết giờ thì còi kêu.',
-    note: 'Bài 5 · Đồng hồ đếm giờ chơi (K2-M4)\nLò vi sóng, đồng hồ bấm giờ thể thao đều đếm ngược rồi kêu báo. Bấm nút SW để bắt đầu.\nBiến "còn lại" là cái hộp có tên để não nhớ số giây còn lại. Mỗi giây hộp bớt 1, số mới hiện trên màn OLED. Màn OLED cắm cổng I2C: hai sợi dây để não nói chuyện với màn. Khối «OLED in» chỉ viết vào giấy nháp; khối «hiện lên màn OLED» mới chép nháp lên màn thật. Đổi 30 thành số giây em muốn.',
+    note: 'Bài 5 · Đồng hồ đếm giờ chơi (K2-M4)\nNhiệm vụ: làm đồng hồ đếm ngược như lò vi sóng. Bấm SW để bắt đầu, hết giờ thì còi kêu.\nBiến là một cái hộp có tên để não nhớ một con số. Biến "còn lại" nhớ số giây còn lại; mỗi giây hộp bớt 1.\nMàn OLED cắm cổng I2C: hai sợi dây để não "nói chuyện" với màn.\nKhối «OLED in» chỉ viết vào giấy nháp. Khối «hiện lên màn OLED» mới chép nháp lên màn thật.\nThử: đổi 30 thành số giây em muốn.',
     variables: [{ name: 'còn lại', type: 'int' }],
     stacks: [
       whenBegin(init(), oledInit()),
@@ -237,14 +251,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K4-M4 (#34) Nhiệt kế đeo tay',
-    hardware: [
-      'Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)',
-      'Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)',
-      'Đèn L1',
-      'Còi',
-    ],
+    hardware: ['Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)', OLED, 'Đèn L1', 'Còi'],
     description: 'Nhiệt kế báo nóng: đọc nhiệt độ, hiện lên OLED; nóng hơn ngưỡng thì đèn sáng và còi báo.',
-    note: 'Bài 6 · Nhiệt kế đeo tay (K4-M4)\nNhiệt kế điện tử đo sốt, máy điều hòa biết phòng nóng hay mát đều nhờ cảm biến nhiệt độ. Cảm biến DHT11 là "làn da" cảm nhận nóng lạnh của robot. Nó nối vào chân IO4: chân là sợi dây nối từ não ra cổng cắm, mỗi chân có một số.\nCứ 2 giây, chương trình đọc nhiệt độ, cất vào biến "nhiệt độ" (cái hộp có tên để não nhớ một số) rồi so với "ngưỡng". Ngưỡng là cái mốc để quyết định: nóng hơn 32 độ thì báo. Thử đổi ngưỡng rồi cầm cảm biến trong lòng bàn tay.',
+    note: 'Bài 6 · Nhiệt kế đeo tay (K4-M4)\nNhiệm vụ: làm nhiệt kế báo nóng, như máy điều hòa biết phòng nóng hay mát. Nóng quá thì đèn sáng, còi kêu.\nCảm biến DHT11 là "làn da" cảm nhận nóng lạnh của robot. Nó cắm cổng cảm biến, dây tín hiệu nối chân IO4. Chân là sợi dây nối từ não ra cổng cắm, mỗi chân có một số.\nMàn OLED cắm cổng I2C: hai sợi dây để não "nói chuyện" với màn.\nBiến là một cái hộp có tên để não nhớ một con số. Cứ 2 giây, não đọc nhiệt độ vào biến "nhiệt độ" rồi so với biến "ngưỡng".\nNgưỡng là cái mốc để quyết định, như vạch mức trên cốc đo: nóng hơn 32 độ thì báo.\nThử: đổi ngưỡng, rồi nắm cảm biến trong lòng bàn tay xem đèn có sáng không.',
     variables: [
       { name: 'nhiệt độ', type: 'float' },
       { name: 'ngưỡng', type: 'int' },
@@ -275,14 +284,10 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K6-M4 (#54) Trạm khí tượng của em (thay K6-M2: chưa có khối đọc quang trở)',
-    hardware: [
-      'Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)',
-      'Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)',
-      'Đèn L1, L2',
-    ],
+    hardware: ['Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)', OLED, 'Đèn L1, L2'],
     description:
       'Trạm thời tiết mini: đo nhiệt độ và độ ẩm, hiện lên OLED kèm lời nhận xét NONG, AM UOT hay DE CHIU.',
-    note: 'Bài 7 · Trạm khí tượng (K6-M4)\nĐài khí tượng đo nhiệt độ, độ ẩm nhiều lần trong ngày để dự báo thời tiết. Độ ẩm là lượng hơi nước trong không khí: số càng lớn thì không khí càng ẩm ướt, như trước cơn mưa. Cảm biến DHT11 nối chân IO4 đo cả hai thứ. Màn OLED nối cổng I2C: hai sợi dây để não nói chuyện với màn.\nChương trình so với hai ngưỡng (mốc để quyết định): trên 32°C là NONG, độ ẩm trên 85% là AM UOT, còn lại là DE CHIU. Ghi số đo vào vở mỗi giờ để vẽ biểu đồ thời tiết của lớp.',
+    note: 'Bài 7 · Trạm khí tượng của em (K6-M4)\nNhiệm vụ: làm trạm thời tiết mini cho lớp. Đo nhiệt độ, độ ẩm, rồi nhận xét NONG, AM UOT hay DE CHIU.\nĐộ ẩm là lượng hơi nước trong không khí. Số càng lớn, không khí càng ẩm, như trước cơn mưa.\nCảm biến DHT11 cắm cổng cảm biến (dây tín hiệu ở chân IO4) đo cả hai thứ. Màn OLED cắm cổng I2C: hai sợi dây để não "nói chuyện" với màn.\nNgưỡng là cái mốc để quyết định, như vạch mức trên cốc đo. Bài này có hai ngưỡng: trên 32 độ là NONG, độ ẩm trên 85% là AM UOT.\nMàn OLED chỉ hiện được chữ không dấu.\nThử: ghi số đo vào vở mỗi giờ, rồi vẽ biểu đồ thời tiết của lớp.',
     variables: [
       { name: 'nhiệt độ', type: 'float' },
       { name: 'độ ẩm', type: 'float' },
@@ -299,7 +304,7 @@ export const K12_LESSONS = [
         oledPrint(join('Do am: ', v('độ ẩm'))),
         oledCursor(0, 40),
         note(
-          'Nhận xét: kiểm tra nóng trước, rồi đến ẩm.',
+          'Nhận xét: xét nóng trước (trên 32 độ), rồi mới xét ẩm (trên 85%). Còn lại là dễ chịu.',
           ifElse(
             gt(v('nhiệt độ'), 32),
             [oledPrint('=> NONG'), led(1, 100), led(2, 0)],
@@ -323,9 +328,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K5-M9 (#49) Bảng tin LED của lớp (thay K4-M9: chưa có khối cảm biến PIR)',
-    hardware: ['Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn; thay cho ma trận LED, LCD)', 'Nút SW'],
+    hardware: [OLED, 'Nút SW'],
     description: 'Bảng tin điện tử 3 trang tự lật sau 5 giây; bấm SW để sang trang ngay.',
-    note: 'Bài 8 · Bảng tin của lớp (K5-M9)\nỞ nhà ga, bến xe, bảng tin điện tử tự lật từng trang. Biến "trang" là cái hộp có tên để não nhớ đang hiện trang nào (1, 2 hoặc 3). Sau 5 giây, hoặc khi em bấm nút SW, bảng lật sang trang sau; qua trang 3 thì quay về trang 1.\nMàn OLED cắm cổng I2C: hai sợi dây để não nói chuyện với màn. Em sửa nội dung các trang thành tin của lớp mình (màn chỉ hiện chữ không dấu).',
+    note: 'Bài 8 · Bảng tin của lớp (K5-M9)\nNhiệm vụ: làm bảng tin điện tử như ở nhà ga. Ba trang tin tự lật sau 5 giây; bấm SW để sang trang ngay.\nBiến là một cái hộp có tên để não nhớ một con số. Biến "trang" nhớ đang hiện trang nào (1, 2 hay 3). Qua trang 3 thì về trang 1.\nBiến "đếm" đếm số lần đợi 0,1 giây. Đếm tới 50 là đủ 5 giây.\nMàn OLED cắm cổng I2C: hai sợi dây để não "nói chuyện" với màn. Màn chỉ hiện được chữ không dấu.\nThử: sửa ba trang thành tin của lớp em.',
     variables: [
       { name: 'trang', type: 'int' },
       { name: 'đếm', type: 'int' },
@@ -343,10 +348,10 @@ export const K12_LESSONS = [
         ifThen(eq(v('trang'), 2), oledPrint('Truc nhat:'), oledPrint('To 2')),
         ifThen(eq(v('trang'), 3), oledPrint('Nho mang'), oledPrint('ao mua')),
         oledRefresh(),
-        note('Chờ tối đa 5 giây (50 lần × 0,1 giây), bấm SW thì thôi chờ.', set('đếm', 0)),
+        note('Chờ tối đa 5 giây (50 lần × 0,1 giây). Bấm SW thì thôi chờ.', set('đếm', 0)),
         repeatUntil(or(pressed(), gt(v('đếm'), 49)), wait(0.1), change('đếm', 1)),
         waitUntil(not(pressed())),
-        change('trang', 1),
+        note('Sang trang sau. Qua trang 3 thì về trang 1.', change('trang', 1)),
         ifThen(gt(v('trang'), 3), set('trang', 1)),
       ),
     ],
@@ -357,9 +362,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K3-M9 (#29) Hộp mù bí ẩn',
-    hardware: ['Servo S1 làm chốt khóa (servo: động cơ quay đúng một góc rồi đứng lại)', 'Nút SW', 'Còi'],
+    hardware: ['Servo S1 làm chốt khóa', 'Nút SW', 'Còi'],
     description: 'Khóa mã bí mật: bấm SW đúng số lần bí mật thì servo mở chốt hộp.',
-    note: 'Bài 9 · Hộp mù bí ẩn (K3-M9)\nKét sắt, khóa cửa điện tử chỉ mở khi nhập đúng mã. Ở đây mã bí mật là số lần bấm SW (mặc định 3). Bấm xong thì đợi 2 giây: đúng mã thì chốt mở 5 giây rồi tự khóa, sai thì còi kêu trầm.\nServo S1 là chốt khóa. Servo là động cơ biết quay đúng một góc rồi đứng lại, như khớp tay. Biến "mã bí mật" và "số lần bấm" là hai cái hộp có tên để não nhớ hai con số, rồi so xem chúng có bằng nhau không.',
+    note: 'Bài 9 · Hộp mù bí ẩn (K3-M9)\nNhiệm vụ: làm khóa mã như két sắt. Bấm SW đúng số lần bí mật thì chốt mở.\nServo là động cơ biết quay đúng một góc rồi đứng lại, như khớp tay. Servo S1 làm chốt khóa: 0 độ là khóa, 90 độ là mở.\nBiến là một cái hộp có tên để não nhớ một con số. "mã bí mật" là số lần phải bấm (mặc định 3). "số lần bấm" đếm số lần em đã bấm.\nBấm xong, không bấm thêm trong 2 giây là não chấm. Đúng mã: chốt mở 5 giây rồi tự khóa. Sai mã: còi kêu một tiếng trầm.\nThử: đổi mã bí mật, rồi đố bạn mở hộp.',
     variables: [
       { name: 'mã bí mật', type: 'int' },
       { name: 'số lần bấm', type: 'int' },
@@ -371,7 +376,7 @@ export const K12_LESSONS = [
         set('số lần bấm', 0),
         set('chờ', 0),
         note(
-          'Đếm số lần bấm. Không bấm thêm trong 2 giây là xong.',
+          'Đếm số lần bấm. Biến "chờ" đếm số lần đợi 0,1 giây; mỗi lần bấm lại về 0. Chờ quá 20 lần (2 giây) là xong.',
           repeatUntil(
             gt(v('chờ'), 19),
             ifElse(
@@ -383,17 +388,20 @@ export const K12_LESSONS = [
         ),
         ifThen(
           gt(v('số lần bấm'), 0),
-          ifElse(
-            eq(v('số lần bấm'), v('mã bí mật')),
-            [
-              playNote('C', 5, 0.25),
-              playNote('E', 5, 0.25),
-              playNote('G', 5, 0.5),
-              moveServo(1, 90, 1),
-              wait(5),
-              moveServo(1, 0, 1),
-            ],
-            [playNote('C', 4, 1)],
+          note(
+            'Đúng mã: hát Đô Mi Son, mở chốt 5 giây rồi khóa lại. Sai mã: một nốt trầm.',
+            ifElse(
+              eq(v('số lần bấm'), v('mã bí mật')),
+              [
+                playNote('C', 5, 0.25),
+                playNote('E', 5, 0.25),
+                playNote('G', 5, 0.5),
+                moveServo(1, 90, 1),
+                wait(5),
+                moveServo(1, 0, 1),
+              ],
+              [playNote('C', 4, 1)],
+            ),
           ),
         ),
       ),
@@ -408,17 +416,23 @@ export const K12_LESSONS = [
     hardware: ['Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)', 'Servo S1 làm cánh cửa'],
     description:
       'Cửa tự động: người lại gần dưới 20 cm thì cửa mở, đi xa quá 40 cm thì cửa đóng (hai ngưỡng để cửa không đóng mở liên tục).',
-    note: 'Bài 10 · Cửa siêu thị tự mở (K6-M9)\nCửa siêu thị tự mở khi có người tới gần. Cảm biến siêu âm là "đôi mắt" đo khoảng cách: nó phát tiếng kêu rất cao (tai người không nghe được) rồi đo thời gian tiếng vang dội lại, như con dơi. Chân TRIG (IO0) ra lệnh phát tiếng, chân ECHO (IO4) nghe tiếng vang.\nNgưỡng là cái mốc để quyết định. Bài dùng HAI ngưỡng: gần hơn 20 cm thì mở, xa hơn 40 cm mới đóng. Ở giữa hai ngưỡng thì cửa giữ nguyên, nên không mở ra đóng vào liên tục. Servo S1 (động cơ quay đúng một góc rồi đứng lại) làm cánh cửa; biến "cửa mở" nhớ cửa đang mở (1) hay đóng (0).',
+    note: 'Bài 10 · Cửa siêu thị tự mở (K6-M9)\nNhiệm vụ: làm cửa tự động. Người tới gần thì cửa mở, đi xa thì cửa đóng.\nCảm biến siêu âm đo khoảng cách như con dơi: phát một tiếng kêu rất cao (tai người không nghe được) rồi đo thời gian tiếng vang dội lại. Chân TRIG (IO0) ra lệnh phát tiếng, chân ECHO (IO4) nghe tiếng vang.\nNgưỡng là cái mốc để quyết định, như vạch mức trên cốc đo. Bài này dùng hai ngưỡng: gần hơn 20 cm thì mở, xa hơn 40 cm mới đóng. Ở giữa, cửa giữ nguyên, nên không mở ra đóng vào liên tục.\nServo là động cơ biết quay đúng một góc rồi đứng lại. Servo S1 làm cánh cửa. Biến "cửa mở" nhớ cửa đang mở (1) hay đóng (0).\nThử: đổi hai ngưỡng rồi đi lại trước cửa xem.',
     variables: [
       { name: 'khoảng cách', type: 'float' },
       { name: 'cửa mở', type: 'int' },
     ],
     stacks: [
-      whenBegin(init(), set('cửa mở', 0), moveServo(1, 0, 0.5)),
+      whenBegin(init(), set('cửa mở', 0), note('Cửa đóng ở 0 độ, mở ở 90 độ.', moveServo(1, 0, 0.5))),
       whenLoop(
         set('khoảng cách', distance()),
-        ifThen(and(eq(v('cửa mở'), 0), lt(v('khoảng cách'), 20)), set('cửa mở', 1), moveServo(1, 90, 1)),
-        ifThen(and(eq(v('cửa mở'), 1), gt(v('khoảng cách'), 40)), wait(2), set('cửa mở', 0), moveServo(1, 0, 1)),
+        note(
+          'Cửa đang đóng mà có người gần hơn 20 cm: mở cửa.',
+          ifThen(and(eq(v('cửa mở'), 0), lt(v('khoảng cách'), 20)), set('cửa mở', 1), moveServo(1, 90, 1)),
+        ),
+        note(
+          'Cửa đang mở mà người đã xa hơn 40 cm: đợi 2 giây rồi đóng cửa.',
+          ifThen(and(eq(v('cửa mở'), 1), gt(v('khoảng cách'), 40)), wait(2), set('cửa mở', 0), moveServo(1, 0, 1)),
+        ),
         wait(0.1),
       ),
     ],
@@ -429,9 +443,9 @@ export const K12_LESSONS = [
     group: K12,
     level: 2,
     source: 'K4-M7 (#37) Chong chóng điện gió',
-    hardware: ['Động cơ M1 gắn cánh quạt', 'Nút SW', 'Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)'],
+    hardware: ['Động cơ M1 gắn cánh quạt', 'Nút SW', OLED],
     description: 'Quạt có nút chọn cấp gió 0–3; tốc độ tăng giảm từ từ bằng biến chứ không nhảy bậc.',
-    note: 'Bài 11 · Chong chóng điện gió (K4-M7)\nQuạt điện có nút chọn số 1, 2, 3; cối xay gió quay nhanh dần chứ không vọt ngay. Mỗi lần bấm SW, cấp gió tăng 1 (0 → 1 → 2 → 3 → 0).\nTốc độ động cơ tính theo phần trăm: 0% là dừng, 100% là nhanh nhất. Não ra lệnh, mạch công suất cấp điện cho động cơ bằng cách bật tắt rất nhanh; bật càng lâu thì quay càng nhanh. Biến "tốc độ" (cái hộp có tên để não nhớ một số) nhích dần 2% mỗi lượt về tốc độ "đích", nên cánh quạt quay nhanh lên từ từ.',
+    note: 'Bài 11 · Chong chóng điện gió (K4-M7)\nNhiệm vụ: làm quạt có nút chọn cấp gió 0, 1, 2, 3. Mỗi lần bấm SW, cấp tăng 1; qua 3 thì về 0.\nTốc độ động cơ tính theo phần trăm: 0% là dừng, 100% là nhanh nhất. Mạch công suất bật tắt điện rất nhanh; bật càng lâu thì động cơ quay càng nhanh.\nBiến là một cái hộp có tên để não nhớ một con số. "đích" là tốc độ muốn tới. "tốc độ" nhích dần 2% mỗi lượt về phía "đích", nên cánh quạt quay nhanh lên từ từ như cối xay gió.\nThử: đổi 2 thành 10 xem quạt vọt nhanh hơn thế nào.',
     variables: [
       { name: 'cấp', type: 'int' },
       { name: 'tốc độ', type: 'int' },
@@ -440,9 +454,15 @@ export const K12_LESSONS = [
     stacks: [
       whenBegin(init(), oledInit(), oledText(2), set('cấp', 0), set('tốc độ', 0)),
       whenLoop(
-        ifThen(pressed(), change('cấp', 1), ifThen(gt(v('cấp'), 3), set('cấp', 0)), waitUntil(not(pressed()))),
+        note(
+          'Bấm SW: cấp tăng 1, qua 3 thì về 0. Đợi nhả tay để một lần bấm chỉ tính một lần.',
+          ifThen(pressed(), change('cấp', 1), ifThen(gt(v('cấp'), 3), set('cấp', 0)), waitUntil(not(pressed()))),
+        ),
         note('Cấp 1, 2, 3 ứng với tốc độ đích 30%, 60%, 90%.', set('đích', mul(v('cấp'), 30))),
-        ifThen(lt(v('tốc độ'), v('đích')), change('tốc độ', 2)),
+        note(
+          'Chưa tới đích thì nhích 2% mỗi lượt: lên hoặc xuống.',
+          ifThen(lt(v('tốc độ'), v('đích')), change('tốc độ', 2)),
+        ),
         ifThen(gt(v('tốc độ'), v('đích')), change('tốc độ', -2)),
         note(
           'Ô tốc độ chỉ nhận số. Biến được bọc trong khối «làm tròn» để ô nhận nó là một số.',
@@ -466,7 +486,7 @@ export const K12_LESSONS = [
     hardware: ['Động cơ M1 (bánh trái), M2 (bánh phải)', 'Đèn L1, L2', 'Còi'],
     description:
       'Điệu nhảy robot: dùng hàm (chuỗi lệnh được đặt tên) ghép các động tác "lắc trái", "lắc phải", "xoay vòng" theo nhạc.',
-    note: 'Bài 12 · Robot vũ công (K2-M2)\nNhóm nhảy tập theo từng động tác có tên: "lắc trái", "lắc phải", "xoay vòng". Robot cũng vậy. Mỗi khối «định nghĩa» màu hồng là một HÀM: một chuỗi lệnh được đặt tên. Vòng lặp chính chỉ gọi tên động tác, nên đổi điệu nhảy rất dễ.\nHai bánh quay ngược chiều nhau thì xe lắc hoặc xoay tại chỗ. Đặt robot trên sàn rộng trước khi chạy.',
+    note: 'Bài 12 · Robot vũ công (K2-M2)\nNhiệm vụ: dạy robot nhảy theo nhạc với ba động tác: lắc trái, lắc phải, xoay vòng.\nMỗi khối «định nghĩa» màu hồng là một hàm: một chuỗi lệnh được đặt tên. Vòng lặp chính chỉ gọi tên động tác, nên đổi điệu nhảy rất dễ.\nM1 là bánh trái, M2 là bánh phải. Hai bánh quay ngược chiều nhau thì xe lắc hoặc xoay tại chỗ.\nĐặt robot trên sàn rộng trước khi chạy.\nThử: thêm động tác mới, ví dụ "lùi một bước".',
     variables: [],
     stacks: [
       whenBegin(init(), tempo(150)),
@@ -480,7 +500,7 @@ export const K12_LESSONS = [
       ),
       define(
         'lắc trái',
-        led(1, 100),
+        note('Bánh trái lùi, bánh phải tiến: xe lắc sang trái trong lúc chơi nốt Đô nửa phách.', led(1, 100)),
         motor(1, 'backward', 60),
         motor(2, 'forward', 60),
         playNote('C', 5, 0.5),
@@ -515,7 +535,7 @@ export const K12_LESSONS = [
     hardware: ['Động cơ M1 (bánh trái), M2 (bánh phải)', 'Nút SW (nút xuất phát)'],
     description:
       'Xe giao hàng đi theo lộ trình trên bản đồ sàn bằng các hàm đi thẳng, rẽ trái, rẽ phải; tự canh thời gian rẽ 90°.',
-    note: 'Bài 13 · Robot đưa thư (K1-M7)\nXe giao hàng, robot chở đồ trong nhà kho đi theo một lộ trình có sẵn. Bấm SW để xe xuất phát.\nXe này không có mắt, nó đi theo thời gian: chạy bao nhiêu giây thì đi bấy nhiêu đường. Biến "số giây" (cái hộp có tên để não nhớ một số) chọn quãng đường trước khi gọi hàm "đi thẳng". Biến "rẽ 90" là số giây để xe xoay một góc vuông: em đo trên sàn thật rồi sửa con số cho đúng xe của mình.',
+    note: 'Bài 13 · Robot đưa thư (K1-M7)\nNhiệm vụ: xe giao hàng đi theo lộ trình có sẵn tới hộp thư, như robot chở đồ trong nhà kho. Bấm SW để xuất phát.\nXe này không có mắt. Nó đi theo thời gian: chạy bao nhiêu giây thì đi bấy nhiêu đường.\nMỗi khối «định nghĩa» là một hàm: một chuỗi lệnh được đặt tên. Lộ trình chỉ gọi tên "đi thẳng", "rẽ phải", "rẽ trái".\nBiến là một cái hộp có tên để não nhớ một con số. "số giây" là thời gian đi thẳng, đặt trước khi gọi hàm "đi thẳng".\n"rẽ 90" là số giây để xe xoay một góc vuông. Em đo trên sàn thật rồi sửa con số cho đúng xe của mình.\nThử: vẽ bản đồ sàn lớp rồi đổi lộ trình.',
     variables: [
       { name: 'số giây', type: 'float' },
       { name: 'rẽ 90', type: 'float' },
@@ -536,7 +556,7 @@ export const K12_LESSONS = [
       ),
       define(
         'đi thẳng',
-        motor(1, 'forward', 60),
+        note('Hai bánh cùng tiến 60% trong "số giây", rồi dừng và nghỉ 0,3 giây.', motor(1, 'forward', 60)),
         motor(2, 'forward', 60),
         wait(v('số giây')),
         motor(1, 'forward', 0),
@@ -545,7 +565,7 @@ export const K12_LESSONS = [
       ),
       define(
         'rẽ phải',
-        motor(1, 'forward', 60),
+        note('Bánh trái tiến, bánh phải lùi: xe xoay phải tại chỗ trong "rẽ 90" giây.', motor(1, 'forward', 60)),
         motor(2, 'backward', 60),
         wait(v('rẽ 90')),
         motor(1, 'forward', 0),
@@ -571,13 +591,17 @@ export const K12_LESSONS = [
     source: 'K3-M2 (#22) Robot họa sĩ',
     hardware: ['Động cơ M1, M2 (hai bánh)', 'Servo S1 giữ bút (nâng, hạ bút)', 'Nút SW'],
     description: 'Robot vẽ hình vuông, tam giác bằng lặp lồng nhau; servo nâng hạ bút giữa các hình.',
-    note: 'Bài 14 · Robot họa sĩ (K3-M2)\nRobot vẽ tranh, máy vẽ sơ đồ di chuyển đầu bút theo hình. Gắn bút vào servo S1 (servo: động cơ quay đúng một góc rồi đứng lại). 0 độ là hạ bút, 60 độ là nhấc bút.\nMỗi hình có "số cạnh" cạnh. Sau mỗi cạnh, xe xoay một góc bằng 360 : số cạnh (hình vuông 90 độ, tam giác 120 độ). Biến "xoay 1 độ" là số giây để xe xoay 1 độ, em đo rồi sửa cho đúng. Khối «lặp lại» vẽ từng cạnh nằm trong hàm "vẽ hình", hàm này lại được gọi nhiều lần: đó là lặp lồng nhau.',
+    note: 'Bài 14 · Robot họa sĩ (K3-M2)\nNhiệm vụ: robot cầm bút vẽ hình vuông rồi hình tam giác trên giấy. Bấm SW để bắt đầu.\nServo là động cơ biết quay đúng một góc rồi đứng lại. Gắn bút vào servo S1: 0 độ là hạ bút, 60 độ là nhấc bút.\nMỗi hình có "số cạnh" cạnh. Vẽ xong một cạnh, xe xoay một góc bằng 360 chia số cạnh: hình vuông 90 độ, tam giác 120 độ.\n"xoay 1 độ" là số giây để xe xoay 1 độ. Em đo rồi sửa cho đúng xe của mình.\nKhối «lặp lại» vẽ từng cạnh nằm trong hàm "vẽ hình". Hàm này được gọi hai lần: đó là lặp lồng nhau.\nThử: đặt "số cạnh" bằng 6 để vẽ hình lục giác.',
     variables: [
       { name: 'số cạnh', type: 'int' },
       { name: 'xoay 1 độ', type: 'float' },
     ],
     stacks: [
-      whenBegin(init(), set('xoay 1 độ', 0.0067), call('nhấc bút')),
+      whenBegin(
+        init(),
+        note('0,0067 giây cho 1 độ, tức 0,6 giây cho một góc vuông. Đo trên sàn rồi sửa.', set('xoay 1 độ', 0.0067)),
+        call('nhấc bút'),
+      ),
       whenLoop(
         waitUntil(pressed()),
         wait(1),
@@ -593,7 +617,7 @@ export const K12_LESSONS = [
         'vẽ hình',
         call('hạ bút'),
         note(
-          'Lặp lồng nhau: mỗi cạnh là "đi thẳng rồi xoay".',
+          'Mỗi cạnh: đi thẳng 1 giây rồi xoay. Thời gian xoay = (360 : số cạnh) × "xoay 1 độ".',
           repeat(
             v('số cạnh'),
             motor(1, 'forward', 50),
@@ -620,22 +644,25 @@ export const K12_LESSONS = [
     source: 'K2-M7 (#17) Robot vượt chướng ngại',
     hardware: ['Động cơ M1, M2 (hai bánh)', 'Nút SW làm cản va phía trước (như râu của con kiến)'],
     description: 'Robot hút bụi: chạm cản va thì lùi, rẽ ngẫu nhiên rồi đi tiếp.',
-    note: 'Bài 15 · Robot vượt chướng ngại (K2-M7)\nRobot hút bụi trong nhà đụng chân bàn là lùi lại rồi rẽ hướng khác. Gắn một thanh cản va sao cho khi xe đâm vào vật thì thanh đè lên nút SW.\nXe đi thẳng; khi chạm thì lùi lại, rẽ một góc ngẫu nhiên rồi đi tiếp. Ngẫu nhiên nghĩa là mỗi lần một khác, không đoán trước được; nhờ vậy xe không mắc kẹt mãi ở một góc.',
+    note: 'Bài 15 · Robot vượt chướng ngại (K2-M7)\nNhiệm vụ: làm robot hút bụi. Đụng chân bàn thì lùi lại, rẽ hướng khác rồi đi tiếp.\nGắn một thanh cản va phía trước, sao cho xe đâm vào vật thì thanh đè lên nút SW. Nút SW là "râu" của robot, như râu con kiến.\nNgẫu nhiên là máy tự chọn một số, không ai biết trước. Rẽ ngẫu nhiên nên xe không mắc kẹt mãi ở một góc.\nThử: đổi tốc độ, hay cho xe lùi lâu hơn.',
     variables: [],
     stacks: [
       whenBegin(init()),
       whenLoop(
-        ifElse(
-          pressed(),
-          [
-            motor(1, 'backward', 60),
-            motor(2, 'backward', 60),
-            wait(0.5),
-            note('Rẽ ngẫu nhiên từ 0,3 đến 0,8 giây để không mắc kẹt mãi một chỗ.', motor(1, 'forward', 60)),
-            motor(2, 'backward', 60),
-            wait(mul(random(3, 8), 0.1)),
-          ],
-          [motor(1, 'forward', 50), motor(2, 'forward', 50)],
+        note(
+          'Chạm cản va: lùi nửa giây rồi xoay. Không chạm: đi thẳng.',
+          ifElse(
+            pressed(),
+            [
+              motor(1, 'backward', 60),
+              motor(2, 'backward', 60),
+              wait(0.5),
+              note('Xoay từ 0,3 đến 0,8 giây: ngẫu nhiên 3 đến 8, nhân 0,1.', motor(1, 'forward', 60)),
+              motor(2, 'backward', 60),
+              wait(mul(random(3, 8), 0.1)),
+            ],
+            [motor(1, 'forward', 50), motor(2, 'forward', 50)],
+          ),
         ),
         wait(0.02),
       ),
@@ -648,14 +675,14 @@ export const K12_LESSONS = [
     level: 3,
     source: 'K8-M1 (#71) Cú va chạm an toàn',
     hardware: [
-      'Cảm biến gia tốc MPU6050 (cắm cổng I2C: hai dây để não nói chuyện với cảm biến)',
+      'Cảm biến gia tốc MPU6050 (cắm cổng I2C)',
       'Màn OLED (cũng cắm cổng I2C, khác địa chỉ)',
       'Động cơ M1, M2',
       'Nút SW',
     ],
     description:
       'Thử nghiệm va chạm như thử mũ bảo hiểm: xe lao vào thành chắn, đo cú dội mạnh nhất; so sánh có đệm xốp và không đệm.',
-    note: 'Bài 16 · Cú va chạm an toàn (K8-M1)\nNgười ta thử ô tô, mũ bảo hiểm bằng cách cho đâm vào vật cản rồi đo cú dội. Đệm, túi khí làm cú dội nhẹ đi. Bấm SW: xe chạy thẳng 2 giây vào thành chắn.\nCảm biến MPU6050 đo gia tốc: vận tốc đổi càng đột ngột thì gia tốc càng lớn, như khi xe phanh gấp em bị xô người tới trước. Nó đo theo 3 hướng x, y, z. Chương trình gộp ba hướng thành một độ lớn a = căn bậc hai(ax² + ay² + az²) và giữ giá trị lớn nhất. MPU6050 và màn OLED dùng chung hai dây I2C, mỗi thiết bị một địa chỉ riêng như số nhà. Làm lại với thành chắn có đệm xốp rồi so sánh hai con số.',
+    note: 'Bài 16 · Cú va chạm an toàn (K8-M1)\nNhiệm vụ: thử nghiệm va chạm như thử mũ bảo hiểm. Bấm SW, xe lao vào thành chắn, đo cú dội mạnh nhất.\nGia tốc cho biết vận tốc đổi nhanh hay chậm. Xe phanh gấp, em bị xô tới trước: đó là gia tốc lớn.\nCảm biến MPU6050 đo gia tốc theo ba hướng x, y, z. Chương trình gộp ba hướng thành một độ lớn (căn bậc hai của tổng ba bình phương) rồi giữ số lớn nhất.\nMPU6050 và màn OLED cùng cắm cổng I2C: hai sợi dây để não "nói chuyện" với nhiều thiết bị, mỗi thiết bị có một địa chỉ riêng như số nhà.\nĐơn vị g: 1 g là gia tốc của vật rơi tự do, bằng 9,8 m/s². Số g càng lớn, cú dội càng mạnh.\nThử: lót đệm xốp lên thành chắn rồi đo lại, so sánh hai con số.',
     variables: [
       { name: 'a', type: 'float' },
       { name: 'lớn nhất', type: 'float' },
@@ -675,34 +702,37 @@ export const K12_LESSONS = [
         motor(1, 'forward', 80),
         motor(2, 'forward', 80),
         note(
-          'Đo 200 lần trong khoảng 2 giây.',
+          'Đo 200 lần, mỗi lần cách nhau 0,01 giây: khoảng 2 giây xe chạy.',
           repeatUntil(
             gt(v('đếm'), 199),
             mpuRead(),
-            set(
-              'a',
-              mathop(
-                'sqrt',
-                add(
-                  add(mul(acceleration('x'), acceleration('x')), mul(acceleration('y'), acceleration('y'))),
-                  mul(acceleration('z'), acceleration('z')),
+            note(
+              'Độ lớn gia tốc a = căn bậc hai của (x² + y² + z²), tính bằng m/s².',
+              set(
+                'a',
+                mathop(
+                  'sqrt',
+                  add(
+                    add(mul(acceleration('x'), acceleration('x')), mul(acceleration('y'), acceleration('y'))),
+                    mul(acceleration('z'), acceleration('z')),
+                  ),
                 ),
               ),
             ),
-            ifThen(gt(v('a'), v('lớn nhất')), set('lớn nhất', v('a'))),
+            note('Giữ lại số lớn nhất từng đo được.', ifThen(gt(v('a'), v('lớn nhất')), set('lớn nhất', v('a')))),
             change('đếm', 1),
             wait(0.01),
           ),
         ),
         motor(1, 'forward', 0),
         motor(2, 'forward', 0),
-        note(
-          'Đổi ra đơn vị "g": 1 g là gia tốc của vật rơi, bằng 9,8 m/s². Số g càng lớn thì cú dội càng mạnh.',
-          oledClear(),
-        ),
+        oledClear(),
         oledCursor(0, 0),
         oledPrint('Dinh (g):'),
-        oledPrint(mul(round(mul(div(v('lớn nhất'), 9.8), 10)), 0.1)),
+        note(
+          'Đổi ra đơn vị g: chia cho 9,8. Nhân 10, làm tròn, rồi nhân 0,1 để chỉ giữ một chữ số sau dấu phẩy.',
+          oledPrint(mul(round(mul(div(v('lớn nhất'), 9.8), 10)), 0.1)),
+        ),
         oledRefresh(),
         wait(5),
       ),
@@ -714,13 +744,10 @@ export const K12_LESSONS = [
     group: K12,
     level: 3,
     source: 'K5-M7 (#47) Xe điều khiển từ xa',
-    hardware: [
-      'Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)',
-      'Động cơ M1 (bánh trái), M2 (bánh phải)',
-    ],
+    hardware: [PS2, 'Động cơ M1 (bánh trái), M2 (bánh phải)'],
     description:
       'Xe điều khiển từ xa: đẩy cần trái của tay PS2 tới để chạy, nghiêng ngang để rẽ; đẩy càng nhiều xe càng nhanh.',
-    note: 'Bài 17 · Xe điều khiển từ xa (K5-M7)\nXe đồ chơi điều khiển từ xa lái bằng cần gạt. Tay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2 trên mạch. Đầu mỗi vòng lặp, khối «đọc dữ liệu tay cầm PS2» hỏi tay cầm đang ra sao.\nCần trái trả về số từ 0 đến 255, để yên ở giữa là khoảng 128. "Tiến" = 128 − LY (đẩy lên là số dương), "rẽ" = LX − 128. Bánh trái = tiến + rẽ, bánh phải = tiến − rẽ. Khối động cơ chỉ nhận tốc độ 0% đến 100%, nên số âm thì cho bánh quay lùi.',
+    note: 'Bài 17 · Xe điều khiển từ xa (K5-M7)\nNhiệm vụ: lái xe bằng cần gạt của tay cầm PS2, như xe đồ chơi điều khiển từ xa.\nTay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2 trên mạch. Đầu mỗi vòng lặp, khối «đọc dữ liệu tay cầm PS2» hỏi tay cầm đang ra sao.\nCần trái trả về số từ 0 đến 255; để yên ở giữa là khoảng 128. "tiến" = 128 − LY (đẩy lên là số dương). "rẽ" = LX − 128.\nBánh trái = tiến + rẽ, bánh phải = tiến − rẽ. Hai bánh quay khác tốc độ thì xe rẽ.\nKhối động cơ chỉ nhận tốc độ 0% đến 100%, nên số âm thì cho bánh quay lùi.\nThử: đổi 0,5 thành 0,8 để xe rẽ gắt hơn.',
     variables: [
       { name: 'tiến', type: 'float' },
       { name: 'rẽ', type: 'float' },
@@ -741,9 +768,9 @@ export const K12_LESSONS = [
           deadZone('tiến', 8),
         ),
         deadZone('rẽ', 6),
-        set('trái', add(v('tiến'), v('rẽ'))),
+        note('Bánh trái = tiến + rẽ, bánh phải = tiến − rẽ.', set('trái', add(v('tiến'), v('rẽ')))),
         set('phải', sub(v('tiến'), v('rẽ'))),
-        driveWheel(1, 'trái'),
+        note('Số dương thì bánh tiến, số âm thì bánh lùi (đổi dấu để tốc độ là số dương).', driveWheel(1, 'trái')),
         driveWheel(2, 'phải'),
         wait(0.02),
       ),
@@ -755,13 +782,10 @@ export const K12_LESSONS = [
     group: FANROC,
     level: 3,
     source: 'K8-M2 (#72) FTC khởi động, chuyển từ NeoBot sang ThingBot',
-    hardware: [
-      'Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)',
-      'Động cơ M1, M2 (hai bánh lái), M3 (cơ cấu nâng)',
-    ],
+    hardware: [PS2, 'Động cơ M1, M2 (hai bánh lái), M3 (cơ cấu nâng)'],
     description:
       'Robot thi đấu: lái kiểu xe tăng bằng hai cần, L1/R1 nâng hạ, START bật chế độ chạy chậm để căn chính xác; nhả tay là dừng.',
-    note: 'Bài 18 · Robot thi đấu bước 1 (K8-M2, chuyển nền từ NeoBot sang ThingBot)\nXe tăng, máy xúc bánh xích lái bằng hai cần: mỗi cần một bên bánh. Ở đây cần trái điều khiển bánh trái (M1), cần phải điều khiển bánh phải (M2). Tay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2.\nL1 nâng, R1 hạ (động cơ M3); nhả nút là cơ cấu dừng ngay cho an toàn. Bấm START để bật hoặc tắt chế độ chạy chậm (khoảng 40%) khi cần căn chỉnh chính xác. Biến "chậm" nhớ đang ở chế độ nào (1 là chậm, 0 là thường); đèn L1 sáng khi đang chạy chậm.',
+    note: 'Bài 18 · Robot thi đấu bước 1: lái và nâng (K8-M2)\nNhiệm vụ: lái robot thi đấu kiểu xe tăng. Cần trái điều khiển bánh trái (M1), cần phải điều khiển bánh phải (M2).\nTay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2.\nL1 nâng, R1 hạ (động cơ M3). Nhả nút là cơ cấu dừng ngay, cho an toàn.\nBấm START để bật hoặc tắt chế độ chạy chậm (khoảng 40%) khi cần căn chỉnh chính xác.\nBiến là một cái hộp có tên để não nhớ một con số. "chậm" nhớ chế độ (1 là chậm, 0 là thường); đèn L1 sáng khi đang chạy chậm.\nThử: đổi 0,3 thành 0,5 nếu chế độ chậm chạy chậm quá.',
     variables: [
       { name: 'chậm', type: 'int' },
       { name: 'hệ số', type: 'float' },
@@ -781,8 +805,14 @@ export const K12_LESSONS = [
             [set('giữ START', 0)],
           ),
         ),
-        ifElse(eq(v('chậm'), 1), [set('hệ số', 0.3), led(1, 100)], [set('hệ số', 0.78), led(1, 0)]),
-        set('trái', mul(sub(128, joystick('LY')), v('hệ số'))),
+        note(
+          'Hệ số 0,78 đưa 128 thành khoảng 100 (tốc độ tối đa). Hệ số 0,3 là chế độ chậm, khoảng 40%.',
+          ifElse(eq(v('chậm'), 1), [set('hệ số', 0.3), led(1, 100)], [set('hệ số', 0.78), led(1, 0)]),
+        ),
+        note(
+          'Cần để yên ở giữa là 128. Đẩy lên thì LY nhỏ đi, nên 128 − LY là số dương.',
+          set('trái', mul(sub(128, joystick('LY')), v('hệ số'))),
+        ),
         set('phải', mul(sub(128, joystick('RY')), v('hệ số'))),
         deadZone('trái', 6),
         deadZone('phải', 6),
@@ -809,24 +839,42 @@ export const K12_LESSONS = [
     hardware: ['Servo S1 (đế xoay), S2 (khuỷu tay), S3 (kẹp)', 'Nút SW'],
     description:
       'Cánh tay robot nhà máy: ba servo chuyển động mượt và cùng lúc; hàm "gắp" và "thả" chuyển đồ từ trái sang phải.',
-    note: 'Bài 19 · Cánh tay máy (K4-M2)\nTrong nhà máy, cánh tay robot gắp sản phẩm từ chỗ này sang chỗ khác. Cánh tay ở đây có ba servo (động cơ quay đúng một góc rồi đứng lại, như khớp tay): S1 xoay đế như vai, S2 nâng hạ như khuỷu tay, S3 đóng mở kẹp như bàn tay. Não ra lệnh, mạch công suất cấp điện cho cả ba servo.\nKhối «bắt đầu quay servo» ra lệnh rồi đi tiếp ngay, nên nhiều servo quay cùng lúc; khối «chờ các servo quay xong» đợi tất cả tới nơi. Bấm SW để tay máy chuyển một món đồ từ bên trái sang bên phải.',
+    note: 'Bài 19 · Cánh tay máy (K4-M2)\nNhiệm vụ: cánh tay robot nhà máy gắp một món đồ bên trái, chuyển sang bên phải. Bấm SW để bắt đầu.\nServo là động cơ biết quay đúng một góc rồi đứng lại, như khớp tay. S1 xoay đế như vai, S2 nâng hạ như khuỷu tay, S3 đóng mở kẹp như bàn tay. Não ra lệnh, mạch công suất cấp điện cho cả ba servo.\nKhối «bắt đầu quay servo» ra lệnh rồi đi tiếp ngay, nên nhiều servo quay cùng lúc. Khối «chờ các servo quay xong» đợi tất cả tới nơi.\nMỗi việc là một hàm (chuỗi lệnh được đặt tên): "gắp", "thả", "về chỗ cũ".\nThử: đổi các góc cho hợp với cánh tay của em.',
     variables: [],
     stacks: [
       whenBegin(init(), call('về chỗ cũ')),
       whenLoop(
         waitUntil(pressed()),
-        note('Quay sang trái và hạ tay cùng lúc.', startServo(1, 150, 1)),
+        note('Đế xoay sang trái (150 độ) và khuỷu hạ xuống (40 độ) cùng lúc, trong 1 giây.', startServo(1, 150, 1)),
         startServo(2, 40, 1),
         waitServos(),
         call('gắp'),
-        startServo(1, 30, 1.5),
+        note('Mang đồ sang bên phải: đế xoay tới 30 độ trong 1,5 giây.', startServo(1, 30, 1.5)),
         waitServos(),
         call('thả'),
         call('về chỗ cũ'),
       ),
-      define('gắp', startServo(3, 20, 0.5), waitServos(), startServo(2, 100, 0.8), waitServos()),
-      define('thả', startServo(2, 40, 0.8), waitServos(), startServo(3, 80, 0.5), waitServos()),
-      define('về chỗ cũ', startServo(1, 90, 1), startServo(2, 100, 1), startServo(3, 80, 1), waitServos()),
+      define(
+        'gắp',
+        note('Khép kẹp (20 độ) rồi nâng khuỷu lên (100 độ).', startServo(3, 20, 0.5)),
+        waitServos(),
+        startServo(2, 100, 0.8),
+        waitServos(),
+      ),
+      define(
+        'thả',
+        note('Hạ khuỷu xuống (40 độ) rồi mở kẹp (80 độ).', startServo(2, 40, 0.8)),
+        waitServos(),
+        startServo(3, 80, 0.5),
+        waitServos(),
+      ),
+      define(
+        'về chỗ cũ',
+        note('Tư thế nghỉ: đế giữa (90 độ), khuỷu cao (100 độ), kẹp mở (80 độ).', startServo(1, 90, 1)),
+        startServo(2, 100, 1),
+        startServo(3, 80, 1),
+        waitServos(),
+      ),
     ],
   },
   {
@@ -836,13 +884,13 @@ export const K12_LESSONS = [
     level: 3,
     source: 'K7-M9 (#69) Cánh tay robot nhà máy, bản thi đấu FanRoc',
     hardware: [
-      'Tay cầm PS2 (tay cầm chơi game không dây; khối «khởi động tay cầm PS2 trên ThingBot» dùng sẵn chân 7/2/10/6 của cổng PS2)',
+      'Tay cầm PS2 (tay cầm chơi game không dây; khối «khởi động tay cầm PS2 trên ThingBot» dùng sẵn chân IO7/IO2/IO10/IO6 của cổng PS2)',
       'M1 bánh trái, M2 bánh phải, M3 con lăn hút, M4 nâng',
       'S1 tay nâng, S2 kẹp, S3 cửa xả',
     ],
     description:
       'Mẫu robot thi đấu: lái bằng cần trái, tay nâng bằng cần phải, con lăn hút, nâng, kẹp, cửa xả; giữ L2 để chạy chậm.',
-    note: 'Bài 20 · Robot FanRoc hoàn chỉnh (K7-M9)\nRobot thi đấu phải lái nhanh, gom vật, nâng lên rồi thả đúng chỗ, như xe nâng trong nhà kho. Tay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2. Mỗi việc là một hàm (chuỗi lệnh được đặt tên): "lái", "con lăn và nâng", "tay và kẹp".\nGán cổng trong bài là ĐỀ XUẤT; đội chỉnh lại theo robot của mình (bánh quay ngược thì đổi tiến thành lùi).\n• Cần trái: lái (M1 trái, M2 phải; hai bánh quay khác tốc độ thì xe rẽ). Giữ L2: chạy chậm khoảng 40%.\n• R1 hút / R2 nhả: con lăn M3. ▲/▼: nâng hạ M4.\n• Cần phải lên/xuống: tay nâng S1 (giới hạn 20–160 độ để servo không bị kẹt).\n• ○ đóng kẹp, ✕ mở kẹp (S2). Giữ □: mở cửa xả S3.',
+    note: 'Bài 20 · Robot FanRoc hoàn chỉnh (K7-M9)\nNhiệm vụ: robot thi đấu lái nhanh, gom vật, nâng lên rồi thả đúng chỗ, như xe nâng trong nhà kho.\nTay cầm PS2 là tay cầm chơi game không dây; bộ thu cắm cổng PS2. Mỗi việc là một hàm (chuỗi lệnh được đặt tên): "lái", "con lăn và nâng", "tay và kẹp".\nGán cổng trong bài là đề xuất. Đội chỉnh lại theo robot của mình: bánh quay ngược thì đổi tiến thành lùi.\n• Cần trái: lái (M1 trái, M2 phải; hai bánh quay khác tốc độ thì xe rẽ). Giữ L2: chạy chậm khoảng 40%.\n• R1 hút, R2 nhả: con lăn M3. ▲ nâng, ▼ hạ: động cơ M4.\n• Cần phải lên, xuống: tay nâng S1 (giới hạn 20–160 độ để servo không bị kẹt).\n• ○ đóng kẹp, ✕ mở kẹp (S2). Giữ □: mở cửa xả S3.',
     variables: [
       { name: 'hệ số', type: 'float' },
       { name: 'tiến', type: 'float' },
@@ -868,10 +916,19 @@ export const K12_LESSONS = [
       whenLoop(ps2Read(), call('lái'), call('con lăn và nâng'), call('tay và kẹp'), wait(0.02)),
       define(
         'lái',
-        ifElse(button('L2'), [set('hệ số', 0.3)], [set('hệ số', 0.78)]),
-        set('tiến', mul(sub(128, joystick('LY')), v('hệ số'))),
+        note(
+          'Giữ L2: hệ số 0,3 (chạy chậm, khoảng 40%). Bình thường: 0,78 đưa 128 thành khoảng 100.',
+          ifElse(button('L2'), [set('hệ số', 0.3)], [set('hệ số', 0.78)]),
+        ),
+        note(
+          'Cần để yên ở giữa là 128. Đẩy lên thì LY nhỏ đi: 128 − LY là số dương.',
+          set('tiến', mul(sub(128, joystick('LY')), v('hệ số'))),
+        ),
         set('rẽ', mul(sub(joystick('LX'), 128), mul(v('hệ số'), 0.6))),
-        deadZone('tiến', 5),
+        note(
+          'Vùng chết: nhả tay ra, cần vẫn lệch một chút. Lệch ít thì coi như 0 để xe đứng yên.',
+          deadZone('tiến', 5),
+        ),
         deadZone('rẽ', 4),
         set('trái', add(v('tiến'), v('rẽ'))),
         set('phải', sub(v('tiến'), v('rẽ'))),
@@ -883,10 +940,13 @@ export const K12_LESSONS = [
       ),
       define(
         'con lăn và nâng',
-        ifElse(
-          button('R1'),
-          [motor(3, 'forward', 100)],
-          [ifElse(button('R2'), [motor(3, 'backward', 80)], [motor(3, 'forward', 0)])],
+        note(
+          'R1: con lăn hút vào (100%). R2: nhả ra (80%). Không bấm: dừng.',
+          ifElse(
+            button('R1'),
+            [motor(3, 'forward', 100)],
+            [ifElse(button('R2'), [motor(3, 'backward', 80)], [motor(3, 'forward', 0)])],
+          ),
         ),
         ifElse(
           button('PAD_UP'),
@@ -901,13 +961,16 @@ export const K12_LESSONS = [
           ifThen(lt(joystick('RY'), 60), change('góc tay', 2)),
         ),
         ifThen(gt(joystick('RY'), 196), change('góc tay', -2)),
-        ifThen(gt(v('góc tay'), 160), set('góc tay', 160)),
+        note(
+          'Giữ góc tay trong khoảng 20–160 độ để servo không bị kẹt.',
+          ifThen(gt(v('góc tay'), 160), set('góc tay', 160)),
+        ),
         ifThen(lt(v('góc tay'), 20), set('góc tay', 20)),
         servo(1, v('góc tay')),
-        ifThen(button('CIRCLE'), set('góc kẹp', 20)),
+        note('○ đóng kẹp (20 độ), ✕ mở kẹp (80 độ).', ifThen(button('CIRCLE'), set('góc kẹp', 20))),
         ifThen(button('CROSS'), set('góc kẹp', 80)),
         servo(2, v('góc kẹp')),
-        ifElse(button('SQUARE'), [servo(3, 90)], [servo(3, 0)]),
+        note('Giữ □: cửa xả mở 90 độ. Nhả: đóng về 0 độ.', ifElse(button('SQUARE'), [servo(3, 90)], [servo(3, 0)])),
       ),
     ],
   },

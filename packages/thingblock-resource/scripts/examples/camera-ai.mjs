@@ -116,6 +116,8 @@ const headTilt = () => cam('headTilt')
 const whenNod = (...then) => stack(cam('whenNod'), ...then)
 const whenHeadTilt = (dir, ...then) => stack(cam('whenHeadTilt', { DIR: dir }), ...then)
 const whenFlap = (...then) => stack(cam('whenFlap'), ...then)
+// Attach a Vietnamese note to a block (shown beside it in the editor).
+const comment = (text, block) => ({ ...block, comment: text })
 
 const GROUP = 'Camera AI'
 const HARDWARE = ['Webcam, hoặc chuột nếu máy không có webcam']
@@ -130,7 +132,11 @@ const HEAD_MOUSE_TIP =
   'Giữ phím ← hoặc → để nghiêng đầu dần, phím ↑ để đầu thẳng lại, phím ↓ để gật đầu (con trỏ nằm trên sân chơi).'
 const headNote = (title, ...lines) => [`${title} · Camera AI · Bài tập thể dục`, ...lines, HEAD_MOUSE_TIP].join('\n')
 /** A short safety line every exercise game repeats. */
-const SAFE = 'Làm chậm thôi. Thấy chóng mặt, mỏi hay đau thì dừng lại, ngồi nghỉ.'
+const SAFE =
+  'An toàn: làm chậm thôi. Thấy chóng mặt, mỏi hay đau thì dừng lại, ngồi nghỉ. Dọn chỗ trống quanh em trước khi tập.'
+/** What the AI does, said once in each hand game. */
+const AI_HAND =
+  'AI là chương trình máy tính học cách nhìn. Ở đây AI nhìn ảnh webcam, tìm bàn tay em và đánh dấu 21 điểm mốc trên đó.'
 
 export const CAMERA_AI_EXAMPLES = [
   {
@@ -140,20 +146,21 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Ngôi sao đi theo ngón trỏ; sân chơi gọi tên cử chỉ em làm.',
     note: note(
       'Tay em trên sân chơi',
-      'Nhiệm vụ: làm cây đũa thần. Ngôi sao bay theo ngón tay em.',
-      'AI là chương trình máy tính học cách nhìn. Ở đây AI nhìn ảnh webcam và tìm bàn tay em.',
-      'AI đánh dấu 21 điểm trên bàn tay: cổ tay, các khớp, các đầu ngón. Đó là điểm mốc bàn tay.',
-      'Khối "x của ngón trỏ" cho biết đầu ngón trỏ đang ở đâu. Ngôi sao đi tới đó, mãi mãi.',
-      'Cử chỉ là dáng bàn tay: nắm tay, xòe tay, chữ V. Mỗi lần em đổi cử chỉ, sân chơi nói tên nó.',
+      'Nhiệm vụ: làm cây đũa thần. Ngôi sao bay theo đầu ngón trỏ của em.',
+      AI_HAND,
+      'Điểm mốc là các điểm AI đánh dấu trên bàn tay: cổ tay, các khớp, các đầu ngón.',
+      'Khối «x của ngón trỏ» và «y của ngón trỏ» cho biết đầu ngón trỏ đang ở đâu trên sân chơi. Ngôi sao đi tới đó, mãi.',
+      'Cử chỉ là dáng bàn tay: nắm tay, xoè tay, chữ V. Mỗi lần em đổi cử chỉ, sân chơi nói tên nó.',
+      'Thử: đổi "ngón trỏ" thành "ngón cái" trong hai khối x, y.',
     ),
     stacks: [
       whenFlag(
-        cameraOn(),
-        spawn('star', 'sao', 0, 0, 50),
+        comment('Bật webcam. "Soi gương" lật ảnh như gương, để tay phải của em ở bên phải.', cameraOn()),
+        comment('Tạo một ngôi sao tên "sao" ở giữa sân chơi (x: 0, y: 0), cỡ 50.', spawn('star', 'sao', 0, 0, 50)),
         say('Giơ tay lên nào!'),
-        forever(moveToHand('sao', 'indexTip')),
+        comment('Mỗi khung hình, đưa sao tới chỗ đầu ngón trỏ.', forever(moveToHand('sao', 'indexTip'))),
       ),
-      whenGesture('FIST', say('Nắm tay ✊')),
+      comment('Khối mũ: chạy mỗi khi AI thấy cử chỉ này.', whenGesture('FIST', say('Nắm tay ✊'))),
       whenGesture('OPEN', say('Xòe tay ✋')),
       whenGesture('VICTORY', say('Chữ V ✌️')),
     ],
@@ -166,9 +173,11 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Quả bóng theo ngón trỏ; chạm con dế để ghi điểm trong 30 giây.',
     note: note(
       'Bắt Dế',
-      'Nhiệm vụ: con dế nhảy khắp sân. Em bắt được càng nhiều càng giỏi, trong 30 giây.',
-      'Quả bóng đi theo đầu ngón trỏ của em. AI tìm ngón trỏ trong ảnh webcam, mỗi khung hình một lần.',
-      'Khối "dế chạm ngón trỏ?" hỏi: đầu ngón trỏ có nằm trên con dế không? Có thì cộng 1 điểm, dế nhảy chỗ khác.',
+      'Nhiệm vụ: con dế nhảy khắp sân. Em đưa ngón trỏ chạm dế để bắt. Bắt được càng nhiều càng giỏi, trong 30 giây.',
+      AI_HAND,
+      'Quả bóng đi theo đầu ngón trỏ của em, mỗi khung hình một lần.',
+      'Khối «de chạm ngón trỏ?» hỏi: đầu ngón trỏ có nằm trên con dế không? Có thì cộng 1 điểm, dế nhảy chỗ khác.',
+      'Ngẫu nhiên là máy tự chọn một số, không ai biết trước. Dế nhảy tới chỗ ngẫu nhiên.',
       'Nắm tay lại: dế giật mình, nhảy đi ngay.',
     ),
     stacks: [
@@ -177,11 +186,14 @@ export const CAMERA_AI_EXAMPLES = [
         spawn('ball', 'bong', 0, 0, 44),
         spawn('cricket', 'de', 120, 60, 70),
         setScore(1, 0),
-        startTimer(30),
+        comment('Đồng hồ đếm ngược 30 giây. Hết giờ thì khối «khi hết giờ» chạy.', startTimer(30)),
         say('Chạm ngón trỏ vào con dế!'),
         forever(
           moveToHand('bong', 'indexTip'),
-          ifThen(touching('de', 'indexTip'), addScore(1), moveRandom('de'), wait(0.3)),
+          comment(
+            'Ngón trỏ chạm dế: +1 điểm, dế nhảy tới chỗ ngẫu nhiên. Đợi 0,3 giây để không tính hai lần.',
+            ifThen(touching('de', 'indexTip'), addScore(1), moveRandom('de'), wait(0.3)),
+          ),
         ),
       ),
       whenTimeUp(timeUpScore(), remove('de')),
@@ -196,37 +208,45 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Rổ theo lòng bàn tay; hứng giọt mưa +1, để rơi xuống đáy −1, trong 30 giây.',
     note: note(
       'Hứng Mưa',
-      'Nhiệm vụ: trời mưa, em cầm rổ hứng nước cho cây.',
+      'Nhiệm vụ: trời mưa, em cầm rổ hứng nước cho cây. Hứng được +1, để rơi mất −1, trong 30 giây.',
+      AI_HAND,
       'Cái rổ đi theo lòng bàn tay. Lòng bàn tay là điểm giữa năm điểm mốc quanh bàn tay.',
-      'Giọt mưa có tốc độ: mỗi giây rơi xuống 150 bước. Chạm lòng bàn tay thì +1 và rơi lại từ trên.',
-      'Giọt chạm mép dưới sân là rơi mất: −1.',
+      'Tốc độ là số bước vật đi mỗi giây. Giọt mưa có tốc độ y bằng −150: mỗi giây rơi xuống 150 bước.',
+      'Giọt chạm lòng bàn tay: +1, rồi rơi lại từ trên. Giọt chạm mép dưới sân: rơi mất, −1.',
+      'Thử: đổi −150 thành −250 cho mưa rơi nhanh hơn.',
     ),
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
-        spawn('basket', 'ro', 0, -120, 80),
+        comment('Rổ ở gần đáy sân (y: −120). Giọt mưa ở sát mép trên (y: 170).', spawn('basket', 'ro', 0, -120, 80)),
         spawn('drop', 'giot', 0, 170, 36),
-        setVelocity('giot', 0, -150),
+        comment('Tốc độ y −150: mỗi giây giọt rơi xuống 150 bước.', setVelocity('giot', 0, -150)),
         startTimer(30),
         say('Hứng giọt mưa bằng lòng bàn tay!'),
         forever(moveToHand('ro', 'palm')),
       ),
-      whenTouching(
-        'giot',
-        'PALM',
-        addScore(1),
-        say('+1'),
-        moveTo('giot', random(-200, 200), 170),
-        setVelocity('giot', 0, -150),
+      comment(
+        'Giọt chạm lòng bàn tay: +1, rồi đưa giọt lên mép trên ở chỗ ngẫu nhiên và cho rơi lại.',
+        whenTouching(
+          'giot',
+          'PALM',
+          addScore(1),
+          say('+1'),
+          moveTo('giot', random(-200, 200), 170),
+          setVelocity('giot', 0, -150),
+        ),
       ),
-      whenTouching(
-        'giot',
-        'BOTTOM',
-        addScore(-1),
-        say('Rơi mất!'),
-        moveTo('giot', random(-200, 200), 170),
-        setVelocity('giot', 0, -150),
+      comment(
+        'Giọt chạm mép dưới: rơi mất, −1, rồi cũng rơi lại từ trên.',
+        whenTouching(
+          'giot',
+          'BOTTOM',
+          addScore(-1),
+          say('Rơi mất!'),
+          moveTo('giot', random(-200, 200), 170),
+          setVelocity('giot', 0, -150),
+        ),
       ),
       whenTimeUp(timeUpScore(), remove('giot')),
     ],
@@ -239,28 +259,36 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Bóng rơi theo trọng lực; đưa lòng bàn tay vào bóng để đỡ nó bay lên.',
     note: note(
       'Đỡ Bóng',
-      'Nhiệm vụ: tâng bóng như cầu thủ, nhưng bằng bàn tay. Đừng để bóng chạm đất.',
-      'Trọng lực kéo mọi vật rơi xuống, như quả táo rơi khỏi cây. Khối "đặt trọng lực 250" bật nó lên.',
-      'Lòng bàn tay chạm bóng thì bóng được cho tốc độ bay lên, lệch sang trái hoặc phải một chút ngẫu nhiên.',
+      'Nhiệm vụ: tâng bóng như cầu thủ, nhưng bằng lòng bàn tay. Đừng để bóng chạm đất.',
+      AI_HAND,
+      'Trọng lực kéo mọi vật rơi xuống, như quả táo rơi khỏi cây. Khối «đặt trọng lực 250» bật nó lên; số càng lớn, bóng rơi càng nhanh.',
+      'Lòng bàn tay chạm bóng: bóng được cho tốc độ bay lên, lệch sang trái hoặc phải một chút ngẫu nhiên.',
       'Bóng chạm mép dưới là thua. Sân chơi đọc số lần em đỡ được, rồi chơi lại.',
+      'Thử: đổi 250 thành 150 cho bóng rơi chậm hơn.',
     ),
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
         spawn('ball', 'bong', 0, 120, 56),
-        setGravity(250),
+        comment('Trọng lực 250: bóng rơi nhanh dần. Đặt 0 là tắt trọng lực.', setGravity(250)),
         say('Đỡ bóng bằng lòng bàn tay, đừng để rơi!'),
       ),
-      whenTouching('bong', 'PALM', addScore(1), setVelocity('bong', random(-120, 120), 330), say('Đỡ!')),
-      whenTouching(
-        'bong',
-        'BOTTOM',
-        say(join('Rơi rồi! Đỡ được: ', score())),
-        wait(2),
-        setScore(1, 0),
-        moveTo('bong', 0, 120),
-        say('Lại nào!'),
+      comment(
+        'Đỡ được: +1, bóng bay lên 330 bước mỗi giây, lệch ngang ngẫu nhiên từ −120 đến 120.',
+        whenTouching('bong', 'PALM', addScore(1), setVelocity('bong', random(-120, 120), 330), say('Đỡ!')),
+      ),
+      comment(
+        'Bóng chạm mép dưới: đọc điểm, đợi 2 giây, về 0 điểm và thả bóng lại từ trên.',
+        whenTouching(
+          'bong',
+          'BOTTOM',
+          say(join('Rơi rồi! Đỡ được: ', score())),
+          wait(2),
+          setScore(1, 0),
+          moveTo('bong', 0, 120),
+          say('Lại nào!'),
+        ),
       ),
     ],
   },
@@ -272,10 +300,12 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Lướt ngón trỏ qua ngôi sao +1, chạm quả bom −3; bom đổi chỗ mỗi 2 giây.',
     note: note(
       'Hái sao né bom',
-      'Nhiệm vụ: hái thật nhiều sao trong 30 giây, nhưng phải tránh quả bom.',
+      'Nhiệm vụ: lướt ngón trỏ hái thật nhiều sao trong 30 giây, nhưng phải tránh quả bom.',
+      AI_HAND,
       'Ngẫu nhiên là máy tự chọn một số, không ai biết trước. Sao và bom hiện ở chỗ ngẫu nhiên.',
       'Ngón trỏ chạm sao: +1. Chạm bom: −3. Điểm có thể xuống dưới 0, đó là số âm.',
       'Cứ 2 giây bom lại đổi chỗ. Em phải nhìn kỹ trước khi lướt tay.',
+      'Thử: đổi 2 giây thành 1 giây cho bom nhảy nhanh hơn.',
     ),
     stacks: [
       whenFlag(
@@ -285,10 +315,13 @@ export const CAMERA_AI_EXAMPLES = [
         spawn('bomb', 'bom', -120, -60, 50),
         startTimer(30),
         say('Lướt ngón trỏ qua ngôi sao, tránh quả bom!'),
-        forever(wait(2), moveRandom('bom')),
+        comment('Cứ 2 giây, bom đổi sang chỗ ngẫu nhiên.', forever(wait(2), moveRandom('bom'))),
       ),
-      whenTouching('sao', 'INDEX_TIP', addScore(1), moveRandom('sao')),
-      whenTouching('bom', 'INDEX_TIP', addScore(-3), say('Ối, bom! −3'), moveRandom('bom')),
+      comment('Chạm sao: +1, sao hiện ở chỗ khác.', whenTouching('sao', 'INDEX_TIP', addScore(1), moveRandom('sao'))),
+      comment(
+        'Chạm bom: −3 (cộng số âm là trừ), bom hiện ở chỗ khác.',
+        whenTouching('bom', 'INDEX_TIP', addScore(-3), say('Ối, bom! −3'), moveRandom('bom')),
+      ),
       whenTimeUp(timeUpScore(), remove('sao'), remove('bom')),
     ],
   },
@@ -300,16 +333,18 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Đếm 3-2-1 rồi ra búa ✊, bao ✋ hoặc kéo ✌️; máy chọn ngẫu nhiên, bảng điểm em và máy.',
     note: note(
       'Oẳn tù tì',
-      'Nhiệm vụ: chơi oẳn tù tì với máy tính. Người 1 là em, người 2 là máy.',
-      'Máy đếm 3-2-1. Lúc đó em giơ ✊ nắm tay (búa), ✋ xòe tay (bao) hoặc ✌️ chữ V (kéo).',
-      'AI nhận ra cử chỉ của em. Máy chọn ngẫu nhiên một trong ba. Búa thắng kéo, kéo thắng bao, bao thắng búa.',
-      'Danh sách "lua_chon" giữ tên ba cử chỉ. Hai bên trùng nhau là hoà.',
+      'Nhiệm vụ: chơi oẳn tù tì với máy tính. Người chơi 1 là em, người chơi 2 là máy.',
+      'Máy đếm 3-2-1. Lúc đó em giơ ✊ nắm tay (búa), ✋ xoè tay (bao) hoặc ✌️ chữ V (kéo).',
+      AI_HAND,
+      'Máy chọn ngẫu nhiên một trong ba. Búa thắng kéo, kéo thắng bao, bao thắng búa. Hai bên giống nhau là hoà.',
+      'Danh sách là một dãy ô có tên, mỗi ô một thứ. Danh sách "lựa chọn" giữ tên máy của ba cử chỉ; "ký hiệu" giữ ba hình ✊ ✋ ✌️ cùng thứ tự.',
+      'Biến là một cái hộp có tên để não nhớ một thứ. "số máy" là ô máy chọn (1, 2 hay 3); "số em" là ô của cử chỉ em làm, bằng 0 khi không thấy tay.',
       'Chơi bằng chuột: giữ chuột trái là búa, phím 1 là bao, phím 2 là kéo.',
     ),
-    variables: [{ name: 'may_so' }, { name: 'may' }, { name: 'nguoi' }, { name: 'ket_qua' }],
+    variables: [{ name: 'số máy' }, { name: 'máy' }, { name: 'cử chỉ em' }, { name: 'số em' }, { name: 'kết quả' }],
     lists: [
-      { name: 'lua_chon', items: ['fist', 'open', 'victory'] },
-      { name: 'ky_hieu', items: ['✊', '✋', '✌️'] },
+      { name: 'lựa chọn', items: ['fist', 'open', 'victory'] },
+      { name: 'ký hiệu', items: ['✊', '✋', '✌️'] },
     ],
     stacks: [
       whenFlag(
@@ -325,36 +360,49 @@ export const CAMERA_AI_EXAMPLES = [
           wait(1),
           say('1'),
           wait(1),
-          set('may_so', random(1, 3)),
-          set('may', item(v('may_so'), 'lua_chon')),
-          set('nguoi', gesture()),
-          ifElse(
-            eq(v('nguoi'), v('may')),
-            [set('ket_qua', 'Hoà!')],
-            [
-              ifElse(
-                eq(itemNum(v('nguoi'), 'lua_chon'), '0'),
-                [set('ket_qua', 'Không thấy tay')],
-                [
-                  ifElse(
-                    or(
-                      and(eq(v('nguoi'), 'fist'), eq(v('may'), 'victory')),
-                      or(
-                        and(eq(v('nguoi'), 'open'), eq(v('may'), 'fist')),
-                        and(eq(v('nguoi'), 'victory'), eq(v('may'), 'open')),
+          comment('Máy chọn ngẫu nhiên ô 1, 2 hay 3 của danh sách "lựa chọn".', set('số máy', random(1, 3))),
+          set('máy', item(v('số máy'), 'lựa chọn')),
+          comment(
+            'Cử chỉ em đang làm (fist, open, victory). "số em" là số thứ tự của nó trong "lựa chọn": 0 nếu không thấy tay.',
+            set('cử chỉ em', gesture()),
+          ),
+          set('số em', itemNum(v('cử chỉ em'), 'lựa chọn')),
+          comment(
+            'Chấm điểm theo thứ tự: không thấy tay, hoà, em thắng, còn lại máy thắng.',
+            ifElse(
+              eq(v('số em'), '0'),
+              [set('kết quả', 'Không thấy tay')],
+              [
+                ifElse(
+                  eq(v('cử chỉ em'), v('máy')),
+                  [set('kết quả', 'Hoà!')],
+                  [
+                    comment(
+                      'Em thắng khi: búa (fist) gặp kéo (victory), bao (open) gặp búa, hoặc kéo gặp bao.',
+                      ifElse(
+                        or(
+                          and(eq(v('cử chỉ em'), 'fist'), eq(v('máy'), 'victory')),
+                          or(
+                            and(eq(v('cử chỉ em'), 'open'), eq(v('máy'), 'fist')),
+                            and(eq(v('cử chỉ em'), 'victory'), eq(v('máy'), 'open')),
+                          ),
+                        ),
+                        [addScore(1, 1), set('kết quả', 'Em thắng!')],
+                        [addScore(1, 2), set('kết quả', 'Máy thắng!')],
                       ),
                     ),
-                    [addScore(1, 1), set('ket_qua', 'Em thắng!')],
-                    [addScore(1, 2), set('ket_qua', 'Máy thắng!')],
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-          say(
-            join(
-              join('Máy ', item(v('may_so'), 'ky_hieu')),
-              join(join(' – Em ', item(itemNum(v('nguoi'), 'lua_chon'), 'ky_hieu')), join(' → ', v('ket_qua'))),
+          comment(
+            'Ghép câu: ký hiệu của máy, ký hiệu của em, rồi kết quả.',
+            say(
+              join(
+                join('Máy ', item(v('số máy'), 'ký hiệu')),
+                join(join(' – Em ', item(v('số em'), 'ký hiệu')), join(' → ', v('kết quả'))),
+              ),
             ),
           ),
           wait(3),
@@ -369,29 +417,43 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Sân chơi gọi một cử chỉ; làm đúng thật nhanh để ghi điểm trong 30 giây.',
     note: note(
       'Phản xạ cử chỉ',
-      'Nhiệm vụ: luyện phản xạ như thủ môn. Sân chơi gọi cử chỉ nào, em làm ngay cử chỉ đó.',
-      'Máy chọn ngẫu nhiên một cử chỉ khác cử chỉ tay em đang làm, rồi chờ.',
-      'Khối "chờ đến khi" dừng chương trình lại cho tới khi điều kiện đúng: tay em làm đúng, hoặc hết giờ.',
-      'Làm đúng được +1. Trong 30 giây em được bao nhiêu điểm?',
-      'Chơi bằng chuột: giữ chuột trái là nắm tay, phím 1 là xòe tay, phím 2 là chữ V.',
+      'Nhiệm vụ: luyện phản xạ như thủ môn. Sân chơi gọi cử chỉ nào, em làm ngay cử chỉ đó. Làm đúng được +1, trong 30 giây.',
+      AI_HAND,
+      'Danh sách là một dãy ô có tên. "mã cử chỉ" giữ tên máy của ba cử chỉ; "tên cử chỉ" giữ tên tiếng Việt cùng thứ tự.',
+      'Ngẫu nhiên là máy tự chọn một số, không ai biết trước. Biến "số" là ô máy chọn (1, 2 hay 3).',
+      'Máy chọn lại cho tới khi khác cử chỉ tay em đang làm, nên em luôn phải đổi tay.',
+      'Khối «đợi đến khi» dừng chương trình lại cho tới khi điều kiện đúng: tay em làm đúng, hoặc hết giờ.',
+      'Chơi bằng chuột: giữ chuột trái là nắm tay, phím 1 là xoè tay, phím 2 là chữ V.',
     ),
-    variables: [{ name: 'so' }],
+    variables: [{ name: 'số' }],
     lists: [
-      { name: 'ma', items: ['fist', 'open', 'victory'] },
-      { name: 'ten', items: ['✊ Nắm tay', '✋ Xòe tay', '✌️ Chữ V'] },
+      { name: 'mã cử chỉ', items: ['fist', 'open', 'victory'] },
+      { name: 'tên cử chỉ', items: ['✊ Nắm tay', '✋ Xòe tay', '✌️ Chữ V'] },
     ],
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
         startTimer(30),
-        repeatUntil(
-          eq(timeLeft(), '0'),
-          set('so', random(1, 3)),
-          repeatUntil(not(eq(gesture(), item(v('so'), 'ma'))), set('so', random(1, 3))),
-          say(join('Làm nhanh: ', item(v('so'), 'ten'))),
-          waitUntil(or(eq(gesture(), item(v('so'), 'ma')), eq(timeLeft(), '0'))),
-          ifThen(gt(timeLeft(), '0'), addScore(1), say('Đúng rồi!'), wait(0.5)),
+        comment(
+          'Mỗi lượt: chọn một cử chỉ, gọi tên, đợi em làm đúng, cộng điểm. Lặp tới khi hết giờ.',
+          repeatUntil(
+            eq(timeLeft(), '0'),
+            set('số', random(1, 3)),
+            comment(
+              'Chọn lại cho tới khi cử chỉ mới khác cử chỉ tay em đang làm.',
+              repeatUntil(not(eq(gesture(), item(v('số'), 'mã cử chỉ'))), set('số', random(1, 3))),
+            ),
+            say(join('Làm nhanh: ', item(v('số'), 'tên cử chỉ'))),
+            comment(
+              'Đợi tay em làm đúng cử chỉ, hoặc hết giờ.',
+              waitUntil(or(eq(gesture(), item(v('số'), 'mã cử chỉ')), eq(timeLeft(), '0'))),
+            ),
+            comment(
+              'Còn giờ nghĩa là em đã làm đúng: +1. Đợi 0,5 giây rồi ra cử chỉ tiếp.',
+              ifThen(gt(timeLeft(), '0'), addScore(1), say('Đúng rồi!'), wait(0.5)),
+            ),
+          ),
         ),
         timeUpScore(),
       ),
@@ -404,11 +466,11 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Bài tập tay-vai: vỗ hai tay xuống để Dế Xanh bay lên, lách qua khe giữa hai cây tre.',
     note: [
       'Dế Xanh bay · Camera AI · Bài tập thể dục tay và vai',
-      'Nhiệm vụ: Dế Xanh phải bay qua rừng tre. Em là đôi cánh của dế.',
-      'Động tác: giơ hai tay lên cao quá đầu, rồi vỗ mạnh xuống ngang hông, như chim vỗ cánh. Mỗi lần vỗ, dế bật lên một chút.',
+      'Nhiệm vụ: Dế Xanh phải bay qua rừng tre. Em là đôi cánh của dế: vỗ tay xuống để dế bật lên, lách qua khe giữa hai cây tre.',
+      'Động tác: đứng thẳng, giơ hai tay lên cao quá đầu, rồi vỗ mạnh xuống ngang hông, như chim vỗ cánh. Mỗi lần vỗ, dế bật lên một chút.',
+      'Số lần: mỗi lượt vỗ khoảng 10 đến 20 lần. Chơi 3 lượt rồi nghỉ, thả lỏng vai.',
+      'AI là chương trình máy tính học cách nhìn. Ở đây AI tìm hai bàn tay và cổ tay em. Hai tay cùng đi từ nửa trên xuống thật nhanh là một lần vỗ.',
       'Trọng lực kéo dế rơi xuống. Dế chạm cây tre hoặc chạm đất là hết lượt. Qua mỗi khe được 1 điểm.',
-      'AI tìm hai bàn tay em (và cổ tay, nhờ mô hình tư thế). Hai tay cùng đi từ nửa trên xuống thật nhanh là một lần vỗ.',
-      'Mỗi lượt vỗ khoảng 10 đến 20 lần. Chơi 3 lượt rồi nghỉ, thả lỏng vai.',
       SAFE,
       'Máy không có webcam? Ở khung Sân chơi, chọn "Chuột (không cần webcam)", để con trỏ trên sân chơi và bấm phím cách để vỗ hai tay.',
     ].join('\n'),
@@ -417,9 +479,12 @@ export const CAMERA_AI_EXAMPLES = [
         cameraOn(),
         setScore(1, 0),
         spawn('cricket', 'de', -120, 40, 50),
-        spawn('bamboo', 'tre', 240, 0, 150),
+        comment('Cây tre có khe, hiện ở sát mép phải (x: 240).', spawn('bamboo', 'tre', 240, 0, 150)),
         forever(
-          setGravity(0),
+          comment(
+            'Đầu lượt: tắt trọng lực, dừng dế và tre, đưa về chỗ cũ. Khe tre ở độ cao ngẫu nhiên.',
+            setGravity(0),
+          ),
           setVelocity('de', 0, 0),
           moveTo('de', -120, 40),
           setVelocity('tre', 0, 0),
@@ -432,9 +497,12 @@ export const CAMERA_AI_EXAMPLES = [
           say('1'),
           wait(1),
           say('Vỗ cánh nào!'),
-          setGravity(300),
+          comment('Bật trọng lực 300: dế bắt đầu rơi. Tre trôi sang trái 100 bước mỗi giây.', setGravity(300)),
           setVelocity('tre', -100, 0),
-          waitUntil(or(objectTouching('de', 'tre'), atEdge('de', 'bottom'))),
+          comment(
+            'Đợi tới khi dế chạm tre hoặc chạm mép dưới: hết lượt.',
+            waitUntil(or(objectTouching('de', 'tre'), atEdge('de', 'bottom'))),
+          ),
           setGravity(0),
           setVelocity('de', 0, 0),
           setVelocity('tre', 0, 0),
@@ -442,8 +510,11 @@ export const CAMERA_AI_EXAMPLES = [
           wait(3),
         ),
       ),
-      whenFlap(setVelocity('de', 0, 180)),
-      whenTouching('tre', 'LEFT', addScore(1), moveTo('tre', 240, random(-60, 60)), setVelocity('tre', -100, 0)),
+      comment('Mỗi lần vỗ hai tay: dế bật lên 180 bước mỗi giây.', whenFlap(setVelocity('de', 0, 180))),
+      comment(
+        'Tre ra tới mép trái là dế đã qua một khe: +1. Tre về bên phải với khe ở chỗ mới.',
+        whenTouching('tre', 'LEFT', addScore(1), moveTo('tre', 240, random(-60, 60)), setVelocity('tre', -100, 0)),
+      ),
     ],
   },
   {
@@ -451,36 +522,46 @@ export const CAMERA_AI_EXAMPLES = [
     title: 'Thể dục cổ: nghiêng đầu hứng sao',
     level: 2,
     description:
-      'Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để rô bốt Tre chạy tới hứng sao rơi, trong 60 giây.',
+      'Bài tập cổ: nghiêng đầu chậm sang trái, sang phải để robot Tre chạy tới hứng sao rơi, trong 60 giây.',
     note: headNote(
       'Thể dục cổ: nghiêng đầu hứng sao',
-      'Nhiệm vụ: sao rơi từ trời xuống. Rô bốt Tre của Làng Maker chạy theo đầu em để hứng: nghiêng đầu sang trái, Tre chạy sang trái.',
-      'Động tác: nghiêng đầu thật chậm về một bên, tai hướng xuống vai, giữ 2 giây, về giữa, rồi sang bên kia. Tập 60 giây.',
-      'AI mô hình tư thế tìm 33 điểm trên người em: mũi, mắt, tai, vai… Đường nối hai mắt cho biết đầu nghiêng bao nhiêu độ.',
-      'Khối "góc nghiêng đầu" ra số độ: âm là nghiêng trái, dương là nghiêng phải. Nhân 7 lên là chỗ của rô bốt Tre.',
+      'Nhiệm vụ: sao rơi từ trời xuống. Robot Tre của Làng Maker chạy theo đầu em để hứng: nghiêng đầu sang trái, Tre chạy sang trái.',
+      'Động tác: nghiêng đầu thật chậm về một bên, tai hướng xuống vai, giữ 2 giây, về giữa, rồi sang bên kia.',
+      'Số lần: tập 60 giây, khoảng 10 lần mỗi bên.',
+      'AI là chương trình máy tính học cách nhìn. Ở đây AI tìm 33 điểm trên người em: mũi, mắt, tai, vai… Đường nối hai mắt cho biết đầu nghiêng bao nhiêu độ.',
+      'Khối «góc nghiêng đầu» ra số độ: âm là nghiêng trái, dương là nghiêng phải. Nhân 7 lên là chỗ của robot Tre trên sân.',
       SAFE,
     ),
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
-        spawn('tre', 'robot', 0, -140, 80),
+        comment('Robot Tre đứng ở gần đáy sân (y: −140).', spawn('tre', 'robot', 0, -140, 80)),
         spawn('star', 'sao', random(-180, 180), 170, 40),
-        setVelocity('sao', 0, -70),
+        comment('Sao rơi chậm: 70 bước mỗi giây.', setVelocity('sao', 0, -70)),
         startTimer(60),
-        say('Nghiêng đầu thật chậm để rô bốt Tre hứng sao'),
+        say('Nghiêng đầu thật chậm để robot Tre hứng sao'),
         forever(
-          moveTo('robot', mul(headTilt(), 7), -140),
-          ifThen(
-            objectTouching('sao', 'robot'),
-            addScore(1),
-            say('+1 ⭐'),
-            moveTo('sao', random(-180, 180), 170),
-            setVelocity('sao', 0, -70),
+          comment(
+            'Góc nghiêng đầu (độ) × 7 là chỗ của Tre. Nghiêng 20 độ thì Tre ở x = 140.',
+            moveTo('robot', mul(headTilt(), 7), -140),
+          ),
+          comment(
+            'Sao chạm Tre: +1, sao rơi lại từ trên ở chỗ ngẫu nhiên.',
+            ifThen(
+              objectTouching('sao', 'robot'),
+              addScore(1),
+              say('+1 ⭐'),
+              moveTo('sao', random(-180, 180), 170),
+              setVelocity('sao', 0, -70),
+            ),
           ),
         ),
       ),
-      whenTouching('sao', 'BOTTOM', moveTo('sao', random(-180, 180), 170), setVelocity('sao', 0, -70)),
+      comment(
+        'Sao rơi mất (chạm mép dưới): không trừ điểm, rơi lại từ trên.',
+        whenTouching('sao', 'BOTTOM', moveTo('sao', random(-180, 180), 170), setVelocity('sao', 0, -70)),
+      ),
       whenTimeUp(say(join('Hết giờ! Hứng được ', join(score(), ' ngôi sao. Thả lỏng cổ nhé.'))), remove('sao')),
     ],
   },
@@ -491,10 +572,11 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Bài tập cổ: gật đầu chậm 10 lần, sân chơi đếm giúp em và đội vương miện sao.',
     note: headNote(
       'Gật đầu đếm nhịp',
-      'Nhiệm vụ: như thầy thể dục đếm nhịp, máy đếm số lần em gật đầu.',
-      'Động tác: cúi đầu chậm cho cằm gần ngực, rồi ngẩng lên nhìn thẳng. Đó là một lần. Làm 10 lần.',
-      'AI tìm mũi và hai vai. Mũi đi xuống gần vai rồi lên lại thì máy hiểu là em vừa gật đầu.',
-      'Ngôi sao đội trên đầu em: nó đi theo "x của đầu" và "y của đầu" cộng thêm 70.',
+      'Nhiệm vụ: như thầy thể dục đếm nhịp, máy đếm số lần em gật đầu và đội cho em một vương miện sao.',
+      'Động tác: ngồi hoặc đứng thẳng, cúi đầu chậm cho cằm gần ngực, rồi ngẩng lên nhìn thẳng. Đó là một lần.',
+      'Số lần: làm 10 lần, rồi nghỉ.',
+      'AI là chương trình máy tính học cách nhìn. Ở đây AI tìm mũi và hai vai em. Mũi đi xuống gần vai rồi lên lại là một lần gật.',
+      'Ngôi sao đội trên đầu em: nó đi theo «x của đầu» và «y của đầu» cộng thêm 70.',
       SAFE,
     ),
     stacks: [
@@ -503,11 +585,18 @@ export const CAMERA_AI_EXAMPLES = [
         setScore(1, 0),
         spawn('star', 'sao', 0, 0, 40),
         say('Gật đầu thật chậm 10 lần nhé'),
-        forever(moveTo('sao', headX(), add(headY(), 70))),
+        comment('Sao đội trên đầu: x của đầu, y của đầu + 70.', forever(moveTo('sao', headX(), add(headY(), 70)))),
       ),
-      whenNod(
-        addScore(1),
-        ifElse(gt(score(), 9), [say('Giỏi lắm! Đủ 10 lần rồi. Thả lỏng cổ nhé.')], [say(join('Gật lần ', score()))]),
+      comment(
+        'Mỗi lần gật: +1. Quá 9 (tức đủ 10) thì khen; chưa thì đọc số lần.',
+        whenNod(
+          addScore(1),
+          ifElse(
+            gt(score(), 9),
+            [say('Giỏi lắm! Đủ 10 lần rồi. Thả lỏng cổ nhé.')],
+            [say(join('Gật lần ', score()))],
+          ),
+        ),
       ),
     ],
   },
@@ -518,40 +607,48 @@ export const CAMERA_AI_EXAMPLES = [
     description: 'Bài tập chân: bóng bay ngang tầm đầu, em ngồi xuống chậm để né rồi đứng lên, trong 60 giây.',
     note: headNote(
       'Ngồi xuống né bóng',
-      'Nhiệm vụ: quả bóng bay ngang qua đúng tầm đầu em. Ngồi xuống để bóng bay qua trên đầu.',
-      'Động tác: hai chân rộng bằng vai, lưng thẳng, ngồi xuống chậm như ngồi ghế, rồi đứng lên. Tập 60 giây.',
-      'Lúc đầu máy nhớ chiều cao đầu em khi đứng thẳng vào biến "cao". Bóng bay ở đúng độ cao đó.',
+      'Nhiệm vụ: quả bóng bay ngang qua đúng tầm đầu em. Ngồi xuống để bóng bay qua trên đầu, rồi đứng lên.',
+      'Động tác: hai chân rộng bằng vai, lưng thẳng, ngồi xuống chậm như ngồi ghế, rồi đứng lên.',
+      'Số lần: tập 60 giây, khoảng 10 đến 15 lần ngồi xuống đứng lên.',
+      'AI là chương trình máy tính học cách nhìn. Ở đây AI tìm đầu em. Lúc đầu máy nhớ độ cao đầu em khi đứng thẳng vào biến "độ cao đầu". Bóng bay ở đúng độ cao đó.',
+      'Biến là một cái hộp có tên để não nhớ một con số.',
       'Bóng chạm đầu là trúng. Bóng bay qua tới mép trái là né được: +1 điểm.',
-      'Đứng cách camera đủ xa để thấy cả người. Dọn chỗ trống quanh em trước khi chơi.',
+      'Đứng cách camera đủ xa để thấy cả người.',
       SAFE,
     ),
-    variables: [{ name: 'cao' }],
+    variables: [{ name: 'độ cao đầu' }],
     stacks: [
       whenFlag(
         cameraOn(),
         setScore(1, 0),
         say('Đứng thẳng, nhìn vào camera…'),
         wait(3),
-        set('cao', headY()),
-        spawn('ball', 'bong', 240, v('cao'), 50),
-        setVelocity('bong', -120, 0),
+        comment('Nhớ độ cao đầu lúc đứng thẳng. Bóng sẽ bay ở đúng độ cao này.', set('độ cao đầu', headY())),
+        spawn('ball', 'bong', 240, v('độ cao đầu'), 50),
+        comment('Bóng bay sang trái 120 bước mỗi giây, từ mép phải (x: 240).', setVelocity('bong', -120, 0)),
         startTimer(60),
         say('Bóng tới! Ngồi xuống thật chậm để né'),
       ),
-      whenTouching(
-        'bong',
-        'HEAD',
-        say('Ối, trúng đầu!'),
-        moveTo('bong', 240, v('cao')),
-        setVelocity('bong', -120, 0),
+      comment(
+        'Bóng chạm đầu: trúng, không có điểm. Bóng bay lại từ mép phải.',
+        whenTouching(
+          'bong',
+          'HEAD',
+          say('Ối, trúng đầu!'),
+          moveTo('bong', 240, v('độ cao đầu')),
+          setVelocity('bong', -120, 0),
+        ),
       ),
-      whenTouching(
-        'bong',
-        'LEFT',
-        addScore(1),
-        say('Né giỏi! Đứng lên nào'),
-        moveTo('bong', 240, v('cao')),
-        setVelocity('bong', -120, 0),
+      comment(
+        'Bóng qua tới mép trái mà không chạm đầu: em đã né được, +1.',
+        whenTouching(
+          'bong',
+          'LEFT',
+          addScore(1),
+          say('Né giỏi! Đứng lên nào'),
+          moveTo('bong', 240, v('độ cao đầu')),
+          setVelocity('bong', -120, 0),
+        ),
       ),
       whenTimeUp(say(join('Hết giờ! Né được ', join(score(), ' quả. Đứng thẳng, thở đều nhé.'))), remove('bong')),
     ],

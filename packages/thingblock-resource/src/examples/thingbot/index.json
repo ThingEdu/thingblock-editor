@@ -7,7 +7,7 @@
       "title": "Đèn hội trăng rằm",
       "group": "K12 cơ bản",
       "level": 1,
-      "description": "Đèn lồng Trung thu: hai đèn thay nhau sáng; học khối «lặp lại» có đếm số lần, đổi nhịp nhanh chậm.",
+      "description": "Đèn lồng Trung thu: hai đèn thay nhau sáng, lúc nhanh lúc chậm, bằng khối «lặp lại» có đếm số lần.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Đèn L1, L2 có sẵn trên mạch"],
@@ -19,7 +19,7 @@
       "title": "Người hùng quanh em: còi báo động",
       "group": "K12 cơ bản",
       "level": 1,
-      "description": "Còi xe cứu hỏa hai nốt cao thấp xen nhau, đèn chớp theo nhịp nhạc.",
+      "description": "Còi xe cứu hỏa: hai nốt cao, thấp kêu xen nhau, đèn chớp theo nhịp.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Còi có sẵn trên mạch", "Đèn L1, L2"],
@@ -37,7 +37,7 @@
       "hardware": [
         "Đèn L1 (đèn đỏ), L2 (đèn xanh)",
         "Nút SW (nút xin đường cho người đi bộ)",
-        "Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)"
+        "Màn OLED (cắm cổng I2C)"
       ],
       "source": "K3-M4 (#24) Đèn giao thông ngã tư"
     },
@@ -62,11 +62,7 @@
       "description": "Đồng hồ đếm giờ chơi: bấm SW để đếm ngược 30 giây trên màn OLED; hết giờ thì còi kêu.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": [
-        "Nút SW",
-        "Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn; thay cho ma trận LED)",
-        "Còi"
-      ],
+      "hardware": ["Nút SW", "Màn OLED (cắm cổng I2C)", "Còi"],
       "source": "K2-M4 (#14) Đồng hồ đếm giờ chơi"
     },
     {
@@ -80,7 +76,7 @@
       "peripherals": ["dht", "oled"],
       "hardware": [
         "Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)",
-        "Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)",
+        "Màn OLED (cắm cổng I2C)",
         "Đèn L1",
         "Còi"
       ],
@@ -97,7 +93,7 @@
       "peripherals": ["dht", "oled"],
       "hardware": [
         "Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)",
-        "Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)",
+        "Màn OLED (cắm cổng I2C)",
         "Đèn L1, L2"
       ],
       "source": "K6-M4 (#54) Trạm khí tượng của em (thay K6-M2: chưa có khối đọc quang trở)"
@@ -111,7 +107,7 @@
       "description": "Bảng tin điện tử 3 trang tự lật sau 5 giây; bấm SW để sang trang ngay.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn; thay cho ma trận LED, LCD)", "Nút SW"],
+      "hardware": ["Màn OLED (cắm cổng I2C)", "Nút SW"],
       "source": "K5-M9 (#49) Bảng tin LED của lớp (thay K4-M9: chưa có khối cảm biến PIR)"
     },
     {
@@ -123,7 +119,7 @@
       "description": "Khóa mã bí mật: bấm SW đúng số lần bí mật thì servo mở chốt hộp.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Servo S1 làm chốt khóa (servo: động cơ quay đúng một góc rồi đứng lại)", "Nút SW", "Còi"],
+      "hardware": ["Servo S1 làm chốt khóa", "Nút SW", "Còi"],
       "source": "K3-M9 (#29) Hộp mù bí ẩn"
     },
     {
@@ -147,11 +143,7 @@
       "description": "Quạt có nút chọn cấp gió 0–3; tốc độ tăng giảm từ từ bằng biến chứ không nhảy bậc.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": [
-        "Động cơ M1 gắn cánh quạt",
-        "Nút SW",
-        "Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)"
-      ],
+      "hardware": ["Động cơ M1 gắn cánh quạt", "Nút SW", "Màn OLED (cắm cổng I2C)"],
       "source": "K4-M7 (#37) Chong chóng điện gió"
     },
     {
@@ -212,7 +204,7 @@
       "device": "thingbot",
       "peripherals": ["mpu6050", "oled"],
       "hardware": [
-        "Cảm biến gia tốc MPU6050 (cắm cổng I2C: hai dây để não nói chuyện với cảm biến)",
+        "Cảm biến gia tốc MPU6050 (cắm cổng I2C)",
         "Màn OLED (cũng cắm cổng I2C, khác địa chỉ)",
         "Động cơ M1, M2",
         "Nút SW"
@@ -271,7 +263,7 @@
       "device": "thingbot",
       "peripherals": [],
       "hardware": [
-        "Tay cầm PS2 (tay cầm chơi game không dây; khối «khởi động tay cầm PS2 trên ThingBot» dùng sẵn chân 7/2/10/6 của cổng PS2)",
+        "Tay cầm PS2 (tay cầm chơi game không dây; khối «khởi động tay cầm PS2 trên ThingBot» dùng sẵn chân IO7/IO2/IO10/IO6 của cổng PS2)",
         "M1 bánh trái, M2 bánh phải, M3 con lăn hút, M4 nâng",
         "S1 tay nâng, S2 kẹp, S3 cửa xả"
       ],
@@ -394,7 +386,7 @@
       "description": "Bảng chào: khởi động màn OLED, in hai dòng chữ rồi đưa lên màn hình.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Màn OLED (cắm cổng I2C: hai dây để não nói chuyện với màn)"],
+      "hardware": ["Màn OLED (cắm cổng I2C)"],
       "source": "thingbot-sim bài 4"
     },
     {
@@ -406,7 +398,7 @@
       "description": "Servo S1 quét qua lại giữa 0 và 180 độ, mỗi lượt 1 giây, như thanh chắn bãi xe nhấc lên hạ xuống.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Servo S1 (động cơ quay đúng một góc rồi đứng lại)"],
+      "hardware": ["Servo S1"],
       "source": "thingbot-sim bài 5"
     },
     {
@@ -436,10 +428,10 @@
     {
       "id": "sim-08-xe-di-thang-re",
       "file": "sim-08-xe-di-thang-re.tb",
-      "title": "Xe đi thẳng – rẽ",
+      "title": "Xe đi thẳng và rẽ",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Xe đi thẳng 2 giây rồi dừng; đổi chiều một bánh để xe xoay tại chỗ.",
+      "description": "Xe đi thẳng 2 giây rồi dừng. Thử đổi chiều một bánh để xe xoay tại chỗ.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)"],
@@ -460,7 +452,7 @@
     {
       "id": "sim-10-day-chuyen-phan-loai",
       "file": "sim-10-day-chuyen-phan-loai.tb",
-      "title": "Dự án: dây chuyền phân loại",
+      "title": "Dự án: dây chuyền phân loại trứng",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
       "description": "Dự án máy soi trứng: băng chuyền chở trứng qua mắt hồng ngoại, trứng hỏng (tối) bị servo gạt ra.",

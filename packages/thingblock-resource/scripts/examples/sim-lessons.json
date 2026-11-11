@@ -14,7 +14,8 @@
               "y": 30,
               "next": {
                 "block": {
-                  "type": "thingBotC3_init"
+                  "type": "thingBotC3_init",
+                  "comment": "Chuẩn bị các bộ phận của mạch. Mọi chương trình ThingBot đều bắt đầu bằng khối này."
                 }
               }
             },
@@ -111,7 +112,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "comment": "Bật L1 sáng 100%, đợi nửa giây, tắt (0%), đợi nửa giây. Nằm trong vòng lặp nên lặp mãi."
                 }
               }
             }
@@ -185,7 +187,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "comment": "Mỗi vòng lặp hỏi: nút SW đang bấm? Có thì bật đèn, không thì tắt."
                 }
               }
             }
@@ -287,15 +290,18 @@
                                   },
                                   "next": {
                                     "block": {
-                                      "type": "oled_refresh"
+                                      "type": "oled_refresh",
+                                      "comment": "Chép giấy nháp lên màn thật. Không có khối này, màn vẫn trống."
                                     }
                                   }
                                 }
-                              }
+                              },
+                              "comment": "Đặt bút ở dòng thứ hai: y = 16 điểm tính từ trên xuống."
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "Màn 128 điểm ngang, 64 điểm dọc, số nhà I2C 0x3C."
                     }
                   }
                 }
@@ -380,7 +386,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "comment": "Quay về 0 độ trong 1 giây, rồi quay tới 180 độ trong 1 giây. Lặp mãi."
                 }
               }
             }
@@ -439,7 +446,8 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "comment": "1500 là ngưỡng: số nhỏ hơn là bóng tối màu (đen khoảng 300, xanh dương khoảng 1100). Bóng trắng đọc khoảng 3500."
                       }
                     },
                     "SUBSTACK": {
@@ -491,7 +499,8 @@
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "Đợi 0,05 giây rồi nhìn lại: mỗi giây mắt nhìn 20 lần."
                     }
                   }
                 }
@@ -587,7 +596,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "comment": "Tốc độ 60%: tiến 2 giây, rồi lùi 2 giây."
                 }
               }
             }
@@ -597,7 +607,7 @@
     },
     "bai-8": {
       "no": 8,
-      "title": "Xe đi thẳng – rẽ",
+      "title": "Xe đi thẳng và rẽ",
       "example": {
         "blocks": {
           "languageVersion": 0,
@@ -691,13 +701,15 @@
                                         }
                                       }
                                     }
-                                  }
+                                  },
+                                  "comment": "Tốc độ 0% là dừng."
                                 }
                               }
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "M1 là bánh trái, M2 là bánh phải. Hai bánh cùng tiến 50%: xe đi thẳng."
                     }
                   }
                 }
@@ -897,9 +909,11 @@
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "Nút ▲: hai bánh tiến 50%. Nút ▼: hai bánh lùi. Không bấm: dừng (0%)."
                     }
-                  }
+                  },
+                  "comment": "Hỏi tay cầm mỗi vòng lặp, trước khi xem nút nào đang bấm."
                 }
               }
             }
@@ -909,7 +923,7 @@
     },
     "bai-10": {
       "no": 10,
-      "title": "Dự án: dây chuyền phân loại",
+      "title": "Dự án: dây chuyền phân loại trứng",
       "example": {
         "blocks": {
           "languageVersion": 0,
@@ -955,7 +969,8 @@
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "Băng chuyền chạy 40%. Cần gạt nhấc lên (0 độ) lúc bắt đầu."
                     }
                   }
                 }
@@ -995,7 +1010,8 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "comment": "Số đọc nhỏ hơn 1500 là trứng hỏng (tối, khoảng 900). Trứng tốt khoảng 3300, băng chuyền trống khoảng 2600."
                       }
                     },
                     "SUBSTACK": {
@@ -1013,7 +1029,8 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "comment": "Trứng hỏng: cần gạt hạ 90 độ, đẩy trứng xuống thùng loại."
                       }
                     },
                     "SUBSTACK2": {
@@ -1047,7 +1064,8 @@
                             }
                           }
                         }
-                      }
+                      },
+                      "comment": "Đợi thật ngắn (0,05 giây) để kịp nhìn từng quả."
                     }
                   }
                 }
