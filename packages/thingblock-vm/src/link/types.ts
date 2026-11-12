@@ -35,15 +35,15 @@ export interface PlatformStatus {
 
 /**
  * A compiled firmware binary handed from `compile()` to `flash()`. The payload is backend-specific:
- * the helper keeps the binary on disk and carries its `path` (no bytes over the WS), while the web
- * backend carries the images in `parts` as base64.
+ * the helper keeps the images on disk and carries their `path`s (no bytes over the WS), while the web
+ * backend carries the images in `parts` as base64 `data`.
  */
 export interface Artifact {
     /** Binary format: 'bin' (ESP) or 'hex' (AVR). */
     format: string
     path?: string
     /** Flash images in write order; absent for a single-image (AVR) build. */
-    parts?: Array<{data: string, offset: number}>
+    parts?: Array<{offset: number, data?: string, path?: string}>
 }
 
 /** One progress update from a long-running operation. */
@@ -73,10 +73,10 @@ export interface Connection {
     listBoards (device: LinkDevice): Promise<ConnectionTarget[]>
 
     /**
-     * Open the link to a target. Optional: helper mode passes a target chosen from `listBoards()`; web
-     * mode lets the browser's native picker choose.
+     * Open the link to a target of the device. The target is optional: helper mode passes one chosen
+     * from `listBoards()`; web mode lets the browser's native picker choose.
      */
-    connect (target?: ConnectionTarget | null): Promise<void>
+    connect (device: LinkDevice, target?: ConnectionTarget | null): Promise<void>
 
     /** Close the link and release the transport. Safe to call when already disconnected. */
     disconnect (): Promise<void>

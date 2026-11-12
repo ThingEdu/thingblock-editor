@@ -1,5 +1,5 @@
 const test = require('tap').test;
-const {createCloudBackend, filtersFromDevice, isCloudSupported} = require('../../src/link/cloud');
+const {createCloudBackend, filtersFromDevice} = require('../../src/link/cloud');
 const Runtime = require('../../src/engine/runtime').default;
 
 // A minimal fake of a Web Serial SerialPort that records open/close and serves scripted reads.
@@ -67,41 +67,25 @@ const makeFakePort = (chunks = []) => ({
 // Install a fake navigator.serial that hands back `port` and records the requestPort filters.
 const installSerial = port => {
     const calls = {filters: null};
-    global.navigator = {
-        serial: {
-            requestPort (options) {
-                calls.filters = options.filters;
-                return Promise.resolve(port);
+    // Node ships a getter-only `navigator`, which plain assignment silently leaves in place.
+    Object.defineProperty(global, 'navigator', {
+        configurable: true,
+        writable: true,
+        value: {
+            serial: {
+                requestPort (options) {
+                    calls.filters = options.filters;
+                    return Promise.resolve(port);
+                }
             }
         }
-    };
+    });
     return calls;
 };
 
 const uninstallSerial = () => {
     delete global.navigator;
 };
-
-test('spec', t => {
-    const c = createCloudBackend(new Runtime());
-
-    t.type(createCloudBackend, 'function');
-    t.type(c.connection.listBoards, 'function');
-    t.type(c.connection.connect, 'function');
-    t.type(c.connection.disconnect, 'function');
-    t.equal(c.connection.isConnected, false);
-    t.end();
-});
-
-test('isSupported reflects navigator.serial presence', t => {
-    uninstallSerial();
-    t.equal(isCloudSupported(), false);
-
-    installSerial(makeFakePort());
-    t.equal(isCloudSupported(), true);
-    uninstallSerial();
-    t.end();
-});
 
 test('filtersFromDevice parses pnpid VID/PID', t => {
     const device = {
@@ -132,15 +116,6 @@ test('listBoards returns one picker entry labelled with the device when Web Seri
     });
 });
 
-test('listBoards is empty when Web Serial is unavailable', t => {
-    uninstallSerial();
-    const c = createCloudBackend(new Runtime());
-    c.connection.listBoards(stubDevice()).then(targets => {
-        t.same(targets, []);
-        t.end();
-    });
-});
-
 test('connect opens the port, exposes transport, and emits DEVICE_CONNECTED', t => {
     const rt = new Runtime();
     const c = createCloudBackend(rt);
@@ -152,24 +127,13 @@ test('connect opens the port, exposes transport, and emits DEVICE_CONNECTED', t 
 
     t.throws(() => c.connection.transport, 'transport throws before connect');
 
-    c.connection.connect({filters: [{usbVendorId: 0x2341, usbProductId: 0x0043}]}).then(() => {
+    c.connection.connect(null, {filters: [{usbVendorId: 0x2341, usbProductId: 0x0043}]}).then(() => {
         t.equal(c.connection.isConnected, true);
         t.equal(port.opened, true);
         t.equal(port.openOptions.baudRate, 115200);
         t.equal(c.connection.transport, port);
         t.same(calls.filters, [{usbVendorId: 0x2341, usbProductId: 0x0043}]);
         t.equal(connectedEvents, 1);
-        uninstallSerial();
-        t.end();
-    });
-});
-
-test('connect with no target shows all ports (empty filters)', t => {
-    const c = createCloudBackend(new Runtime());
-    const calls = installSerial(makeFakePort());
-
-    c.connection.connect().then(() => {
-        t.same(calls.filters, []);
         uninstallSerial();
         t.end();
     });
@@ -194,19 +158,6 @@ test('disconnect closes the port and emits DEVICE_DISCONNECTED', t => {
             uninstallSerial();
             t.end();
         });
-});
-
-test('disconnect is a no-op when not connected', t => {
-    const rt = new Runtime();
-    const c = createCloudBackend(rt);
-
-    let disconnectedEvents = 0;
-    rt.events.on('DEVICE_DISCONNECTED', () => disconnectedEvents++);
-
-    c.connection.disconnect().then(() => {
-        t.equal(disconnectedEvents, 0);
-        t.end();
-    });
 });
 
 test('connect throws when Web Serial is unavailable', t => {

@@ -67,3 +67,21 @@ describe('start servo block', () => {
     expect(tooltip).toContain('wait for servos')
   })
 })
+
+describe('notes and servo timing (from main)', () => {
+  it('resolves every note name and octave to an equal-tempered frequency', () => {
+    const hz = (note: string, octave: string) =>
+      generate('thingBotC3_playNote', { NOTE: note, OCTAVE: octave }, { BEATS: '1' }).code
+
+    expect(hz('C', '4')).toBe('musicPlay(262, 1);\n')
+    expect(hz('G', '4')).toBe('musicPlay(392, 1);\n')
+    expect(hz('C', '5')).toBe('musicPlay(523, 1);\n')
+    expect(hz('A', '3')).toBe('musicPlay(220, 1);\n')
+    expect(hz('A#', '4')).toBe('musicPlay(466, 1);\n')
+  })
+
+  it('guards the servo tick against a zero or negative duration instead of dividing by it', () => {
+    const { gen } = generate('thingBotC3_startServoAngle')
+    expect(gen.globals.get('thingbot_servo_angle') ?? '').toMatch(/dur = seconds > 0/)
+  })
+})

@@ -46,7 +46,7 @@ describe('FirmwareStep', () => {
 
         await screen.findByText('Firmware installed');
         expect(vm.link.listBoards).toHaveBeenCalledWith('thingbot');
-        expect(vm.link.connectBoard).toHaveBeenCalledWith(port);
+        expect(vm.link.connectBoard).toHaveBeenCalledWith('thingbot', port);
         expect(vm.link.flashFirmware).toHaveBeenCalledWith('thingbot', 'telemetrix-ble');
         await waitFor(() => expect(vm.link.disconnectBoard).toHaveBeenCalled());
 

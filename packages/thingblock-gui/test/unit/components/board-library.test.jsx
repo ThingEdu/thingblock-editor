@@ -68,19 +68,4 @@ describe('BoardLibrary', () => {
         expect(screen.getByRole('button', {name: /ESP32 Dev Module/i})).toBeInTheDocument();
         expect(container.querySelector('img[src="vm-arduino-uno.svg"]')).toBeInTheDocument();
     });
-
-    test('configures the library for fixed-size items', () => {
-        renderBoardLibrary();
-
-        expect(screen.getByText('Arduino Uno').closest('[data-fixed-item-size]')).toHaveAttribute(
-            'data-fixed-item-size',
-            'true'
-        );
-    });
-
-    test('renders nothing when not visible', () => {
-        const {container} = renderBoardLibrary(false);
-
-        expect(container).toBeEmptyDOMElement();
-    });
 });

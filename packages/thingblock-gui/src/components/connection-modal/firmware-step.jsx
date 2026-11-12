@@ -25,7 +25,7 @@ const FirmwareStep = ({
     vm,
     onScanning
 }) => {
-    // 'listing' | 'ports' | 'flashing' | 'done' | 'error'
+    // 'listing' | 'ports' | 'connecting' | 'flashing' | 'done' | 'error'
     const [status, setStatus] = useState('listing');
     const [ports, setPorts] = useState([]);
     const [error, setError] = useState(null);
@@ -61,9 +61,12 @@ const FirmwareStep = ({
         const port = ports.find(candidate => candidate.id === portId);
         // Only release the port afterwards if this step opened it.
         const ownsPort = !connectedBoard;
-        setStatus('flashing');
-        (ownsPort ? vm.link.connectBoard(port) : Promise.resolve())
-            .then(() => vm.link.flashFirmware(firmware.deviceId, firmware.firmwareId))
+        setStatus(ownsPort ? 'connecting' : 'flashing');
+        (ownsPort ? vm.link.connectBoard(firmware.deviceId, port) : Promise.resolve())
+            .then(() => {
+                if (!unmountedRef.current) setStatus('flashing');
+                return vm.link.flashFirmware(firmware.deviceId, firmware.firmwareId);
+            })
             .then(() => {
                 if (unmountedRef.current) return;
                 setStatus('done');
@@ -116,7 +119,7 @@ const FirmwareStep = ({
                 ) : (
                     <div className={styles.activityAreaInfo}>
                         <div className={styles.centeredRow}>
-                            {(status === 'listing' || status === 'flashing') && (
+                            {(status === 'listing' || status === 'connecting' || status === 'flashing') && (
                                 <img
                                     className={classNames(styles.radarSmall, styles.radarSpin)}
                                     src={radarIcon}
@@ -140,6 +143,13 @@ const FirmwareStep = ({
                                     defaultMessage="No USB boards found"
                                     description="Text shown when no USB board could be found to install firmware on"
                                     id="gui.connection.firmware.noPorts"
+                                />
+                            )}
+                            {status === 'connecting' && (
+                                <FormattedMessage
+                                    defaultMessage="Connecting to the board…"
+                                    description="Text shown while connecting to the USB board to install firmware on"
+                                    id="gui.connection.firmware.connecting"
                                 />
                             )}
                             {status === 'flashing' && (

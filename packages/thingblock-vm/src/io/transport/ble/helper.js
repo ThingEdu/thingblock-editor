@@ -2,12 +2,12 @@ const {BleBackend, BleConnection, BleCharacteristic} = require('./backend');
 
 /**
  * Default address of the thingblock-link helper's BLE channel. Separate from the
- * flash channel (`ws://localhost:3030/`); the helper bridges GATT over it with
+ * Arduino channel (`/ws/arduino`); the helper bridges GATT over it with
  * btleplug for environments without Web Bluetooth (Tauri's WebKitGTK/WKWebView/
  * WebView2, and non-Chromium browsers).
  * @type {string}
  */
-const DEFAULT_URL = 'ws://localhost:3030/io';
+const DEFAULT_URL = 'ws://127.0.0.1:3030/ws/ble';
 
 /** The WebSocket OPEN readyState (spec-fixed). */
 const WS_OPEN = 1;
@@ -111,8 +111,8 @@ class HelperBleConnection extends BleConnection {
  * BLE backend that bridges GATT operations through the thingblock-link helper
  * over a WebSocket. Speaks the helper's `{id, type, payload}` envelope: a
  * request's `id` correlates its terminal `result`/`error`; scans stream
- * `bleDevice` frames on the scan's id; notifications and disconnects arrive as
- * unsolicited `bleNotify`/`bleDisconnected` frames routed by device.
+ * `device` frames on the scan's id; notifications and disconnects arrive as
+ * unsolicited `notify`/`disconnected` frames routed by device.
  *
  * The WebSocket and its URL are injectable so tests can drive a fake socket.
  */
@@ -238,17 +238,17 @@ class HelperBleBackend extends BleBackend {
         }
         const {id, type, payload} = message;
         switch (type) {
-        case 'bleDevice': {
+        case 'device': {
             const onDevice = this._scans.get(id);
             if (onDevice) onDevice({id: payload.deviceId, name: payload.name, rssi: payload.rssi});
             break;
         }
-        case 'bleNotify': {
+        case 'notify': {
             const handler = this._notifyHandlers.get(notifyKey(payload.deviceId, payload.characteristic));
             if (handler) handler(base64ToBytes(payload.data));
             break;
         }
-        case 'bleDisconnected': {
+        case 'disconnected': {
             const cb = this._disconnectHandlers.get(payload.deviceId);
             if (cb) {
                 this._disconnectHandlers.delete(payload.deviceId);

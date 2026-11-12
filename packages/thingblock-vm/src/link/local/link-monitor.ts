@@ -29,7 +29,7 @@ export default class LinkMonitor implements SerialMonitor {
         this.session.monitor = {id, opened: false};
         log.info(`LinkClient.openMonitor: opening serial monitor on ${port} at ${baudRate} baud`);
         try {
-            await this.session.request('monitorOpen', {port, baudRate}, null, false, id);
+            await this.session.request('monitorOpen', {baudRate}, null, false, id);
         } catch (err) {
             // A failed open must leave no routing behind, whichever path rejected it.
             if (this.session.monitor && this.session.monitor.id === id) this.session.monitor = null;

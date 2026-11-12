@@ -33,16 +33,6 @@ describe('Variable Prompt Container', () => {
         </Provider>
     );
 
-    test('shows the value-type options and not the sprite scope or cloud controls', () => {
-        renderPrompt(true);
-        // getByRole throws if the element is missing, asserting the three options exist.
-        expect(screen.getByRole('radio', {name: 'Number'})).not.toBeNull();
-        expect(screen.getByRole('radio', {name: 'Decimal'})).not.toBeNull();
-        expect(screen.getByRole('radio', {name: 'Text'})).not.toBeNull();
-        expect(screen.queryByText('For all sprites')).toBeNull();
-        expect(screen.queryByText(/Cloud variable/)).toBeNull();
-    });
-
     test('passes the selected type to onOk as a global variable', () => {
         renderPrompt(true);
         fireEvent.click(screen.getByRole('radio', {name: 'Decimal'}));

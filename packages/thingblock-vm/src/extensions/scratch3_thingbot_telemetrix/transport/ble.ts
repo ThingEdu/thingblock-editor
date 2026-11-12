@@ -28,11 +28,17 @@ class BLETransport implements Transport {
             if (onDisconnect) onDisconnect();
         });
 
-        this._rxChar = await this._connection.getCharacteristic(SERVICE_UUID, RX_CHAR_UUID);
-        const txChar = await this._connection.getCharacteristic(SERVICE_UUID, TX_CHAR_UUID);
-        this._unsubscribeData = await txChar.subscribe((bytes: Uint8Array) => this._onData(bytes));
-
-        await this._handshake();
+        // The helper rejects connecting an already-connected device, so a failed setup must close
+        // the link or the next connect attempt fails.
+        try {
+            this._rxChar = await this._connection.getCharacteristic(SERVICE_UUID, RX_CHAR_UUID);
+            const txChar = await this._connection.getCharacteristic(SERVICE_UUID, TX_CHAR_UUID);
+            this._unsubscribeData = await txChar.subscribe((bytes: Uint8Array) => this._onData(bytes));
+            await this._handshake();
+        } catch (err) {
+            this.disconnect();
+            throw err;
+        }
     }
 
     send (packet: Uint8Array) {
