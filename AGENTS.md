@@ -153,7 +153,8 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
 - Styles are CSS modules named `*.module.css`, with camelCase class names so `styles.fooBar` works in both
   webpack and Vite. They use the `$variable` tokens in `css/` (`colors`, `units`, `z-index`, exported as
   `@thingblock/thingblock-ui/css/*`), so a consumer needs `postcss-import` and `postcss-simple-vars`.
-- `thingblock-gui` still has its own copies of these components and tokens; nothing consumes `thingblock-ui` yet.
+- `thingblock-virtualspace` consumes it through Vite, with the two plugins in its `postcss.config.mjs`.
+  `thingblock-gui` still has its own copies of these components and tokens and does not use `thingblock-ui` yet.
 
 ### thingblock-blocks specifics
 
