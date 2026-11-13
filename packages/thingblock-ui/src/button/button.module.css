@@ -1,0 +1,33 @@
+@import '../../css/units.css';
+
+.outlinedButton {
+  cursor: pointer;
+  border-radius: $form-radius;
+  font-weight: bold;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  user-select: none;
+
+  background: inherit;
+  border: inherit;
+  color: inherit;
+}
+
+.icon {
+  height: 1.5rem;
+}
+
+[dir='ltr'] .icon {
+  margin-right: 0.5rem;
+}
+
+[dir='rtl'] .icon {
+  margin-left: 0.5rem;
+}
+
+.content {
+  white-space: nowrap;
+}

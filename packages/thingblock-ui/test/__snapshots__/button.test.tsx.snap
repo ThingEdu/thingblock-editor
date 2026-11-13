@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Button > matches snapshot 1`] = `
+<button
+  class="_outlinedButton_2b13e7"
+>
+  <div
+    class="_content_2b13e7"
+  />
+</button>
+`;

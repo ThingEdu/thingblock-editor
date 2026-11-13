@@ -80,12 +80,13 @@ packages/
 ├── thingblock-vm/          Virtual machine that runs Scratch projects
 ├── thingblock-blocks/      Blockly-based block editor (workspace fork)
 ├── thingblock-storage/     Asset and project file storage layer
+├── thingblock-ui/          UI components shared by ThingBlock apps (private, source-only)
 └── task-herder/            Async task scheduler with rate limiting
 scripts/                    Monorepo-level utility scripts
 ```
 
 `apps/` holds deployed applications; they are private workspaces, not npm packages. `packages/` holds the
-published libraries.
+libraries.
 
 ## Packages at a glance
 
@@ -96,6 +97,7 @@ published libraries.
 | `thingblock-blocks` | TypeScript | webpack | Vitest |
 | `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
+| `thingblock-ui` | TypeScript | none (consumers bundle its source) | Vitest |
 | `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
 
 `task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
@@ -141,6 +143,15 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   lesson panel (`containers/lesson-panel.jsx`, reducer `lesson`) sends it `watch` rules and renders its `check`
   verdicts. The Scratch tutorial decks and cards are gone; the Lessons menu opens `containers/lesson-library.jsx`,
   fed by the pack's `tutorials/index.json`.
+
+### thingblock-ui specifics
+
+- React 18 components in TSX, exported from `src/index.ts` and consumed from source; the consumer's bundler
+  compiles them. `react` is a peer dependency.
+- Styles are CSS modules named `*.module.css`, with camelCase class names so `styles.fooBar` works in both
+  webpack and Vite. They use the `$variable` tokens in `css/` (`colors`, `units`, `z-index`, exported as
+  `@thingblock/thingblock-ui/css/*`), so a consumer needs `postcss-import` and `postcss-simple-vars`.
+- `thingblock-gui` still has its own copies of these components and tokens; nothing consumes `thingblock-ui` yet.
 
 ### thingblock-blocks specifics
 

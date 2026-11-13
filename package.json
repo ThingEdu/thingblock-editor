@@ -22,6 +22,7 @@
     "packages/thingblock-gui",
     "packages/thingblock-resource",
     "packages/thingblock-sim",
+    "packages/thingblock-ui",
     "apps/thingblock-virtualspace"
   ],
   "scripts": {

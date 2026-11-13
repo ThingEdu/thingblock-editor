@@ -1,0 +1,36 @@
+{
+  "name": "@thingblock/thingblock-ui",
+  "version": "0.1.0",
+  "description": "UI components shared by ThingBlock apps.",
+  "license": "AGPL-3.0-only",
+  "author": "ThingEdu",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./css/*": "./css/*"
+  },
+  "scripts": {
+    "format": "prettier --write . && eslint --fix",
+    "lint": "eslint && prettier --check .",
+    "test": "npm run lint && tsc && vitest run"
+  },
+  "devDependencies": {
+    "@testing-library/react": "14.3.1",
+    "@types/react": "18.3.27",
+    "eslint": "9.39.4",
+    "eslint-config-scratch": "14.1.30",
+    "jsdom": "31.0.0",
+    "prettier": "3.8.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.8"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "dependencies": {
+    "classnames": "2.5.1"
+  }
+}
