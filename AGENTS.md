@@ -74,6 +74,7 @@ rejected by the pre-commit hook.
 
 ```text
 apps/
+├── thingblock/               Editor web app (bare scaffold, not used yet)
 └── thingblock-virtualspace/  Web-only virtual robot environment (private, never published)
 packages/
 ├── thingblock-gui/         React-based editor UI
@@ -98,6 +99,7 @@ libraries.
 | `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
 | `thingblock-ui` | TypeScript | none (consumers bundle its source) | Vitest |
+| `thingblock` (app) | TypeScript | Vite | Vitest |
 | `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
 
 `task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
