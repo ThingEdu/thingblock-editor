@@ -12,7 +12,6 @@ import Filter from '../filter/filter.jsx';
 import TagButton from '../../containers/tag-button.jsx';
 import {legacyConfig} from '../../legacy-config';
 import Spinner from '../spinner/spinner.jsx';
-import {CATEGORIES} from '../../lib/libraries/categories.js';
 
 import styles from './library.css';
 import {ModalFocusContext} from '../../contexts/modal-focus-context.jsx';
@@ -27,28 +26,6 @@ const messages = defineMessages({
         id: 'gui.library.allTag',
         defaultMessage: 'All',
         description: 'Label for library tag to revert to all items after filtering by tag.'
-    },
-    // Strings here need to be defined statically
-    // https://formatjs.io/docs/getting-started/message-declaration/#pre-declaring-using-definemessage-for-later-consumption-less-recommended
-    [CATEGORIES.gettingStarted]: {
-        id: `gui.library.gettingStarted`,
-        defaultMessage: 'Getting Started',
-        description: 'Label for getting started category'
-    },
-    [CATEGORIES.basics]: {
-        id: `gui.library.basics`,
-        defaultMessage: 'Basics',
-        description: 'Label for basics category'
-    },
-    [CATEGORIES.intermediate]: {
-        id: `gui.library.intermediate`,
-        defaultMessage: 'Intermediate',
-        description: 'Label for intermediate category'
-    },
-    [CATEGORIES.prompts]: {
-        id: `gui.library.prompts`,
-        defaultMessage: 'Prompts',
-        description: 'Label for prompts category'
     },
     membershipTag: {
         defaultMessage: 'Membership',
@@ -302,35 +279,26 @@ class LibraryComponent extends React.Component {
         />);
     }
     renderData (data) {
-        if (this.state.selectedTag !== ALL_TAG.tag || !this.props.withCategories) {
+        if (this.state.selectedTag !== ALL_TAG.tag || !this.props.categories) {
             return data.map(item => this.renderElement(item));
         }
 
-        // Object.groupBy is not available on older versions of javascript
-        const dataByCategory = data.reduce((acc, el) => {
-            acc[el.category] = acc[el.category] || [];
-            acc[el.category].push(el);
-            return acc;
-        }, {});
-        const categoriesOrder = Object.values(CATEGORIES);
-
-        return Object.entries(dataByCategory)
-            .sort(([key1], [key2]) => categoriesOrder.indexOf(key1) - categoriesOrder.indexOf(key2))
-            .map(([key, values]) =>
+        // One section per category, in the order given; empty categories are left out.
+        return this.props.categories
+            .map(category => ({category, items: data.filter(item => item.category === category.id)}))
+            .filter(({items}) => items.length)
+            .map(({category, items}) =>
                 (<div
-                    key={key}
+                    key={category.id}
                     className={styles.libraryCategory}
                 >
-                    {key === 'undefined' ?
-                        null :
-                        <span className={styles.libraryCategoryTitle}>
-                            {this.props.intl.formatMessage(messages[key])}
-                        </span>
-                    }
+                    <span className={styles.libraryCategoryTitle}>
+                        {this.props.intl.formatMessage(category.intlLabel)}
+                    </span>
                     <div
                         className={styles.libraryCategoryItems}
                     >
-                        {values.map(item => this.renderElement(item))}
+                        {items.map(item => this.renderElement(item))}
                     </div>
                 </div>));
     }
@@ -402,6 +370,11 @@ class LibraryComponent extends React.Component {
 }
 
 LibraryComponent.propTypes = {
+    /** Sections shown under the "All" tag, in order; each item names its section in `category`. */
+    categories: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        intlLabel: PropTypes.shape({id: PropTypes.string}).isRequired
+    })),
     data: PropTypes.arrayOf(
          
         // An item in the library
@@ -418,7 +391,6 @@ LibraryComponent.propTypes = {
     ),
     fixedItemSize: PropTypes.bool,
     filterable: PropTypes.bool,
-    withCategories: PropTypes.bool,
     id: PropTypes.string.isRequired,
     intl: intlShape.isRequired,
     onItemMouseEnter: PropTypes.func,

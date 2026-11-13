@@ -118,9 +118,14 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `reducers/locales.js`.
 - Integration tests (`test/integration/`) require a browser environment via Jest + jsdom; they are slow and
   should not be run unnecessarily. Smoke tests (`test/smoke/`) require a live server.
-- **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is now a firmware device panel
-  (`components/gui/device-panel`) containing `CodeView` (generated code display) and `SerialLog` (Monitor,
-  collapsible serial/input panel). The VM still runs one implicit device target, but no sprite UI renders.
+- **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is `components/side-panel`. With a
+  board selected it shows `CodeView` and `containers/board-monitor.jsx` (board serial, baud rate); with none it
+  shows only `containers/host-monitor.jsx` (block print output, "ask and wait"). Each pane can be hidden from the
+  panel's menu. Both monitors own their state and render `components/monitor-view`. While a lesson is open,
+  `components/left-panel` sits left of the editor and holds the lesson panel, so the editor's tab strip moves with
+  the workspace. With a board selected, the panel also shows `containers/sim-panel.jsx` above the code view:
+  a headerless card whose Run/Pause, Step, Reset and Mute are an `ActionMenu` FAB like the monitor's. The VM still runs one implicit device target, but no sprite
+  UI renders.
 - `thingblock-gui`'s webpack build (and dev server) compiles `@thingblock/thingblock-vm` from source through its
   `webpack` export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
   resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `thingblock-vm` source — needs
@@ -175,14 +180,16 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
   skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
   cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
-- Lessons live in `packages/thingblock-resource/src/tutorials/<ma>/bai.<lang>.md` (see that folder's README).
-  `scripts/build-lessons.mjs` compiles them to `dist/thingblock-resource/tutorials/` with an index; a bad rule,
-  missing image or unknown tour anchor fails the pack build. `test/lessons/lessons.test.ts` grades each lesson's
-  `kiem-thu/*.tb` the way the editor grades a learner, so every shipped lesson is proven solvable. Rule grammar and
+- Lessons live in `packages/thingblock-resource/src/tutorials/<id>/lesson.<lang>.md` (see that folder's README).
+  Everything authors and developers type there is English (front matter, `> hint:`, `check:`, `point at:`, file
+  names); only learner-facing text is Vietnamese. `scripts/build-lessons.mjs` compiles them to
+  `dist/thingblock-resource/tutorials/` with an index; a bad rule, missing image or unknown tour anchor fails the
+  pack build. `test/lessons/lessons.test.ts` grades each lesson's
+  `solutions/*.tb` the way the editor grades a learner, so every shipped lesson is proven solvable. Rule grammar and
   grading are in `packages/thingblock-sim/src/checker/` (package export `./checker`); `rules.ts` must stay
   import-free because the Node build script loads it through type stripping. `vm.devices.getTutorialsOrigin()` gives
   the GUI the base for fetching lessons.
-- Camera AI lessons (`bo: khong`, `mo-rong: cameraAi`) use playground rules (`checker/camera.ts`) that the lesson
+- Camera AI lessons (`board: none`, `extensions: cameraAi`, group `camera-ai`) use playground rules (`checker/camera.ts`) that the lesson
   panel grades from the VM's Camera AI events (`gui/src/lib/lesson-camera.js`), not the simulator worker.
   `test/lessons/camera-lessons.test.ts` and `test/examples-camera-ai.test.ts` in `thingblock-resource` run those
   projects in the built VM (`thingblock-vm/dist/node`) with a synthetic hand, so they need `npm run build:libs`.

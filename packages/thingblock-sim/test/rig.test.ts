@@ -113,7 +113,7 @@ describe('Session with the egg belt', () => {
     const { session, snapshot } = run(sorter(DOWN), 20)
     expect(snapshot.belt?.rejectedGood).toBe(0)
     expect(snapshot.belt?.passedBad).toBe(0)
-    expect(grade(['phân loại đúng 6 trứng liền', 'gạt 2 trứng hỏng', 'đọc mắt hồng ngoại IO4'], session)).toEqual([
+    expect(grade(['sort 6 eggs in a row', 'reject 2 bad eggs', 'read IR eye IO4'], session)).toEqual([
       { ok: true, message: '' },
       { ok: true, message: '' },
       { ok: true, message: '' },
@@ -122,7 +122,7 @@ describe('Session with the egg belt', () => {
 
   it('lets a bad egg through when the gate never comes down, and says so', () => {
     const { session } = run(sorter(UP), 20)
-    const [sorted, rejected] = grade(['phân loại đúng 6 trứng liền', 'gạt 2 trứng hỏng'], session)
+    const [sorted, rejected] = grade(['sort 6 eggs in a row', 'reject 2 bad eggs'], session)
     expect(sorted.ok).toBe(false)
     expect(sorted.message).toMatch(/trứng hỏng lọt vào thùng trứng tốt/)
     expect(rejected).toEqual({

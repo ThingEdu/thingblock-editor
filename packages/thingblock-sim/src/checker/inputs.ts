@@ -1,7 +1,7 @@
 // packages/thingblock-sim/src/checker/inputs.ts
 /**
- * The rig settings that make a step's input rules hold ("giữ nút SW", "khoảng cách < 20 cm", "giữ nút PS2
- * lên", "chọn bóng tối màu"), and the egg belt for the sorting rules. The editor leaves them to the learner; the lesson fixtures apply them before grading a solution
+ * The rig settings that make a step's input rules hold ("hold SW", "distance < 20 cm", "hold PS2
+ * up", "pick dark ball"), and the egg belt for the sorting rules. The editor leaves them to the learner; the lesson fixtures apply them before grading a solution
  * headless, so a solution is graded in the situation the step describes.
  */
 import { BALLS, BELT_INPUT, IR_INPUT } from '../hal/rig'

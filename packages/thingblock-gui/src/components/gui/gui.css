@@ -187,7 +187,6 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    /* A tall lesson column scrolls inside itself instead of growing the page. */
     min-height: 0;
 }
 
@@ -209,16 +208,6 @@
     min-height: 0;
 }
 
-/*
-    The workspace beside the lesson column; Blockly's injection div and the extension button are absolutely
-    positioned inside it.
-*/
-.blocks-area {
-    flex: 1;
-    position: relative;
-    min-width: 0;
-}
-
 .resize-handle {
     width: 4px;
     flex-shrink: 0;
@@ -230,18 +219,6 @@
 
 .resize-handle:hover {
     background-color: $motion-primary;
-}
-
-.device-panel {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 420px;
-    min-height: 0;
-    overflow: hidden;
-    /* No top padding so the controls row (a $stage-menu-height strip) matches
-       the tab strip on the left, aligning the Generated Code panel with the
-       canvas top. The gap below the code view is added on the monitor itself. */
-    padding: 0 $space $space;
 }
 
 

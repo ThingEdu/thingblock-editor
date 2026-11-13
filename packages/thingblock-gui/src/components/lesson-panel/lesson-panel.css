@@ -2,20 +2,33 @@
 @import "../../css/colors.css";
 
 .panel {
-    flex: 0 0 280px;
+    width: 280px;
+    flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid $ui-black-transparent;
-    background: $ui-white;
+    color: $text-primary;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    background: $ui-white;
+    border: 1px solid $ui-black-transparent;
+    border-radius: $space;
 }
 
 .collapsed {
-    flex-basis: 2.5rem;
+    width: 2.25rem;
+}
+
+.collapsed .card {
     align-items: center;
-    padding-top: 0.5rem;
-    gap: 0.5rem;
+    padding-top: $space;
 }
 
 .collapsed-label {
@@ -26,43 +39,53 @@
 .header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    /* Same height as the editor's tab strip, so the card starts level with the workspace. */
+    height: $stage-menu-height;
+}
+
+/* Matches the side panel's header buttons. */
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0.5rem;
-    border-bottom: 1px solid $ui-black-transparent;
-}
-
-.title {
-    flex: 1;
-    font-weight: bold;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.collapse-button,
-.close-button {
-    border: none;
-    background: none;
+    border: 1px solid $ui-black-transparent;
+    border-radius: $form-radius;
+    background-color: $ui-white;
+    color: $text-primary;
     cursor: pointer;
 }
 
-.progress-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    font-size: 0.75rem;
+.icon-button:active {
+    background-color: $looks-transparent;
+}
+
+.icon-button:disabled,
+.button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.icon {
+    width: 100%;
+    height: 100%;
 }
 
 .progress-track {
     display: flex;
-    gap: 2px;
+    gap: 3px;
     flex: 1;
 }
 
 .progress-cell {
     flex: 1;
-    height: 6px;
+    height: 4px;
+    border-radius: 2px;
     background: $ui-black-transparent;
 }
 
@@ -71,40 +94,50 @@
 }
 
 .progress-current {
-    outline: 2px solid $motion-primary;
+    background: $motion-primary;
 }
 
 .content {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: $space;
+    padding: $space calc($space * 1.5);
+    font-size: 0.875rem;
+    line-height: 1.5;
 }
 
 .content img {
     max-width: 100%;
 }
 
+.lesson-name {
+    margin-bottom: 0.25rem;
+    color: $text-primary-transparent;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .step-title {
-    margin-top: 0;
-    font-size: 1.1rem;
+    margin: 0 0 $space;
+    font-size: 1rem;
 }
 
 .hint {
     background: $ui-black-transparent;
-    border-radius: 4px;
-    padding: 0.5rem;
-}
-
-.hint-button {
-    cursor: pointer;
+    border-radius: $form-radius;
+    padding: $space;
 }
 
 .verdict {
-    margin: $space;
+    margin: 0 $space $space;
     padding: $space;
-    border-radius: $space;
+    border-radius: $form-radius;
     background: $ui-black-transparent;
+    font-size: 0.875rem;
 }
 
 .failed {
@@ -124,14 +157,36 @@
     margin-top: 0.25rem;
 }
 
+/* Matches the monitor's input row. */
 .footer {
     display: flex;
-    justify-content: space-between;
-    padding: 0.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    gap: $space;
+    padding: $space;
+    font-size: 0.75rem;
     border-top: 1px solid $ui-black-transparent;
 }
 
-.next-ready {
-    background: $motion-primary;
+/* Outlined counterpart of the monitor's Send button. */
+.button {
+    padding: calc($space * 0.75) calc($space * 1.5);
+    border: 1px solid $ui-black-transparent;
+    border-radius: $form-radius;
+    background-color: $ui-white;
+    color: $text-primary;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.primary {
+    border-color: $motion-primary;
+    background-color: $motion-primary;
     color: $ui-white;
+}
+
+.primary:hover:enabled {
+    background-color: $motion-tertiary;
 }

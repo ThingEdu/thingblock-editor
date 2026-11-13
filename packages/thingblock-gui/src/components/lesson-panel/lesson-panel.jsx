@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
 import LessonBody, {Runs} from './lesson-body.jsx';
 import styles from './lesson-panel.css';
 
@@ -38,122 +38,189 @@ const verdictText = {
     />)
 };
 
+const messages = defineMessages({
+    collapse: {
+        defaultMessage: 'Hide lesson',
+        description: 'Button that collapses the lesson panel',
+        id: 'gui.lessonPanel.collapse'
+    },
+    expand: {
+        defaultMessage: 'Show lesson',
+        description: 'Button that expands the collapsed lesson panel',
+        id: 'gui.lessonPanel.expand'
+    },
+    close: {
+        defaultMessage: 'Close lesson',
+        description: 'Button that closes the lesson',
+        id: 'gui.lessonPanel.close'
+    },
+    prev: {
+        defaultMessage: 'Back',
+        description: 'Previous lesson step',
+        id: 'gui.lessonPanel.prev'
+    },
+    next: {
+        defaultMessage: 'Next',
+        description: 'Next lesson step',
+        id: 'gui.lessonPanel.next'
+    }
+});
+
+const Icon = ({path}) => (
+    <svg
+        className={styles.icon}
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d={path} />
+    </svg>
+);
+
+Icon.propTypes = {
+    path: PropTypes.string.isRequired
+};
+
+const ICON_SIDEBAR = 'M4 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM6 2v12';
+const ICON_PREV = 'M10 3L5 8l5 5';
+const ICON_NEXT = 'M6 3l5 5-5 5';
+const ICON_CLOSE = 'M4 4l8 8M12 4l-8 8';
+
+const IconButton = ({className, label, path, ...props}) => (
+    <button
+        aria-label={label}
+        className={classNames(styles.iconButton, className)}
+        title={label}
+        type="button"
+        {...props}
+    >
+        <Icon path={path} />
+    </button>
+);
+
+IconButton.propTypes = {
+    className: PropTypes.string,
+    label: PropTypes.string.isRequired,
+    path: PropTypes.string.isRequired
+};
+
 const LessonPanel = ({
     lesson, stepIndex, passedSteps, hintsShown, check, collapsed,
     onPrev, onNext, onHint, onClose, onToggleCollapse
 }) => {
+    const intl = useIntl();
     const step = lesson.steps[stepIndex];
     const total = lesson.steps.length;
     const graded = step.rules.length > 0;
     if (collapsed) {
         return (
             <aside className={classNames(styles.panel, styles.collapsed)}>
-                <button
-                    className={styles.collapseButton}
-                    type="button"
-                    onClick={onToggleCollapse}
-                >▶</button>
-                <span className={styles.collapsedLabel}>{stepIndex + 1}/{total}</span>
+                <header className={styles.header}>
+                    <IconButton
+                        label={intl.formatMessage(messages.expand)}
+                        path={ICON_SIDEBAR}
+                        onClick={onToggleCollapse}
+                    />
+                </header>
+                <div className={styles.card}>
+                    <span className={styles.collapsedLabel}>{stepIndex + 1}/{total}</span>
+                </div>
             </aside>
         );
     }
     return (
         <aside
             className={styles.panel}
-            data-tour="huong-dan"
+            data-tour="lesson-panel"
         >
             <header className={styles.header}>
-                <button
-                    className={styles.collapseButton}
-                    type="button"
+                <IconButton
+                    label={intl.formatMessage(messages.collapse)}
+                    path={ICON_SIDEBAR}
                     onClick={onToggleCollapse}
-                >◀</button>
-                <span className={styles.title}>{lesson.ten}</span>
-                <button
-                    className={styles.closeButton}
-                    type="button"
-                    onClick={onClose}
-                >✕</button>
-            </header>
-            <div className={styles.progressRow}>
-                <span>{stepIndex + 1}/{total}</span>
-                <div className={styles.progressTrack}>
-                    {lesson.steps.map((s, i) => (
-                        <span
-                            key={i}
-                            className={classNames(styles.progressCell, {
-                                [styles.progressCurrent]: i === stepIndex,
-                                [styles.progressPassed]: passedSteps.includes(i)
-                            })}
-                        />
-                    ))}
-                </div>
-            </div>
-            <section className={styles.content}>
-                <h2 className={styles.stepTitle}>{step.title}</h2>
-                <LessonBody
-                    baseUrl={lesson.baseUrl}
-                    segments={step.body}
                 />
-                {step.hints.slice(0, hintsShown).map((hint, i) => (
-                    <p
-                        key={i}
-                        className={styles.hint}
-                    >💡 <Runs runs={hint} /></p>
-                ))}
-                {hintsShown < step.hints.length && (
-                    <button
-                        className={styles.hintButton}
-                        type="button"
-                        onClick={onHint}
-                    >
-                        <FormattedMessage
-                            defaultMessage="Hint"
-                            description="Show the next lesson hint"
-                            id="gui.lessonPanel.hint"
-                        />
-                    </button>
-                )}
-            </section>
-            {graded && (
-                <div
-                    className={classNames(styles.verdict, styles[check.status])}
-                    data-check-status={check.status}
-                >
-                    <div>{verdictText[check.status]}</div>
-                    {check.messages.map((m, i) => (
-                        <div
-                            key={i}
-                            className={styles.verdictMessage}
-                        >{m}</div>
-                    ))}
-                </div>
-            )}
-            <footer className={styles.footer}>
-                <button
-                    disabled={stepIndex === 0}
-                    type="button"
-                    onClick={onPrev}
-                >
-                    ◀ <FormattedMessage
-                        defaultMessage="Back"
-                        description="Previous lesson step"
-                        id="gui.lessonPanel.prev"
+                <IconButton
+                    label={intl.formatMessage(messages.close)}
+                    path={ICON_CLOSE}
+                    onClick={onClose}
+                />
+            </header>
+            <div className={styles.card}>
+                <section className={styles.content}>
+                    <div
+                        className={styles.lessonName}
+                        title={lesson.name}
+                    >{lesson.name}</div>
+                    <h2 className={styles.stepTitle}>{step.title}</h2>
+                    <LessonBody
+                        baseUrl={lesson.baseUrl}
+                        segments={step.body}
                     />
-                </button>
-                <button
-                    className={classNames({[styles.nextReady]: !graded || check.status === 'passed'})}
-                    disabled={stepIndex === total - 1}
-                    type="button"
-                    onClick={onNext}
-                >
-                    <FormattedMessage
-                        defaultMessage="Next"
-                        description="Next lesson step"
-                        id="gui.lessonPanel.next"
-                    /> ▶
-                </button>
-            </footer>
+                    {step.hints.slice(0, hintsShown).map((hint, i) => (
+                        <p
+                            key={i}
+                            className={styles.hint}
+                        >💡 <Runs runs={hint} /></p>
+                    ))}
+                    {hintsShown < step.hints.length && (
+                        <button
+                            className={styles.button}
+                            type="button"
+                            onClick={onHint}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Hint"
+                                description="Show the next lesson hint"
+                                id="gui.lessonPanel.hint"
+                            />
+                        </button>
+                    )}
+                </section>
+                {graded && (
+                    <div
+                        className={classNames(styles.verdict, styles[check.status])}
+                        data-check-status={check.status}
+                    >
+                        <div>{verdictText[check.status]}</div>
+                        {check.messages.map((m, i) => (
+                            <div
+                                key={i}
+                                className={styles.verdictMessage}
+                            >{m}</div>
+                        ))}
+                    </div>
+                )}
+                <footer className={styles.footer}>
+                    <IconButton
+                        disabled={stepIndex === 0}
+                        label={intl.formatMessage(messages.prev)}
+                        path={ICON_PREV}
+                        onClick={onPrev}
+                    />
+                    <span>{stepIndex + 1}/{total}</span>
+                    <div className={styles.progressTrack}>
+                        {lesson.steps.map((s, i) => (
+                            <span
+                                key={i}
+                                className={classNames(styles.progressCell, {
+                                    [styles.progressCurrent]: i === stepIndex,
+                                    [styles.progressPassed]: passedSteps.includes(i)
+                                })}
+                            />
+                        ))}
+                    </div>
+                    <IconButton
+                        className={classNames({[styles.primary]: !graded || check.status === 'passed'})}
+                        disabled={stepIndex === total - 1}
+                        label={intl.formatMessage(messages.next)}
+                        path={ICON_NEXT}
+                        onClick={onNext}
+                    />
+                </footer>
+            </div>
         </aside>
     );
 };
@@ -162,7 +229,7 @@ const runsShape = PropTypes.arrayOf(PropTypes.shape({text: PropTypes.string.isRe
 
 LessonPanel.propTypes = {
     lesson: PropTypes.shape({
-        ten: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
         baseUrl: PropTypes.string.isRequired,
         steps: PropTypes.arrayOf(PropTypes.shape({
             title: PropTypes.string.isRequired,

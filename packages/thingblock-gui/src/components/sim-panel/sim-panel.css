@@ -2,113 +2,90 @@
 @import "../../css/colors.css";
 
 .sim-panel {
-    /* The panel redraws up to 60 times a second; containing it keeps those updates from
-       relaying out the rest of the editor (the Blockly workspace is thousands of nodes). */
-    contain: layout paint style;
     display: flex;
     flex-direction: column;
     /* On a short window the panel gives way to the code view and scrolls inside itself; it keeps
-       its header and status strip, so Run and the clock stay in reach. */
+       its board, so Run and the clock stay in reach. */
     flex: 0 1 auto;
     min-height: 6rem;
+    background-color: $ui-white;
     border-radius: $space;
     border: 1px solid $ui-black-transparent;
     overflow: hidden;
-    margin-bottom: $space;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.header {
-    container: sim-header / inline-size;
-    height: $stage-menu-height;
-    color: $text-primary;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0 $space;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    border-bottom: 1px solid $ui-black-transparent;
-    user-select: none;
-}
-
-.title {
-    flex: 1;
-}
-
-.button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    height: 1.625rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0 0.5rem;
-    border-radius: 0.375rem;
-    border: 1px solid $ui-black-transparent;
-    background: $ui-white;
-    color: $text-primary;
-    cursor: pointer;
-    transition: background-color 0.1s ease, color 0.1s ease;
-}
-
-.button:hover:not(:disabled) {
-    background: $ui-secondary;
-    color: $motion-tertiary;
-}
-
-/* Run / Pause: the main action, filled like the Upload button. */
-.primary {
-    background: $ui-green-2;
-    border-color: $ui-green;
-    color: $ui-white;
-}
-
-.primary:hover:not(:disabled) {
-    background: $ui-green;
-    color: $ui-white;
-}
-
-.button:disabled {
-    opacity: 0.45;
-    cursor: default;
-}
-
-.icon {
-    width: 0.875rem;
-    height: 0.875rem;
-    flex-shrink: 0;
-}
-
-/* A narrow panel keeps the icons and tooltips and drops the words. */
-@container sim-header (max-width: 22rem) {
-    .button-label {
-        display: none;
-    }
-}
-
-.speed {
-    font-size: 0.75rem;
+/* Gap to the code view or monitor below. */
+.sim-panel:not(:last-child) {
+    margin-bottom: $space;
 }
 
 .body {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    /* Keep the scrollbar's room whether or not it shows: with classic scrollbars the drawing would
-       otherwise narrow when the bar appears, get shorter, lose the bar, widen again, and so on. */
-    scrollbar-gutter: stable;
 }
 
-/* The board and, when the program uses one, its display, drawn to one scale and growing with the panel. */
+/* The board and, when the program uses one, its display, drawn to one scale and growing with the panel.
+   The bottom padding is the strip the clock and the controls sit in, so they don't cover the board. */
 .rig {
+    position: relative;
+    flex-shrink: 0;
     display: flex;
     justify-content: center;
-    padding: 0.75rem;
-    background: #ffffff;
+    padding: $space $space calc(2.75rem + $space * 2);
+}
+
+.status {
+    position: absolute;
+    left: $space;
+    bottom: $space;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 2.75rem;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: 1.75rem;
+    padding: 0 0.5rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: $form-radius;
+    background-color: $ui-white;
+    color: $text-primary;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.chip-button {
+    cursor: pointer;
+}
+
+.chip-button:hover,
+.chip-button[aria-pressed="true"] {
+    background-color: $looks-transparent;
+}
+
+.chip-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.fab {
+    position: absolute;
+    right: $space;
+    bottom: $space;
 }
 
 .drawing {
+    /* The board redraws up to 60 times a second; containing it keeps those updates from relaying out
+       the rest of the editor (the Blockly workspace is thousands of nodes). It is the drawing and not the
+       card that is contained, because containment would also clip the controls' tooltips. */
+    contain: layout paint style;
     position: relative;
     flex: 0 1 auto;
     min-width: 0;
@@ -145,11 +122,8 @@
 
 .zoom-row {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0 0.75rem 0.75rem;
-    background: #ffffff;
+    justify-content: center;
+    padding: 0 $space $space;
 }
 
 .oled-zoom {
@@ -194,23 +168,19 @@
     }
 }
 
-.status {
-    contain: strict;
-    height: 1.5rem;
-    font-variant-numeric: tabular-nums;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    color: $text-primary;
-    border-top: 1px solid $ui-black-transparent;
-    display: flex;
-    justify-content: space-between;
-}
-
-.problem {
+.problem,
+.notice {
+    flex-shrink: 0;
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
     color: #b42318;
     background: #fef3f2;
+    border-bottom: 1px solid $ui-black-transparent;
+}
+
+.notice {
+    color: $text-primary;
+    background: $looks-transparent;
 }
 
 .serial {
@@ -257,7 +227,7 @@
     min-width: 2rem;
     padding: 0.25rem 0.375rem;
     font-size: 0.75rem;
-    border-radius: 0.25rem;
+    border-radius: $form-radius;
     border: 1px solid $ui-black-transparent;
     background: $ui-white;
     color: $text-primary;
@@ -267,8 +237,8 @@
 }
 
 .ps2-held {
-    background: #2462c4;
-    color: #ffffff;
+    background: $looks-secondary;
+    color: $ui-white;
 }
 
 .balls {

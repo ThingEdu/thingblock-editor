@@ -99,8 +99,8 @@ until it scores.
 
 ## Tutorials
 
-Lessons are Markdown under `src/tutorials/<ma>/bai.<lang>.md`, with `kiem-thu/dung*.tb` and `sai-<n>.tb`
-fixtures beside them; `src/tutorials/README.md` documents the format. `scripts/build-lessons.mjs` (part of
+Lessons are Markdown under `src/tutorials/<id>/lesson.<lang>.md`, with `solutions/pass*.tb` and
+`fail-<n>.tb` fixtures beside them; `src/tutorials/README.md` documents the format. `scripts/build-lessons.mjs` (part of
 `npm run build`) compiles them to `dist/thingblock-resource/tutorials/` plus an `index.json`, and fails on a bad
 rule, a missing image or an unknown tour anchor. `test/lessons/lessons.test.ts` grades every lesson's fixtures
 with the simulator's checker.

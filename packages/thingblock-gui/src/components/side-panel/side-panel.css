@@ -1,0 +1,94 @@
+@import "../../css/units.css";
+@import "../../css/colors.css";
+@import "../../css/z-index.css";
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    /* No top padding so the controls row (a $stage-menu-height strip) matches
+       the tab strip on the left, aligning the Generated Code panel with the
+       canvas top. The gap below the code view is added on the monitor itself. */
+    padding: 0 $space $space;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.panel-actions {
+    position: relative;
+    display: flex;
+    gap: 0.25rem;
+    margin-inline-start: auto;
+}
+
+.panel-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: $form-radius;
+    background-color: $ui-white;
+    color: $text-primary;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.panel-button:active,
+.panel-button.open {
+    background-color: $looks-transparent;
+}
+
+.panel-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.panel-menu {
+    top: 100%;
+    margin-top: 0.25rem;
+    border-radius: $form-radius;
+    z-index: $z-index-card;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.check {
+    visibility: hidden;
+}
+
+.checked {
+    visibility: visible;
+}
+
+.no-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space;
+    padding: calc($space * 2);
+    background-color: $ui-white;
+    border: 1px solid $ui-black-transparent;
+    border-radius: $space;
+    color: $text-primary-transparent;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: $menu-bar-large-font-size;
+    text-align: center;
+}
+
+.no-panel-icon {
+    width: 3rem;
+    height: 3rem;
+}

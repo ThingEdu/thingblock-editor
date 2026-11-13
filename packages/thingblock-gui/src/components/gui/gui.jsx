@@ -10,13 +10,7 @@ import tabStyles from 'react-tabs/style/react-tabs.css';
 import VM from '@thingblock/thingblock-vm';
 
 import Blocks from '../../containers/blocks.jsx';
-import CodeView from '../code-view/code-view.jsx';
-import SimPanel from '../../containers/sim-panel.jsx';
-import PlaygroundPanel from '../../containers/playground-panel.jsx';
-import {usePaneCollapsed} from '../../lib/pane-collapse';
-import SerialLog from '../serial-log/serial-log.jsx';
-import DeviceControls from '../../containers/device-controls.jsx';
-import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
+import SidePanel from '../side-panel/side-panel.jsx';
 import Loader from '../loader/loader.jsx';
 import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
@@ -24,6 +18,7 @@ import MenuBar from '../menu-bar/menu-bar.jsx';
 import ExtensionsButton from '../extension-button/extension-button.jsx';
 import LessonLibrary from '../../containers/lesson-library.jsx';
 import LessonPanel from '../../containers/lesson-panel.jsx';
+import LeftPanel from '../left-panel/left-panel.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -71,11 +66,6 @@ const ariaMessages = defineMessages({
         id: 'gui.aria.codePanel',
         defaultMessage: 'Code editor panel',
         description: 'accessibility label for the code editor panel'
-    },
-    stageAndTarget: {
-        id: 'gui.aria.stageAndTarget',
-        defaultMessage: 'Device panel',
-        description: 'accessibility label for the device panel'
     },
     stage: {
         id: 'gui.aria.stage',
@@ -148,7 +138,6 @@ const GUIComponent = props => {
         onTelemetryModalOptOut,
         showNewFeatureCallouts,
         stageSizeMode,
-        connectedBoard,
         selectedDeviceId,
         cameraAiLoaded,
         generatedCode,
@@ -187,60 +176,6 @@ const GUIComponent = props => {
     }, [theme, hasActiveMembership, props.setTheme]);
 
     const [devicePanelWidth, setDevicePanelWidth] = useState(540);
-    const [serialLogs, setSerialLogs] = useState([]);
-    // Cap the monitor scrollback; an unbounded log lags the client once a chatty board floods it.
-    const MAX_MONITOR_LOGS = 500;
-    const appendLogs = (prev, additions) => {
-        const next = prev.concat(additions);
-        return next.length > MAX_MONITOR_LOGS ? next.slice(next.length - MAX_MONITOR_LOGS) : next;
-    };
-    const [monitorPrompt, setMonitorPrompt] = useState(null);
-    // The code and monitor panes start folded to their headers, like VS Code side bar sections, so
-    // the simulator gets the room; each remembers whether the learner opened it.
-    const [codeCollapsed, toggleCode] = usePaneCollapsed('code', true);
-    const [serialCollapsed, toggleSerial] = usePaneCollapsed('serial', true);
-    // Default matches the VM's DEFAULT_MONITOR_BAUD; the dropdown drives both via vm.link.setMonitorBaud.
-    const [baudRate, setBaudRate] = useState(115200);
-    // Holds the partial trailing line between serial chunks; serial frames are not line-aligned.
-    const serialBuffer = useRef('');
-    // The code view is generated from the Blockly workspace in the Blocks
-    // container and delivered here through redux as `generatedCode`.
-    const prismLanguage = 'arduino';
-
-    useEffect(() => {
-        const handlePrint = message => {
-            setSerialLogs(prev => appendLogs(prev, [{message: String(message)}]));
-        };
-        vm.events.on('PRINT_TO_MONITOR', handlePrint);
-        return () => {
-            vm.events.off('PRINT_TO_MONITOR', handlePrint);
-        };
-    }, [vm]);
-
-    useEffect(() => {
-        // Inbound board serial arrives in arbitrary chunks; buffer the trailing partial line and emit
-        // only complete (newline-terminated) lines so the monitor reads line-by-line.
-        const handleSerial = chunk => {
-            const text = serialBuffer.current + String(chunk);
-            const parts = text.split('\n');
-            serialBuffer.current = parts.pop();
-            if (parts.length) {
-                setSerialLogs(prev => appendLogs(prev, parts.map(line => ({message: line.replace(/\r$/, '')}))));
-            }
-        };
-        vm.events.on('SERIAL_DATA', handleSerial);
-        return () => {
-            vm.events.off('SERIAL_DATA', handleSerial);
-        };
-    }, [vm]);
-
-    useEffect(() => {
-        const onPrompt = q => setMonitorPrompt(q === null || typeof q === 'undefined' ? null : q);
-        vm.events.on('QUESTION', onPrompt);
-        return () => {
-            vm.events.off('QUESTION', onPrompt);
-        };
-    }, [vm]);
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize'));
@@ -259,28 +194,13 @@ const GUIComponent = props => {
         }
     }, [lessonOpen]);
 
-    const handleClearMonitor = useCallback(() => {
-        setSerialLogs([]);
-    }, []);
-
-    const handleMonitorSend = useCallback(value => {
-        // A connected board's reply (if any) comes back via SERIAL_DATA, so there is no local echo.
-        vm.writeMonitor(value);
-        if (!connectedBoard) setMonitorPrompt(null);
-    }, [vm, connectedBoard]);
-
-    const handleBaudChange = useCallback(rate => {
-        setBaudRate(rate);
-        vm.link.setMonitorBaud(rate);
-    }, [vm]);
-
     const handleResizeMouseDown = useCallback(e => {
         const startX = e.clientX;
         const startWidth = devicePanelWidth;
 
         const onMouseMove = moveEvent => {
             const delta = startX - moveEvent.clientX;
-            setDevicePanelWidth(Math.max(240, Math.min(700, startWidth + delta)));
+            setDevicePanelWidth(Math.max(360, Math.min(700, startWidth + delta)));
         };
         const onMouseUp = () => {
             document.removeEventListener('mousemove', onMouseMove);
@@ -402,6 +322,11 @@ const GUIComponent = props => {
                     </MenuRefProvider>
                     }
                     <Box className={classNames(boxStyles, styles.flexWrapper)}>
+                        {lessonOpen && (
+                            <LeftPanel>
+                                <LessonPanel />
+                            </LeftPanel>
+                        )}
                         <Box
                             role="main"
                             aria-label={intl.formatMessage(ariaMessages.editor)}
@@ -462,26 +387,23 @@ const GUIComponent = props => {
                                         aria-label={intl.formatMessage(ariaMessages.codePanel)}
                                         element="section"
                                     >
-                                        {lessonOpen && <LessonPanel />}
-                                        <div className={styles.blocksArea}>
-                                            <Blocks
-                                                key={`${blocksId}/${colorMode}/${theme}`}
-                                                grow={1}
-                                                isVisible={blocksTabVisible}
-                                                options={{media: blocksMedia}}
-                                                stageSize={stageSize}
-                                                theme={theme}
-                                                vm={vm}
-                                                colorMode={colorMode}
-                                            />
-                                            <ExtensionsButton
-                                                boardMode={Boolean(selectedDeviceId)}
-                                                intl={intl}
-                                                onExtensionButtonClick={
-                                                    selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
-                                                }
-                                            />
-                                        </div>
+                                        <Blocks
+                                            key={`${blocksId}/${colorMode}/${theme}`}
+                                            grow={1}
+                                            isVisible={blocksTabVisible}
+                                            options={{media: blocksMedia}}
+                                            stageSize={stageSize}
+                                            theme={theme}
+                                            vm={vm}
+                                            colorMode={colorMode}
+                                        />
+                                        <ExtensionsButton
+                                            boardMode={Boolean(selectedDeviceId)}
+                                            intl={intl}
+                                            onExtensionButtonClick={
+                                                selectedDeviceId ? onOpenPeripheralLibrary : onExtensionButtonClick
+                                            }
+                                        />
                                     </Box>
                                 </TabPanel>
                             </Tabs>
@@ -491,38 +413,13 @@ const GUIComponent = props => {
                             className={styles.resizeHandle}
                             onMouseDown={handleResizeMouseDown}
                         />
-                        <Box
-                            role="complementary"
-                            aria-label={intl.formatMessage(ariaMessages.stageAndTarget)}
-                            className={styles.devicePanel}
-                            element="aside"
-                            style={{flex: `0 0 ${devicePanelWidth}px`}}
-                        >
-                            <DeviceControls />
-                            <PlatformInstallModal />
-                            {cameraAiLoaded && <PlaygroundPanel />}
-                            {selectedDeviceId && <SimPanel roomy={codeCollapsed} />}
-                            {selectedDeviceId && (
-                                <CodeView
-                                    code={generatedCode}
-                                    collapsed={codeCollapsed}
-                                    language={prismLanguage}
-                                    onToggle={toggleCode}
-                                />
-                            )}
-                            <SerialLog
-                                logs={serialLogs}
-                                fill={!selectedDeviceId}
-                                baudRate={baudRate}
-                                baudDisabled={!connectedBoard}
-                                onBaudChange={handleBaudChange}
-                                onClear={handleClearMonitor}
-                                onSend={handleMonitorSend}
-                                prompt={monitorPrompt}
-                                collapsed={serialCollapsed}
-                                onToggle={toggleSerial}
-                            />
-                        </Box>
+                        <SidePanel
+                            cameraAiLoaded={cameraAiLoaded}
+                            generatedCode={generatedCode}
+                            selectedDeviceId={selectedDeviceId}
+                            vm={vm}
+                            width={devicePanelWidth}
+                        />
                     </Box>
                     <DragLayer />
                 </Box>
@@ -543,10 +440,6 @@ GUIComponent.propTypes = {
     blocksId: PropTypes.string,
     canChangeLanguage: PropTypes.bool,
     canChangeColorMode: PropTypes.bool,
-    connectedBoard: PropTypes.shape({
-        id: PropTypes.string,
-        name: PropTypes.string
-    }),
     canChangeTheme: PropTypes.bool,
     canCreateCopy: PropTypes.bool,
     canCreateNew: PropTypes.bool,

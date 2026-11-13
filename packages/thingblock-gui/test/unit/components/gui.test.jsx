@@ -23,7 +23,8 @@ jest.mock('../../../src/containers/peripheral-library.jsx', () => stub('peripher
 jest.mock('../../../src/containers/drag-layer.jsx', () => stub('drag-layer'));
 jest.mock('../../../src/components/menu-bar/menu-bar.jsx', () => stub('menu-bar'));
 jest.mock('../../../src/components/code-view/code-view.jsx', () => stub('code-view'));
-jest.mock('../../../src/components/serial-log/serial-log.jsx', () => stub('serial-log'));
+jest.mock('../../../src/containers/host-monitor.jsx', () => stub('host-monitor'));
+jest.mock('../../../src/containers/board-monitor.jsx', () => stub('board-monitor'));
 
 const vm = {
     events: {on: () => {}, off: () => {}},
@@ -52,13 +53,6 @@ const ui = lessonOpen => (
 );
 
 describe('GUI with a lesson open', () => {
-    test('the extension button sits in the workspace area, not over the lesson column', () => {
-        render(ui(true));
-        const workspaceArea = screen.getByTestId('blocks').parentElement;
-        expect(workspaceArea).not.toContainElement(screen.getByTestId('lesson-panel'));
-        expect(workspaceArea).toContainElement(screen.getByRole('button', {name: 'Add Peripheral'}));
-    });
-
     test('the device panel narrows while the lesson is open and returns to its width after', () => {
         const devicePanel = () => screen.getByRole('complementary');
         const {rerender} = render(ui(false));

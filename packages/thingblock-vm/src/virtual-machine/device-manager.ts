@@ -229,7 +229,7 @@ export default class DeviceManager {
     /**
      * The HTTP base the bundled example projects are served from: `examples/index.json` lists them and
      * each entry's `file` is relative to this base. Null when the active link backend serves no packs.
-     * @returns the examples base, e.g. `http://localhost:3030/resources/examples`.
+     * @returns the examples base, e.g. `http://127.0.0.1:3030/resources/examples`.
      */
     getExamplesOrigin (): string | null {
         const origin = this.linkResourceOrigin();
@@ -239,7 +239,7 @@ export default class DeviceManager {
     /**
      * The HTTP base the bundled lessons are served from: `index.json` lists them and each lesson's
      * files sit under `<ma>/`. Null when the active link backend serves no packs.
-     * @returns the lessons base, e.g. `http://localhost:3030/resources/tutorials`.
+     * @returns the lessons base, e.g. `http://127.0.0.1:3030/resources/tutorials`.
      */
     getTutorialsOrigin (): string | null {
         const origin = this.linkResourceOrigin();
@@ -583,7 +583,7 @@ export default class DeviceManager {
     /**
      * Strip a pack's resource origin from its served base, yielding the path relative to the resource
      * root that the helper's `{pack, lib}` (compile) and `{pack, file}` (flashFirmware) references
-     * expect. e.g. base `http://localhost:3030/resources/extensions/devices/thingbot` strips down to
+     * expect. e.g. base `http://127.0.0.1:3030/resources/extensions/devices/thingbot` strips down to
      * `extensions/devices/thingbot`.
      *
      * Derived from the link backend's `resourceOrigin` rather than a literal `/resources/` split: the

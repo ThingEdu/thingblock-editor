@@ -663,7 +663,7 @@ export const CAMERA_AI_EXAMPLES = [
   device: null,
 }))
 
-/** The block helpers, for the Camera AI lessons' `kiem-thu` fixtures. */
+/** The block helpers, for the Camera AI lessons' `solutions` fixtures. */
 export const cameraBlocks = {
   add,
   addScore,

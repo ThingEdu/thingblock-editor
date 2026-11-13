@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { LessonError, parseLesson, parseRuns } from '../../scripts/lessons/parse-lesson.mjs'
 
 const FRONT = `---
-ma: den-nhap-nhay
-ten: Đèn nhấp nháy
-nhom: dau-ra            # nhóm
-thu-tu: 2
-bo: thingbot
-thoi-luong: 10
+id: blink
+name: Blinking light
+group: outputs            # comment
+order: 2
+board: thingbot
+duration: 10
 ---
 `
 const catchError = (fn: () => unknown): LessonError => {
@@ -18,62 +18,63 @@ const catchError = (fn: () => unknown): LessonError => {
   }
   throw new Error('expected a LessonError')
 }
-const ctx = { dirName: 'den-nhap-nhay', lang: 'vi', files: ['bai.vi.md', 'khoi.png'] }
+const ctx = { dirName: 'blink', lang: 'vi', files: ['lesson.vi.md', 'block.png'] }
 
 describe('parseLesson', () => {
   it('reads front matter, steps, body runs, hints and rules', () => {
     const md = `${FRONT}
-## Bật đèn L1
-Kéo khối **set led L1 100** vào *bên trong* khối bắt đầu.
-![Khối đèn](khoi.png)
+## Turn on L1
+Drag the **set led L1 100** block *inside* the start block.
+![Light block](block.png)
 
-- việc một
-- việc **hai**
+- step one
+- step **two**
 
-> gợi ý: Khối đèn nằm trong nhóm **ThingBot**.
+> hint: The light block is in the **ThingBot** category.
 
-kiểm: L1 sáng
-kiểm: L2 tắt
+check: L1 on
+check: L2 off
 
-## Xong
-Chúc mừng!
+## Done
+Well done!
 `
     const { lesson, warnings } = parseLesson(md, ctx)
     expect(warnings).toEqual([])
     expect(lesson).toMatchObject({
-      ma: 'den-nhap-nhay',
-      ten: 'Đèn nhấp nháy',
-      nhom: 'dau-ra',
-      thuTu: 2,
-      bo: 'thingbot',
-      batDau: null,
-      thietBi: [],
-      moRong: [],
-      thoiLuong: 10,
+      id: 'blink',
+      name: 'Blinking light',
+      group: 'outputs',
+      order: 2,
+      board: 'thingbot',
+      start: null,
+      image: null,
+      peripherals: [],
+      extensions: [],
+      duration: 10,
       lang: 'vi',
     })
     expect(lesson.steps).toHaveLength(2)
     const [step, last] = lesson.steps
-    expect(step.title).toBe('Bật đèn L1')
+    expect(step.title).toBe('Turn on L1')
     expect(step.body).toEqual([
       {
         type: 'p',
         runs: [
-          { text: 'Kéo khối ' },
+          { text: 'Drag the ' },
           { text: 'set led L1 100', bold: true },
-          { text: ' vào ' },
-          { text: 'bên trong', italic: true },
-          { text: ' khối bắt đầu.' },
+          { text: ' block ' },
+          { text: 'inside', italic: true },
+          { text: ' the start block.' },
         ],
       },
-      { type: 'img', src: 'khoi.png', alt: 'Khối đèn' },
+      { type: 'img', src: 'block.png', alt: 'Light block' },
       {
         type: 'list',
-        items: [[{ text: 'việc một' }], [{ text: 'việc ' }, { text: 'hai', bold: true }]],
+        items: [[{ text: 'step one' }], [{ text: 'step ' }, { text: 'two', bold: true }]],
       },
     ])
     expect(step.hints).toEqual([
-      [{ text: 'Khối đèn nằm trong nhóm ' }, { text: 'ThingBot', bold: true }, { text: '.' }],
+      [{ text: 'The light block is in the ' }, { text: 'ThingBot', bold: true }, { text: ' category.' }],
     ])
     expect(step.rules).toEqual([
       { kind: 'light', target: 'L1', on: true },
@@ -83,49 +84,53 @@ Chúc mừng!
     expect(last.rules).toEqual([])
   })
 
-  it('accepts a tour marker and rejects an unknown one', () => {
-    const ok = parseLesson(`${FRONT}\n## B\nchỉ vào: nut-run\n`, ctx)
-    expect(ok.lesson.steps[0].pointAt).toBe('nut-run')
-    expect(() => parseLesson(`${FRONT}\n## B\nchỉ vào: nut-bay\n`, ctx)).toThrow(LessonError)
+  it('accepts a tour anchor and rejects an unknown one', () => {
+    const ok = parseLesson(`${FRONT}\n## B\npoint at: run-button\n`, ctx)
+    expect(ok.lesson.steps[0].pointAt).toBe('run-button')
+    expect(() => parseLesson(`${FRONT}\n## B\npoint at: fly-button\n`, ctx)).toThrow(LessonError)
   })
 
   it('reads the peripherals the lesson needs, for the editor to add when it opens', () => {
-    const md = `${FRONT.replace('bo: thingbot', 'bo: thingbot\nthiet-bi: oled, ultrasonic')}\n## B\n`
-    expect(parseLesson(md, ctx).lesson.thietBi).toEqual(['oled', 'ultrasonic'])
+    const md = `${FRONT.replace('board: thingbot', 'board: thingbot\nperipherals: oled, ultrasonic')}\n## B\n`
+    expect(parseLesson(md, ctx).lesson.peripherals).toEqual(['oled', 'ultrasonic'])
   })
 
   it('reads a Camera AI lesson: no board, the extension to load, and playground rules', () => {
-    const md = `${FRONT.replace('bo: thingbot', 'bo: khong\nmo-rong: cameraAi').replace('nhom: dau-ra', 'nhom: camera-ai')}
+    const md = `${FRONT.replace('board: thingbot', 'board: none\nextensions: cameraAi').replace('group: outputs', 'group: camera-ai')}
 ## Bật camera
-kiểm: camera bật
-kiểm: "sao" chạm ngón trỏ
+check: camera on
+check: "sao" touches index finger
 `
     const { lesson } = parseLesson(md, ctx)
-    expect(lesson).toMatchObject({ bo: 'khong', nhom: 'camera-ai', moRong: ['cameraAi'] })
+    expect(lesson).toMatchObject({ board: 'none', group: 'camera-ai', extensions: ['cameraAi'] })
     expect(lesson.steps[0].rules).toEqual([{ kind: 'cameraOn' }, { kind: 'touch', name: 'sao', part: 'indexTip' }])
   })
 
   it.each([
-    ['unknown mo-rong', FRONT.replace('bo: thingbot', 'bo: thingbot\nmo-rong: camera'), /mo-rong "camera"/],
-    ['a Camera AI rule without mo-rong', `${FRONT}\n## B\nkiểm: camera bật\n`, /mo-rong: cameraAi/],
+    [
+      'unknown extension',
+      FRONT.replace('board: thingbot', 'board: thingbot\nextensions: camera'),
+      /extension "camera"/,
+    ],
+    ['a Camera AI rule without extensions', `${FRONT}\n## B\ncheck: camera on\n`, /extensions: cameraAi/],
     [
       'a step mixing Camera AI and board rules',
-      `${FRONT.replace('bo: thingbot', 'bo: thingbot\nmo-rong: cameraAi')}\n## B\nkiểm: camera bật\nkiểm: L1 sáng\n`,
-      /không trộn/,
+      `${FRONT.replace('board: thingbot', 'board: thingbot\nextensions: cameraAi')}\n## B\ncheck: camera on\ncheck: L1 on\n`,
+      /cannot mix/,
     ],
   ])('fails the build on %s', (_name, md, pattern) => {
     expect(() => parseLesson(md, ctx)).toThrow(pattern)
   })
 
   it.each([
-    ['unknown thiet-bi', FRONT.replace('bo: thingbot', 'bo: thingbot\nthiet-bi: man-hinh'), /man-hinh/],
-    ['missing ten', FRONT.replace('ten: Đèn nhấp nháy\n', ''), /ten/],
-    ['ma differs from folder', FRONT.replace('ma: den-nhap-nhay', 'ma: khac'), /thư mục/],
-    ['bad nhom', FRONT.replace('nhom: dau-ra', 'nhom: xyz'), /nhom/],
-    ['bad rule', `${FRONT}\n## B\nkiểm: L9 sáng\n`, /L9 sáng/],
-    ['missing image', `${FRONT}\n## B\n![](thieu.png)\n`, /thieu\.png/],
-    ['missing bat-dau', FRONT.replace('bo: thingbot', 'bo: thingbot\nbat-dau: bat-dau.tb'), /bat-dau\.tb/],
-    ['no steps', FRONT, /bước/],
+    ['unknown peripheral', FRONT.replace('board: thingbot', 'board: thingbot\nperipherals: screen'), /screen/],
+    ['missing name', FRONT.replace('name: Blinking light\n', ''), /name/],
+    ['id differs from folder', FRONT.replace('id: blink', 'id: other'), /folder/],
+    ['bad group', FRONT.replace('group: outputs', 'group: xyz'), /group/],
+    ['bad rule', `${FRONT}\n## B\ncheck: L9 on\n`, /L9 on/],
+    ['missing image', `${FRONT}\n## B\n![](missing.png)\n`, /missing\.png/],
+    ['missing start', FRONT.replace('board: thingbot', 'board: thingbot\nstart: other.tb'), /other\.tb/],
+    ['no steps', FRONT, /no steps/],
   ])('fails the build on %s', (_name, md, pattern) => {
     expect(() => parseLesson(md, ctx)).toThrow(pattern)
   })
@@ -133,7 +138,7 @@ kiểm: "sao" chạm ngón trỏ
   it('reports every problem with its line number in one error', () => {
     let error: LessonError | undefined
     try {
-      parseLesson(`${FRONT}\n## B\nkiểm: L9 sáng\nkiểm: còi hú\n`, ctx)
+      parseLesson(`${FRONT}\n## B\ncheck: L9 on\ncheck: buzzer howls\n`, ctx)
     } catch (e) {
       error = e as LessonError
     }
@@ -142,43 +147,44 @@ kiểm: "sao" chạm ngón trỏ
 
   describe('fix round 1', () => {
     const HAPPY = `${FRONT}
-## Bật đèn
-Kéo khối **a**.
+## Turn on the light
+Drag the **a** block.
 
-kiểm: L1 sáng
+check: L1 on
 `
 
     it('parses a CRLF + BOM file like the LF one', () => {
-      const crlf = '\uFEFF' + HAPPY.replace(/\n/g, '\r\n')
+      const crlf = '﻿' + HAPPY.replace(/\n/g, '\r\n')
       expect(parseLesson(crlf, ctx).lesson).toEqual(parseLesson(HAPPY, ctx).lesson)
     })
 
-    it.each(['Kiểm: L1 sáng', 'KIỂM: L1 sáng'])('reads directive %s case-insensitively', (l) => {
+    it.each(['Check: L1 on', 'CHECK: L1 on'])('reads directive %s case-insensitively', (l) => {
       const { lesson } = parseLesson(`${FRONT}\n## B\n${l}\n`, ctx)
       expect(lesson.steps[0].rules).toEqual([{ kind: 'light', target: 'L1', on: true }])
     })
 
     it('reads a capitalised hint and tour directive', () => {
-      const { lesson } = parseLesson(`${FRONT}\n## B\n> Gợi ý: xin chào\nChỉ vào: nut-run\n`, ctx)
-      expect(lesson.steps[0].hints).toEqual([[{ text: 'xin chào' }]])
-      expect(lesson.steps[0].pointAt).toBe('nut-run')
+      const { lesson } = parseLesson(`${FRONT}\n## B\n> Hint: hello\nPoint at: run-button\n`, ctx)
+      expect(lesson.steps[0].hints).toEqual([[{ text: 'hello' }]])
+      expect(lesson.steps[0].pointAt).toBe('run-button')
     })
 
-    it('reads decomposed (NFD) Vietnamese', () => {
-      const md = `${FRONT}\n## B\nkiểm: L1 sáng\n`.normalize('NFD')
+    it('reads decomposed (NFD) Vietnamese text', () => {
+      const md = `${FRONT}\n## Bật đèn\ncheck: L1 on\n`.normalize('NFD')
       const { lesson } = parseLesson(md, ctx)
+      expect(lesson.steps[0].title).toBe('Bật đèn'.normalize('NFC'))
       expect(lesson.steps[0].rules).toHaveLength(1)
     })
 
     it('joins a multi-line hint into one hint', () => {
-      const { lesson } = parseLesson(`${FRONT}\n## B\n> gợi ý: dòng một\n> dòng hai\n\nxong\n`, ctx)
-      expect(lesson.steps[0].hints).toEqual([[{ text: 'dòng một dòng hai' }]])
-      expect(lesson.steps[0].body).toEqual([{ type: 'p', runs: [{ text: 'xong' }] }])
+      const { lesson } = parseLesson(`${FRONT}\n## B\n> hint: line one\n> line two\n\ndone\n`, ctx)
+      expect(lesson.steps[0].hints).toEqual([[{ text: 'line one line two' }]])
+      expect(lesson.steps[0].body).toEqual([{ type: 'p', runs: [{ text: 'done' }] }])
     })
 
     it.each([
-      ['thu-tu', FRONT.replace('thu-tu: 2', 'thu-tu: hai'), /thu-tu phải là số/, 5],
-      ['thoi-luong', FRONT.replace('thoi-luong: 10', 'thoi-luong: mười'), /thoi-luong phải là số/, 7],
+      ['order', FRONT.replace('order: 2', 'order: two'), /order must be a number/, 5],
+      ['duration', FRONT.replace('duration: 10', 'duration: ten'), /duration must be a number/, 7],
     ])('rejects non-numeric %s at its line', (_n, md, pattern, line) => {
       const err = catchError(() => parseLesson(`${md}\n## B\n`, ctx))
       expect(err.message).toMatch(pattern)
@@ -186,59 +192,59 @@ kiểm: L1 sáng
     })
 
     it('treats # as a comment only after whitespace', () => {
-      const { lesson } = parseLesson(`${FRONT.replace('ten: Đèn nhấp nháy', 'ten: Đèn #2')}\n## B\n`, ctx)
-      expect(lesson.ten).toBe('Đèn #2')
-      expect(lesson.nhom).toBe('dau-ra')
+      const { lesson } = parseLesson(`${FRONT.replace('name: Blinking light', 'name: Light #2')}\n## B\n`, ctx)
+      expect(lesson.name).toBe('Light #2')
+      expect(lesson.group).toBe('outputs')
     })
 
     it('puts numbered items in a list', () => {
-      const { lesson } = parseLesson(`${FRONT}\n## B\n1. một\n2. **hai**\n`, ctx)
+      const { lesson } = parseLesson(`${FRONT}\n## B\n1. one\n2. **two**\n`, ctx)
       expect(lesson.steps[0].body).toEqual([
-        { type: 'list', items: [[{ text: 'một' }], [{ text: 'hai', bold: true }]] },
+        { type: 'list', items: [[{ text: 'one' }], [{ text: 'two', bold: true }]] },
       ])
     })
 
     it('rejects ### headings', () => {
-      const err = catchError(() => parseLesson(`${FRONT}\n## B\n### con\n`, ctx))
-      expect(err.problems).toEqual([{ line: 11, message: 'chỉ dùng ## cho bước, không dùng ###' }])
+      const err = catchError(() => parseLesson(`${FRONT}\n## B\n### sub\n`, ctx))
+      expect(err.problems).toEqual([{ line: 11, message: 'use ## for steps, not ###' }])
     })
 
     it('checks an image whose path has a space', () => {
-      expect(() => parseLesson(`${FRONT}\n## B\n![a](khoi den.png)\n`, ctx)).toThrow(/khoi den\.png/)
+      expect(() => parseLesson(`${FRONT}\n## B\n![a](light block.png)\n`, ctx)).toThrow(/light block\.png/)
     })
 
-    it('reports a bad nhom on its own line', () => {
-      const err = catchError(() => parseLesson(`${FRONT.replace('nhom: dau-ra', 'nhom: xyz')}\n## B\n`, ctx))
+    it('reports a bad group on its own line', () => {
+      const err = catchError(() => parseLesson(`${FRONT.replace('group: outputs', 'group: xyz')}\n## B\n`, ctx))
       expect(err.problems[0].line).toBe(4)
     })
 
     it('keeps consecutive hints separate', () => {
-      const two = parseLesson(`${FRONT}\n## B\n> gợi ý: một\n> gợi ý: hai\n`, ctx)
-      expect(two.lesson.steps[0].hints).toEqual([[{ text: 'một' }], [{ text: 'hai' }]])
-      const mixed = parseLesson(`${FRONT}\n## B\n> gợi ý: một\n> hai\n> gợi ý: ba\n`, ctx)
-      expect(mixed.lesson.steps[0].hints).toEqual([[{ text: 'một hai' }], [{ text: 'ba' }]])
+      const two = parseLesson(`${FRONT}\n## B\n> hint: one\n> hint: two\n`, ctx)
+      expect(two.lesson.steps[0].hints).toEqual([[{ text: 'one' }], [{ text: 'two' }]])
+      const mixed = parseLesson(`${FRONT}\n## B\n> hint: one\n> two\n> hint: three\n`, ctx)
+      expect(mixed.lesson.steps[0].hints).toEqual([[{ text: 'one two' }], [{ text: 'three' }]])
     })
   })
 })
 
 describe('parseRuns', () => {
   it('reads _italic_ like *italic*', () => {
-    expect(parseRuns('Kéo khối _bên trong_ hộp')).toEqual([
-      { text: 'Kéo khối ' },
-      { text: 'bên trong', italic: true },
-      { text: ' hộp' },
+    expect(parseRuns('Drag _inside_ the box')).toEqual([
+      { text: 'Drag ' },
+      { text: 'inside', italic: true },
+      { text: ' the box' },
     ])
   })
 
   it('reads __bold__ like **bold**', () => {
-    expect(parseRuns('__đậm__ và _nghiêng_')).toEqual([
-      { text: 'đậm', bold: true },
-      { text: ' và ' },
-      { text: 'nghiêng', italic: true },
+    expect(parseRuns('__bold__ and _italic_')).toEqual([
+      { text: 'bold', bold: true },
+      { text: ' and ' },
+      { text: 'italic', italic: true },
     ])
   })
 
   it('leaves underscores inside words alone', () => {
-    expect(parseRuns('biến a_b_c giữ nguyên')).toEqual([{ text: 'biến a_b_c giữ nguyên' }])
+    expect(parseRuns('variable a_b_c stays')).toEqual([{ text: 'variable a_b_c stays' }])
   })
 })

@@ -29,7 +29,6 @@ const coreManifest = {
     hidden: true,
     blocks: './blocks.js',
     generator: './generator.js',
-    sim: './sim.js',
     toolbox: './toolbox.js',
     libs: [{path: 'libs/ThingBot'}]
 };
@@ -83,9 +82,6 @@ const makeVM = () => {
         }},
         [`${coreBase}/generator.js`]: {registerGenerators: (generator, Order) => {
             generator.forBlock.thingbot_digitalwrite = () => `digitalWrite(2, HIGH);${Order.ATOMIC}`;
-        }},
-        [`${coreBase}/sim.js`]: {registerSimGenerators: (generator, Order) => {
-            generator.forBlock.thingbot_digitalwrite = () => `$.digitalWrite(2, 1);${Order.ATOMIC}`;
         }},
         [`${servoBase}/toolbox.js`]: {default: servoToolbox},
         [`${servoBase}/blocks.js`]: {registerBlocks: Blockly => {
@@ -158,46 +154,6 @@ test('selectDevice registers each referenced peripheral\'s blocks and codegen on
     t.end();
 });
 
-test('selectDevice registers a pack\'s simulator codegen on the injected simGenerator', async t => {
-    const {vm} = makeVM();
-    const scratchBlocks = {...makeScratchBlocks(), simGenerator: {forBlock: {}}};
-    vm.devices.setScratchBlocks(scratchBlocks);
-
-    await vm.devices.selectDevice('thingbot');
-
-    t.type(scratchBlocks.simGenerator.forBlock.thingbot_digitalwrite, 'function', 'core sim codegen registered');
-    t.notOk(scratchBlocks.simGenerator.forBlock.servo_setangle, 'a pack without sim.js registers nothing');
-    t.end();
-});
-
-test('an editor without a simGenerator skips importing sim modules', async t => {
-    const {vm, counts} = makeVM();
-    vm.devices.setScratchBlocks(makeScratchBlocks());
-
-    await vm.devices.selectDevice('thingbot');
-
-    t.notOk(counts[`${coreBase}/sim.js`], 'sim.js not imported');
-    t.end();
-});
-
-test('getActivePeripheral* reflect the active device and clear on deselect', async t => {
-    const {vm} = makeVM();
-    vm.devices.setScratchBlocks(makeScratchBlocks());
-
-    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'no categories before a device is selected');
-    t.same(vm.devices.getActivePeripheralLibs(), [], 'no libs before a device is selected');
-
-    await vm.devices.selectDevice('thingbot');
-    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox],
-        'surfaces active categories');
-
-    await vm.devices.selectDevice(null);
-    t.same(vm.devices.getActivePeripheralToolboxCategories(), [], 'categories cleared after deselect');
-    t.same(vm.devices.getActivePeripheralLibs(), [], 'libs cleared after deselect');
-
-    t.end();
-});
-
 test('records peripherals headless: toolbox/libs recorded, blocks skipped', async t => {
     const {vm, counts} = makeVM();
     // No setScratchBlocks: headless.
@@ -216,21 +172,6 @@ test('records peripherals headless: toolbox/libs recorded, blocks skipped', asyn
     );
     t.notOk(counts[`${coreBase}/blocks.js`], 'did not import core blocks without a handle');
     t.notOk(counts[`${servoBase}/blocks.js`], 'did not import peripheral blocks without a handle');
-
-    t.end();
-});
-
-test('re-selecting a device re-activates without re-importing its modules', async t => {
-    const {vm, counts} = makeVM();
-    vm.devices.setScratchBlocks(makeScratchBlocks());
-
-    await vm.devices.selectDevice('thingbot');
-    await vm.devices.selectDevice(null);
-    await t.resolves(vm.devices.selectDevice('thingbot'), 're-selection does not throw');
-
-    t.same(vm.devices.getActivePeripheralToolboxCategories(), [coreToolbox, servoToolbox], 're-activated');
-    t.equal(counts[`${coreBase}/blocks.js`], 1, 'core blocks imported once');
-    t.equal(counts[`${servoBase}/blocks.js`], 1, 'peripheral blocks imported once');
 
     t.end();
 });

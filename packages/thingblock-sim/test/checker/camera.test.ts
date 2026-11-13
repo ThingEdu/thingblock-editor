@@ -5,24 +5,24 @@ import { isCameraRule, parseRule, RuleSyntaxError, type CameraRule } from '../..
 
 describe('Camera AI rules', () => {
   it.each([
-    ['camera bật', { kind: 'cameraOn' }],
-    ['Thấy bàn tay', { kind: 'handSeen' }],
-    ['tay nắm', { kind: 'gesture', gesture: 'fist' }],
-    ['tay xòe', { kind: 'gesture', gesture: 'open' }],
-    ['tay chữ V', { kind: 'gesture', gesture: 'victory' }],
-    ['sân chơi có "sao"', { kind: 'object', name: 'sao' }],
-    ['"sao" chạm ngón trỏ', { kind: 'touch', name: 'sao', part: 'indexTip' }],
-    ['"ro" chạm  lòng bàn tay', { kind: 'touch', name: 'ro', part: 'palm' }],
-    ['điểm người chơi 1 ≥ 1', { kind: 'score', player: 1, op: '≥', n: 1 }],
-    ['điểm người chơi 2 >= 3', { kind: 'score', player: 2, op: '≥', n: 3 }],
-    ['điểm người chơi 1 = 0', { kind: 'score', player: 1, op: '=', n: 0 }],
-    ['sân chơi nói "Nắm tay"', { kind: 'say', text: 'Nắm tay' }],
-    ['thấy đầu', { kind: 'headSeen' }],
-    ['đầu nghiêng trái', { kind: 'headTilt', dir: 'left' }],
-    ['Đầu nghiêng thẳng', { kind: 'headTilt', dir: 'straight' }],
-    ['"bong" chạm đầu', { kind: 'touch', name: 'bong', part: 'head' }],
-    ['vỗ hai tay', { kind: 'motion', motion: 'flap' }],
-    ['gật đầu', { kind: 'motion', motion: 'nod' }],
+    ['camera on', { kind: 'cameraOn' }],
+    ['Hand Seen', { kind: 'handSeen' }],
+    ['hand fist', { kind: 'gesture', gesture: 'fist' }],
+    ['hand open', { kind: 'gesture', gesture: 'open' }],
+    ['hand victory', { kind: 'gesture', gesture: 'victory' }],
+    ['playground has "sao"', { kind: 'object', name: 'sao' }],
+    ['"sao" touches index finger', { kind: 'touch', name: 'sao', part: 'indexTip' }],
+    ['"ro" touches  palm', { kind: 'touch', name: 'ro', part: 'palm' }],
+    ['player 1 score ≥ 1', { kind: 'score', player: 1, op: '≥', n: 1 }],
+    ['player 2 score >= 3', { kind: 'score', player: 2, op: '≥', n: 3 }],
+    ['player 1 score = 0', { kind: 'score', player: 1, op: '=', n: 0 }],
+    ['playground says "Nắm tay"', { kind: 'say', text: 'Nắm tay' }],
+    ['head seen', { kind: 'headSeen' }],
+    ['head tilts left', { kind: 'headTilt', dir: 'left' }],
+    ['Head tilts straight', { kind: 'headTilt', dir: 'straight' }],
+    ['"bong" touches head', { kind: 'touch', name: 'bong', part: 'head' }],
+    ['arms flap', { kind: 'motion', motion: 'flap' }],
+    ['head nods', { kind: 'motion', motion: 'nod' }],
   ])('%s', (text, rule) => {
     const parsed = parseRule(text)
     expect(parsed).toEqual(rule)
@@ -30,17 +30,17 @@ describe('Camera AI rules', () => {
   })
 
   it('keeps board rules out of the Camera AI kind', () => {
-    expect(isCameraRule(parseRule('L1 sáng'))).toBe(false)
+    expect(isCameraRule(parseRule('L1 on'))).toBe(false)
   })
 
   it('names the gestures and hand parts it knows when one is misspelt', () => {
-    expect(() => parseRule('tay vẫy')).toThrow(RuleSyntaxError)
-    expect(() => parseRule('tay vẫy')).toThrow(/nắm/)
-    expect(() => parseRule('"sao" chạm mũi')).toThrow(/ngón trỏ/)
+    expect(() => parseRule('hand wave')).toThrow(RuleSyntaxError)
+    expect(() => parseRule('hand wave')).toThrow(/fist/)
+    expect(() => parseRule('"sao" touches nose')).toThrow(/index finger/)
   })
 
   it('tells the simulator a Camera AI rule is not its to grade', () => {
-    const [result] = evaluateLogRules([parseRule('camera bật')], [])
+    const [result] = evaluateLogRules([parseRule('camera on')], [])
     expect(result.ok).toBe(false)
     expect(result.message).toMatch(/Sân chơi/)
   })
@@ -91,13 +91,13 @@ describe('evaluateCameraRules', () => {
   it('passes when the playground shows what the rules ask', () => {
     const results = evaluateCameraRules(
       rules(
-        'camera bật',
-        'thấy bàn tay',
-        'tay nắm',
-        'sân chơi có "sao"',
-        '"sao" chạm ngón trỏ',
-        'điểm người chơi 1 ≥ 2',
-        'sân chơi nói "Nắm tay"',
+        'camera on',
+        'hand seen',
+        'hand fist',
+        'playground has "sao"',
+        '"sao" touches index finger',
+        'player 1 score ≥ 2',
+        'playground says "Nắm tay"',
       ),
       snapshot(),
     )
@@ -106,7 +106,7 @@ describe('evaluateCameraRules', () => {
 
   it("explains each miss in the learner's words", () => {
     const results = evaluateCameraRules(
-      rules('camera bật', 'thấy bàn tay', 'sân chơi có "de"', 'điểm người chơi 1 ≥ 3', 'sân chơi nói "Xòe tay"'),
+      rules('camera on', 'hand seen', 'playground has "de"', 'player 1 score ≥ 3', 'playground says "Xòe tay"'),
       snapshot({ cameraOn: false, hands: [] }),
     )
     expect(results.every((r) => !r.ok && r.message !== '')).toBe(true)
@@ -116,10 +116,10 @@ describe('evaluateCameraRules', () => {
 
   it("touches within the picture plus the extension's margin, and asks for the right gesture", () => {
     const far = snapshot({ objects: [{ name: 'sao', x: 50, y: 0, size: 50 }] })
-    expect(evaluateCameraRules(rules('"sao" chạm ngón trỏ'), far)[0].ok).toBe(false)
+    expect(evaluateCameraRules(rules('"sao" touches index finger'), far)[0].ok).toBe(false)
     const edge = snapshot({ objects: [{ name: 'sao', x: 39, y: 0, size: 50 }] })
-    expect(evaluateCameraRules(rules('"sao" chạm ngón trỏ'), edge)[0].ok).toBe(true)
-    expect(evaluateCameraRules(rules('tay xòe'), snapshot())[0].message).toMatch(/xòe tay/)
+    expect(evaluateCameraRules(rules('"sao" touches index finger'), edge)[0].ok).toBe(true)
+    expect(evaluateCameraRules(rules('hand open'), snapshot())[0].message).toMatch(/xòe tay/)
   })
 })
 
@@ -158,14 +158,14 @@ describe('head rules', () => {
 
   it('grades seeing the head, a lean, a head touch and the movements', () => {
     const head = headOnStage({ hands: [], mirror: true, pose: poseAt(0.5, 0.5, 0.04) })
-    const ok = evaluateCameraRules(rules('thấy đầu', 'đầu nghiêng trái', '"bong" chạm đầu', 'vỗ hai tay'), {
+    const ok = evaluateCameraRules(rules('head seen', 'head tilts left', '"bong" touches head', 'arms flap'), {
       ...base,
       head,
       motions: ['flap'],
     })
     expect(ok.map((r) => r.message)).toEqual(['', '', '', ''])
-    const missed = evaluateCameraRules(rules('thấy đầu', 'đầu nghiêng phải', 'gật đầu'), { ...base, head: null })
+    const missed = evaluateCameraRules(rules('head seen', 'head tilts right', 'head nods'), { ...base, head: null })
     expect(missed.every((r) => !r.ok && r.message !== '')).toBe(true)
-    expect(evaluateCameraRules(rules('đầu nghiêng phải'), { ...base, head })[0].message).toMatch(/phải/)
+    expect(evaluateCameraRules(rules('head tilts right'), { ...base, head })[0].message).toMatch(/phải/)
   })
 })

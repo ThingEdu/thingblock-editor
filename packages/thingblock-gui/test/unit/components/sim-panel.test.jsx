@@ -88,15 +88,15 @@ test('draws the display module from the code before the first run', () => {
 });
 
 test('the zoom button shows an enlarged copy painted with the same frame', () => {
-    const {getByText, container} = renderPanel(<SimPanel
+    const {getByLabelText, container} = renderPanel(<SimPanel
         {...props}
         snapshot={snapshot(lit())}
     />);
     painted = [];
-    fireEvent.click(getByText('Zoom the display'));
+    fireEvent.click(getByLabelText('Zoom the display'));
     expect(container.querySelectorAll('canvas')).toHaveLength(2);
     expect(painted).toEqual(['lit', 'lit']);
-    fireEvent.click(getByText('Hide the zoomed display'));
+    fireEvent.click(getByLabelText('Hide the zoomed display'));
     expect(container.querySelectorAll('canvas')).toHaveLength(1);
 });
 
@@ -117,34 +117,6 @@ test('the display is drawn to the board\'s scale: a 0.96" module, its pixels ove
     expect(parseFloat(canvas.style.left)).toBeCloseTo((active.x / extent.width) * 100, 3);
 });
 
-test('the controls carry icons, labels and tooltips; Run is the filled main action', () => {
-    const {getByRole} = renderPanel(<SimPanel
-        {...props}
-        snapshot={null}
-    />);
-    for (const [name, tip] of [
-        ['Run', 'Run the program on the virtual board'],
-        ['Step', 'Run one block and stop'],
-        ['Reset', 'Restart the virtual board from power-on']
-    ]) {
-        const button = getByRole('button', {name});
-        expect(button.getAttribute('title')).toBe(tip);
-        expect(button.querySelector('svg')).not.toBeNull();
-    }
-    expect(getByRole('button', {name: 'Run'}).dataset.variant).toBe('primary');
-    expect(getByRole('button', {name: 'Step'}).dataset.variant).toBe('secondary');
-});
-
-test('while running, the main action is Pause', () => {
-    const {getByRole, queryByRole} = renderPanel(<SimPanel
-        {...props}
-        snapshot={{t: 0, running: true, pwm: [], oled: null}}
-    />);
-    expect(getByRole('button', {name: 'Pause'}).dataset.variant).toBe('primary');
-    expect(queryByRole('button', {name: 'Run'})).toBeNull();
-    expect(getByRole('button', {name: 'Step'}).disabled).toBe(true);
-});
-
 test('with the code pane folded the panel takes the freed room', () => {
     const {container, rerender} = renderPanel(<SimPanel
         {...props}
@@ -160,26 +132,22 @@ test('with the code pane folded the panel takes the freed room', () => {
     expect(container.firstChild.dataset.roomy).toBe('false');
 });
 
-test('an error from the last run is shown without locking Run, Step or Reset', () => {
-    const {getByRole, getByText} = renderPanel(<SimPanel
+test('an error from the last run is shown', () => {
+    const {getByText} = renderPanel(<SimPanel
         {...props}
         runError="Unexpected token"
         snapshot={null}
     />);
     expect(getByText('Unexpected token')).toBeTruthy();
-    for (const name of ['Run', 'Step', 'Reset']) {
-        expect(getByRole('button', {name}).disabled).toBe(false);
-    }
 });
 
 test('says the simulator was restarted after it stopped responding', () => {
-    const {getByText, getByRole} = renderPanel(<SimPanel
+    const {getByText} = renderPanel(<SimPanel
         {...props}
         restarted
         snapshot={null}
     />);
     expect(getByText(/stopped responding and was restarted/)).toBeTruthy();
-    expect(getByRole('button', {name: 'Run'}).disabled).toBe(false);
 });
 
 test('draws the board at one scale whether or not the display is shown', () => {

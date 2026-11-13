@@ -27,8 +27,8 @@ class FakeWorker {
 }
 
 const RULES = [{kind: 'light', target: 'L1', on: true}];
-const lesson = {ma: 'den',
-    ten: 'Đèn',
+const lesson = {id: 'blink',
+    name: 'Đèn',
     baseUrl: '/',
     steps: [
         {title: 'A', body: [], hints: [], rules: [], pointAt: null},
@@ -102,7 +102,7 @@ test('a passing report on the loaded program marks the step passed once and save
     send({type: 'snapshot', snapshot: {t: 7000000, phase: 'loop', running: true}});
     expect(actions.filter(a => a.type === 'scratch-gui/lesson/MARK_PASSED')).toHaveLength(1);
     expect(container.querySelector('[data-check-status]')).toHaveAttribute('data-check-status', 'passed');
-    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.den')))
+    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.blink')))
         .toEqual({stepIndex: 1, passedSteps: [1]});
 });
 
@@ -146,7 +146,7 @@ test('editing blocks after a pass returns the verdict to idle and keeps the step
     expect(container.querySelector('[data-check-status]')).toHaveTextContent('Press Run to check');
     expect(lessonState().passedSteps).toEqual([1]);
     expect(actions.map(a => a.type)).not.toContain('scratch-gui/lesson/MARK_PASSED');
-    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.den')).passedSteps).toEqual([1]);
+    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.blink')).passedSteps).toEqual([1]);
 
     act(() => store.dispatch(setSimLoadedCode('code-2')));
     report(send, false);
@@ -177,14 +177,14 @@ test('Next and Back move between steps and save the step', () => {
     const {getByRole, lessonState} = setup({stepIndex: 0, passedSteps: []});
     fireEvent.click(getByRole('button', {name: /Next/}));
     expect(lessonState().stepIndex).toBe(1);
-    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.den')).stepIndex).toBe(1);
+    expect(JSON.parse(window.localStorage.getItem('thingblock.lesson.blink')).stepIndex).toBe(1);
     fireEvent.click(getByRole('button', {name: /Back/}));
     expect(lessonState().stepIndex).toBe(0);
 });
 
 test('closing the panel closes the lesson and unwatches', () => {
-    const {container, getByText, lessonState} = setup({stepIndex: 1, passedSteps: []});
-    fireEvent.click(getByText('✕'));
+    const {container, getByRole, lessonState} = setup({stepIndex: 1, passedSteps: []});
+    fireEvent.click(getByRole('button', {name: 'Close lesson'}));
     expect(lessonState().lesson).toBeNull();
     expect(container).toBeEmptyDOMElement();
     expect(FakeWorker.last.posted[FakeWorker.last.posted.length - 1]).toEqual({type: 'watch', rules: null});

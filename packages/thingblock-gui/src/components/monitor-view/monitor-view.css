@@ -1,0 +1,202 @@
+@import "../../css/units.css";
+@import "../../css/colors.css";
+
+.monitor {
+    display: flex;
+    flex-direction: column;
+    /* On a short window the monitor gives way first (down to its input row), so the
+       simulator and the code view above it stay usable. */
+    flex-shrink: 3;
+    min-height: 5.5rem;
+    margin-top: $space;
+    background-color: $ui-white;
+    border-radius: $space;
+    border: 1px solid $ui-black-transparent;
+    overflow: visible;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    position: relative;
+    /* height controlled via inline style from JS */
+}
+
+/* With no code view beside it, the monitor fills the panel instead of using a fixed height. */
+.fill {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0;
+}
+
+
+
+
+
+.resize-handle {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: row-resize;
+    z-index: 1;
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.resize-handle:hover::after {
+    background-color: $motion-primary;
+}
+
+.inner {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: $space;
+}
+
+
+
+.baud-select {
+    font-family: inherit;
+    font-size: 0.6875rem;
+    color: $text-primary;
+    background-color: $ui-white;
+    border: 1px solid $ui-black-transparent;
+    border-radius: calc($space / 2);
+    padding: calc($space / 4) calc($space / 2);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.baud-select:focus {
+    border-color: $motion-primary;
+}
+
+
+
+
+
+.content-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: $space;
+    /* Keep lines clear of the floating action button. */
+    padding-right: 3.75rem;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: $text-primary;
+    min-height: 0;
+}
+
+.jump-button {
+    position: absolute;
+    bottom: $space;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: calc($space / 4);
+    padding: calc($space / 2) $space;
+    background-color: $motion-primary;
+    color: $ui-white;
+    border: none;
+    border-radius: calc($space * 2);
+    font-family: inherit;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px $ui-black-transparent;
+}
+
+.jump-button:hover {
+    background-color: $motion-tertiary;
+}
+
+.jump-button:active {
+    transform: translateX(-50%) translateY(1px);
+}
+
+.entry {
+    word-break: break-all;
+    color: $extensions-primary;
+}
+
+.prompt-banner {
+    flex-shrink: 0;
+    padding: calc($space * 0.75) $space;
+    background-color: $ui-modal-overlay;
+    color: $ui-white;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-top: 1px solid $ui-black-transparent;
+}
+
+.input-row {
+    display: flex;
+    flex-shrink: 0;
+    gap: $space;
+    padding: $space;
+    border-top: 1px solid $ui-black-transparent;
+    background-color: $ui-white;
+}
+
+.input {
+    flex: 1;
+    /* Inputs keep an intrinsic width by default; let it give way so Send stays visible. */
+    min-width: 0;
+    border: 1px solid $ui-black-transparent;
+    border-radius: calc($space / 2);
+    padding: calc($space * 0.75) $space;
+    font-size: 0.75rem;
+    font-family: inherit;
+    color: $text-primary;
+    outline: none;
+    background-color: $ui-white;
+}
+
+.input:focus {
+    border-color: $motion-primary;
+}
+
+.send-button {
+    background-color: $motion-primary;
+    color: $ui-white;
+    border: none;
+    border-radius: calc($space / 2);
+    padding: calc($space * 0.75) calc($space * 1.5);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.send-button:hover {
+    background-color: $motion-tertiary;
+}
+
+.fab {
+    position: absolute;
+    right: $space;
+    bottom: $space;
+}

@@ -1,5 +1,5 @@
 /**
- * A teacher opens a lesson's reference solutions in the editor, so every `kiem-thu/*.tb` must be a
+ * A teacher opens a lesson's reference solutions in the editor, so every `solutions/*.tb` must be a
  * project the editor accepts: it passes the same scratch-parser validation the editor runs, every
  * target has a costume, and it names its board (none for Camera AI) and the packs its blocks need, like an
  * editor save.
@@ -22,7 +22,7 @@ const TUTORIALS = join(__dirname, '../../src/tutorials')
 const fixtures = readdirSync(TUTORIALS, { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .flatMap((d) => {
-    const dir = join(TUTORIALS, d.name, 'kiem-thu')
+    const dir = join(TUTORIALS, d.name, 'solutions')
     try {
       return readdirSync(dir)
         .filter((f) => f.endsWith('.tb'))

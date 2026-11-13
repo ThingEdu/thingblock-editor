@@ -1,24 +1,25 @@
-// A lesson is Markdown a teacher writes: front matter, one `##` per step, `> gợi ý:` hints, `kiểm:`
-// rules and an optional `chỉ vào:` tour anchor. The build turns it into JSON the editor renders, and
+// A lesson is Markdown a teacher writes: front matter, one `##` per step, `> hint:` hints, `check:`
+// rules and an optional `point at:` tour anchor. The build turns it into JSON the editor renders, and
 // every authoring mistake fails here, not on a learner's screen.
 import { readdirSync } from 'node:fs'
 import { isCameraRule, parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
-const GROUPS = ['lam-quen', 'dau-ra', 'dong-co', 'dau-vao', 'camera-ai']
-const HINT_START = /^>\s*gợi ý:\s*(.+)$/i
-const REQUIRED = ['ma', 'ten', 'nhom', 'thu-tu', 'bo']
-/** Peripheral packs a lesson can name in `thiet-bi:`, by folder name. */
+const GROUPS = ['getting-started', 'outputs', 'motors', 'inputs', 'camera-ai']
+const HINT_START = /^>\s*hint:\s*(.+)$/i
+const REQUIRED = ['id', 'name', 'group', 'order', 'board']
+const IMAGE_FILE = /\.(png|gif)$/
+/** Peripheral packs a lesson can name in `peripherals:`, by folder name. */
 const PERIPHERALS = readdirSync(new URL('../../src/extensions/peripheral/', import.meta.url), { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
-/** Editor extensions a lesson can name in `mo-rong:`; they run in the editor, not on a board. */
+/** Editor extensions a lesson can name in `extensions:`; they run in the editor, not on a board. */
 const EXTENSIONS = ['cameraAi']
 
 export class LessonError extends Error {
   /** @param {{line: number, message: string}[]} problems Every authoring problem found, with its line. */
   constructor(problems) {
-    super(problems.map((p) => `dòng ${p.line}: ${p.message}`).join('\n'))
+    super(problems.map((p) => `line ${p.line}: ${p.message}`).join('\n'))
     this.name = 'LessonError'
     this.problems = problems
   }
@@ -51,7 +52,7 @@ const parseFrontMatter = (lines, problems) => {
   const meta = {}
   const metaLine = {}
   if (lines[0] !== '---') {
-    problems.push({ line: 1, message: 'tệp phải bắt đầu bằng "---" (front matter)' })
+    problems.push({ line: 1, message: 'the file must start with "---" (front matter)' })
     return { meta, metaLine, end: 0 }
   }
   let i = 1
@@ -61,7 +62,7 @@ const parseFrontMatter = (lines, problems) => {
       meta[m[1]] = m[2]
       metaLine[m[1]] = i + 1
     } else if (lines[i].trim()) {
-      problems.push({ line: i + 1, message: `không hiểu dòng front matter "${lines[i]}"` })
+      problems.push({ line: i + 1, message: `cannot parse front matter line "${lines[i]}"` })
     }
   }
   return { meta, metaLine, end: i + 1 }
@@ -84,45 +85,54 @@ export function parseLesson(markdown, ctx) {
   const { meta, metaLine, end } = parseFrontMatter(lines, problems)
 
   for (const key of REQUIRED) {
-    if (!meta[key]) problems.push({ line: 1, message: `thiếu "${key}" trong front matter` })
+    if (!meta[key]) problems.push({ line: 1, message: `missing "${key}" in front matter` })
   }
-  if (meta.ma && meta.ma !== ctx.dirName) {
-    problems.push({ line: metaLine.ma, message: `ma "${meta.ma}" khác tên thư mục "${ctx.dirName}"` })
+  if (meta.id && meta.id !== ctx.dirName) {
+    problems.push({ line: metaLine.id, message: `id "${meta.id}" differs from the folder name "${ctx.dirName}"` })
   }
-  if (meta.nhom && !GROUPS.includes(meta.nhom)) {
-    problems.push({ line: metaLine.nhom, message: `nhom "${meta.nhom}" không thuộc ${GROUPS.join('|')}` })
+  if (meta.group && !GROUPS.includes(meta.group)) {
+    problems.push({ line: metaLine.group, message: `group "${meta.group}" is not one of ${GROUPS.join('|')}` })
   }
-  if (meta['bat-dau'] && !ctx.files.includes(meta['bat-dau'])) {
-    problems.push({ line: metaLine['bat-dau'], message: `không thấy tệp bat-dau "${meta['bat-dau']}"` })
+  if (meta.start && !ctx.files.includes(meta.start)) {
+    problems.push({ line: metaLine.start, message: `start file "${meta.start}" not found` })
+  }
+  if (meta.image && !(IMAGE_FILE.test(meta.image) && ctx.files.includes(meta.image))) {
+    problems.push({
+      line: metaLine.image,
+      message: `image "${meta.image}" must be a .png or .gif file in the lesson folder`,
+    })
   }
 
-  const thietBi = meta['thiet-bi']
-    ? meta['thiet-bi']
+  const peripherals = meta.peripherals
+    ? meta.peripherals
         .split(',')
         .map((id) => id.trim())
         .filter(Boolean)
     : []
-  for (const id of thietBi) {
+  for (const id of peripherals) {
     if (!PERIPHERALS.includes(id)) {
-      problems.push({ line: metaLine['thiet-bi'], message: `thiet-bi "${id}" không thuộc ${PERIPHERALS.join('|')}` })
+      problems.push({
+        line: metaLine.peripherals,
+        message: `peripheral "${id}" is not one of ${PERIPHERALS.join('|')}`,
+      })
     }
   }
 
-  const moRong = meta['mo-rong']
-    ? meta['mo-rong']
+  const extensions = meta.extensions
+    ? meta.extensions
         .split(',')
         .map((id) => id.trim())
         .filter(Boolean)
     : []
-  for (const id of moRong) {
+  for (const id of extensions) {
     if (!EXTENSIONS.includes(id)) {
-      problems.push({ line: metaLine['mo-rong'], message: `mo-rong "${id}" không thuộc ${EXTENSIONS.join('|')}` })
+      problems.push({ line: metaLine.extensions, message: `extension "${id}" is not one of ${EXTENSIONS.join('|')}` })
     }
   }
 
-  for (const key of ['thu-tu', 'thoi-luong']) {
+  for (const key of ['order', 'duration']) {
     if (meta[key] && !/^\d+$/.test(meta[key])) {
-      problems.push({ line: metaLine[key], message: `${key} phải là số` })
+      problems.push({ line: metaLine[key], message: `${key} must be a number` })
     }
   }
 
@@ -151,7 +161,7 @@ export function parseLesson(markdown, ctx) {
     }
     hintText = null
     if ((m = line.match(/^(#{3,})\s/))) {
-      problems.push({ line: lineNo, message: 'chỉ dùng ## cho bước, không dùng ###' })
+      problems.push({ line: lineNo, message: 'use ## for steps, not ###' })
       continue
     }
     if ((m = line.match(/^##\s+(.+?)\s*$/))) {
@@ -165,20 +175,20 @@ export function parseLesson(markdown, ctx) {
     }
     if (!step) {
       if (line.trim()) {
-        problems.push({ line: lineNo, message: 'nội dung phải nằm sau một tiêu đề bước "## …"' })
+        problems.push({ line: lineNo, message: 'content must come after a step heading "## …"' })
       }
       continue
     }
-    if ((m = line.match(/^kiểm:\s*(.+)$/i))) {
+    if ((m = line.match(/^check:\s*(.+)$/i))) {
       flushParagraph()
       flushList()
       try {
         const rule = parseRule(m[1])
         // Camera AI rules are graded on the playground, the others in the simulator: one place per step.
         if (step.rules.length && isCameraRule(step.rules[0]) !== isCameraRule(rule)) {
-          problems.push({ line: lineNo, message: 'một bước không trộn luật Camera AI với luật mạch ảo' })
-        } else if (isCameraRule(rule) && !moRong.includes('cameraAi')) {
-          problems.push({ line: lineNo, message: 'luật Camera AI cần "mo-rong: cameraAi" trong front matter' })
+          problems.push({ line: lineNo, message: 'a step cannot mix Camera AI rules with virtual board rules' })
+        } else if (isCameraRule(rule) && !extensions.includes('cameraAi')) {
+          problems.push({ line: lineNo, message: 'Camera AI rules need "extensions: cameraAi" in the front matter' })
         }
         step.rules.push(rule)
       } catch (e) {
@@ -189,14 +199,14 @@ export function parseLesson(markdown, ctx) {
       }
       continue
     }
-    if ((m = line.match(/^chỉ vào:\s*(\S+)\s*$/i))) {
+    if ((m = line.match(/^point at:\s*(\S+)\s*$/i))) {
       flushParagraph()
       flushList()
       if (TOUR_MARKERS.includes(m[1])) step.pointAt = m[1]
       else {
         problems.push({
           line: lineNo,
-          message: `mốc "${m[1]}" không có; các mốc: ${TOUR_MARKERS.join(', ')}`,
+          message: `unknown anchor "${m[1]}"; anchors: ${TOUR_MARKERS.join(', ')}`,
         })
       }
       continue
@@ -212,7 +222,7 @@ export function parseLesson(markdown, ctx) {
       flushParagraph()
       flushList()
       if (!ctx.files.includes(m[2])) {
-        problems.push({ line: lineNo, message: `không thấy ảnh "${m[2]}"` })
+        problems.push({ line: lineNo, message: `image "${m[2]}" not found` })
       }
       step.body.push({ type: 'img', src: m[2], alt: m[1] })
       continue
@@ -234,21 +244,22 @@ export function parseLesson(markdown, ctx) {
     flushParagraph()
     flushList()
   }
-  if (!steps.length) problems.push({ line: lines.length, message: 'bài không có bước nào ("## …")' })
+  if (!steps.length) problems.push({ line: lines.length, message: 'the lesson has no steps ("## …")' })
 
   if (problems.length) throw new LessonError(problems)
 
   return {
     lesson: {
-      ma: meta.ma,
-      ten: meta.ten,
-      nhom: meta.nhom,
-      thuTu: Number(meta['thu-tu']),
-      bo: meta.bo,
-      batDau: meta['bat-dau'] ?? null,
-      thietBi,
-      moRong,
-      thoiLuong: meta['thoi-luong'] ? Number(meta['thoi-luong']) : null,
+      id: meta.id,
+      name: meta.name,
+      group: meta.group,
+      order: Number(meta.order),
+      board: meta.board,
+      start: meta.start ?? null,
+      image: meta.image ?? null,
+      peripherals,
+      extensions,
+      duration: meta.duration ? Number(meta.duration) : null,
       lang: ctx.lang,
       steps,
     },
