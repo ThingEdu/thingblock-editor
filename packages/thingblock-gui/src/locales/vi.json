@@ -328,5 +328,22 @@
     "cameraAi.menu.hide": "ẩn",
     "cameraAi.menu.leanLeft": "trái",
     "cameraAi.menu.leanRight": "phải",
-    "cameraAi.menu.leanStraight": "thẳng"
+    "cameraAi.menu.leanStraight": "thẳng",
+    "gui.menuBar.board": "Mạch: {boardName}",
+    "gui.gui.codeTab": "Khối lệnh",
+    "gui.connection.firmware.connecting": "Đang kết nối với mạch…",
+    "gui.boardListDialog.connecting": "Đang kết nối với {name}…",
+    "gui.boardListDialog.connectError": "Không kết nối được: {error}",
+    "gui.simPanel.title": "Mô phỏng",
+    "gui.aria.startProjectButton": "Chạy chương trình",
+    "gui.aria.stopProjectButton": "Dừng chương trình",
+    "gui.aria.fileMenu": "Menu Tập tin",
+    "gui.aria.editMenu": "Menu Chỉnh sửa",
+    "gui.aria.settingsMenu": "Menu Cài đặt",
+    "gui.aria.languageMenu": "Menu Ngôn ngữ",
+    "gui.aria.modeMenu": "Menu Chế độ",
+    "gui.aria.aboutMenu": "Menu Giới thiệu",
+    "device.thingbot.description": "Mạch robot ESP32-C3 của ThingEdu, có Wi-Fi và Bluetooth năng lượng thấp (BLE).",
+    "device.cobot.description": "Robot dò đường của làng Maker: chip ESP32-C3, hai động cơ, bốn mắt dò line và cảm biến màu I2C.",
+    "device.viaBanhMi.description": "Mạch robot ESP32 của MakerViet, để học sinh Việt Nam làm robot và xe tự hành."
 }

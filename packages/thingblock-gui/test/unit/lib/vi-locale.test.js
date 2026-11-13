@@ -25,6 +25,15 @@ const REQUIRED = [
     'gui.lessonLibrary.group.motors',
     'gui.lessonLibrary.group.inputs',
     'gui.gui.addPeripheral',
+    // Board menu, code tab, connecting and the board picker's descriptions (#48).
+    'gui.menuBar.board',
+    'gui.gui.codeTab',
+    'gui.connection.firmware.connecting',
+    'gui.boardListDialog.connecting',
+    'gui.boardListDialog.connectError',
+    'device.thingbot.description',
+    'device.cobot.description',
+    'device.viaBanhMi.description',
     // Live mode and Arduino pin blocks, which the VM resolves from the editor's messages.
     'thingbotTelemetrix.controlDC',
     'arduino.digitalRead'
