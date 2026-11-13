@@ -73,6 +73,8 @@ rejected by the pre-commit hook.
 ## Repository layout
 
 ```text
+apps/
+└── thingblock-virtualspace/  Web-only virtual robot environment (private, never published)
 packages/
 ├── thingblock-gui/         React-based editor UI
 ├── thingblock-vm/          Virtual machine that runs Scratch projects
@@ -81,6 +83,9 @@ packages/
 └── task-herder/            Async task scheduler with rate limiting
 scripts/                    Monorepo-level utility scripts
 ```
+
+`apps/` holds deployed applications; they are private workspaces, not npm packages. `packages/` holds the
+published libraries.
 
 ## Packages at a glance
 
@@ -91,6 +96,7 @@ scripts/                    Monorepo-level utility scripts
 | `thingblock-blocks` | TypeScript | webpack | Vitest |
 | `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
+| `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
 
 `task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
 the same test framework (Vitest) but retains webpack as its bundler. The remaining packages reflect the legacy
