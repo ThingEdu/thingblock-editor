@@ -1,0 +1,16 @@
+{
+  "name": "ThingBlock Live",
+  "short_name": "ThingBlock",
+  "description": "Lập trình khối điều khiển ThingBot qua Bluetooth, chạy trên máy tính bảng",
+  "lang": "vi",
+  "start_url": "./?locale=vi",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "theme_color": "#4c97ff",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

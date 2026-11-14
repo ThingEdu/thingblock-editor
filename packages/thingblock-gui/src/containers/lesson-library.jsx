@@ -12,6 +12,10 @@ import {openLesson} from '../reducers/lesson';
 import {closeTipsLibrary} from '../reducers/modals';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {setProjectTitle} from '../reducers/project-title';
+import {LIVE_ONLY} from '../lib/live-only';
+
+// The lesson group that needs no board, the only one a live-only editor lists.
+const BOARDLESS_GROUP = 'camera-ai';
 
 // Lessons are written in Vietnamese only for now.
 const LESSON_LANG = 'vi';
@@ -83,7 +87,7 @@ const LessonLibrary = ({projectChanged, vm, onClose, onOpen}) => {
     return (
         <LessonLibraryComponent
             error={error}
-            lessons={index ? index.lessons : []}
+            lessons={index ? index.lessons.filter(lesson => !LIVE_ONLY || lesson.group === BOARDLESS_GROUP) : []}
             loading={!index && !error}
             tutorialsBase={base}
             onClose={onClose}

@@ -10,6 +10,7 @@ import log from '../lib/log';
 import LibraryComponent from '../components/library/library.jsx';
 import ExampleCard from '../components/example-card/example-card.jsx';
 import {closeExampleLibrary} from '../reducers/modals';
+import {LIVE_ONLY} from '../lib/live-only';
 
 const messages = defineMessages({
     title: {
@@ -105,13 +106,15 @@ class ExampleLibrary extends React.PureComponent {
     render () {
         if (!this.props.visible) return null;
         const {index} = this.state;
-        const data = index ? index.examples.map(example => ({
+        // A live-only editor cannot upload, so it lists only the examples that need no board.
+        const examples = index ? index.examples.filter(example => !LIVE_ONLY || !example.device) : [];
+        const data = examples.map(example => ({
             ...example,
             name: example.title,
             tags: [example.group]
-        })) : [];
+        }));
         // A group the editor has no label for is shown by its index name.
-        const tags = index ? index.groups.map(group => ({
+        const tags = index ? index.groups.filter(group => examples.some(e => e.group === group)).map(group => ({
             tag: group,
             intlLabel: groupMessages[group] || {id: 'gui.exampleLibrary.groupOther', defaultMessage: group}
         })) : [];

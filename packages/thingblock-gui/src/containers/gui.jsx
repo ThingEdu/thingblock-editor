@@ -42,6 +42,7 @@ import {PLATFORM} from '../lib/platform.js';
 import GUIComponent from '../components/gui/gui.jsx';
 import {GUIStoragePropType} from '../gui-config';
 import {AccountMenuOptionsPropTypes} from '../lib/account-menu-options';
+import {LIVE_ONLY, LIVE_EXTENSION_ID} from '../lib/live-only';
 import {
     costumeShape,
     soundShape,
@@ -75,6 +76,10 @@ class GUI extends React.Component {
             // this only notifies container when a project changes from not yet loaded to loaded
             // At this time the project view in www doesn't need to know when a project is unloaded
             this.props.onProjectLoaded();
+            const {extensionManager} = this.props.vm;
+            if (LIVE_ONLY && !extensionManager.isExtensionLoaded(LIVE_EXTENSION_ID)) {
+                extensionManager.loadExtensionURL(LIVE_EXTENSION_ID);
+            }
         }
         if (this.props.shouldStopProject && !prevProps.shouldStopProject) {
             this.props.vm.stopAll();

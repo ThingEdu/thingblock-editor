@@ -8,6 +8,7 @@ import extensionData from '../lib/libraries/extensions/index.jsx';
 import {connect} from 'react-redux';
 
 import {closeConnectionModal} from '../reducers/modals';
+import {LIVE_ONLY} from '../lib/live-only';
 
 class ConnectionModal extends React.Component {
     constructor (props) {
@@ -121,9 +122,9 @@ class ConnectionModal extends React.Component {
         const webBluetoothAvailable = typeof navigator !== 'undefined' && !!navigator.bluetooth;
         const useExternalPeripheralList = this.props.useExternalPeripheralList || webBluetoothAvailable;
         // Offer the firmware install only when the pack ships the image and the client can flash it
-        // (the cloud client cannot).
+        // (the cloud client cannot, nor can a live-only editor, which has no link helper).
         const firmware = this.state.extension && this.state.extension.firmware;
-        const canInstallFirmware = Boolean(firmware && this.props.vm.link.backend &&
+        const canInstallFirmware = Boolean(!LIVE_ONLY && firmware && this.props.vm.link.backend &&
             this.props.vm.link.backend.flasher.canFlashFirmware &&
             this.props.vm.devices.getDeviceFirmware(firmware.deviceId).some(fw => fw.id === firmware.firmwareId));
         return (

@@ -6,6 +6,14 @@ import {fireEvent, waitFor} from '@testing-library/react';
 import {renderWithIntl} from '../../helpers/intl-helpers.jsx';
 import LessonLibrary from '../../../src/containers/lesson-library.jsx';
 
+let mockLiveOnly = false;
+jest.mock('../../../src/lib/live-only', () => ({
+    get LIVE_ONLY () {
+        return mockLiveOnly;
+    },
+    LIVE_EXTENSION_ID: 'thingbotTelemetrix'
+}));
+
 jest.mock('../../../src/containers/modal.jsx', () => {
     const MockModal = ({children}) => <div>{children}</div>;
     return MockModal;
@@ -33,7 +41,8 @@ const entry = (id, name, group, order, stepCount, gradedCount) => ({
 });
 const INDEX = {lessons: [
     entry('blink', 'Đèn nhấp nháy', 'outputs', 2, 4, 2),
-    entry('hello', 'Chào bạn', 'getting-started', 1, 3, 1)
+    entry('hello', 'Chào bạn', 'getting-started', 1, 3, 1),
+    entry('cam-01', 'Tay em', 'camera-ai', 1, 3, 2)
 ]};
 const LESSON = {id: 'blink', name: 'Đèn nhấp nháy', group: 'outputs', order: 2, board: 'thingbot', steps: []};
 
@@ -65,6 +74,7 @@ beforeEach(() => {
 
 afterEach(() => {
     delete global.fetch;
+    mockLiveOnly = false;
 });
 
 test('shows the lessons from the index', async () => {
@@ -205,4 +215,12 @@ test('a changed project is only replaced when the learner confirms', async () =>
     } finally {
         confirm.mockRestore();
     }
+});
+
+test('a live-only editor lists only the lessons that need no board', async () => {
+    mockLiveOnly = true;
+    const {getByText, queryByText} = renderLibrary(ROOT);
+    await waitFor(() => expect(getByText('Tay em')).toBeInTheDocument());
+    expect(queryByText('Đèn nhấp nháy')).toBeNull();
+    expect(queryByText('Chào bạn')).toBeNull();
 });

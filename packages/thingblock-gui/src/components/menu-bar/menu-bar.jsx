@@ -27,6 +27,7 @@ import FileMenu from './file-menu.jsx';
 import EditMenu from './edit-menu.jsx';
 import ModeMenu from './mode-menu.jsx';
 import BoardMenu from './board-menu.jsx';
+import {LIVE_ONLY} from '../../lib/live-only';
 import AboutMenu from './about-menu.jsx';
 
 import {openTipsLibrary, openDebugModal, openSettingsModal} from '../../reducers/modals';
@@ -340,7 +341,7 @@ class MenuBar extends React.Component {
                             isRtl={this.props.isRtl}
                             depth={1}
                         />)}
-                        <BoardMenu depth={1} />
+                        {!LIVE_ONLY && <BoardMenu depth={1} />}
                     </div>
                     {this.props.canEditTitle ? (
                         <div className={classNames(styles.menuBarItem, styles.growable)}>

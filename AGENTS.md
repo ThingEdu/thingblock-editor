@@ -197,6 +197,10 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `CAMERA_AI_VISION_RESULTS` frame as the hands. The GUI runs that model only when the VM's `CAMERA_COMMAND` says
   `pose: true` (the project has a head/body block or the flap hat). Flaps, nods and leans are also emitted as
   `CAMERA_AI_MOTION` for lesson checks.
+- A host that sets `globalThis.__THINGBLOCK_LIVE_ONLY__` (the tablet web build, `scripts/web-live/stage.sh`)
+  gets a live-only editor (`gui/src/lib/live-only.js`): no board picker or firmware install, the ThingBot
+  live blocks loaded with each project, and only boardless lessons and examples. Blocks reach the ThingBot
+  over Web Bluetooth, so it needs Chrome and a board already running its live firmware.
 - `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 
