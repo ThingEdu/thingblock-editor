@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="372" viewBox="0 0 600 372">
+  <rect width="600" height="372" fill="#f3f4f6"/>
+  <!-- The floor with a line to follow -->
+  <rect x="60" y="262" width="480" height="70" rx="10" fill="#e5e7eb"/>
+  <rect x="262" y="262" width="76" height="70" fill="#111827"/>
+  <!-- Sensor bar seen from the side -->
+  <rect x="110" y="96" width="380" height="64" rx="12" fill="#1f2937"/>
+  <rect x="130" y="112" width="40" height="10" rx="3" fill="#374151"/>
+  <rect x="430" y="112" width="40" height="10" rx="3" fill="#374151"/>
+  <g fill="#111827">
+    <rect x="152" y="160" width="56" height="34" rx="6"/>
+    <rect x="232" y="160" width="56" height="34" rx="6"/>
+    <rect x="312" y="160" width="56" height="34" rx="6"/>
+    <rect x="392" y="160" width="56" height="34" rx="6"/>
+  </g>
+  <g fill="#ef4444">
+    <circle cx="168" cy="177" r="7"/><circle cx="248" cy="177" r="7"/>
+    <circle cx="328" cy="177" r="7"/><circle cx="408" cy="177" r="7"/>
+  </g>
+  <g fill="#9ca3af">
+    <circle cx="192" cy="177" r="7"/><circle cx="272" cy="177" r="7"/>
+    <circle cx="352" cy="177" r="7"/><circle cx="432" cy="177" r="7"/>
+  </g>
+  <!-- Infrared beams to the floor -->
+  <g stroke="#ef4444" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12" opacity="0.8">
+    <line x1="180" y1="204" x2="180" y2="252"/><line x1="260" y1="204" x2="260" y2="252"/>
+    <line x1="340" y1="204" x2="340" y2="252"/><line x1="420" y1="204" x2="420" y2="252"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#f3f4f6" text-anchor="middle">
+    <text x="180" y="146">1</text><text x="260" y="146">2</text><text x="340" y="146">3</text><text x="420" y="146">4</text>
+  </g>
+</svg>

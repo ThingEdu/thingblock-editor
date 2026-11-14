@@ -1,0 +1,82 @@
+{
+  "cobotC3_init": {
+    "message0": "khởi động CoBot",
+    "tooltip": "Chuẩn bị hai động cơ, bật đèn hồng ngoại của các mắt, tắt đèn trắng."
+  },
+  "cobotC3_drive": {
+    "message0": "CoBot %1 tốc độ %2 %%",
+    "tooltip": "Tốc độ từ 0 đến 100 %. Rẽ: một bánh đứng, bánh kia chạy. Xoay: hai bánh chạy ngược chiều nhau, xe quay tại chỗ.",
+    "options": {
+      "MOVE": {
+        "forward": "tiến",
+        "backward": "lùi",
+        "turnLeft": "rẽ trái",
+        "turnRight": "rẽ phải",
+        "spinLeft": "xoay trái",
+        "spinRight": "xoay phải"
+      }
+    }
+  },
+  "cobotC3_stop": {
+    "message0": "dừng CoBot"
+  },
+  "cobotC3_setMotor": {
+    "message0": "động cơ %1 tốc độ %2 %%",
+    "tooltip": "Từ -100 đến 100 %: số âm thì bánh quay lùi, 0 thì bánh đứng.",
+    "options": {
+      "MOTOR": {
+        "left": "trái",
+        "right": "phải"
+      }
+    }
+  },
+  "cobotC3_setTrim": {
+    "message0": "bánh phải nhanh hơn bánh trái %1 %%",
+    "tooltip": "Hai động cơ không bao giờ quay nhanh y hệt nhau. Xe đi thẳng mà lệch sang phải thì thử 10; lệch sang trái thì dùng số âm."
+  },
+  "cobotC3_readEye": {
+    "message0": "đọc mắt %1",
+    "tooltip": "Số từ 0 đến 4095: lượng ánh sáng hồng ngoại từ mặt sàn hắt về mắt. Vạch tối cho số nhỏ, nền sáng cho số lớn."
+  },
+  "cobotC3_onLine": {
+    "message0": "mắt %1 thấy vạch?"
+  },
+  "cobotC3_setLine": {
+    "message0": "mắt thấy vạch khi số đọc %1 %2",
+    "tooltip": "≤ là nhỏ hơn hoặc bằng, ≥ là lớn hơn hoặc bằng. Ngưỡng là con số chia đôi vạch và nền (0 đến 4095): đọc số của mắt trên vạch và trên nền rồi chọn một số ở giữa.",
+    "options": {
+      "SIDE": {
+        "below": "≤",
+        "above": "≥"
+      }
+    }
+  },
+  "cobotC3_pattern": {
+    "message0": "mẫu 4 mắt",
+    "tooltip": "Bốn chữ số, từ mắt 1 tới mắt 4: 1 là thấy vạch, 0 là không. \"0110\" là hai mắt giữa thấy vạch."
+  },
+  "cobotC3_patternIs": {
+    "message0": "mẫu 4 mắt là %1?",
+    "tooltip": "Bốn chữ số, từ mắt 1 tới mắt 4: 1 là thấy vạch, 0 là không. Viết x cho mắt nào thấy hay không cũng được."
+  },
+  "cobotC3_irLight": {
+    "message0": "%1 đèn hồng ngoại của mắt",
+    "tooltip": "Đèn hồng ngoại có bật thì mắt mới thấy vạch.",
+    "options": {
+      "STATE": {
+        "HIGH": "bật",
+        "LOW": "tắt"
+      }
+    }
+  },
+  "cobotC3_whiteLight": {
+    "message0": "%1 đèn trắng",
+    "tooltip": "Chiếu sáng mặt sàn dưới cảm biến màu, để màu đọc như nhau cả khi phòng tối.",
+    "options": {
+      "STATE": {
+        "HIGH": "bật",
+        "LOW": "tắt"
+      }
+    }
+  }
+}

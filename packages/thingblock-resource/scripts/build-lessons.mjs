@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { LessonError, parseLesson } from './lessons/parse-lesson.mjs'
 
-const GROUP_ORDER = ['getting-started', 'outputs', 'motors', 'inputs']
+const GROUP_ORDER = ['getting-started', 'outputs', 'motors', 'inputs', 'camera-ai']
 const LESSON_FILE = /^lesson\.([a-z]{2})\.md$/
 const IMAGE_FILE = /\.(png|gif)$/
 

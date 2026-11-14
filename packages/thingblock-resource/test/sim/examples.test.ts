@@ -4,7 +4,7 @@
 /**
  * The "Mô phỏng ThingBot Sim" examples are the simulator's own lessons, so every one of them must run in
  * the simulator: generate without a missing block, and run without the board halting. The input
- * examples must also answer the panel's controls (the distance slider, the gamepad).
+ * examples must also answer the panel's controls (the ball in front of the IR eye, the egg belt, the gamepad).
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -72,22 +72,23 @@ describe('simulator examples', () => {
     expect(snapshot.phase).toBe('loop')
   })
 
-  it('the distance sensor example lights L1 only when something is near', async () => {
-    const far = await start('sim-06-cam-bien-khoang-cach.tb', { ultrasonic: 100 })
-    for (let i = 0; i < 20; i++) far.tick(16)
-    const near = await start('sim-06-cam-bien-khoang-cach.tb', { ultrasonic: 10 })
-    for (let i = 0; i < 20; i++) near.tick(16)
-    expect(far.snapshot().pwm[15]).not.toBe(near.snapshot().pwm[15])
+  it('the IR eye example lights L1 for a dark ball and not for a bright one', async () => {
+    const dark = await start('sim-06-mat-hong-ngoai.tb', { adc4: 300 })
+    for (let i = 0; i < 20; i++) dark.tick(16)
+    expect(dark.snapshot().pwm[15]).toBeGreaterThan(0)
+    const bright = await start('sim-06-mat-hong-ngoai.tb', { adc4: 3500 })
+    for (let i = 0; i < 20; i++) bright.tick(16)
+    expect(bright.snapshot().pwm[15]).toBe(0)
   })
 
-  it('the obstacle-avoiding car drives on when clear and turns when an obstacle is near', async () => {
-    const clear = await start('sim-10-xe-tranh-vat-can.tb', { ultrasonic: 100 })
-    for (let i = 0; i < 20; i++) clear.tick(16)
-    expect([motor(clear.snapshot().pwm, 1), motor(clear.snapshot().pwm, 2)]).toEqual(['forward', 'forward'])
-
-    const blocked = await start('sim-10-xe-tranh-vat-can.tb', { ultrasonic: 10 })
-    for (let i = 0; i < 20; i++) blocked.tick(16)
-    expect([motor(blocked.snapshot().pwm, 1), motor(blocked.snapshot().pwm, 2)]).toEqual(['forward', 'backward'])
+  it('the egg sorting line pushes bad eggs out and lets good ones through', async () => {
+    const session = await start('sim-10-day-chuyen-phan-loai.tb', { belt: 1 })
+    // 20 s of the belt at 40 %: about a dozen eggs reach the gate or the end.
+    for (let i = 0; i < 1250; i++) session.tick(16)
+    const belt = session.snapshot().belt
+    expect(belt?.rejectedBad).toBeGreaterThan(1)
+    expect(belt?.passedGood).toBeGreaterThan(3)
+    expect([belt?.rejectedGood, belt?.passedBad]).toEqual([0, 0])
   })
 
   it('the gamepad example drives forward while up is held and stops when it is released', async () => {

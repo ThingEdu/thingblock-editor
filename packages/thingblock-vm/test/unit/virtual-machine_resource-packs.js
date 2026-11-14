@@ -206,6 +206,28 @@ const firmwareManifest = Object.assign({}, sampleManifest, {
     }]
 });
 
+test('hasSimulator follows the device pack\'s own simulator codegen', t => {
+    const vm = new VirtualMachine();
+    const devices = 'http://localhost:3030/resources/extensions/devices';
+    const peripherals = 'http://localhost:3030/resources/extensions/peripheral';
+    vm.devices.registerDeviceManifest({...sampleManifest, extensions: ['thingBotC3']}, `${devices}/thingbot`);
+    vm.devices.registerPeripheralManifest({id: 'thingBotC3', name: 'ThingBot', hidden: true, sim: './sim.js'},
+        `${peripherals}/thingbot-core`);
+    vm.devices.registerDeviceManifest({...sampleManifest, id: 'cobot', extensions: ['cobotC3', 'colourSensor']},
+        `${devices}/cobot`);
+    vm.devices.registerPeripheralManifest({id: 'cobotC3', name: 'CoBot', hidden: true}, `${peripherals}/cobot-core`);
+    vm.devices.registerPeripheralManifest({id: 'colourSensor', name: 'Colour', sim: './sim.js'},
+        `${peripherals}/colourSensor`);
+    vm.devices.registerDeviceManifest({...sampleManifest, id: 'bare'}, `${devices}/bare`);
+
+    t.equal(vm.devices.hasSimulator('thingbot'), true, 'its own pack ships simulator codegen');
+    t.equal(vm.devices.hasSimulator('cobot'), false, 'a simulated reusable pack does not stand in for its own');
+    t.equal(vm.devices.hasSimulator('bare'), false, 'a pack device with no pack of its own');
+    t.equal(vm.devices.hasSimulator('esp32c3'), true, 'a built-in board runs core blocks');
+
+    t.end();
+});
+
 test('getDeviceFirmware lists what the pack declared', t => {
     const vm = new VirtualMachine();
     vm.devices.registerDeviceManifest(firmwareManifest, 'http://127.0.0.1:3030/resources/extensions/devices/thingbot');

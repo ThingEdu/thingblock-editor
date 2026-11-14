@@ -25,7 +25,7 @@ export interface Step {
 export interface Lesson {
   id: string
   name: string
-  group: 'getting-started' | 'outputs' | 'motors' | 'inputs'
+  group: 'getting-started' | 'outputs' | 'motors' | 'inputs' | 'camera-ai'
   order: number
   board: string
   start: string | null
@@ -33,6 +33,8 @@ export interface Lesson {
   image: string | null
   /** Extra packs the editor adds when the lesson opens (`peripherals:`). */
   peripherals: string[]
+  /** Editor extensions the editor loads when the lesson opens (`extensions:`), e.g. `cameraAi`. */
+  extensions: string[]
   duration: number | null
   lang: string
   steps: Step[]

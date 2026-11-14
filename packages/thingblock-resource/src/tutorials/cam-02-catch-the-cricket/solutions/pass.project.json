@@ -1,0 +1,288 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "variableTypes": {},
+      "blocks": {},
+      "comments": {},
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 0,
+      "tempo": 60,
+      "videoTransparency": 50,
+      "videoState": "on",
+      "textToSpeechLanguage": null
+    },
+    {
+      "isStage": false,
+      "name": "Sprite1",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {
+        "b1": {
+          "opcode": "event_whenflagclicked",
+          "next": "b2",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 40,
+          "y": 40
+        },
+        "b2": {
+          "opcode": "cameraAi_cameraOn",
+          "next": "b3",
+          "parent": "b1",
+          "inputs": {},
+          "fields": {
+            "MIRROR": ["mirror", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b3": {
+          "opcode": "cameraAi_spawn",
+          "next": "b4",
+          "parent": "b2",
+          "inputs": {
+            "NAME": [1, [10, "bong"]],
+            "X": [1, [4, "0"]],
+            "Y": [1, [4, "0"]],
+            "SIZE": [1, [4, "44"]]
+          },
+          "fields": {
+            "KIND": ["ball", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b4": {
+          "opcode": "cameraAi_spawn",
+          "next": "b5",
+          "parent": "b3",
+          "inputs": {
+            "NAME": [1, [10, "de"]],
+            "X": [1, [4, "120"]],
+            "Y": [1, [4, "60"]],
+            "SIZE": [1, [4, "70"]]
+          },
+          "fields": {
+            "KIND": ["cricket", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b5": {
+          "opcode": "cameraAi_setScore",
+          "next": "b7",
+          "parent": "b4",
+          "inputs": {
+            "PLAYER": [1, "s6"],
+            "N": [1, [4, "0"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "s6": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b5",
+          "inputs": {},
+          "fields": {
+            "PLAYER": ["1", null]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b7": {
+          "opcode": "control_forever",
+          "next": null,
+          "parent": "b5",
+          "inputs": {
+            "SUBSTACK": [2, "b8"]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b8": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b11",
+          "parent": "b7",
+          "inputs": {
+            "NAME": [1, [10, "bong"]],
+            "X": [3, "b9", [4, "0"]],
+            "Y": [3, "b10", [4, "0"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b9": {
+          "opcode": "cameraAi_handX",
+          "next": null,
+          "parent": "b8",
+          "inputs": {},
+          "fields": {
+            "PART": ["indexTip", null],
+            "HAND": ["ANY", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b10": {
+          "opcode": "cameraAi_handY",
+          "next": null,
+          "parent": "b8",
+          "inputs": {},
+          "fields": {
+            "PART": ["indexTip", null],
+            "HAND": ["ANY", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b11": {
+          "opcode": "control_if",
+          "next": null,
+          "parent": "b8",
+          "inputs": {
+            "CONDITION": [2, "b12"],
+            "SUBSTACK": [2, "b13"]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b12": {
+          "opcode": "cameraAi_touching",
+          "next": null,
+          "parent": "b11",
+          "inputs": {
+            "NAME": [1, [10, "de"]]
+          },
+          "fields": {
+            "PART": ["indexTip", null],
+            "HAND": ["ANY", null]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b13": {
+          "opcode": "cameraAi_addScore",
+          "next": "b15",
+          "parent": "b11",
+          "inputs": {
+            "N": [1, [4, "1"]],
+            "PLAYER": [1, "s14"]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "s14": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b13",
+          "inputs": {},
+          "fields": {
+            "PLAYER": ["1", null]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b15": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b18",
+          "parent": "b13",
+          "inputs": {
+            "NAME": [1, [10, "de"]],
+            "X": [3, "b16", [4, "0"]],
+            "Y": [3, "b17", [4, "0"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b16": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b15",
+          "inputs": {
+            "FROM": [1, [4, "-200"]],
+            "TO": [1, [4, "200"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b17": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b15",
+          "inputs": {
+            "FROM": [1, [4, "-140"]],
+            "TO": [1, [4, "140"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b18": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "b15",
+          "inputs": {
+            "DURATION": [1, [5, "0.3"]]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        }
+      },
+      "comments": {},
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "size": 100,
+      "direction": 90,
+      "draggable": false,
+      "rotationStyle": "all around"
+    }
+  ],
+  "monitors": [],
+  "extensions": ["cameraAi"],
+  "meta": {
+    "semver": "3.0.0",
+    "vm": "14.1.0",
+    "agent": "thingblock-resource/lessons kiem-thu"
+  }
+}

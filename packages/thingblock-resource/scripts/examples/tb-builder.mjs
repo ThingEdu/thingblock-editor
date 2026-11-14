@@ -40,7 +40,7 @@ const CORE_PREFIXES = new Set([
 ])
 
 /** Peripherals a device activates on its own (its manifest `extensions`); not saved in `board`. */
-const DEVICE_AUTO_PERIPHERALS = { thingbot: ['thingBotC3', 'ps2'] }
+const DEVICE_AUTO_PERIPHERALS = { thingbot: ['thingBotC3', 'ps2'], cobot: ['cobotC3', 'colourSensor'] }
 
 /** The placeholder costume every ThingBlock save references (the editor ships the asset itself). */
 const COSTUME = {
@@ -56,16 +56,23 @@ const ZIP_DATE = new Date('2026-11-01T00:00:00Z')
 const COLUMN_WIDTH = 760
 const COMMENT_OFFSET_X = 420
 
+// Lines a comment takes once wrapped at `perLine` characters; each \n starts a new line.
+const wrappedLines = (text, perLine) =>
+  text.split('\n').reduce((n, line) => n + Math.max(1, Math.ceil(line.length / perLine)), 0)
+
 /**
  * Convert one program to a ThingBlock `project.json` object.
  * @param {object} spec The example.
  * @param {Array<object>} spec.stacks Top-level blocks (hats, procedure definitions), serialization form.
  * @param {Array<{name: string, type?: 'int'|'float'|'string'}>} [spec.variables] Stage variables.
- * @param {string} [spec.device] Target device id (default `thingbot`).
+ * @param {Array<{name: string, items: string[]}>} [spec.lists] Stage lists.
+ * @param {string|null} [spec.device] Target device id (default `thingbot`); null for a project that
+ *   runs in the editor without a board (Camera AI), which saves no `board`.
  * @param {string} [spec.note] Workspace comment shown at the top-left (the lesson summary).
+ * @param {number} [spec.noteHeight] The note's height, when its lines need more than the default.
  * @returns {object} The `project.json` content, ready to zip.
  */
-export function toProject({ stacks, variables = [], device = 'thingbot', note }) {
+export function toProject({ stacks, variables = [], lists = [], device = 'thingbot', note, noteHeight }) {
   const blocks = {}
   const comments = {}
   let counter = 0
@@ -80,10 +87,23 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
     return v
   }
 
-  const primitive = (shadow) => {
+  const listsByName = new Map(lists.map((l, i) => [l.name, { id: `list${i + 1}`, ...l }]))
+
+  // A primitive shadow serializes inline; any other (an extension's menu) is a shadow block of its own.
+  const shadowOf = (shadow, parent) => {
     const kind = PRIMITIVES[shadow.type]
-    if (!kind) throw new Error(`Unsupported shadow type ${shadow.type}`)
-    return [kind[0], String(shadow.fields?.[kind[1]] ?? '')]
+    if (kind) return [kind[0], String(shadow.fields?.[kind[1]] ?? '')]
+    const id = nextId('s')
+    blocks[id] = {
+      opcode: shadow.type,
+      next: null,
+      parent,
+      inputs: {},
+      fields: Object.fromEntries(Object.entries(shadow.fields ?? {}).map(([k, v]) => [k, [String(v), null]])),
+      shadow: true,
+      topLevel: false,
+    }
+    return id
   }
 
   /**
@@ -115,6 +135,10 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
       if (name === 'VARIABLE') {
         const v = resolveVar(value)
         out.fields[name] = [v.name, v.id]
+      } else if (name === 'LIST') {
+        const l = listsByName.get(value.name)
+        if (!l) throw new Error(`Unknown list ${JSON.stringify(value)}`)
+        out.fields[name] = [l.name, l.id]
       } else {
         out.fields[name] = [String(value), null]
       }
@@ -153,7 +177,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
     }
 
     for (const [name, input] of Object.entries(b.inputs ?? {})) {
-      const shadow = input.shadow ? primitive(input.shadow) : null
+      const shadow = input.shadow ? shadowOf(input.shadow, id) : null
       if (input.block) {
         let ref
         if (input.block.type === 'data_variable') {
@@ -175,7 +199,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
         x: anchor.x + COMMENT_OFFSET_X,
         y: anchor.y,
         width: 300,
-        height: Math.max(80, 24 * Math.ceil(b.comment.length / 34)),
+        height: Math.max(80, 24 * wrappedLines(b.comment, 34)),
         minimized: false,
         text: b.comment,
       }
@@ -189,7 +213,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
 
   let y0 = 40
   if (note) {
-    const height = Math.max(100, 22 * Math.ceil(note.length / 60))
+    const height = noteHeight ?? Math.max(100, 22 * wrappedLines(note, 60) + 20)
     comments[nextId('c')] = { blockId: null, x: 40, y: 40, width: 640, height, minimized: false, text: note }
     y0 = 40 + height + 40
   }
@@ -200,6 +224,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
 
   const { extensions, peripherals } = packsOf(Object.values(blocks), device)
 
+  const stageLists = Object.fromEntries([...listsByName.values()].map((l) => [l.id, [l.name, l.items]]))
   const stageVariables = {}
   const variableTypes = {}
   for (const v of varsByName.values()) {
@@ -213,7 +238,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
         isStage: true,
         name: 'Stage',
         variables: stageVariables,
-        lists: {},
+        lists: stageLists,
         broadcasts: {},
         variableTypes,
         blocks: {},
@@ -253,7 +278,7 @@ export function toProject({ stacks, variables = [], device = 'thingbot', note })
     monitors: [],
     extensions,
     meta: { semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-resource/scripts/examples' },
-    board: { device, peripherals },
+    ...(device ? { board: { device, peripherals } } : {}),
   }
 }
 
@@ -279,7 +304,7 @@ export function packsOf(blocks, device) {
  * its own saves: the target fields the validator requires, the placeholder costume, `extensions` and
  * `board`. Fields already present are kept.
  * @param {object} project A project.json object, possibly minimal.
- * @param {string} device The board id the project targets.
+ * @param {string|null} device The board id the project targets; null for a boardless (Camera AI) project.
  * @param {string[]} [extraPeripherals] Packs to add to `board.peripherals` even when no block uses them.
  * @returns {object} A complete project.json object.
  */
@@ -336,7 +361,9 @@ export function completeProject(project, device = 'thingbot', extraPeripherals =
     monitors: project.monitors ?? [],
     extensions: project.extensions ?? extensions,
     meta: project.meta ?? { semver: '3.0.0', vm: '14.1.0', agent: 'thingblock-resource/scripts/lessons' },
-    board: project.board ?? { device, peripherals: [...new Set([...peripherals, ...extraPeripherals])] },
+    ...(project.board || device
+      ? { board: project.board ?? { device, peripherals: [...new Set([...peripherals, ...extraPeripherals])] } }
+      : {}),
   }
 }
 

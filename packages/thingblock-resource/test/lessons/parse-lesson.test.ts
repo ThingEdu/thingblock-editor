@@ -49,6 +49,7 @@ Well done!
       start: null,
       image: null,
       peripherals: [],
+      extensions: [],
       duration: 10,
       lang: 'vi',
     })
@@ -92,6 +93,33 @@ Well done!
   it('reads the peripherals the lesson needs, for the editor to add when it opens', () => {
     const md = `${FRONT.replace('board: thingbot', 'board: thingbot\nperipherals: oled, ultrasonic')}\n## B\n`
     expect(parseLesson(md, ctx).lesson.peripherals).toEqual(['oled', 'ultrasonic'])
+  })
+
+  it('reads a Camera AI lesson: no board, the extension to load, and playground rules', () => {
+    const md = `${FRONT.replace('board: thingbot', 'board: none\nextensions: cameraAi').replace('group: outputs', 'group: camera-ai')}
+## Bật camera
+check: camera on
+check: "sao" touches index finger
+`
+    const { lesson } = parseLesson(md, ctx)
+    expect(lesson).toMatchObject({ board: 'none', group: 'camera-ai', extensions: ['cameraAi'] })
+    expect(lesson.steps[0].rules).toEqual([{ kind: 'cameraOn' }, { kind: 'touch', name: 'sao', part: 'indexTip' }])
+  })
+
+  it.each([
+    [
+      'unknown extension',
+      FRONT.replace('board: thingbot', 'board: thingbot\nextensions: camera'),
+      /extension "camera"/,
+    ],
+    ['a Camera AI rule without extensions', `${FRONT}\n## B\ncheck: camera on\n`, /extensions: cameraAi/],
+    [
+      'a step mixing Camera AI and board rules',
+      `${FRONT.replace('board: thingbot', 'board: thingbot\nextensions: cameraAi')}\n## B\ncheck: camera on\ncheck: L1 on\n`,
+      /cannot mix/,
+    ],
+  ])('fails the build on %s', (_name, md, pattern) => {
+    expect(() => parseLesson(md, ctx)).toThrow(pattern)
   })
 
   it.each([

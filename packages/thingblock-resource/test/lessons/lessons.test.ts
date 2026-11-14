@@ -4,8 +4,9 @@
 /**
  * Every shipped lesson proves itself: its `solutions/pass*.tb` passes each graded step and each
  * `fail-<n>.tb` fails step n, graded as the editor grades a learner: the rules are checked after every
- * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time. A step
- * with input rules runs with the rig set the way the step tells the learner to set it.
+ * simulator tick, and the step passes if they all hold at any tick within 5 s of virtual time (30 s for the
+ * egg belt, which needs that long to carry six eggs past the gate). A step with input rules runs with the
+ * rig set the way the step tells the learner to set it.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -16,7 +17,7 @@ import { Order } from '../../../thingblock-blocks/src/generators/arduino/order'
 import { SimGenerator } from '../../../thingblock-blocks/src/generators/sim'
 import type { RuleResult } from '../../../thingblock-sim/src/checker/evaluate'
 import { inputsFor } from '../../../thingblock-sim/src/checker/inputs'
-import type { Rule } from '../../../thingblock-sim/src/checker/rules'
+import { isCameraRule, type Rule } from '../../../thingblock-sim/src/checker/rules'
 import { Watcher, type CheckReport } from '../../../thingblock-sim/src/checker/watch'
 import { loadProject, type Sb3Project } from '../../../thingblock-sim/src/headless'
 import { Session } from '../../../thingblock-sim/src/session'
@@ -28,6 +29,7 @@ const PERIPHERALS = readdirSync(join(__dirname, '../../src/extensions/peripheral
 /** Packs the ThingBot board puts in the palette by itself (its device manifest's `extensions`). */
 const BOARD_PACKS = ['thingBotC3', 'ps2']
 const WINDOW_US = 5_000_000
+const BELT_WINDOW_US = 30_000_000
 /** The worker's tick, in milliseconds. */
 const TICK_MS = 16
 
@@ -69,7 +71,8 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   const allOk = (r: CheckReport | null) => r?.results.every((x) => x.ok) ?? false
   let report: CheckReport | null = null
   session.running = true
-  for (let t = 0; t < WINDOW_US && !allOk(report); ) {
+  const limit = rules.some((r) => r.kind === 'sorted' || r.kind === 'rejected') ? BELT_WINDOW_US : WINDOW_US
+  for (let t = 0; t < limit && !allOk(report); ) {
     const snapshot = session.tick(TICK_MS)
     report = watcher.after(session) ?? report
     if (snapshot.phase === 'halted') break
@@ -79,14 +82,21 @@ const grade = async (tb: string, rules: Rule[]): Promise<{ passed: boolean; resu
   return { passed: allOk(report), results: report.results }
 }
 
+const parse = (id: string) =>
+  parseLesson(readFileSync(join(TUTORIALS, id, 'lesson.vi.md'), 'utf8'), {
+    dirName: id,
+    lang: 'vi',
+    files: readdirSync(join(TUTORIALS, id)),
+  }).lesson
+// Camera AI steps are graded on the playground, by camera-lessons.test.ts; a lesson made only of them is left to it.
+const isCameraLesson = (id: string) => parse(id).steps.some((s) => s.rules.some(isCameraRule))
 const lessonDirs = readdirSync(TUTORIALS, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
+  .filter((d) => d.isDirectory() && !isCameraLesson(d.name))
   .map((d) => d.name)
 
 describe.each(lessonDirs)('lesson %s', (id) => {
   const dir = join(TUTORIALS, id)
-  const files = readdirSync(dir)
-  const { lesson } = parseLesson(readFileSync(join(dir, 'lesson.vi.md'), 'utf8'), { dirName: id, lang: 'vi', files })
+  const lesson = parse(id)
   const graded = lesson.steps.map((s, i) => ({ step: s, n: i + 1 })).filter(({ step }) => step.rules.length)
   const rulesOf = (n: number): Rule[] => {
     const found = graded.find((g) => g.n === n)

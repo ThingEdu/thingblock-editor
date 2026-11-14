@@ -1,0 +1,65 @@
+{
+  "groups": ["CoBot"],
+  "examples": [
+    {
+      "id": "cobot-01-chay-thu-dong-co",
+      "file": "cobot-01-chay-thu-dong-co.tb",
+      "title": "Xe giao hàng chạy thử",
+      "group": "CoBot",
+      "level": 1,
+      "description": "Trước giờ giao hàng, xe chạy thử: tiến, lùi, rẽ, xoay tại chỗ rồi dừng.",
+      "device": "cobot",
+      "peripherals": [],
+      "hardware": ["CoBot (hai động cơ: bánh trái IO2/IO10, bánh phải IO6/IO5)"],
+      "source": "makerviet/cobot-arduino (Maker Việt · ThingEdu): cobot_motors_test"
+    },
+    {
+      "id": "cobot-02-doc-bon-mat",
+      "file": "cobot-02-doc-bon-mat.tb",
+      "title": "Bốn mắt nhìn sàn",
+      "group": "CoBot",
+      "level": 1,
+      "description": "Đọc số của 4 mắt dò line và in lên Serial Monitor; tìm ngưỡng chia vạch và nền.",
+      "device": "cobot",
+      "peripherals": ["serial"],
+      "hardware": ["CoBot (4 mắt hồng ngoại: IO4, IO3, IO1, IO0)", "Cáp USB để xem số trên Serial Monitor"],
+      "source": "makerviet/cobot-arduino (Maker Việt · ThingEdu): cobot_simple_line_following"
+    },
+    {
+      "id": "cobot-03-do-line-co-ban",
+      "file": "cobot-03-do-line-co-ban.tb",
+      "title": "Dò line: xe theo vạch",
+      "group": "CoBot",
+      "level": 2,
+      "description": "Xe bám theo vạch như chương trình mẫu: mắt ngoài cùng thấy vạch thì xoay về phía đó, còn lại đi thẳng.",
+      "device": "cobot",
+      "peripherals": [],
+      "hardware": ["CoBot", "Sân có vạch dò line (băng dính dán trên nền)"],
+      "source": "makerviet/cobot-arduino (Maker Việt · ThingEdu): cobot_simple_line_following"
+    },
+    {
+      "id": "cobot-04-dung-o-vach-do",
+      "file": "cobot-04-dung-o-vach-do.tb",
+      "title": "Xe buýt dừng ở trạm đỏ",
+      "group": "CoBot",
+      "level": 2,
+      "description": "Xe dò line; cảm biến màu thấy ô đỏ thì dừng 3 giây như xe buýt đón khách, rồi đi tiếp.",
+      "device": "cobot",
+      "peripherals": [],
+      "hardware": ["CoBot (cảm biến màu nối I2C: SDA IO8, SCL IO9)", "Sân dò line có dán một ô màu đỏ trên vạch"],
+      "source": "makerviet/cobot-arduino (Maker Việt · ThingEdu): cảm biến màu TCS34725 trên đế CoBot"
+    },
+    {
+      "id": "cobot-05-tim-duong-me-cung",
+      "file": "cobot-05-tim-duong-me-cung.tb",
+      "title": "Tìm đường trong mê cung vạch",
+      "group": "CoBot",
+      "level": 3,
+      "description": "Robot dò đường thi đấu: gặp ngã rẽ trái thì rẽ trái, gặp ngõ cụt thì quay đầu, cứ thế tới đích.",
+      "device": "cobot",
+      "peripherals": [],
+      "hardware": ["CoBot", "Mê cung vẽ bằng vạch: các ngã rẽ vuông góc, có ngõ cụt"],
+      "source": "ThingBlock: quy tắc bám tường trái của micromouse, làm trên mê cung vạch"
+    }
+  ]
+}

@@ -8,6 +8,13 @@ import HashParserHOC from '../lib/hash-parser-hoc.jsx';
 import log from '../lib/log.js';
 import {PLATFORM} from '../lib/platform.js';
 
+/** In development the VM is reachable from the console and from browser tests. */
+const handleVmInit = vm => {
+    if (process.env.NODE_ENV !== 'production' && typeof window === 'object') {
+        window.thingblockVm = vm;
+    }
+};
+
 const onClickLogo = () => {
     window.open('https://github.com/ThingEdu', '_blank');
 };
@@ -77,6 +84,7 @@ export default appTarget => {
                 showComingSoon
                 canSave={false}
                 onClickLogo={onClickLogo}
+                onVmInit={handleVmInit}
             />
     );
 };

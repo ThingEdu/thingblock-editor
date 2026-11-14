@@ -4,6 +4,11 @@ import {defineMessages, useIntl} from 'react-intl';
 import Modal from '../../containers/modal.jsx';
 import LibraryComponent from '../library/library.jsx';
 import placeholderImage from './lesson-placeholder.svg';
+import cameraAiImage from './lesson-group-camera-ai.svg';
+import gettingStartedImage from './lesson-group-getting-started.svg';
+import inputsImage from './lesson-group-inputs.svg';
+import motorsImage from './lesson-group-motors.svg';
+import outputsImage from './lesson-group-outputs.svg';
 import styles from './lesson-library.css';
 
 const messages = defineMessages({
@@ -41,16 +46,30 @@ const messages = defineMessages({
         defaultMessage: 'Inputs and the OLED',
         description: 'Lesson group',
         id: 'gui.lessonLibrary.group.inputs'
+    },
+    cameraAi: {
+        defaultMessage: 'Camera AI (no board)',
+        description: 'Lesson group: lessons with the webcam and the Camera AI blocks, which need no board',
+        id: 'gui.lessonLibrary.group.cameraAi'
     }
 });
 
-/** Lesson groups as the library's sections, in the order the lessons are taught. */
+/**
+ * Lesson groups as the library's sections, in the order the lessons are taught. `image` is the card
+ * picture of a lesson in the group that names no `image` of its own.
+ */
 const GROUPS = [
-    {id: 'getting-started', intlLabel: messages.gettingStarted},
-    {id: 'outputs', intlLabel: messages.outputs},
-    {id: 'motors', intlLabel: messages.motors},
-    {id: 'inputs', intlLabel: messages.inputs}
+    {id: 'getting-started', intlLabel: messages.gettingStarted, image: gettingStartedImage},
+    {id: 'outputs', intlLabel: messages.outputs, image: outputsImage},
+    {id: 'motors', intlLabel: messages.motors, image: motorsImage},
+    {id: 'inputs', intlLabel: messages.inputs, image: inputsImage},
+    {id: 'camera-ai', intlLabel: messages.cameraAi, image: cameraAiImage}
 ];
+
+const groupImage = group => {
+    const found = GROUPS.find(g => g.id === group);
+    return found ? found.image : placeholderImage;
+};
 
 const LessonLibrary = ({lessons, tutorialsBase, loading, error, onClose, onSelect}) => {
     const intl = useIntl();
@@ -74,7 +93,7 @@ const LessonLibrary = ({lessons, tutorialsBase, loading, error, onClose, onSelec
     const data = lessons.map(lesson => ({
         lessonId: lesson.id,
         name: lesson.name,
-        rawURL: lesson.image ? `${tutorialsBase}/${lesson.id}/${lesson.image}` : placeholderImage,
+        rawURL: lesson.image ? `${tutorialsBase}/${lesson.id}/${lesson.image}` : groupImage(lesson.group),
         category: lesson.group,
         featured: true
     }));

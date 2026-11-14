@@ -1,0 +1,32 @@
+{
+  "colourSensor_init": {
+    "message0": "khởi động cảm biến màu"
+  },
+  "colourSensor_read": {
+    "message0": "cảm biến màu đọc %1",
+    "options": {
+      "CHANNEL": {
+        "0": "đỏ",
+        "1": "xanh lá",
+        "2": "xanh dương",
+        "3": "độ sáng"
+      }
+    }
+  },
+  "colourSensor_is": {
+    "message0": "cảm biến màu thấy màu %1?",
+    "options": {
+      "COLOUR": {
+        "0": "đen",
+        "1": "đỏ",
+        "2": "xanh lá",
+        "3": "xanh dương",
+        "4": "vàng",
+        "5": "trắng"
+      }
+    }
+  },
+  "colourSensor_name": {
+    "message0": "tên màu cảm biến thấy"
+  }
+}

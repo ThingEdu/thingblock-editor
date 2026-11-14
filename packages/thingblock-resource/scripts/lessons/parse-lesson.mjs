@@ -2,10 +2,10 @@
 // rules and an optional `point at:` tour anchor. The build turns it into JSON the editor renders, and
 // every authoring mistake fails here, not on a learner's screen.
 import { readdirSync } from 'node:fs'
-import { parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
+import { isCameraRule, parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
-const GROUPS = ['getting-started', 'outputs', 'motors', 'inputs']
+const GROUPS = ['getting-started', 'outputs', 'motors', 'inputs', 'camera-ai']
 const HINT_START = /^>\s*hint:\s*(.+)$/i
 const REQUIRED = ['id', 'name', 'group', 'order', 'board']
 const IMAGE_FILE = /\.(png|gif)$/
@@ -13,6 +13,8 @@ const IMAGE_FILE = /\.(png|gif)$/
 const PERIPHERALS = readdirSync(new URL('../../src/extensions/peripheral/', import.meta.url), { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
+/** Editor extensions a lesson can name in `extensions:`; they run in the editor, not on a board. */
+const EXTENSIONS = ['cameraAi']
 
 export class LessonError extends Error {
   /** @param {{line: number, message: string}[]} problems Every authoring problem found, with its line. */
@@ -116,6 +118,18 @@ export function parseLesson(markdown, ctx) {
     }
   }
 
+  const extensions = meta.extensions
+    ? meta.extensions
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : []
+  for (const id of extensions) {
+    if (!EXTENSIONS.includes(id)) {
+      problems.push({ line: metaLine.extensions, message: `extension "${id}" is not one of ${EXTENSIONS.join('|')}` })
+    }
+  }
+
   for (const key of ['order', 'duration']) {
     if (meta[key] && !/^\d+$/.test(meta[key])) {
       problems.push({ line: metaLine[key], message: `${key} must be a number` })
@@ -169,7 +183,14 @@ export function parseLesson(markdown, ctx) {
       flushParagraph()
       flushList()
       try {
-        step.rules.push(parseRule(m[1]))
+        const rule = parseRule(m[1])
+        // Camera AI rules are graded on the playground, the others in the simulator: one place per step.
+        if (step.rules.length && isCameraRule(step.rules[0]) !== isCameraRule(rule)) {
+          problems.push({ line: lineNo, message: 'a step cannot mix Camera AI rules with virtual board rules' })
+        } else if (isCameraRule(rule) && !extensions.includes('cameraAi')) {
+          problems.push({ line: lineNo, message: 'Camera AI rules need "extensions: cameraAi" in the front matter' })
+        }
+        step.rules.push(rule)
       } catch (e) {
         problems.push({
           line: lineNo,
@@ -237,6 +258,7 @@ export function parseLesson(markdown, ctx) {
       start: meta.start ?? null,
       image: meta.image ?? null,
       peripherals,
+      extensions,
       duration: meta.duration ? Number(meta.duration) : null,
       lang: ctx.lang,
       steps,
