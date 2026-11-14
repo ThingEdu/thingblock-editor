@@ -28,7 +28,8 @@ cp -R "$GUI_BUILD"/. "$OUT"/
 cp -R "$RESOURCE_PACK" "$OUT/thingblock-resource"
 cp "$HERE/manifest.webmanifest" "$HERE/icon-192.png" "$HERE/icon-512.png" "$OUT"/
 # Pages the tablet build does not use.
-rm -f "$OUT"/blocks-only.html "$OUT"/compatibility-testing.html "$OUT"/player.html "$OUT"/*.map
+rm -f "$OUT"/blocks-only.html "$OUT"/compatibility-testing.html "$OUT"/player.html "$OUT"/standalone.html \
+    "$OUT"/blocksonly.js "$OUT"/compatibilitytesting.js "$OUT"/player.js "$OUT"/guistandalone.js "$OUT"/*.map
 
 # The pack base is resolved against the page, so the folder works at any URL path.
 INDEX="$OUT/index.html"
