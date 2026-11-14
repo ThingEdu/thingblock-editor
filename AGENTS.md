@@ -201,6 +201,10 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   gets a live-only editor (`gui/src/lib/live-only.js`): no board picker or firmware install, the ThingBot
   live blocks loaded with each project, and only boardless lessons and examples. Blocks reach the ThingBot
   over Web Bluetooth, so it needs Chrome and a board already running its live firmware.
+- ThingBot Live content: the examples in `thingblock-resource/scripts/examples/thingbot-live.mjs` (written to
+  `src/examples/thingbot-live/`, no board) and the `thingbot-live` lessons (`extensions: thingbotTelemetrix`,
+  ungraded). `test/examples-thingbot-live.test.ts` runs each example in the built VM against a fake robot
+  (`test/support/thingbot-live-vm.ts`) that records the commands the blocks send.
 - `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 

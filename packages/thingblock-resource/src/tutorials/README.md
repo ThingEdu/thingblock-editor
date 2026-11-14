@@ -21,15 +21,17 @@ duration: 10
 
 - `id`: identifier, equal to the folder name.
 - `name`: the lesson name shown to learners.
-- `group`: one of `getting-started`, `outputs`, `motors`, `inputs`, `camera-ai`.
+- `group`: one of `getting-started`, `outputs`, `motors`, `inputs`, `camera-ai`, `thingbot-live`.
 - `order`: position within the group, a number. Two lessons in the same `group` cannot share an `order`.
 - `board`: the lesson's board (for example `thingbot`), or `none` to open the lesson without a board.
 - `duration`: estimated minutes, a number.
 - `peripherals` (optional): extra devices the lesson needs, comma-separated, named by their folder in
   `src/extensions/peripheral/` (for example `peripherals: oled`). Opening the lesson adds them to the palette, so
   learners don't have to find **Add Peripheral**.
-- `extensions` (optional): editor extensions the lesson loads, comma-separated. The only one is `cameraAi`, for
-  Camera AI lessons (`board: none`, `group: camera-ai`); their `check:` rules are the playground rules below.
+- `extensions` (optional): editor extensions the lesson loads, comma-separated: `cameraAi` for Camera AI lessons
+  (`board: none`, `group: camera-ai`), whose `check:` rules are the playground rules below, and `thingbotTelemetrix`
+  for ThingBot Live lessons (`board: none`, `group: thingbot-live`). Those drive a real ThingBot over Bluetooth, so
+  they have no `check:` rules and no `solutions/`; `test/lessons/live-lessons.test.ts` checks them instead.
 - `image` (optional): a `.png` or `.gif` in the lesson folder, shown on the lesson's card in the library. Without
   one, the card shows a placeholder. Use a 600×372 image, the shape of a Scratch library card.
 - `start` (optional): a `.tb` project in the lesson folder the lesson opens with. Without one, the lesson opens a

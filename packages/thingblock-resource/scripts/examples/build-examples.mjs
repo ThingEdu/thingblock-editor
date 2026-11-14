@@ -4,8 +4,9 @@
 //
 // The K12 and FanRoc programs live in lessons-k12.mjs, the music ones in music.mjs, the CoBot ones (written to
 // src/examples/cobot/) in cobot.mjs, the Camera AI games (no board, written to src/examples/camera-ai/) in
-// camera-ai.mjs. The ThingBot Sim programs are the reference solutions (`example`) of the ten thingbot-sim
-// lessons, captured in sim-lessons.json.
+// camera-ai.mjs, the ThingBot Live programs (no board, written to src/examples/thingbot-live/) in
+// thingbot-live.mjs. The ThingBot Sim programs are the reference solutions (`example`) of the ten
+// thingbot-sim lessons, captured in sim-lessons.json.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,6 +16,7 @@ import { COBOT_EXAMPLES } from './cobot.mjs'
 import { K12_LESSONS } from './lessons-k12.mjs'
 import { MUSIC_LESSONS } from './music.mjs'
 import { toProject, toTb } from './tb-builder.mjs'
+import { THINGBOT_LIVE_EXAMPLES } from './thingbot-live.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const EXAMPLES = resolve(HERE, '..', '..', 'src', 'examples')
@@ -148,3 +150,5 @@ await writeFolder(
 // Camera AI runs in the editor without a board, so its projects save none and live in their own folder.
 await writeFolder('camera-ai', ['Camera AI'], CAMERA_AI_EXAMPLES)
 await writeFolder('cobot', ['CoBot'], COBOT_EXAMPLES)
+// ThingBot Live drives the robot over Bluetooth from the editor, so it also saves no board.
+await writeFolder('thingbot-live', ['ThingBot Live'], THINGBOT_LIVE_EXAMPLES)

@@ -9,6 +9,7 @@ import gettingStartedImage from './lesson-group-getting-started.svg';
 import inputsImage from './lesson-group-inputs.svg';
 import motorsImage from './lesson-group-motors.svg';
 import outputsImage from './lesson-group-outputs.svg';
+import thingbotLiveImage from './lesson-group-thingbot-live.svg';
 import styles from './lesson-library.css';
 
 const messages = defineMessages({
@@ -51,6 +52,11 @@ const messages = defineMessages({
         defaultMessage: 'Camera AI (no board)',
         description: 'Lesson group: lessons with the webcam and the Camera AI blocks, which need no board',
         id: 'gui.lessonLibrary.group.cameraAi'
+    },
+    thingbotLive: {
+        defaultMessage: 'ThingBot Live (Bluetooth, no upload)',
+        description: 'Lesson group: lessons that drive a real ThingBot over Bluetooth from the editor',
+        id: 'gui.lessonLibrary.group.thingbotLive'
     }
 });
 
@@ -63,7 +69,8 @@ const GROUPS = [
     {id: 'outputs', intlLabel: messages.outputs, image: outputsImage},
     {id: 'motors', intlLabel: messages.motors, image: motorsImage},
     {id: 'inputs', intlLabel: messages.inputs, image: inputsImage},
-    {id: 'camera-ai', intlLabel: messages.cameraAi, image: cameraAiImage}
+    {id: 'camera-ai', intlLabel: messages.cameraAi, image: cameraAiImage},
+    {id: 'thingbot-live', intlLabel: messages.thingbotLive, image: thingbotLiveImage}
 ];
 
 const groupImage = group => {

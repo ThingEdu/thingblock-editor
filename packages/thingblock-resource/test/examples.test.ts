@@ -230,12 +230,14 @@ describe('served examples', () => {
   it('copies every example into the served pack with one merged index', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
     const merged = copyExamples(EXAMPLES_ROOT, out)
-    // The ThingBot and CoBot examples, and the boardless Camera AI ones, each under its own folder.
-    expect(merged.examples).toHaveLength(36 + 5 + 11)
+    // The ThingBot and CoBot examples, and the boardless Camera AI and ThingBot Live ones, each under its own folder.
+    expect(merged.examples).toHaveLength(36 + 5 + 11 + 11)
     expect(merged.groups).toContain('CoBot')
     expect(merged.groups).toContain('Camera AI')
+    expect(merged.groups).toContain('ThingBot Live')
     for (const example of merged.examples as Example[]) {
-      expect(example.file.startsWith(`${example.device ?? 'camera-ai'}/`)).toBe(true)
+      const folder = example.device ?? (example.group === 'ThingBot Live' ? 'thingbot-live' : 'camera-ai')
+      expect(example.file.startsWith(`${folder}/`)).toBe(true)
       expect(existsSync(join(out, example.file))).toBe(true)
     }
     expect(JSON.parse(readFileSync(join(out, 'index.json'), 'utf8'))).toEqual(merged)

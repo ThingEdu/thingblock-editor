@@ -342,7 +342,7 @@ ScratchMsgs.locales['vi'] = {
   CONTROL_INCRCOUNTER: 'bộ đếm tăng dần',
   CONTROL_CLEARCOUNTER: 'xóa bộ đếm',
   CONTROL_ALLATONCE: 'tất cả cùng một lúc',
-  CONTROL_PRINT: 'print %1',
+  CONTROL_PRINT: 'in ra %1',
   DATA_SETVARIABLETO: 'đặt %1 thành %2',
   DATA_CHANGEVARIABLEBY: 'thay đổi %1 một lượng %2',
   DATA_SHOWVARIABLE: 'hiện biến số %1',

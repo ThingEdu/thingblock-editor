@@ -90,8 +90,10 @@ const parse = (id: string) =>
   }).lesson
 // Camera AI steps are graded on the playground, by camera-lessons.test.ts; a lesson made only of them is left to it.
 const isCameraLesson = (id: string) => parse(id).steps.some((s) => s.rules.some(isCameraRule))
+// ThingBot Live lessons drive a real robot over Bluetooth and grade nothing; live-lessons.test.ts checks them.
+const isLiveLesson = (id: string) => parse(id).extensions.includes('thingbotTelemetrix')
 const lessonDirs = readdirSync(TUTORIALS, { withFileTypes: true })
-  .filter((d) => d.isDirectory() && !isCameraLesson(d.name))
+  .filter((d) => d.isDirectory() && !isCameraLesson(d.name) && !isLiveLesson(d.name))
   .map((d) => d.name)
 
 describe.each(lessonDirs)('lesson %s', (id) => {

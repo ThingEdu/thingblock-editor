@@ -51,6 +51,11 @@ const groupMessages = defineMessages({
         defaultMessage: 'Camera AI',
         description: 'Example library tag: games played with a hand in front of the webcam, no board needed',
         id: 'gui.exampleLibrary.groupCameraAi'
+    },
+    'ThingBot Live': {
+        defaultMessage: 'ThingBot Live (Bluetooth)',
+        description: 'Example library tag: programs that drive a ThingBot over Bluetooth with no upload',
+        id: 'gui.exampleLibrary.groupThingbotLive'
     }
 });
 

@@ -1,0 +1,140 @@
+{
+  "groups": ["ThingBot Live"],
+  "examples": [
+    {
+      "id": "live-01-den-nhap-nhay",
+      "file": "live-01-den-nhap-nhay.tb",
+      "title": "Đèn nhấp nháy qua Bluetooth",
+      "group": "ThingBot Live",
+      "level": 1,
+      "description": "Bấm lá cờ: đèn L1 trên ThingBot sáng nửa giây, tắt nửa giây, lặp mãi.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot có firmware Live", "Máy có Bluetooth"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-02-hai-den-va-coi",
+      "file": "live-02-hai-den-va-coi.tb",
+      "title": "Hai đèn thay nhau và tiếng bíp",
+      "group": "ThingBot Live",
+      "level": 1,
+      "description": "Đèn L1 và L2 thay nhau sáng như đèn báo xe cứu thương; mỗi lần đổi đèn, còi kêu bíp.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot có firmware Live"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-03-coi-bao-thuc",
+      "file": "live-03-coi-bao-thuc.tb",
+      "title": "Còi báo thức",
+      "group": "ThingBot Live",
+      "level": 1,
+      "description": "Bấm lá cờ: còi kêu ba hồi, tiếng to dần, rồi đèn L1 sáng báo \"dậy thôi\".",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot có firmware Live"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-04-xe-chay-thu",
+      "file": "live-04-xe-chay-thu.tb",
+      "title": "Xe chạy thử: tiến, xoay, lùi",
+      "group": "ThingBot Live",
+      "level": 1,
+      "description": "Xe tiến 1 giây, xoay tại chỗ, lùi về rồi dừng. Bánh trái là M1, bánh phải là M2.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot gắn hai bánh ở M1 (trái) và M2 (phải)"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-05-lai-xe-bang-phim",
+      "file": "live-05-lai-xe-bang-phim.tb",
+      "title": "Lái xe bằng phím mũi tên",
+      "group": "ThingBot Live",
+      "level": 2,
+      "description": "Phím ↑ ↓ ← → lái xe, phím cách dừng xe. Dùng với máy tính có bàn phím.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot gắn hai bánh ở M1 (trái) và M2 (phải)", "Bàn phím"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-06-servo-vay-tay",
+      "file": "live-06-servo-vay-tay.tb",
+      "title": "Servo vẫy tay chào",
+      "group": "ThingBot Live",
+      "level": 1,
+      "description": "Servo S1 vẫy qua lại năm lần như cánh tay chào, rồi về giữa.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Servo cắm cổng S1"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-07-nut-sw-bat-den",
+      "file": "live-07-nut-sw-bat-den.tb",
+      "title": "Nút SW bật đèn",
+      "group": "ThingBot Live",
+      "level": 2,
+      "description": "Giữ nút SW trên ThingBot thì đèn L1 sáng và còi kêu khẽ, nhả ra thì tắt.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Nút SW trên mạch (chân IO3)"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-08-xe-tranh-vat-can",
+      "file": "live-08-xe-tranh-vat-can.tb",
+      "title": "Xe tránh vật cản",
+      "group": "ThingBot Live",
+      "level": 3,
+      "description": "Cảm biến siêu âm đo khoảng cách; gặp vật gần hơn 20 cm thì xe lùi, xoay rồi đi tiếp.",
+      "device": null,
+      "peripherals": [],
+      "hardware": [
+        "ThingBot gắn hai bánh ở M1 (trái) và M2 (phải)",
+        "Cảm biến siêu âm HC-SR04: TRIG ở IO0, ECHO ở IO4"
+      ],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-09-nhiet-ke-do-am",
+      "file": "live-09-nhiet-ke-do-am.tb",
+      "title": "Nhiệt kế và độ ẩm",
+      "group": "ThingBot Live",
+      "level": 2,
+      "description": "Cảm biến DHT11 đo nhiệt độ và độ ẩm, in ra khung Màn hình mỗi 2 giây; nóng quá 32 °C thì đèn L1 sáng.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Cảm biến DHT11 cắm chân IO4"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-10-mat-hong-ngoai",
+      "file": "live-10-mat-hong-ngoai.tb",
+      "title": "Mắt hồng ngoại sáng hay tối",
+      "group": "ThingBot Live",
+      "level": 2,
+      "description": "Đọc mắt hồng ngoại ở IO4 và in số ra Màn hình; vật tối màu ở trước mắt thì đèn L1 sáng.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["Mắt hồng ngoại cắm chân IO4"],
+      "source": "ThingBlock ThingBot Live"
+    },
+    {
+      "id": "live-11-tay-em-lai-xe",
+      "file": "live-11-tay-em-lai-xe.tb",
+      "title": "Tay em lái xe (Camera AI + ThingBot)",
+      "group": "ThingBot Live",
+      "level": 3,
+      "description": "Xoè tay trước webcam thì xe chạy tới, nắm tay thì xe dừng, giơ chữ V thì xe xoay một vòng.",
+      "device": null,
+      "peripherals": [],
+      "hardware": ["ThingBot gắn hai bánh ở M1 (trái) và M2 (phải)", "Webcam hoặc camera trước của máy tính bảng"],
+      "source": "ThingBlock ThingBot Live"
+    }
+  ]
+}

@@ -382,8 +382,22 @@ class ThingBotTelemetrixExtension implements Extension {
                 LED_STATE: {
                     acceptReporters: false,
                     items: [
-                        {text: 'on', value: 'on'},
-                        {text: 'off', value: 'off'}
+                        {
+                            text: formatMessage({
+                                id: 'thingbotTelemetrix.ledOn',
+                                default: 'on',
+                                description: 'LED state menu item: turn the LED on'
+                            }),
+                            value: 'on'
+                        },
+                        {
+                            text: formatMessage({
+                                id: 'thingbotTelemetrix.ledOff',
+                                default: 'off',
+                                description: 'LED state menu item: turn the LED off'
+                            }),
+                            value: 'off'
+                        }
                     ]
                 },
                 DHT_TYPE: {

@@ -5,7 +5,7 @@ import { readdirSync } from 'node:fs'
 import { isCameraRule, parseRule, RuleSyntaxError } from '../../../thingblock-sim/src/checker/rules.ts'
 import { TOUR_MARKERS } from './tour-markers.mjs'
 
-const GROUPS = ['getting-started', 'outputs', 'motors', 'inputs', 'camera-ai']
+const GROUPS = ['getting-started', 'outputs', 'motors', 'inputs', 'camera-ai', 'thingbot-live']
 const HINT_START = /^>\s*hint:\s*(.+)$/i
 const REQUIRED = ['id', 'name', 'group', 'order', 'board']
 const IMAGE_FILE = /\.(png|gif)$/
@@ -13,8 +13,11 @@ const IMAGE_FILE = /\.(png|gif)$/
 const PERIPHERALS = readdirSync(new URL('../../src/extensions/peripheral/', import.meta.url), { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
-/** Editor extensions a lesson can name in `extensions:`; they run in the editor, not on a board. */
-const EXTENSIONS = ['cameraAi']
+/**
+ * Editor extensions a lesson can name in `extensions:`; they run in the editor, not on a board. `thingbotTelemetrix`
+ * drives a real ThingBot over Bluetooth, so its lessons have nothing to grade in the simulator.
+ */
+const EXTENSIONS = ['cameraAi', 'thingbotTelemetrix']
 
 export class LessonError extends Error {
   /** @param {{line: number, message: string}[]} problems Every authoring problem found, with its line. */
