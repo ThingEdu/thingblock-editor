@@ -7,10 +7,10 @@
       "title": "Đèn hội trăng rằm",
       "group": "K12 cơ bản",
       "level": 1,
-      "description": "Hai đèn nháy so le như đèn lồng; lặp có đếm, đổi nhịp nhanh và chậm.",
+      "description": "Đèn lồng Trung thu: hai đèn thay nhau sáng, lúc nhanh lúc chậm, bằng khối «lặp lại» có đếm số lần.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["LED_1, LED_2 trên mạch"],
+      "hardware": ["Đèn L1, L2 có sẵn trên mạch"],
       "source": "K1-M9 (#9) Đèn hội trăng rằm"
     },
     {
@@ -19,10 +19,10 @@
       "title": "Người hùng quanh em: còi báo động",
       "group": "K12 cơ bản",
       "level": 1,
-      "description": "Còi xe cứu hỏa hai nốt cao thấp, đèn chớp theo nhịp nhạc.",
+      "description": "Còi xe cứu hỏa: hai nốt cao, thấp kêu xen nhau, đèn chớp theo nhịp.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch", "LED_1, LED_2"],
+      "hardware": ["Còi có sẵn trên mạch", "Đèn L1, L2"],
       "source": "K2-M10 (#20) Người hùng quanh em"
     },
     {
@@ -31,10 +31,14 @@
       "title": "Đèn giao thông ngã tư",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Đèn xanh/đỏ có đếm ngược trên OLED; bấm SW để xin đường cho người đi bộ.",
+      "description": "Đèn xanh, đỏ ở ngã tư có đếm ngược trên màn OLED; bấm SW để xin đường cho người đi bộ.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["LED_1 (đèn đỏ), LED_2 (đèn xanh)", "Nút SW", "Màn OLED I2C"],
+      "hardware": [
+        "Đèn L1 (đèn đỏ), L2 (đèn xanh)",
+        "Nút SW (nút xin đường cho người đi bộ)",
+        "Màn OLED (cắm cổng I2C)"
+      ],
       "source": "K3-M4 (#24) Đèn giao thông ngã tư"
     },
     {
@@ -43,10 +47,10 @@
       "title": "Robot thú cưng",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Biến đầu tiên: đếm số lần vuốt (bấm SW); đủ 3 lần thì thú cưng vui, nháy đèn và hát.",
+      "description": "Thú cưng điện tử: đếm số lần em vuốt (bấm SW) bằng biến; đủ 3 lần thì thú cưng vui, nháy đèn và hát.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Nút SW", "LED_1, LED_2", "Còi"],
+      "hardware": ["Nút SW (lưng thú cưng để vuốt ve)", "Đèn L1, L2", "Còi"],
       "source": "K1-M4 (#4) Robot thú cưng"
     },
     {
@@ -55,10 +59,10 @@
       "title": "Đồng hồ đếm giờ chơi",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Bấm SW để bắt đầu đếm ngược 30 giây trên OLED; hết giờ thì còi kêu.",
+      "description": "Đồng hồ đếm giờ chơi: bấm SW để đếm ngược 30 giây trên màn OLED; hết giờ thì còi kêu.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Nút SW", "Màn OLED I2C (thay ma trận LED)", "Còi"],
+      "hardware": ["Nút SW", "Màn OLED (cắm cổng I2C)", "Còi"],
       "source": "K2-M4 (#14) Đồng hồ đếm giờ chơi"
     },
     {
@@ -67,10 +71,15 @@
       "title": "Nhiệt kế đeo tay",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Đọc nhiệt độ, hiện lên OLED; nóng quá ngưỡng thì đèn đỏ và còi báo.",
+      "description": "Nhiệt kế báo nóng: đọc nhiệt độ, hiện lên OLED; nóng hơn ngưỡng thì đèn sáng và còi báo.",
       "device": "thingbot",
       "peripherals": ["dht", "oled"],
-      "hardware": ["Cảm biến DHT11 ở IO4", "Màn OLED I2C", "LED_1", "Còi"],
+      "hardware": [
+        "Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)",
+        "Màn OLED (cắm cổng I2C)",
+        "Đèn L1",
+        "Còi"
+      ],
       "source": "K4-M4 (#34) Nhiệt kế đeo tay"
     },
     {
@@ -79,10 +88,14 @@
       "title": "Trạm khí tượng của em",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Đo nhiệt độ và độ ẩm, hiện lên OLED kèm lời nhận xét thời tiết.",
+      "description": "Trạm thời tiết mini: đo nhiệt độ và độ ẩm, hiện lên OLED kèm lời nhận xét NONG, AM UOT hay DE CHIU.",
       "device": "thingbot",
       "peripherals": ["dht", "oled"],
-      "hardware": ["Cảm biến DHT11 ở IO4", "Màn OLED I2C", "LED_1, LED_2"],
+      "hardware": [
+        "Cảm biến nhiệt độ, độ ẩm DHT11 (cắm cổng cảm biến, dây tín hiệu ở chân IO4)",
+        "Màn OLED (cắm cổng I2C)",
+        "Đèn L1, L2"
+      ],
       "source": "K6-M4 (#54) Trạm khí tượng của em (thay K6-M2: chưa có khối đọc quang trở)"
     },
     {
@@ -91,10 +104,10 @@
       "title": "Bảng tin của lớp",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Bảng tin 3 trang tự lật; bấm SW để sang trang ngay.",
+      "description": "Bảng tin điện tử 3 trang tự lật sau 5 giây; bấm SW để sang trang ngay.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Màn OLED I2C (thay ma trận LED/LCD)", "Nút SW"],
+      "hardware": ["Màn OLED (cắm cổng I2C)", "Nút SW"],
       "source": "K5-M9 (#49) Bảng tin LED của lớp (thay K4-M9: chưa có khối cảm biến PIR)"
     },
     {
@@ -103,7 +116,7 @@
       "title": "Hộp mù bí ẩn",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Bấm SW đúng số lần bí mật thì servo mở khóa hộp.",
+      "description": "Khóa mã bí mật: bấm SW đúng số lần bí mật thì servo mở chốt hộp.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Servo S1 làm chốt khóa", "Nút SW", "Còi"],
@@ -115,10 +128,10 @@
       "title": "Cửa siêu thị tự mở",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Người lại gần dưới 20 cm thì cửa mở, đi xa quá 40 cm thì cửa đóng (hai ngưỡng chống chập chờn).",
+      "description": "Cửa tự động: người lại gần dưới 20 cm thì cửa mở, đi xa quá 40 cm thì cửa đóng (hai ngưỡng để cửa không đóng mở liên tục).",
       "device": "thingbot",
       "peripherals": ["ultrasonic"],
-      "hardware": ["Cảm biến siêu âm: TRIG IO0, ECHO IO4", "Servo S1 làm cánh cửa"],
+      "hardware": ["Cảm biến siêu âm đo khoảng cách (chân TRIG IO0, ECHO IO4)", "Servo S1 làm cánh cửa"],
       "source": "K6-M9 (#59) Cửa siêu thị tự mở"
     },
     {
@@ -127,10 +140,10 @@
       "title": "Chong chóng điện gió",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Bấm SW chuyển cấp gió 0–3; tốc độ tăng giảm dần bằng biến chứ không nhảy bậc.",
+      "description": "Quạt có nút chọn cấp gió 0–3; tốc độ tăng giảm từ từ bằng biến chứ không nhảy bậc.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Động cơ M1 gắn cánh quạt", "Nút SW", "Màn OLED I2C"],
+      "hardware": ["Động cơ M1 gắn cánh quạt", "Nút SW", "Màn OLED (cắm cổng I2C)"],
       "source": "K4-M7 (#37) Chong chóng điện gió"
     },
     {
@@ -139,10 +152,10 @@
       "title": "Robot vũ công",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Hàm đầu tiên: ghép các động tác \"lắc trái\", \"lắc phải\", \"xoay vòng\" thành một điệu nhảy có nhạc.",
+      "description": "Điệu nhảy robot: dùng hàm (chuỗi lệnh được đặt tên) ghép các động tác \"lắc trái\", \"lắc phải\", \"xoay vòng\" theo nhạc.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)", "LED_1, LED_2", "Còi"],
+      "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)", "Đèn L1, L2", "Còi"],
       "source": "K2-M2 (#12) Robot vũ công"
     },
     {
@@ -151,10 +164,10 @@
       "title": "Robot đưa thư",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Xe đi theo lộ trình trên bản đồ sàn bằng các hàm đi thẳng, rẽ trái, rẽ phải; tự canh thời gian rẽ 90°.",
+      "description": "Xe giao hàng đi theo lộ trình trên bản đồ sàn bằng các hàm đi thẳng, rẽ trái, rẽ phải; tự canh thời gian rẽ 90°.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)", "Nút SW"],
+      "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)", "Nút SW (nút xuất phát)"],
       "source": "K1-M7 (#7) Robot đưa thư"
     },
     {
@@ -163,10 +176,10 @@
       "title": "Robot họa sĩ",
       "group": "K12 cơ bản",
       "level": 3,
-      "description": "Lặp lồng nhau vẽ hình vuông, tam giác; servo nâng hạ bút giữa các hình.",
+      "description": "Robot vẽ hình vuông, tam giác bằng lặp lồng nhau; servo nâng hạ bút giữa các hình.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Động cơ M1, M2", "Servo S1 gá bút", "Nút SW"],
+      "hardware": ["Động cơ M1, M2 (hai bánh)", "Servo S1 giữ bút (nâng, hạ bút)", "Nút SW"],
       "source": "K3-M2 (#22) Robot họa sĩ"
     },
     {
@@ -175,10 +188,10 @@
       "title": "Robot vượt chướng ngại",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Phản xạ va chạm: chạm cản va thì lùi, rẽ ngẫu nhiên rồi đi tiếp.",
+      "description": "Robot hút bụi: chạm cản va thì lùi, rẽ ngẫu nhiên rồi đi tiếp.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Động cơ M1, M2", "Nút SW làm cản va phía trước"],
+      "hardware": ["Động cơ M1, M2 (hai bánh)", "Nút SW làm cản va phía trước (như râu của con kiến)"],
       "source": "K2-M7 (#17) Robot vượt chướng ngại"
     },
     {
@@ -187,10 +200,15 @@
       "title": "Cú va chạm an toàn",
       "group": "K12 cơ bản",
       "level": 3,
-      "description": "Xe lao vào thành chắn, đo gia tốc đỉnh khi va chạm; so sánh có đệm và không đệm.",
+      "description": "Thử nghiệm va chạm như thử mũ bảo hiểm: xe lao vào thành chắn, đo cú dội mạnh nhất; so sánh có đệm xốp và không đệm.",
       "device": "thingbot",
       "peripherals": ["mpu6050", "oled"],
-      "hardware": ["Cảm biến gia tốc MPU6050 (I2C)", "Màn OLED I2C", "Động cơ M1, M2", "Nút SW"],
+      "hardware": [
+        "Cảm biến gia tốc MPU6050 (cắm cổng I2C)",
+        "Màn OLED (cũng cắm cổng I2C, khác địa chỉ)",
+        "Động cơ M1, M2",
+        "Nút SW"
+      ],
       "source": "K8-M1 (#71) Cú va chạm an toàn"
     },
     {
@@ -199,10 +217,13 @@
       "title": "Xe điều khiển từ xa",
       "group": "K12 cơ bản",
       "level": 3,
-      "description": "Cần analog trái của tay PS2: đẩy tới để chạy, nghiêng ngang để rẽ; tốc độ tỉ lệ theo độ đẩy.",
+      "description": "Xe điều khiển từ xa: đẩy cần trái của tay PS2 tới để chạy, nghiêng ngang để rẽ; đẩy càng nhiều xe càng nhanh.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Bộ thu tay cầm PS2 ở cổng PS2", "Động cơ M1 (bánh trái), M2 (bánh phải)"],
+      "hardware": [
+        "Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)",
+        "Động cơ M1 (bánh trái), M2 (bánh phải)"
+      ],
       "source": "K5-M7 (#47) Xe điều khiển từ xa"
     },
     {
@@ -211,10 +232,13 @@
       "title": "Robot thi đấu bước 1: lái và nâng",
       "group": "FanRoc",
       "level": 3,
-      "description": "Lái kiểu xe tăng bằng hai cần, L1/R1 nâng hạ, START bật chế độ chạy chậm chính xác; nhả tay là dừng.",
+      "description": "Robot thi đấu: lái kiểu xe tăng bằng hai cần, L1/R1 nâng hạ, START bật chế độ chạy chậm để căn chính xác; nhả tay là dừng.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Bộ thu tay cầm PS2", "Động cơ M1, M2 (lái), M3 (cơ cấu nâng)"],
+      "hardware": [
+        "Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)",
+        "Động cơ M1, M2 (hai bánh lái), M3 (cơ cấu nâng)"
+      ],
       "source": "K8-M2 (#72) FTC khởi động, chuyển từ NeoBot sang ThingBot"
     },
     {
@@ -223,7 +247,7 @@
       "title": "Cánh tay máy",
       "group": "K12 cơ bản",
       "level": 2,
-      "description": "Ba servo chuyển động mượt và song song; hàm \"gắp\" và \"thả\" chuyển đồ từ trái sang phải.",
+      "description": "Cánh tay robot nhà máy: ba servo chuyển động mượt và cùng lúc; hàm \"gắp\" và \"thả\" chuyển đồ từ trái sang phải.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Servo S1 (đế xoay), S2 (khuỷu tay), S3 (kẹp)", "Nút SW"],
@@ -235,11 +259,11 @@
       "title": "Robot FanRoc hoàn chỉnh",
       "group": "FanRoc",
       "level": 3,
-      "description": "Mẫu robot thi đấu: lái vi sai bằng cần trái, tay nâng bằng cần phải, con lăn, nâng, kẹp, cửa xả, giữ L2 để chạy chậm.",
+      "description": "Mẫu robot thi đấu: lái bằng cần trái, tay nâng bằng cần phải, con lăn hút, nâng, kẹp, cửa xả; giữ L2 để chạy chậm.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": [
-        "Bộ thu tay cầm PS2 (khối init PS2 on ThingBot: chân 7/2/10/6)",
+        "Tay cầm PS2 (tay cầm chơi game không dây; khối «khởi động tay cầm PS2 trên ThingBot» dùng sẵn chân IO7/IO2/IO10/IO6 của cổng PS2)",
         "M1 bánh trái, M2 bánh phải, M3 con lăn hút, M4 nâng",
         "S1 tay nâng, S2 kẹp, S3 cửa xả"
       ],
@@ -251,10 +275,10 @@
       "title": "Kìa con bướm vàng",
       "group": "Âm nhạc",
       "level": 1,
-      "description": "Bài hát thiếu nhi quen thuộc: mỗi câu nhạc lặp lại hai lần, rất dễ nhớ.",
+      "description": "Bài hát thiếu nhi quen thuộc ở lớp mẫu giáo: mỗi câu nhạc lặp lại hai lần, rất dễ nhớ.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "Giai điệu dân gian Pháp \"Frère Jacques\""
     },
     {
@@ -263,10 +287,10 @@
       "title": "Ngôi sao lấp lánh (Twinkle Twinkle Little Star)",
       "group": "Âm nhạc",
       "level": 1,
-      "description": "Giai điệu đi lên rồi đi xuống từng bậc, hợp để học tên các nốt Do Re Mi.",
+      "description": "Bài hát ru quen thuộc; giai điệu đi lên rồi đi xuống từng bậc, hợp để học tên các nốt Đô Rê Mi.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "Giai điệu dân gian Pháp \"Ah! vous dirai-je, maman\""
     },
     {
@@ -275,10 +299,10 @@
       "title": "Chúc mừng sinh nhật (Happy Birthday)",
       "group": "Âm nhạc",
       "level": 1,
-      "description": "Nhạc chúc mừng sinh nhật; có nốt ngắn 0,25 phách và nốt dài 2 phách.",
+      "description": "Nhạc cho buổi tiệc sinh nhật; có nốt ngắn 0,25 phách và nốt dài 2 phách.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "Giai điệu \"Good Morning to All\" (Mildred và Patty Hill, 1893)"
     },
     {
@@ -287,10 +311,10 @@
       "title": "Cá mập con (Baby Shark)",
       "group": "Âm nhạc",
       "level": 1,
-      "description": "Một câu nhạc lặp ba lần rồi kết, nhiều nốt Sol đi liền nhau.",
+      "description": "Bài hát vui nhộn cho cả lớp vận động; một câu nhạc lặp ba lần rồi kết, nhiều nốt Son đi liền nhau.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "Bài hát truyền thống (giai điệu dân gian, không phải bản thu âm nào)"
     },
     {
@@ -299,10 +323,10 @@
       "title": "Tiếng chuông ngân (Jingle Bells)",
       "group": "Âm nhạc",
       "level": 2,
-      "description": "Điệp khúc Jingle Bells; có nốt chấm dôi 1,5 phách và nốt móc đơn 0,5 phách.",
+      "description": "Nhạc Giáng sinh quen thuộc; có nốt dài 1,5 phách (nốt chấm dôi) và nốt ngắn 0,5 phách (nốt móc đơn).",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "James Lord Pierpont, 1857"
     },
     {
@@ -311,10 +335,10 @@
       "title": "Khúc hoan ca (Ode to Joy)",
       "group": "Âm nhạc",
       "level": 2,
-      "description": "Giai điệu đi từng bậc liền nhau; hai câu giống nhau, chỉ khác nốt kết.",
+      "description": "Bản nhạc nổi tiếng của Beethoven; giai điệu đi từng bậc liền nhau, hai câu giống nhau, chỉ khác nốt kết.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Còi trên mạch"],
+      "hardware": ["Còi có sẵn trên mạch"],
       "source": "Ludwig van Beethoven, Giao hưởng số 9 (1824)"
     },
     {
@@ -323,10 +347,10 @@
       "title": "Làm quen ThingBot",
       "group": "Mô phỏng ThingBot Sim",
       "level": 1,
-      "description": "Hai khối mũ \"khi Arduino khởi động\" và \"vòng lặp Arduino\", khởi động ThingBot.",
+      "description": "Khung của mọi chương trình: hai khối «khi Arduino khởi động» và «vòng lặp Arduino», cùng khối «khởi động ThingBot».",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Mạch ThingBot"],
+      "hardware": ["Mạch ThingBot (não là chip ESP32-C3)"],
       "source": "thingbot-sim bài 1"
     },
     {
@@ -335,10 +359,10 @@
       "title": "Đèn nhấp nháy",
       "group": "Mô phỏng ThingBot Sim",
       "level": 1,
-      "description": "Đèn LED_1 sáng nửa giây, tắt nửa giây, lặp mãi.",
+      "description": "Đèn báo nhấp nháy như đèn vàng ngã tư lúc nửa đêm: L1 sáng nửa giây, tắt nửa giây, lặp mãi.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["LED_1 trên mạch"],
+      "hardware": ["Đèn L1 trên mạch"],
       "source": "thingbot-sim bài 2"
     },
     {
@@ -347,10 +371,10 @@
       "title": "Nút bấm điều khiển đèn",
       "group": "Mô phỏng ThingBot Sim",
       "level": 1,
-      "description": "Giữ nút SW thì đèn sáng, nhả ra thì tắt (nếu … thì … nếu không thì).",
+      "description": "Đèn pin bấm giữ: giữ nút SW thì đèn sáng, nhả ra thì tắt (khối «nếu … thì … nếu không thì»).",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Nút SW", "LED_1"],
+      "hardware": ["Nút SW (nối chân IO3)", "Đèn L1"],
       "source": "thingbot-sim bài 3"
     },
     {
@@ -359,10 +383,10 @@
       "title": "Màn hình OLED",
       "group": "Mô phỏng ThingBot Sim",
       "level": 1,
-      "description": "Khởi động màn OLED, in hai dòng chữ rồi làm mới màn hình.",
+      "description": "Bảng chào: khởi động màn OLED, in hai dòng chữ rồi đưa lên màn hình.",
       "device": "thingbot",
       "peripherals": ["oled"],
-      "hardware": ["Màn OLED I2C"],
+      "hardware": ["Màn OLED (cắm cổng I2C)"],
       "source": "thingbot-sim bài 4"
     },
     {
@@ -371,22 +395,22 @@
       "title": "Servo quét",
       "group": "Mô phỏng ThingBot Sim",
       "level": 1,
-      "description": "Servo S1 quay qua lại giữa 0 và 180 độ, mỗi lượt trong 1 giây.",
+      "description": "Servo S1 quét qua lại giữa 0 và 180 độ, mỗi lượt 1 giây, như thanh chắn bãi xe nhấc lên hạ xuống.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Servo S1"],
       "source": "thingbot-sim bài 5"
     },
     {
-      "id": "sim-06-cam-bien-khoang-cach",
-      "file": "sim-06-cam-bien-khoang-cach.tb",
-      "title": "Cảm biến khoảng cách",
+      "id": "sim-06-mat-hong-ngoai",
+      "file": "sim-06-mat-hong-ngoai.tb",
+      "title": "Mắt hồng ngoại",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Vật lại gần hơn 20 cm thì đèn LED_1 sáng báo động.",
+      "description": "Mắt nhận bóng FanRoc: bóng tối màu (xanh dương, đen) thì đèn L1 sáng, bóng sáng màu thì tắt.",
       "device": "thingbot",
-      "peripherals": ["ultrasonic"],
-      "hardware": ["Cảm biến siêu âm: TRIG IO0, ECHO IO4", "LED_1"],
+      "peripherals": ["cobot"],
+      "hardware": ["Mắt hồng ngoại (cắm cổng cảm biến, chân tín hiệu IO4)", "Đèn L1"],
       "source": "thingbot-sim bài 6"
     },
     {
@@ -395,7 +419,7 @@
       "title": "Động cơ DC",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Động cơ M1 quay tới 2 giây rồi quay lùi 2 giây, lặp mãi.",
+      "description": "Băng chuyền chạy tới 2 giây rồi lùi 2 giây: động cơ M1 đổi chiều, lặp mãi.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Động cơ M1"],
@@ -404,10 +428,10 @@
     {
       "id": "sim-08-xe-di-thang-re",
       "file": "sim-08-xe-di-thang-re.tb",
-      "title": "Xe đi thẳng – rẽ",
+      "title": "Xe đi thẳng và rẽ",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Hai bánh cùng quay tới 2 giây cho xe đi thẳng rồi dừng; đổi chiều một bánh để xe xoay.",
+      "description": "Xe đi thẳng 2 giây rồi dừng. Thử đổi chiều một bánh để xe xoay tại chỗ.",
       "device": "thingbot",
       "peripherals": [],
       "hardware": ["Động cơ M1 (bánh trái), M2 (bánh phải)"],
@@ -419,22 +443,22 @@
       "title": "Tay cầm điều khiển",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Giữ nút ▲ thì xe đi tới, ▼ thì lùi, nhả ra thì dừng.",
+      "description": "Xe điều khiển từ xa: giữ nút ▲ thì xe đi tới, ▼ thì lùi, nhả ra thì dừng.",
       "device": "thingbot",
       "peripherals": [],
-      "hardware": ["Bộ thu tay cầm PS2 ở cổng PS2", "Động cơ M1, M2"],
+      "hardware": ["Tay cầm PS2 (tay cầm chơi game không dây; bộ thu cắm cổng PS2)", "Động cơ M1, M2"],
       "source": "thingbot-sim bài 9"
     },
     {
-      "id": "sim-10-xe-tranh-vat-can",
-      "file": "sim-10-xe-tranh-vat-can.tb",
-      "title": "Dự án: xe tránh vật cản",
+      "id": "sim-10-day-chuyen-phan-loai",
+      "file": "sim-10-day-chuyen-phan-loai.tb",
+      "title": "Dự án: dây chuyền phân loại trứng",
       "group": "Mô phỏng ThingBot Sim",
       "level": 2,
-      "description": "Dự án: xe tự đi thẳng, gặp vật cản gần hơn 25 cm thì xoay né.",
+      "description": "Dự án máy soi trứng: băng chuyền chở trứng qua mắt hồng ngoại, trứng hỏng (tối) bị servo gạt ra.",
       "device": "thingbot",
-      "peripherals": ["ultrasonic"],
-      "hardware": ["Cảm biến siêu âm: TRIG IO0, ECHO IO4", "Động cơ M1, M2"],
+      "peripherals": ["cobot"],
+      "hardware": ["Mắt hồng ngoại (chân tín hiệu IO4)", "Động cơ M1 (kéo băng chuyền)", "Servo S1 (cần gạt)"],
       "source": "thingbot-sim bài 10"
     }
   ]

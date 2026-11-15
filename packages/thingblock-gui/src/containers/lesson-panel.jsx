@@ -2,24 +2,45 @@ import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
 import LessonPanelComponent from '../components/lesson-panel/lesson-panel.jsx';
+import {decideCameraCheck, gradeCameraStep, isCameraStep} from '../lib/lesson-camera';
 import {decideCheck} from '../lib/lesson-check';
 import {saveProgress} from '../lib/lesson-progress';
 import {getSimClient} from '../lib/sim/sim-client';
 import {closeLesson, goToStep, markStepPassed, setCheck, showNextHint} from '../reducers/lesson';
 
+/** The VM events the Camera AI extension and the playground panel exchange (see thingblock-vm event-name.ts). */
+const CAMERA_STATUS = 'CAMERA_AI_CAMERA_STATUS';
+const VISION_RESULTS = 'CAMERA_AI_VISION_RESULTS';
+const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE';
+const MOTION = 'CAMERA_AI_MOTION';
+const PROJECT_RUN_START = 'PROJECT_RUN_START';
+/** How often a Camera AI step is graded; the playground changes with every hand frame. */
+const CAMERA_GRADE_MS = 200;
+
 /**
  * The lesson column. Watches the shared simulator worker for this step's rule verdicts and turns
- * them into the verdict box; saves progress on every step change and pass.
+ * them into the verdict box; saves progress on every step change and pass. A Camera AI step is graded
+ * here instead, on what the playground shows.
  */
 const LessonPanel = ({
-    lesson, stepIndex, passedSteps, hintsShown, check, simCode, simDiagnostics, simLoadedCode,
+    lesson, stepIndex, passedSteps, hintsShown, check, simCode, simDiagnostics, simLoadedCode, vm,
     onCheck, onPassed, onStep, onHint, onClose
 }) => {
     const [collapsed, setCollapsed] = useState(false);
     const reportRef = useRef(null);
     const snapshotRef = useRef(null);
     const step = lesson.steps[stepIndex];
-    const graded = step.rules.length > 0;
+    const cameraStep = isCameraStep(step);
+    // Graded by the simulator worker; a Camera AI step is graded on the playground below.
+    const graded = step.rules.length > 0 && !cameraStep;
+    // The latest Camera AI events, kept from the moment the lesson opens so a step sees what is on screen.
+    const cameraSeenRef = useRef({
+        cameraOn: false,
+        vision: null,
+        playground: {objects: [], scores: [0, 0], say: ''},
+        motions: {},
+        ranAt: null
+    });
     // The worker holds exactly the workspace's program: the Simulator panel loaded it after the last edit.
     const ranSinceEdit = simLoadedCode !== null && simLoadedCode === simCode;
 
@@ -75,6 +96,66 @@ const LessonPanel = ({
         if (verdict.status === 'passed' && !passedSteps.includes(stepIndex)) onPassed(stepIndex);
     }), [graded, ranSinceEdit, stepIndex, passedSteps, simDiagnostics, check, onCheck, onPassed]);
 
+    useEffect(() => {
+        if (!vm) return;
+        const seen = cameraSeenRef.current;
+        const onStatus = status => {
+            seen.cameraOn = Boolean(status.on);
+        };
+        const onVision = results => {
+            seen.vision = results;
+        };
+        const onPlayground = state => {
+            seen.playground = state;
+        };
+        const onRun = () => {
+            seen.ranAt = Date.now();
+        };
+        const onMotion = motion => {
+            seen.motions = {...seen.motions, [motion.kind]: Date.now()};
+        };
+        vm.events.on(CAMERA_STATUS, onStatus);
+        vm.events.on(VISION_RESULTS, onVision);
+        vm.events.on(PLAYGROUND_UPDATE, onPlayground);
+        vm.events.on(PROJECT_RUN_START, onRun);
+        vm.events.on(MOTION, onMotion);
+        return () => {
+            vm.events.off(MOTION, onMotion);
+            vm.events.off(CAMERA_STATUS, onStatus);
+            vm.events.off(VISION_RESULTS, onVision);
+            vm.events.off(PLAYGROUND_UPDATE, onPlayground);
+            vm.events.off(PROJECT_RUN_START, onRun);
+        };
+    }, [vm]);
+
+    // A Camera AI step: grade the playground a few times a second until the step changes.
+    const checkRef = useRef(check);
+    checkRef.current = check;
+    const passedRef = useRef(passedSteps);
+    passedRef.current = passedSteps;
+    useEffect(() => {
+        if (!cameraStep) return;
+        const stepAt = Date.now();
+        const grade = () => {
+            const seen = cameraSeenRef.current;
+            const now = Date.now();
+            const verdict = decideCameraCheck({
+                results: gradeCameraStep(step, seen, now),
+                ranAt: seen.ranAt,
+                stepAt,
+                now
+            });
+            const shown = checkRef.current;
+            if (verdict.status !== shown.status || verdict.messages.join('\n') !== shown.messages.join('\n')) {
+                onCheck(verdict.status, verdict.messages);
+            }
+            if (verdict.status === 'passed' && !passedRef.current.includes(stepIndex)) onPassed(stepIndex);
+        };
+        grade();
+        const timer = setInterval(grade, CAMERA_GRADE_MS);
+        return () => clearInterval(timer);
+    }, [cameraStep, step, stepIndex, onCheck, onPassed]);
+
     const handleNext = useCallback(() => onStep(stepIndex + 1), [onStep, stepIndex]);
     const handlePrev = useCallback(() => onStep(stepIndex - 1), [onStep, stepIndex]);
     const handleToggleCollapse = useCallback(() => setCollapsed(c => !c), []);
@@ -113,6 +194,9 @@ LessonPanel.propTypes = {
     simCode: PropTypes.string.isRequired,
     simDiagnostics: PropTypes.arrayOf(PropTypes.shape({message: PropTypes.string})).isRequired,
     simLoadedCode: PropTypes.string,
+    vm: PropTypes.shape({
+        events: PropTypes.shape({on: PropTypes.func, off: PropTypes.func})
+    }),
     onCheck: PropTypes.func.isRequired,
     onPassed: PropTypes.func.isRequired,
     onStep: PropTypes.func.isRequired,
@@ -128,7 +212,8 @@ const mapStateToProps = state => ({
     check: state.scratchGui.lesson.check,
     simCode: state.scratchGui.code.simCode,
     simDiagnostics: state.scratchGui.code.simDiagnostics,
-    simLoadedCode: state.scratchGui.code.simLoadedCode
+    simLoadedCode: state.scratchGui.code.simLoadedCode,
+    vm: state.scratchGui.vm
 });
 
 const mapDispatchToProps = dispatch => ({

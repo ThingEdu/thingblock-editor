@@ -13,11 +13,27 @@ const REQUIRED = [
     'gui.lessonPanel.passed',
     'gui.lessonPanel.idle',
     'gui.lessonPanel.waiting',
+    'gui.lessonLibrary.group.cameraAi',
+    'gui.exampleLibrary.groupCameraAi',
+    // Playing Camera AI without a webcam.
+    'gui.playgroundPanel.mouse',
+    'gui.playgroundPanel.useMouse',
+    'gui.playgroundPanel.mouseHint',
+    'cameraAi.menu.mouse',
     'gui.lessonLibrary.group.gettingStarted',
     'gui.lessonLibrary.group.outputs',
     'gui.lessonLibrary.group.motors',
     'gui.lessonLibrary.group.inputs',
     'gui.gui.addPeripheral',
+    // Board menu, code tab, connecting and the board picker's descriptions (#48).
+    'gui.menuBar.board',
+    'gui.gui.codeTab',
+    'gui.connection.firmware.connecting',
+    'gui.boardListDialog.connecting',
+    'gui.boardListDialog.connectError',
+    'device.thingbot.description',
+    'device.cobot.description',
+    'device.viaBanhMi.description',
     // Live mode and Arduino pin blocks, which the VM resolves from the editor's messages.
     'thingbotTelemetrix.controlDC',
     'arduino.digitalRead'

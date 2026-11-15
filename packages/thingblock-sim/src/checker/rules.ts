@@ -19,8 +19,66 @@ export type Rule =
   | { kind: 'switch'; held: boolean }
   | { kind: 'distance'; op: DistanceOp; cm: number }
   | { kind: 'ps2'; button: string }
+  | { kind: 'ball'; dark: boolean }
+  | { kind: 'irRead'; pin: number }
+  | { kind: 'sorted'; streak: number }
+  | { kind: 'rejected'; count: number }
+  | CameraRule
+
+/**
+ * Rules about the Camera AI playground. They are graded in the editor against what the playground shows,
+ * not in the simulator, so a step's rules are all of this kind or none of it.
+ */
+export type CameraRule =
+  | { kind: 'cameraOn' }
+  | { kind: 'handSeen' }
+  | { kind: 'gesture'; gesture: CameraGesture }
+  | { kind: 'object'; name: string }
+  | { kind: 'touch'; name: string; part: HandPart }
+  | { kind: 'score'; player: 1 | 2; op: CompareOp; n: number }
+  | { kind: 'say'; text: string }
+  | { kind: 'headSeen' }
+  | { kind: 'headTilt'; dir: 'left' | 'right' | 'straight' }
+  | { kind: 'motion'; motion: 'flap' | 'nod' }
 
 export type DistanceOp = '<' | '≤' | '>' | '≥'
+export type CompareOp = DistanceOp | '='
+export type CameraGesture = 'fist' | 'open' | 'victory' | 'point_up' | 'thumb_up' | 'thumb_down' | 'i_love_you'
+export type HandPart = 'indexTip' | 'palm' | 'wrist' | 'head'
+
+export const CAMERA_RULE_KINDS: readonly string[] = [
+  'cameraOn',
+  'handSeen',
+  'gesture',
+  'object',
+  'touch',
+  'score',
+  'say',
+  'headSeen',
+  'headTilt',
+  'motion',
+]
+
+export const isCameraRule = (rule: Rule): rule is CameraRule => CAMERA_RULE_KINDS.includes(rule.kind)
+
+/** Gestures a lesson names after `hand`, to the value the blocks report. */
+export const CAMERA_GESTURES: Record<string, CameraGesture> = {
+  fist: 'fist',
+  open: 'open',
+  victory: 'victory',
+  'point up': 'point_up',
+  'thumb up': 'thumb_up',
+  'thumb down': 'thumb_down',
+  'i love you': 'i_love_you',
+}
+
+/** Parts a lesson names after `touches`, to the part the blocks use. */
+export const HAND_PARTS: Record<string, HandPart> = {
+  'index finger': 'indexTip',
+  palm: 'palm',
+  wrist: 'wrist',
+  head: 'head',
+}
 
 /** Words a lesson may name a PS2 button by: the pad's symbol or its English name, to the PS2X constant. */
 export const PS2_BUTTONS: Record<string, string> = {
@@ -137,6 +195,39 @@ export function parseRule(text: string): Rule {
     if (!button) throw new RuleSyntaxError(text, `known PS2 buttons: ${Object.keys(PS2_BUTTONS).join(', ')}`)
     return { kind: 'ps2', button }
   }
+  if ((m = /^pick (dark|bright) ball$/.exec(t))) return { kind: 'ball', dark: m[1] === 'dark' }
+  if ((m = /^read ir eye io ?(\d+)$/.exec(t))) return { kind: 'irRead', pin: Number(m[1]) }
+  if ((m = /^sort (\d+) eggs? in a row$/.exec(t))) {
+    const streak = Number(m[1])
+    if (streak < 1) throw new RuleSyntaxError(text, 'needs at least 1 egg')
+    return { kind: 'sorted', streak }
+  }
+  if ((m = /^reject (\d+) bad eggs?$/.exec(t))) return { kind: 'rejected', count: Number(m[1]) }
+  if (t === 'camera on') return { kind: 'cameraOn' }
+  if (t === 'hand seen') return { kind: 'handSeen' }
+  if (t === 'head seen') return { kind: 'headSeen' }
+  if ((m = /^head tilts (left|right|straight)$/.exec(t))) {
+    return { kind: 'headTilt', dir: m[1] as 'left' | 'right' | 'straight' }
+  }
+  if (t === 'arms flap') return { kind: 'motion', motion: 'flap' }
+  if (t === 'head nods') return { kind: 'motion', motion: 'nod' }
+  if ((m = /^hand (.+)$/.exec(t))) {
+    const gesture = CAMERA_GESTURES[m[1]] as CameraGesture | undefined
+    if (!gesture) throw new RuleSyntaxError(text, `known gestures: ${Object.keys(CAMERA_GESTURES).join(', ')}`)
+    return { kind: 'gesture', gesture }
+  }
+  if ((m = new RegExp(String.raw`^player ([12]) score ?(<|≤|>|≥|=) ?(-?\d+)$`).exec(t))) {
+    return { kind: 'score', player: m[1] === '1' ? 1 : 2, op: m[2] as CompareOp, n: Number(m[3]) }
+  }
+  // Object names and spoken text keep the author's casing: they are what the program writes.
+  const quoted = text.normalize('NFC').trim()
+  if ((m = /^playground has\s+"(.+)"$/i.exec(quoted))) return { kind: 'object', name: m[1] }
+  if ((m = /^playground says\s+"(.+)"$/i.exec(quoted))) return { kind: 'say', text: m[1] }
+  if ((m = /^"(.+)"\s+touches\s+(.+)$/i.exec(quoted))) {
+    const part = HAND_PARTS[normalize(m[2])] as HandPart | undefined
+    if (!part) throw new RuleSyntaxError(text, `known parts: ${Object.keys(HAND_PARTS).join(', ')}`)
+    return { kind: 'touch', name: m[1], part }
+  }
   // The quoted text keeps the author's casing: it is what the learner should see on the screen.
   // Optional placement after the quote: `at y 16` (the line the text starts on, in pixels) and
   // `size 12x16` (the glyph cell the text size block names).
@@ -161,6 +252,10 @@ export function parseRule(text: string): Rule {
     'known forms: "L1 on/off", "buzzer on/off", "L1 blinks every X s ± Y%", ' +
       '"M1 forward/backward/stop", "M1 speed ≥ N%", "servo S1 at A deg ± D", "servo S1 sweeps from A to B deg", ' +
       '\'OLED shows "…"\', \'OLED shows exactly "…"\', \'OLED shows "…" at y N size 12x16\', ' +
-      '"hold/release SW", "distance < N cm", "hold PS2 up"',
+      '"hold/release SW", "distance < N cm", "hold PS2 up", "pick dark/bright ball", "read IR eye IO4", ' +
+      '"sort N eggs in a row", "reject N bad eggs"; Camera AI: "camera on", "hand seen", "hand fist", ' +
+      '\'playground has "name"\', \'"name" touches index finger\', "player 1 score ≥ N", ' +
+      '\'playground says "…"\', "head seen", "head tilts left/right/straight", \'"name" touches head\', ' +
+      '"arms flap", "head nods"',
   )
 }

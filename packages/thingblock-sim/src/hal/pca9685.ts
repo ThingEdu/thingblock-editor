@@ -42,6 +42,7 @@ export class Pca9685 {
   /**
    * The PWM frequency the prescaler gives, in Hz (what a passive buzzer on a channel sounds at), or 0
    * before the first `setPWMFreq()`.
+   * @returns The frequency in Hz.
    */
   get frequency(): number {
     return this.prescale ? this.oscillator / (4096 * (this.prescale + 1)) : 0

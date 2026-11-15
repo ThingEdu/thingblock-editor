@@ -67,6 +67,12 @@ const LessonLibrary = ({projectChanged, vm, onClose, onOpen}) => {
                     vm.devices.addPeripheral(peripheral)
                         .catch(e => log.warn(`Lesson ${id}: cannot add "${peripheral}"`, e));
                 }
+                // Editor extensions such as Camera AI, which run without a board.
+                for (const extension of lesson.extensions || []) {
+                    if (vm.extensionManager.isExtensionLoaded(extension)) continue;
+                    vm.extensionManager.loadExtensionURL(extension)
+                        .catch(e => log.warn(`Lesson ${id}: cannot load extension "${extension}"`, e));
+                }
             })
             .catch(e => {
                 log.warn(`Lesson ${id}: cannot open`, e);
@@ -93,6 +99,10 @@ LessonLibrary.propTypes = {
             addPeripheral: PropTypes.func.isRequired,
             getTutorialsOrigin: PropTypes.func.isRequired
         }).isRequired,
+        extensionManager: PropTypes.shape({
+            isExtensionLoaded: PropTypes.func.isRequired,
+            loadExtensionURL: PropTypes.func.isRequired
+        }),
         project: PropTypes.shape({
             load: PropTypes.func.isRequired
         }).isRequired

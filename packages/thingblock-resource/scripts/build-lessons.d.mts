@@ -4,7 +4,7 @@
 export interface LessonIndexEntry {
   id: string
   name: string
-  group: 'getting-started' | 'outputs' | 'motors' | 'inputs'
+  group: 'getting-started' | 'outputs' | 'motors' | 'inputs' | 'camera-ai'
   order: number
   image: string | null
   duration: number | null

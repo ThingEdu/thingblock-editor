@@ -193,7 +193,10 @@ export default class VirtualMachine {
      */
     setLocale (locale: string, messages: formatMessage.Translations[string]): Promise<unknown> {
         if (locale !== formatMessage.setup().locale) {
-            formatMessage.setup({locale: locale, translations: {[locale]: messages}});
+            // format-message caches each message it formats by replacing it in the translations object
+            // (`'chữ V'` becomes `{message: 'chữ V'}`), so it gets a copy: the caller's map is the editor's
+            // react-intl messages, which only take strings.
+            formatMessage.setup({locale: locale, translations: {[locale]: {...messages}}});
         }
         return this.extensionManager.refreshBlocks();
     }

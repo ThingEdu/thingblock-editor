@@ -3,8 +3,24 @@ import {FormattedMessage} from 'react-intl';
 
 import thingbotTelemetrixIconURL from './thingbotTelemetrix/thingbot-telemetrix.svg';
 import thingbotTelemetrixInsetIconURL from './thingbotTelemetrix/thingbot-telemetrix-small.svg';
+import cameraAiIconURL from './cameraAi/camera-ai.svg';
+import cameraAiInsetIconURL from './cameraAi/camera-ai-small.svg';
 
 export default [
+    {
+        name: 'Camera AI',
+        extensionId: 'cameraAi',
+        iconURL: cameraAiIconURL,
+        insetIconURL: cameraAiInsetIconURL,
+        description: (
+            <FormattedMessage
+                defaultMessage="See hands and gestures through the webcam; play games on the playground."
+                description="Description for the Camera AI extension"
+                id="gui.extension.cameraAi.description"
+            />
+        ),
+        featured: true
+    },
     {
         name: 'ThingBot Telemetrix',
         extensionId: 'thingbotTelemetrix',

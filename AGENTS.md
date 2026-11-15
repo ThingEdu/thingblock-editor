@@ -189,6 +189,14 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   grading are in `packages/thingblock-sim/src/checker/` (package export `./checker`); `rules.ts` must stay
   import-free because the Node build script loads it through type stripping. `vm.devices.getTutorialsOrigin()` gives
   the GUI the base for fetching lessons.
+- Camera AI lessons (`board: none`, `extensions: cameraAi`, group `camera-ai`) use playground rules (`checker/camera.ts`) that the lesson
+  panel grades from the VM's Camera AI events (`gui/src/lib/lesson-camera.js`), not the simulator worker.
+  `test/lessons/camera-lessons.test.ts` and `test/examples-camera-ai.test.ts` in `thingblock-resource` run those
+  projects in the built VM (`thingblock-vm/dist/node`) with a synthetic hand, so they need `npm run build:libs`.
+- Camera AI's head and body blocks read a `pose` (MediaPipe pose landmarker, 33 points) carried in the same
+  `CAMERA_AI_VISION_RESULTS` frame as the hands. The GUI runs that model only when the VM's `CAMERA_COMMAND` says
+  `pose: true` (the project has a head/body block or the flap hat). Flaps, nods and leans are also emitted as
+  `CAMERA_AI_MOTION` for lesson checks.
 - `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
   general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
 

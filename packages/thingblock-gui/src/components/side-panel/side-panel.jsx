@@ -12,6 +12,7 @@ import BoardMonitor from '../../containers/board-monitor.jsx';
 import DeviceControls from '../../containers/device-controls.jsx';
 import HostMonitor from '../../containers/host-monitor.jsx';
 import PlatformInstallModal from '../../containers/platform-install-modal.jsx';
+import PlaygroundPanel from '../../containers/playground-panel.jsx';
 import SimPanel from '../../containers/sim-panel.jsx';
 import {usePaneCollapsed} from '../../lib/pane-collapse';
 import check from '../menu-bar/check.svg';
@@ -115,12 +116,13 @@ PanelOption.propTypes = {
 };
 
 /**
- * Right-hand column of the editor: device controls, and either the board's simulator, generated code and
+ * Right-hand column of the editor: device controls, the Camera AI playground while that extension is loaded,
+ * and either the board's simulator, generated code and
  * serial monitor, or the host monitor when no board is selected.
  * @param {object} props component props.
  * @returns {React.ReactElement} the panel.
  */
-const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
+const SidePanel = ({cameraAiLoaded, generatedCode, selectedDeviceId, vm, width}) => {
     const intl = useIntl();
     // Hiding a pane removes it from the panel; the pane store keeps the choice across reloads.
     const [simHidden, toggleSimHidden] = usePaneCollapsed('sim.hidden', false);
@@ -198,6 +200,7 @@ const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
                 </div>
             </div>
             <PlatformInstallModal />
+            {cameraAiLoaded && <PlaygroundPanel />}
             {showSim && <SimPanel roomy={!showCode} />}
             {showCode && (
                 <CodeView
@@ -224,6 +227,7 @@ const SidePanel = ({generatedCode, selectedDeviceId, vm, width}) => {
 };
 
 SidePanel.propTypes = {
+    cameraAiLoaded: PropTypes.bool,
     generatedCode: PropTypes.string,
     selectedDeviceId: PropTypes.string,
     vm: PropTypes.instanceOf(VM).isRequired,

@@ -12,6 +12,7 @@ import {setProjectChanged, setProjectUnchanged} from '../reducers/project-change
 import {setRunningState, setTurboState, setStartedState} from '../reducers/vm-status';
 import {showExtensionAlert, showStandardAlert, closeAlertWithId} from '../reducers/alerts';
 import {updateMicIndicator} from '../reducers/mic-indicator';
+import {cameraAiLoaded} from '../reducers/camera-ai';
 
 /*
  * Higher Order Component to manage events emitted by the VM
@@ -47,6 +48,7 @@ const vmListenerHOC = function (WrappedComponent) {
             this.props.vm.events.on('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
             this.props.vm.events.on('MIC_LISTENING', this.props.onMicListeningUpdate);
             this.props.vm.events.on('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
+            this.props.vm.events.on('EXTENSION_ADDED', this.props.onExtensionAdded);
 
         }
         componentDidMount () {
@@ -82,6 +84,7 @@ const vmListenerHOC = function (WrappedComponent) {
             this.props.vm.events.removeListener('PERIPHERAL_CONNECTION_LOST_ERROR', this.props.onShowExtensionAlert);
             this.props.vm.events.removeListener('MIC_LISTENING', this.props.onMicListeningUpdate);
             this.props.vm.events.removeListener('EXTENSION_DATA_LOADING', this.props.onExtensionDataLoading);
+            this.props.vm.events.removeListener('EXTENSION_ADDED', this.props.onExtensionAdded);
 
             if (this.props.attachKeyboardEvents) {
                 document.removeEventListener('keydown', this.handleKeyDown);
@@ -147,6 +150,7 @@ const vmListenerHOC = function (WrappedComponent) {
                 onKeyUp,
                 onMicListeningUpdate,
                 onExtensionDataLoading,
+                onExtensionAdded,
                 onMonitorsUpdate,
                 onTargetsUpdate,
                 onProjectChanged,
@@ -167,6 +171,7 @@ const vmListenerHOC = function (WrappedComponent) {
         attachKeyboardEvents: PropTypes.bool,
         onBlockDragUpdate: PropTypes.func.isRequired,
         onExtensionDataLoading: PropTypes.func.isRequired,
+        onExtensionAdded: PropTypes.func.isRequired,
         onGreenFlag: PropTypes.func,
         onKeyDown: PropTypes.func,
         onKeyUp: PropTypes.func,
@@ -223,6 +228,10 @@ const vmListenerHOC = function (WrappedComponent) {
         onTurboModeOff: () => dispatch(setTurboState(false)),
         onShowExtensionAlert: data => {
             dispatch(showExtensionAlert(data));
+        },
+        onExtensionAdded: categoryInfo => {
+            // The Camera AI playground panel shows once its extension is in the project.
+            if (categoryInfo && categoryInfo.id === 'cameraAi') dispatch(cameraAiLoaded());
         },
         onMicListeningUpdate: listening => {
             dispatch(updateMicIndicator(listening));

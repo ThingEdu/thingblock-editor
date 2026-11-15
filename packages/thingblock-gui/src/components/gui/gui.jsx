@@ -139,6 +139,7 @@ const GUIComponent = props => {
         showNewFeatureCallouts,
         stageSizeMode,
         selectedDeviceId,
+        cameraAiLoaded,
         generatedCode,
         settingsModalVisible,
         telemetryModalVisible,
@@ -413,6 +414,7 @@ const GUIComponent = props => {
                             onMouseDown={handleResizeMouseDown}
                         />
                         <SidePanel
+                            cameraAiLoaded={cameraAiLoaded}
                             generatedCode={generatedCode}
                             selectedDeviceId={selectedDeviceId}
                             vm={vm}
@@ -485,6 +487,7 @@ GUIComponent.propTypes = {
     renderLogin: PropTypes.func,
     setTheme: PropTypes.func.isRequired,
     selectedDeviceId: PropTypes.string,
+    cameraAiLoaded: PropTypes.bool,
     generatedCode: PropTypes.string,
     settingsModalVisible: PropTypes.bool,
     showNewFeatureCallouts: PropTypes.bool,

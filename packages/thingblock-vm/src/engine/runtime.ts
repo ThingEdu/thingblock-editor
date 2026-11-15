@@ -212,7 +212,8 @@ class Runtime {
 
         this.allScriptsByOpcodeDo(opcode, ({blockId: topBlockId, fieldsOfInputs}, target) => {
             // Match before the hat runs, so "broadcast and wait" knows exactly which threads it started.
-            if (fields.some(([name, value]) => fieldsOfInputs[name].value !== value)) return;
+            // A hat whose input holds a reporter instead of a shadow has no such field: it never matches.
+            if (fields.some(([name, value]) => fieldsOfInputs[name]?.value !== value)) return;
 
             // Stack-click threads coexist with hat threads.
             const isThisScript = (thread: Thread) =>

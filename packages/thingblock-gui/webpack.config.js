@@ -112,6 +112,12 @@ const baseConfig = new ScratchWebpackConfigBuilder(
                 force: true
             },
             {
+                // The Camera AI hand tracker runs this WASM runtime offline; see src/lib/vision/hand-tracker.js.
+                context: '../../node_modules/@mediapipe/tasks-vision/wasm',
+                from: '*',
+                to: 'static/mediapipe/wasm'
+            },
+            {
                 context: '../../node_modules/@thingblock/thingblock-vm/dist/web',
                 from: 'extension-worker.{js,js.map}',
                 noErrorOnMissing: true

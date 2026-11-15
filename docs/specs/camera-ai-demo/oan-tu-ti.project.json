@@ -1,0 +1,1307 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {},
+      "comments": {},
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 0,
+      "tempo": 60,
+      "videoTransparency": 50,
+      "videoState": "on",
+      "textToSpeechLanguage": null
+    },
+    {
+      "isStage": false,
+      "name": "Sprite1",
+      "variables": {
+        "v_may_so": [
+          "may_so",
+          0
+        ],
+        "v_may": [
+          "may",
+          0
+        ],
+        "v_nguoi": [
+          "nguoi",
+          0
+        ],
+        "v_ket_qua": [
+          "ket_qua",
+          0
+        ]
+      },
+      "lists": {
+        "l_lua_chon": [
+          "lua_chon",
+          [
+            "fist",
+            "open",
+            "victory"
+          ]
+        ],
+        "l_ky_hieu": [
+          "ky_hieu",
+          [
+            "✊",
+            "✋",
+            "✌️"
+          ]
+        ]
+      },
+      "broadcasts": {},
+      "blocks": {
+        "b1": {
+          "opcode": "event_whenflagclicked",
+          "next": "b50",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 40,
+          "y": 60
+        },
+        "b2": {
+          "opcode": "cameraAi_say",
+          "next": "b3",
+          "parent": "b49",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "3"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b3": {
+          "opcode": "control_wait",
+          "next": "b4",
+          "parent": "b2",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b4": {
+          "opcode": "cameraAi_say",
+          "next": "b5",
+          "parent": "b3",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "2"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b5": {
+          "opcode": "control_wait",
+          "next": "b6",
+          "parent": "b4",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b6": {
+          "opcode": "cameraAi_say",
+          "next": "b7",
+          "parent": "b5",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b7": {
+          "opcode": "control_wait",
+          "next": "b8",
+          "parent": "b6",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b8": {
+          "opcode": "data_setvariableto",
+          "next": "b10",
+          "parent": "b7",
+          "inputs": {
+            "VALUE": [
+              3,
+              "b9",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "may_so",
+              "v_may_so"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b9": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b8",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "3"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b10": {
+          "opcode": "data_setvariableto",
+          "next": "b12",
+          "parent": "b8",
+          "inputs": {
+            "VALUE": [
+              3,
+              "b11",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "may",
+              "v_may"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b11": {
+          "opcode": "data_itemoflist",
+          "next": null,
+          "parent": "b10",
+          "inputs": {
+            "INDEX": [
+              3,
+              [
+                12,
+                "may_so",
+                "v_may_so"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "LIST": [
+              "lua_chon",
+              "l_lua_chon"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b12": {
+          "opcode": "data_setvariableto",
+          "next": "b37",
+          "parent": "b10",
+          "inputs": {
+            "VALUE": [
+              3,
+              "b13",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "nguoi",
+              "v_nguoi"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b13": {
+          "opcode": "cameraAi_handGesture",
+          "next": null,
+          "parent": "b12",
+          "inputs": {},
+          "fields": {
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b14": {
+          "opcode": "data_setvariableto",
+          "next": null,
+          "parent": "b37",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                10,
+                "Hoà!"
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "ket_qua",
+              "v_ket_qua"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b15": {
+          "opcode": "data_setvariableto",
+          "next": null,
+          "parent": "b34",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                10,
+                "Không thấy tay"
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "ket_qua",
+              "v_ket_qua"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b16": {
+          "opcode": "cameraAi_addScore",
+          "next": "b18",
+          "parent": "b22",
+          "inputs": {
+            "N": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ],
+            "PLAYER": [
+              1,
+              "b17"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b17": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b16",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b18": {
+          "opcode": "data_setvariableto",
+          "next": null,
+          "parent": "b16",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                10,
+                "Em thắng!"
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "ket_qua",
+              "v_ket_qua"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b19": {
+          "opcode": "cameraAi_addScore",
+          "next": "b21",
+          "parent": "b22",
+          "inputs": {
+            "N": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ],
+            "PLAYER": [
+              1,
+              "b20"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b20": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b19",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "2",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b21": {
+          "opcode": "data_setvariableto",
+          "next": null,
+          "parent": "b19",
+          "inputs": {
+            "VALUE": [
+              1,
+              [
+                10,
+                "Máy thắng!"
+              ]
+            ]
+          },
+          "fields": {
+            "VARIABLE": [
+              "ket_qua",
+              "v_ket_qua"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b22": {
+          "opcode": "control_if_else",
+          "next": null,
+          "parent": "b34",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "b23"
+            ],
+            "SUBSTACK": [
+              2,
+              "b16"
+            ],
+            "SUBSTACK2": [
+              2,
+              "b19"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b23": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "b22",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "b24"
+            ],
+            "OPERAND2": [
+              2,
+              "b27"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b24": {
+          "opcode": "operator_and",
+          "next": null,
+          "parent": "b23",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "b25"
+            ],
+            "OPERAND2": [
+              2,
+              "b26"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b25": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b24",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "fist"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b26": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b24",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "may",
+                "v_may"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "victory"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b27": {
+          "opcode": "operator_or",
+          "next": null,
+          "parent": "b23",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "b28"
+            ],
+            "OPERAND2": [
+              2,
+              "b31"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b28": {
+          "opcode": "operator_and",
+          "next": null,
+          "parent": "b27",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "b29"
+            ],
+            "OPERAND2": [
+              2,
+              "b30"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b29": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b28",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "open"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b30": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b28",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "may",
+                "v_may"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "fist"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b31": {
+          "opcode": "operator_and",
+          "next": null,
+          "parent": "b27",
+          "inputs": {
+            "OPERAND1": [
+              2,
+              "b32"
+            ],
+            "OPERAND2": [
+              2,
+              "b33"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b32": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b31",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "victory"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b33": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b31",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "may",
+                "v_may"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "open"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b34": {
+          "opcode": "control_if_else",
+          "next": null,
+          "parent": "b37",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "b35"
+            ],
+            "SUBSTACK": [
+              2,
+              "b15"
+            ],
+            "SUBSTACK2": [
+              2,
+              "b22"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b35": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b34",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              "b36",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "OPERAND2": [
+              1,
+              [
+                10,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b36": {
+          "opcode": "data_itemnumoflist",
+          "next": null,
+          "parent": "b35",
+          "inputs": {
+            "ITEM": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "LIST": [
+              "lua_chon",
+              "l_lua_chon"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b37": {
+          "opcode": "control_if_else",
+          "next": "b39",
+          "parent": "b12",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "b38"
+            ],
+            "SUBSTACK": [
+              2,
+              "b14"
+            ],
+            "SUBSTACK2": [
+              2,
+              "b34"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b38": {
+          "opcode": "operator_equals",
+          "next": null,
+          "parent": "b37",
+          "inputs": {
+            "OPERAND1": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ],
+            "OPERAND2": [
+              3,
+              [
+                12,
+                "may",
+                "v_may"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b39": {
+          "opcode": "cameraAi_say",
+          "next": "b48",
+          "parent": "b37",
+          "inputs": {
+            "TEXT": [
+              3,
+              "b40",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b40": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b39",
+          "inputs": {
+            "STRING1": [
+              3,
+              "b41",
+              [
+                10,
+                ""
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b43",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b41": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b40",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "Máy "
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b42",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b42": {
+          "opcode": "data_itemoflist",
+          "next": null,
+          "parent": "b41",
+          "inputs": {
+            "INDEX": [
+              3,
+              [
+                12,
+                "may_so",
+                "v_may_so"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "LIST": [
+              "ky_hieu",
+              "l_ky_hieu"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b43": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b40",
+          "inputs": {
+            "STRING1": [
+              3,
+              "b44",
+              [
+                10,
+                ""
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b47",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b44": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b43",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                " – Em "
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b45",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b45": {
+          "opcode": "data_itemoflist",
+          "next": null,
+          "parent": "b44",
+          "inputs": {
+            "INDEX": [
+              3,
+              "b46",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {
+            "LIST": [
+              "ky_hieu",
+              "l_ky_hieu"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b46": {
+          "opcode": "data_itemnumoflist",
+          "next": null,
+          "parent": "b45",
+          "inputs": {
+            "ITEM": [
+              3,
+              [
+                12,
+                "nguoi",
+                "v_nguoi"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {
+            "LIST": [
+              "lua_chon",
+              "l_lua_chon"
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b47": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b43",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                " → "
+              ]
+            ],
+            "STRING2": [
+              3,
+              [
+                12,
+                "ket_qua",
+                "v_ket_qua"
+              ],
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b48": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "b39",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "3"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b49": {
+          "opcode": "control_forever",
+          "next": null,
+          "parent": "b56",
+          "inputs": {
+            "SUBSTACK": [
+              2,
+              "b2"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b50": {
+          "opcode": "cameraAi_cameraOn",
+          "next": "b51",
+          "parent": "b1",
+          "inputs": {},
+          "fields": {
+            "MIRROR": [
+              "mirror",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b51": {
+          "opcode": "cameraAi_setScore",
+          "next": "b53",
+          "parent": "b50",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b52"
+            ],
+            "N": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b52": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b51",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b53": {
+          "opcode": "cameraAi_setScore",
+          "next": "b55",
+          "parent": "b51",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b54"
+            ],
+            "N": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b54": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b53",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "2",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b55": {
+          "opcode": "cameraAi_say",
+          "next": "b56",
+          "parent": "b53",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "Oẳn tù tì! Giơ ✊ ✋ ✌️ khi đếm xong"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b56": {
+          "opcode": "control_wait",
+          "next": "b49",
+          "parent": "b55",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "2"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        }
+      },
+      "comments": {
+        "c1": {
+          "blockId": null,
+          "x": 40,
+          "y": -70,
+          "width": 600,
+          "height": 100,
+          "minimized": false,
+          "text": "Oẳn tù tì · Camera AI\nSau khi đếm 3-2-1, giơ ✊ nắm tay (búa), ✋ xoè tay (bao) hoặc ✌️ chữ V (kéo). Người 1 = em, người 2 = máy."
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "size": 100,
+      "direction": 90,
+      "draggable": false,
+      "rotationStyle": "all around"
+    }
+  ],
+  "monitors": [],
+  "extensions": [
+    "cameraAi"
+  ],
+  "meta": {
+    "semver": "3.0.0",
+    "vm": "14.1.0",
+    "agent": "camera-ai demo"
+  }
+}

@@ -33,6 +33,7 @@ import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace
 import boardReducer, {boardInitialState} from './board';
 import codeReducer, {codeInitialState} from './code';
 import thingbotTelemetrixReducer, {thingbotTelemetrixInitialState} from './thingbot-telemetrix';
+import cameraAiReducer, {cameraAiInitialState} from './camera-ai';
 import throttle from 'redux-throttle';
 
 import {GUIConfig} from '../gui-config';
@@ -74,7 +75,8 @@ const buildInitialState = (config: GUIConfig) => ({
     workspaceMetrics: workspaceMetricsInitialState,
     board: boardInitialState,
     code: codeInitialState,
-    thingbotTelemetrix: thingbotTelemetrixInitialState
+    thingbotTelemetrix: thingbotTelemetrixInitialState,
+    cameraAi: cameraAiInitialState
 });
 
 const initPlayer = function (currentState) {
@@ -168,7 +170,8 @@ const guiReducer = combineReducers({
     workspaceMetrics: workspaceMetricsReducer,
     board: boardReducer,
     code: codeReducer,
-    thingbotTelemetrix: thingbotTelemetrixReducer
+    thingbotTelemetrix: thingbotTelemetrixReducer,
+    cameraAi: cameraAiReducer
 });
 
 export {

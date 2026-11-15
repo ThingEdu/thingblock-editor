@@ -1,0 +1,121 @@
+/**
+ * The Camera AI lessons prove themselves like the board lessons do: `solutions/pass*.tb` passes each graded
+ * step and `fail-<n>.tb` fails step n. A step is graded as the editor's lesson panel grades it, on the
+ * playground: the project runs in the real VM, a synthetic hand plays in front of the camera, and the step
+ * passes if its rules all hold at some frame within the window. The hand does what the step asks the
+ * learner to: it makes the gesture a `tay …` rule names, chases the playground's objects when the step
+ * wants points, and otherwise rests at one spot away from where the objects start. A step about the head
+ * shows a whole body there instead: leaning the way a `head tilts …` rule says, nodding for `head nods`,
+ * and flapping both arms for `arms flap`.
+ */
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { evaluateCameraRules } from '../../../thingblock-sim/src/checker/camera'
+import type { RuleResult } from '../../../thingblock-sim/src/checker/evaluate'
+import { isCameraRule, type CameraRule } from '../../../thingblock-sim/src/checker/rules'
+import { parseLesson } from '../../scripts/lessons/parse-lesson.mjs'
+import { CameraAiRun, flapper, type Player } from '../support/camera-ai-vm'
+
+const TUTORIALS = join(__dirname, '../../src/tutorials')
+const WINDOW_MS = 3000
+/** Where the hand rests when the step does not ask it to chase anything: away from every starting spot. */
+const REST = { x: 100, y: -60 }
+/** How long the chasing hand stays on one object before moving to the next. */
+const CHASE_MS = 300
+
+/**
+ * The hand a step's rules ask the learner for.
+ * @param rules The step's rules.
+ * @returns Where the hand is each frame, and its gesture.
+ */
+const playerFor = (rules: CameraRule[]): Player => {
+  const has = (motion: string) => rules.some((r) => r.kind === 'motion' && r.motion === motion)
+  if (has('flap')) return flapper()
+  const lean = rules.find((r) => r.kind === 'headTilt')
+  const usesHead =
+    lean !== undefined ||
+    has('nod') ||
+    rules.some((r) => r.kind === 'headSeen' || (r.kind === 'touch' && r.part === 'head'))
+  if (usesHead) {
+    const tilt = lean?.kind === 'headTilt' ? { left: -25, right: 25, straight: 0 }[lean.dir] : 0
+    return () => ({
+      hands: [],
+      head: { ...REST, tilt, nod: has('nod') ? Math.max(0, Math.sin((2 * Math.PI * Date.now()) / 800)) : 0 },
+    })
+  }
+  const gestureRule = rules.find((r) => r.kind === 'gesture')
+  const gesture = gestureRule?.kind === 'gesture' ? gestureRule.gesture : 'open'
+  if (!rules.some((r) => r.kind === 'score')) return () => ({ ...REST, gesture })
+  return ({ playground }) => {
+    const { objects } = playground
+    if (!objects.length) return { ...REST, gesture }
+    const o = objects[Math.floor(Date.now() / CHASE_MS) % objects.length]
+    return { x: o.x, y: o.y, gesture }
+  }
+}
+
+const grade = async (tb: string, rules: CameraRule[]): Promise<{ passed: boolean; results: RuleResult[] }> => {
+  const run = await CameraAiRun.load(readFileSync(tb))
+  let results: RuleResult[] = []
+  try {
+    run.play(playerFor(rules))
+    const passed = await run.until(() => {
+      results = evaluateCameraRules(rules, run.graded())
+      return results.every((r) => r.ok)
+    }, WINDOW_MS)
+    return { passed, results }
+  } finally {
+    run.stop()
+  }
+}
+
+const lessons = readdirSync(TUTORIALS, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => {
+    const dir = join(TUTORIALS, d.name)
+    const files = readdirSync(dir)
+    const { lesson } = parseLesson(readFileSync(join(dir, 'lesson.vi.md'), 'utf8'), {
+      dirName: d.name,
+      lang: 'vi',
+      files,
+    })
+    return { id: d.name, dir, lesson }
+  })
+  .filter(({ lesson }) => lesson.steps.some((s) => s.rules.some(isCameraRule)))
+
+describe.each(lessons)('Camera AI lesson $id', ({ dir, lesson }) => {
+  const graded = lesson.steps
+    .map((s, i) => ({ rules: s.rules.filter(isCameraRule), n: i + 1 }))
+    .filter(({ rules }) => rules.length)
+  const rulesOf = (n: number) => graded.find((g) => g.n === n)?.rules ?? []
+  const fixture = (name: string) => join(dir, 'solutions', name)
+
+  it('runs without a board, loads Camera AI and has a correct solution', () => {
+    expect(lesson.board).toBe('none')
+    expect(lesson.extensions).toContain('cameraAi')
+    expect(existsSync(fixture('pass.tb')) || graded.every(({ n }) => existsSync(fixture(`pass-${n}.tb`)))).toBe(true)
+  })
+
+  it.each(graded.map(({ n }) => n))(
+    'step %i passes with the correct solution',
+    async (n) => {
+      const tb = existsSync(fixture(`pass-${n}.tb`)) ? fixture(`pass-${n}.tb`) : fixture('pass.tb')
+      const { results } = await grade(tb, rulesOf(n))
+      expect(results.map((r) => r.message)).toEqual(results.map(() => ''))
+    },
+    WINDOW_MS + 2000,
+  )
+
+  it.each(graded.map(({ n }) => n))(
+    'step %i fails with its fail-<n>.tb and explains why',
+    async (n) => {
+      const tb = fixture(`fail-${n}.tb`)
+      expect(existsSync(tb), `thiếu ${tb}`).toBe(true)
+      const { passed, results } = await grade(tb, rulesOf(n))
+      expect(passed).toBe(false)
+      for (const r of results.filter((x) => !x.ok)) expect(r.message).not.toBe('')
+    },
+    WINDOW_MS + 2000,
+  )
+})

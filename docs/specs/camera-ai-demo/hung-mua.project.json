@@ -1,0 +1,822 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {},
+      "comments": {},
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 0,
+      "tempo": 60,
+      "videoTransparency": 50,
+      "videoState": "on",
+      "textToSpeechLanguage": null
+    },
+    {
+      "isStage": false,
+      "name": "Sprite1",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {
+        "b1": {
+          "opcode": "event_whenflagclicked",
+          "next": "b2",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 40,
+          "y": 60
+        },
+        "b2": {
+          "opcode": "cameraAi_cameraOn",
+          "next": "b3",
+          "parent": "b1",
+          "inputs": {},
+          "fields": {
+            "MIRROR": [
+              "mirror",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b3": {
+          "opcode": "cameraAi_setScore",
+          "next": "b5",
+          "parent": "b2",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b4"
+            ],
+            "N": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b4": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b3",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b5": {
+          "opcode": "cameraAi_spawn",
+          "next": "b6",
+          "parent": "b3",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "ro"
+              ]
+            ],
+            "X": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "-120"
+              ]
+            ],
+            "SIZE": [
+              1,
+              [
+                4,
+                "80"
+              ]
+            ]
+          },
+          "fields": {
+            "KIND": [
+              "basket",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b6": {
+          "opcode": "cameraAi_spawn",
+          "next": "b7",
+          "parent": "b5",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "X": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "170"
+              ]
+            ],
+            "SIZE": [
+              1,
+              [
+                4,
+                "36"
+              ]
+            ]
+          },
+          "fields": {
+            "KIND": [
+              "drop",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b7": {
+          "opcode": "cameraAi_setVelocity",
+          "next": "b8",
+          "parent": "b6",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "VX": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "VY": [
+              1,
+              [
+                4,
+                "-150"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b8": {
+          "opcode": "cameraAi_startTimer",
+          "next": "b9",
+          "parent": "b7",
+          "inputs": {
+            "SECONDS": [
+              1,
+              [
+                4,
+                "30"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b9": {
+          "opcode": "cameraAi_say",
+          "next": "b13",
+          "parent": "b8",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "Hứng giọt mưa bằng lòng bàn tay!"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b10": {
+          "opcode": "cameraAi_moveTo",
+          "next": null,
+          "parent": "b13",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "ro"
+              ]
+            ],
+            "X": [
+              3,
+              "b11",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              3,
+              "b12",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b11": {
+          "opcode": "cameraAi_handX",
+          "next": null,
+          "parent": "b10",
+          "inputs": {},
+          "fields": {
+            "PART": [
+              "palm",
+              null
+            ],
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b12": {
+          "opcode": "cameraAi_handY",
+          "next": null,
+          "parent": "b10",
+          "inputs": {},
+          "fields": {
+            "PART": [
+              "palm",
+              null
+            ],
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b13": {
+          "opcode": "control_forever",
+          "next": null,
+          "parent": "b9",
+          "inputs": {
+            "SUBSTACK": [
+              2,
+              "b10"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b14": {
+          "opcode": "cameraAi_whenTouching",
+          "next": "b16",
+          "parent": null,
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "TARGET": [
+              1,
+              "b15"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 560,
+          "y": 60
+        },
+        "b15": {
+          "opcode": "cameraAi_menu_TARGET",
+          "next": null,
+          "parent": "b14",
+          "inputs": {},
+          "fields": {
+            "TARGET": [
+              "PALM",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b16": {
+          "opcode": "cameraAi_addScore",
+          "next": "b18",
+          "parent": "b14",
+          "inputs": {
+            "N": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ],
+            "PLAYER": [
+              1,
+              "b17"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b17": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b16",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b18": {
+          "opcode": "cameraAi_say",
+          "next": "b19",
+          "parent": "b16",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "+1"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b19": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b21",
+          "parent": "b18",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "X": [
+              3,
+              "b20",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "170"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b20": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b19",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-200"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "200"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b21": {
+          "opcode": "cameraAi_setVelocity",
+          "next": null,
+          "parent": "b19",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "VX": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "VY": [
+              1,
+              [
+                4,
+                "-150"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b22": {
+          "opcode": "cameraAi_whenTouching",
+          "next": "b24",
+          "parent": null,
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "TARGET": [
+              1,
+              "b23"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 560,
+          "y": 300
+        },
+        "b23": {
+          "opcode": "cameraAi_menu_TARGET",
+          "next": null,
+          "parent": "b22",
+          "inputs": {},
+          "fields": {
+            "TARGET": [
+              "BOTTOM",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b24": {
+          "opcode": "cameraAi_addScore",
+          "next": "b26",
+          "parent": "b22",
+          "inputs": {
+            "N": [
+              1,
+              [
+                4,
+                "-1"
+              ]
+            ],
+            "PLAYER": [
+              1,
+              "b25"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b25": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b24",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b26": {
+          "opcode": "cameraAi_say",
+          "next": "b27",
+          "parent": "b24",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "Rơi mất!"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b27": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b29",
+          "parent": "b26",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "X": [
+              3,
+              "b28",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "170"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b28": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b27",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-200"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "200"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b29": {
+          "opcode": "cameraAi_setVelocity",
+          "next": null,
+          "parent": "b27",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ],
+            "VX": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "VY": [
+              1,
+              [
+                4,
+                "-150"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b30": {
+          "opcode": "cameraAi_whenTimeUp",
+          "next": "b31",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 560,
+          "y": 540
+        },
+        "b31": {
+          "opcode": "cameraAi_say",
+          "next": "b35",
+          "parent": "b30",
+          "inputs": {
+            "TEXT": [
+              3,
+              "b32",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b32": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b31",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "Hết giờ! Điểm: "
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b33",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b33": {
+          "opcode": "cameraAi_score",
+          "next": null,
+          "parent": "b32",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b34"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b34": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b33",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b35": {
+          "opcode": "cameraAi_remove",
+          "next": null,
+          "parent": "b31",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "giot"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        }
+      },
+      "comments": {
+        "c1": {
+          "blockId": null,
+          "x": 40,
+          "y": -70,
+          "width": 600,
+          "height": 100,
+          "minimized": false,
+          "text": "Hứng Mưa · Camera AI\nRổ đi theo lòng bàn tay. Hứng giọt mưa được +1, để rơi xuống đáy −1. 30 giây."
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "size": 100,
+      "direction": 90,
+      "draggable": false,
+      "rotationStyle": "all around"
+    }
+  ],
+  "monitors": [],
+  "extensions": [
+    "cameraAi"
+  ],
+  "meta": {
+    "semver": "3.0.0",
+    "vm": "14.1.0",
+    "agent": "camera-ai demo"
+  }
+}

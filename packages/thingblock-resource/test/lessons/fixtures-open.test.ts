@@ -1,7 +1,8 @@
 /**
  * A teacher opens a lesson's reference solutions in the editor, so every `solutions/*.tb` must be a
  * project the editor accepts: it passes the same scratch-parser validation the editor runs, every
- * target has a costume, and it names its board and the packs its blocks need, like an editor save.
+ * target has a costume, and it names its board (none for Camera AI) and the packs its blocks need, like an
+ * editor save.
  */
 import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -50,8 +51,14 @@ describe.each(fixtures.map((f) => [f.slice(TUTORIALS.length + 1), f]))('%s', (_n
     if (!entry) throw new Error(`${file} has no project.json`)
     const project = JSON.parse(await entry.async('string')) as Project
     for (const target of project.targets) expect(target.costumes.length).toBeGreaterThan(0)
-    expect(project.board?.device).toBe('thingbot')
     const opcodes = project.targets.flatMap((t) => Object.values(t.blocks).map((b) => b.opcode))
+    // Camera AI runs without a board, so its solutions save none and name the extension instead.
+    if (opcodes.some((o) => o.startsWith('cameraAi_'))) {
+      expect(project.board).toBeUndefined()
+      expect(project.extensions).toEqual(['cameraAi'])
+    } else {
+      expect(project.board?.device).toBe('thingbot')
+    }
     if (opcodes.some((o) => o.startsWith('oled_'))) {
       expect(project.extensions).toContain('oled')
       expect(project.board?.peripherals).toContain('oled')

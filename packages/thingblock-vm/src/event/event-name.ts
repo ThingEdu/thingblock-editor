@@ -48,6 +48,21 @@ export const PeripheralEvent = {
     PERIPHERAL_SCAN_TIMEOUT: 'PERIPHERAL_SCAN_TIMEOUT'
 };
 
+/**
+ * Exchanged between the Camera AI extension and the GUI playground panel. The GUI owns the webcam
+ * and the vision models; the extension owns the playground objects and the score.
+ */
+export const CameraAiEvent = {
+    // (command: {on?: boolean, mirror?: boolean, device?: string, pose?: boolean}) pose: run the body tracker too
+    CAMERA_COMMAND: 'CAMERA_AI_CAMERA_COMMAND',
+    CAMERA_STATUS: 'CAMERA_AI_CAMERA_STATUS', // (status: {on: boolean, ready: boolean, error?: string})
+    CAMERA_DEVICES: 'CAMERA_AI_CAMERA_DEVICES', // (devices: string[]) the cameras' names, as the GUI found them
+    VISION_RESULTS: 'CAMERA_AI_VISION_RESULTS', // (results: VisionResults)
+    PLAYGROUND_UPDATE: 'CAMERA_AI_PLAYGROUND_UPDATE', // (state: PlaygroundState)
+    PLAYGROUND_COMMAND: 'CAMERA_AI_PLAYGROUND_COMMAND', // (command: {type: 'reset'})
+    MOTION: 'CAMERA_AI_MOTION' // (motion: {kind: 'flap' | 'nod' | 'tilt', dir?: 'left' | 'right', t: number})
+};
+
 /** Emitted by the board link about the connected board. */
 export const LinkEvent = {
     DEVICE_CONNECTED: 'DEVICE_CONNECTED',

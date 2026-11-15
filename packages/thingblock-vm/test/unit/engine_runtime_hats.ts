@@ -122,3 +122,47 @@ test('edge-activated hats', t => {
     t.equal(rt.getIsEdgeActivatedHat('event_unknown'), false);
     t.end();
 });
+
+test('a hat without fields matches the fields of its input shadows; a reporter there never matches', t => {
+    const touchHat = (id: string, nameBlock: string) => ({
+        id,
+        opcode: 'cameraAi_whenTouching',
+        fields: {},
+        inputs: {NAME: {name: 'NAME', block: nameBlock, shadow: `${id}-name`}},
+        next: null,
+        parent: null,
+        shadow: false,
+        topLevel: true
+    });
+    const textShadow = (id: string, parent: string, value: string) => ({
+        id,
+        opcode: 'text',
+        fields: {TEXT: {name: 'TEXT', value}},
+        inputs: {},
+        next: null,
+        parent,
+        shadow: true,
+        topLevel: false
+    });
+    const reporter = (id: string, parent: string) => ({
+        id,
+        opcode: 'data_variable',
+        fields: {VARIABLE: {name: 'VARIABLE', value: 'ten', id: 'v1'}},
+        inputs: {},
+        next: null,
+        parent,
+        shadow: false,
+        topLevel: false
+    });
+    const {rt} = setup(t, newTarget(
+        touchHat('bong', 'bong-name'), textShadow('bong-name', 'bong', 'bong'),
+        touchHat('de', 'de-name'), textShadow('de-name', 'de', 'de'),
+        touchHat('var', 'var-rep'), textShadow('var-name', 'var', 'ball'), reporter('var-rep', 'var')
+    ));
+    rt._hats.cameraAi_whenTouching = {edgeActivated: false, restartExistingThreads: false};
+
+    const threads = rt.startHats('cameraAi_whenTouching', {TEXT: 'bong'});
+    t.strictSame(threads.map(thread => thread.topBlock), ['bong'], 'matched on the shadow text, case apart');
+    t.strictSame(rt.startHats('cameraAi_whenTouching', {TEXT: 'ten'}), [], 'a variable in the slot is not a name');
+    t.end();
+});
