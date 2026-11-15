@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-blocks",
-  "version": "14.1.0",
+  "version": "0.8.0-preview-20261115",
   "description": "Scratch Blocks is a library for building creative computing interfaces.",
   "author": "Massachusetts Institute of Technology",
   "license": "Apache-2.0",

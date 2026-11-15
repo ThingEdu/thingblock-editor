@@ -1,6 +1,6 @@
 {
   "name": "thingblock-editor",
-  "version": "14.1.0",
+  "version": "0.8.0-preview-20261115",
   "private": "true",
   "description": "ThingBlock editor mono-repository",
   "keywords": [],
