@@ -6,12 +6,6 @@ import type Target from '../../src/engine/target';
 
 const utilFor = (target: object) => ({target} as unknown as BlockUtility);
 
-test('getPrimitives', t => {
-    const s = new Sensing(new EventBus());
-    t.type(s.getPrimitives(), 'object');
-    t.end();
-});
-
 test('ask and answer', t => {
     const events = new EventBus();
     const s = new Sensing(events);

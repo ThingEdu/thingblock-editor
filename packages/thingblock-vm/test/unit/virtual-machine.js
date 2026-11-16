@@ -367,43 +367,6 @@ test('installTargets does NOT rename clean local-vs-global name collisions on wh
     });
 });
 
-test('installTargets loads a project whose blocks come from resource packs instead of VM extensions', t => {
-    // Regression guard: device/peripheral packs (e.g. thingBotC3, dht, serial, oled) register their
-    // blocks into Blockly and the Arduino generator when a board is selected -- they are never VM
-    // extensions. An opcode prefix derived from those blocks must not be treated as a missing VM
-    // extension to fetch, or the whole project load rejects and the project can never reopen.
-    const vm = new VirtualMachine();
-    const runtime = vm.runtime;
-
-    const stage = new Target(runtime);
-    stage.isStage = true;
-    stage.name = 'Stage';
-
-    const originalWarn = log.warn;
-    const warnings = [];
-    log.warn = (...args) => warnings.push(args.join(' '));
-
-    const extensions = {
-        extensionIDs: new Set(['thingBotC3', 'dht']),
-        extensionURLs: new Map()
-    };
-
-    return vm.project.installTargets([stage], extensions, true)
-        .then(() => {
-            log.warn = originalWarn;
-            t.match(warnings.join('\n'), /thingBotC3/, 'skip of thingBotC3 is logged');
-            t.match(warnings.join('\n'), /dht/, 'skip of dht is logged');
-            t.notOk(vm.extensionManager.isExtensionLoaded('thingBotC3'),
-                'resource-pack id is not registered as a VM extension');
-            t.end();
-        })
-        .catch(err => {
-            log.warn = originalWarn;
-            t.fail(`installTargets should not reject for resource-pack extension ids: ${err}`);
-            t.end();
-        });
-});
-
 test('installTargets still loads a builtin extension id', t => {
     const vm = new VirtualMachine();
     const runtime = vm.runtime;

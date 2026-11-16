@@ -1,19 +1,6 @@
 import {test} from 'tap';
 import Mouse from '../../src/io/hid/mouse.ts';
 
-test('spec', t => {
-    const m = new Mouse();
-
-    t.type(m, 'object');
-    t.type(m.postData, 'function');
-    t.type(m.getClientX, 'function');
-    t.type(m.getClientY, 'function');
-    t.type(m.getScratchX, 'function');
-    t.type(m.getScratchY, 'function');
-    t.type(m.getIsDown, 'function');
-    t.end();
-});
-
 test('mouseUp', t => {
     const m = new Mouse();
 

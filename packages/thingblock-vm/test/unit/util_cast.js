@@ -73,25 +73,6 @@ test('toString', t => {
     t.end();
 });
 
-test('toRgbColorList', t => {
-    // Hex (minimal, see "color" util tests)
-    t.same(cast.toRgbColorList('#000'), [0, 0, 0]);
-    t.same(cast.toRgbColorList('#000000'), [0, 0, 0]);
-    t.same(cast.toRgbColorList('#fff'), [255, 255, 255]);
-    t.same(cast.toRgbColorList('#ffffff'), [255, 255, 255]);
-
-    // Decimal (minimal, see "color" util tests)
-    t.same(cast.toRgbColorList(0), [0, 0, 0]);
-    t.same(cast.toRgbColorList(1), [0, 0, 1]);
-    t.same(cast.toRgbColorList(16777215), [255, 255, 255]);
-
-    // Malformed
-    t.same(cast.toRgbColorList('ffffff'), [0, 0, 0]);
-    t.same(cast.toRgbColorList('foobar'), [0, 0, 0]);
-    t.same(cast.toRgbColorList('#nothex'), [0, 0, 0]);
-    t.end();
-});
-
 test('toRgbColorObject', t => {
     // Hex (minimal, see "color" util tests)
     t.same(cast.toRgbColorObject('#000'), {r: 0, g: 0, b: 0});

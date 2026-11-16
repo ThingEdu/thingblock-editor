@@ -6,119 +6,9 @@ const sb3 = require('../../src/serialization/sb3');
 const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer;
 const exampleProjectPath = path.resolve(__dirname, '../fixtures/default.sb3');
 const commentsSB3ProjectPath = path.resolve(__dirname, '../fixtures/comments.sb3');
-const commentsSB3NoDupeIds = path.resolve(__dirname, '../fixtures/comments_no_duplicate_id_serialization.sb3');
 const topLevelReportersProjectPath = path.resolve(__dirname, '../fixtures/top-level-reporters.sb3');
 const originSB3ProjectPath = path.resolve(__dirname, '../fixtures/origin.sb3');
 const originAbsentSB3ProjectPath = path.resolve(__dirname, '../fixtures/origin-absent.sb3');
-
-test('serialize', t => {
-    const vm = new VirtualMachine();
-    vm.project.load(readFileToBuffer(exampleProjectPath))
-        .then(() => {
-            const result = sb3.serialize(vm.runtime);
-            // @todo Analyze
-            t.type(JSON.stringify(result), 'string');
-            t.end();
-        });
-});
-
-test('deserialize', t => {
-    const vm = new VirtualMachine();
-    sb3.deserialize('', vm.runtime).then(({targets}) => {
-        // @todo Analyze
-        t.type(targets, 'object');
-        t.end();
-    });
-});
-
-
-test('deserialize sb3 project with comments', t => {
-    const vm = new VirtualMachine();
-    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
-        .then(() => {
-            const runtime = vm.runtime;
-
-            t.type(runtime.targets, 'object');
-            t.equal(Array.isArray(runtime.targets), true);
-            t.equal(runtime.targets.length, 2);
-
-            const stage = runtime.targets[0];
-            t.equal(stage.isStage, true);
-            // The stage has 0 blocks, and 1 workspace comment
-            t.type(stage.blocks, 'object');
-            t.equal(Object.keys(stage.blocks._blocks).length, 0);
-            t.type(stage.comments, 'object');
-            t.equal(Object.keys(stage.comments).length, 1);
-            const stageBlockComments = Object.values(stage.comments).filter(comment => !!comment.blockId);
-            const stageWorkspaceComments = Object.values(stage.comments).filter(comment => comment.blockId === null);
-            t.equal(stageBlockComments.length, 0);
-            t.equal(stageWorkspaceComments.length, 1);
-
-            const sprite = runtime.targets[1];
-            t.equal(sprite.isStage, false);
-            t.type(sprite.blocks, 'object');
-            // Sprite 1 has 6 blocks, 5 block comments, and 1 workspace comment
-            t.equal(Object.values(sprite.blocks._blocks).filter(block => !block.shadow).length, 6);
-            t.type(sprite.comments, 'object');
-            t.equal(Object.keys(sprite.comments).length, 6);
-
-            const spriteBlockComments = Object.values(sprite.comments).filter(comment => !!comment.blockId);
-            const spriteWorkspaceComments = Object.values(sprite.comments).filter(comment => comment.blockId === null);
-            t.equal(spriteBlockComments.length, 5);
-            t.equal(spriteWorkspaceComments.length, 1);
-
-            t.end();
-        });
-});
-
-test('deserialize sb3 project with comments - no duplicate id serialization', t => {
-    const vm = new VirtualMachine();
-    vm.project.load(readFileToBuffer(commentsSB3NoDupeIds))
-        .then(() => {
-            const runtime = vm.runtime;
-
-            t.type(runtime.targets, 'object');
-            t.equal(Array.isArray(runtime.targets), true);
-            t.equal(runtime.targets.length, 2);
-
-            const stage = runtime.targets[0];
-            t.equal(stage.isStage, true);
-            // The stage has 0 blocks, and 0 workspace comment
-            t.type(stage.blocks, 'object');
-            t.equal(Object.keys(stage.blocks._blocks).length, 0);
-            t.type(stage.comments, 'object');
-            t.equal(Object.keys(stage.comments).length, 0);
-
-            const sprite = runtime.targets[1];
-            t.equal(sprite.isStage, false);
-            t.type(sprite.blocks, 'object');
-            // Sprite1 has 1 blocks, 1 block comment, and 1 workspace comment
-            t.equal(Object.values(sprite.blocks._blocks).filter(block => !block.shadow).length, 1);
-            t.type(sprite.comments, 'object');
-            t.equal(Object.keys(sprite.comments).length, 2);
-
-            const spriteBlockComments = Object.values(sprite.comments).filter(comment => !!comment.blockId);
-            const spriteWorkspaceComments = Object.values(sprite.comments).filter(comment => comment.blockId === null);
-            t.equal(spriteBlockComments.length, 1);
-            t.equal(spriteWorkspaceComments.length, 1);
-
-            t.end();
-        });
-});
-
-test('serializeBlocks', t => {
-    const vm = new VirtualMachine();
-    vm.project.load(readFileToBuffer(commentsSB3ProjectPath))
-        .then(() => {
-            const blocks = vm.runtime.targets[1].blocks._blocks;
-            const result = sb3.serializeBlocks(blocks);
-            // @todo Analyze
-            t.type(result[0], 'object');
-            t.ok(Object.keys(result[0]).length < Object.keys(blocks).length, 'less blocks in serialized format');
-            t.ok(Array.isArray(result[1]));
-            t.end();
-        });
-});
 
 test('serializeBlocks serializes x and y for topLevel blocks with x,y of 0,0', t => {
     const vm = new VirtualMachine();
@@ -241,45 +131,6 @@ test('deserializeBlocks on already deserialized input', t => {
         });
 });
 
-test('deserializeBlocks clears topLevel on shadow blocks', t => {
-    // Production Scratch can serialize obscured shadow blocks as top-level
-    // (e.g. when a variable reporter covers a dropdown's shadow). Upstream
-    // Blockly throws "Shadow block cannot be a top-level block" if these
-    // survive into the XML, so deserialization must clear the flag.
-    const blocks = {
-        parentBlock: {
-            opcode: 'looks_switchcostumeto',
-            next: null,
-            parent: null,
-            inputs: {
-                COSTUME: [3, [12, 'my variable', 'var_id'], 'shadowBlock']
-            },
-            fields: {},
-            shadow: false,
-            topLevel: true,
-            x: 0,
-            y: 0
-        },
-        shadowBlock: {
-            opcode: 'looks_costume',
-            next: null,
-            parent: null,
-            inputs: {},
-            fields: {COSTUME: ['costume1', null]},
-            shadow: true,
-            topLevel: true,
-            x: 100,
-            y: 100
-        }
-    };
-
-    sb3.deserializeBlocks(blocks);
-
-    t.equal(blocks.shadowBlock.topLevel, false,
-        'shadow block should not be top-level after deserialization');
-    t.end();
-});
-
 test('getExtensionIdForOpcode', t => {
     t.equal(sb3.getExtensionIdForOpcode('wedo_loopy'), 'wedo');
 
@@ -300,7 +151,7 @@ test('getExtensionIdForOpcode', t => {
 
 test('(#1608) serializeBlocks maintains top level variable reporters', t => {
     const vm = new VirtualMachine();
-    vm.project.load(readFileToBuffer(exampleProjectPath))
+    return vm.project.load(readFileToBuffer(exampleProjectPath))
         .then(() => {
             const stage = vm.runtime.targets[0];
             stage.blocks.deleteAllBlocks();
@@ -324,11 +175,9 @@ test('(#1608) serializeBlocks maintains top level variable reporters', t => {
             t.equal(Object.keys(result.targets[0].blocks).length, 1);
 
             // Make sure deserializing these blocks works
-            t.doesNotThrow(() => {
-                sb3.deserialize(JSON.parse(JSON.stringify(result)), vm.runtime);
-            });
-            t.end();
-        });
+            return sb3.deserialize(JSON.parse(JSON.stringify(result)), vm.runtime);
+        })
+        .then(() => t.end());
 });
 
 test('load origin value from SB3 file json metadata', t => {

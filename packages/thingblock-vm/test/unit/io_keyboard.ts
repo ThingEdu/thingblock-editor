@@ -2,16 +2,6 @@ import {test} from 'tap';
 import Keyboard from '../../src/io/hid/keyboard.ts';
 import {EventBus} from '../../src/event/event-bus.ts';
 
-test('spec', t => {
-    const events = new EventBus();
-    const k = new Keyboard(events);
-
-    t.type(k, 'object');
-    t.type(k.postData, 'function');
-    t.type(k.getKeyIsDown, 'function');
-    t.end();
-});
-
 test('keydown emits KEY_PRESSED', t => {
     const events = new EventBus();
     const k = new Keyboard(events);

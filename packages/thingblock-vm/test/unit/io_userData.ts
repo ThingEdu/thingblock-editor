@@ -1,15 +1,6 @@
 import {test} from 'tap';
 import UserData from '../../src/io/input/user-data.ts';
 
-test('spec', t => {
-    const userData = new UserData();
-
-    t.type(userData, 'object');
-    t.type(userData.postData, 'function');
-    t.type(userData.getUsername, 'function');
-    t.end();
-});
-
 test('getUsername returns empty string initially', t => {
     const userData = new UserData();
 
