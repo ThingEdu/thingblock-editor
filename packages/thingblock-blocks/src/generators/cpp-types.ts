@@ -13,8 +13,7 @@ interface ScratchVariable {
 export type VariableCppType = 'int' | 'float' | 'String'
 
 /**
- * The C++ type to declare a variable with, from its Scratch data type. Shared by the Arduino generator,
- * which declares it, and the simulator generator, which has to compute with the same type.
+ * The C++ type to declare a variable with, from its Scratch data type.
  * @param block A block referencing the variable (for its workspace).
  * @param variableId The variable's id (from a `field_variable`).
  * @returns 'int' | 'float' | 'String'.

@@ -20,8 +20,7 @@
     "packages/thingblock-storage",
     "packages/thingblock-vm",
     "packages/thingblock-gui",
-    "packages/thingblock-resource",
-    "packages/thingblock-sim"
+    "packages/thingblock-resource"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production npm run --workspaces build",

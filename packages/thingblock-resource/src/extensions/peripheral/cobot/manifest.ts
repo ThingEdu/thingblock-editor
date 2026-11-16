@@ -18,7 +18,6 @@ const manifest: PeripheralManifest = {
   icon: './icon.svg',
   blocks: './blocks.js',
   generator: './generator.js',
-  sim: './sim.js',
   toolbox: './toolbox.js',
 }
 

@@ -18,7 +18,6 @@ const manifest: PeripheralManifest = {
   icon: './icon.svg',
   blocks: './blocks.js',
   generator: './generator.js',
-  sim: './sim.js',
   toolbox: './toolbox.js',
   libs: [{ path: 'libs/Adafruit_TCS34725' }, { path: 'libs/Adafruit_BusIO' }],
 }

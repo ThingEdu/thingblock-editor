@@ -60,7 +60,6 @@ type PeripheralPackManifest = {
     toolbox?: string
     blocks?: string
     generator?: string
-    sim?: string
     libs?: Array<{path: string}>
 };
 
@@ -68,13 +67,12 @@ type Pack<M> = {manifest: M, base: string};
 
 type Board = {device: string, peripherals?: string[]};
 
-type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown, simGenerator?: unknown};
+type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown};
 
 type PackModule = {
     default?: unknown
     registerBlocks?: (scratchBlocks: ScratchBlocks) => void
     registerGenerators?: (generator: unknown, order: unknown) => void
-    registerSimGenerators?: (generator: unknown, order: unknown) => void
 };
 
 type ModuleImporter = (url: string) => Promise<PackModule>;
@@ -237,16 +235,6 @@ export default class DeviceManager {
     }
 
     /**
-     * The HTTP base the bundled lessons are served from: `index.json` lists them and each lesson's
-     * files sit under `<ma>/`. Null when the active link backend serves no packs.
-     * @returns the lessons base, e.g. `http://127.0.0.1:3030/resources/tutorials`.
-     */
-    getTutorialsOrigin (): string | null {
-        const origin = this.linkResourceOrigin();
-        return origin && `${origin}/tutorials`;
-    }
-
-    /**
      * The firmware images the selected device's pack ships, for the GUI's restore menu. Empty when
      * the device declares none, which is how a pack opts out of the feature.
      * @param deviceId - the device to list images for.
@@ -300,20 +288,6 @@ export default class DeviceManager {
      */
     registerPeripheralManifest (manifest: PeripheralPackManifest, base: string): void {
         this._resourcePeripheralPacks.set(manifest.id, {manifest, base});
-    }
-
-    /**
-     * Whether the simulator can run programs for a device. The simulator models the board through its
-     * blocks' simulator codegen, so a pack device needs its own pack (the first of its `extensions`) to
-     * ship a `sim` module; a built-in board has only core blocks, which the simulator runs.
-     * @param deviceId - the device to ask about.
-     * @returns false for a pack device whose own pack has no simulator codegen.
-     */
-    hasSimulator (deviceId: string): boolean {
-        const pack = this._resourceDevicePacks.get(deviceId);
-        if (!pack) return true;
-        const own = pack.manifest.extensions?.[0];
-        return Boolean(own && this._resourcePeripheralPacks.get(own)?.manifest.sim);
     }
 
     /**
@@ -671,14 +645,6 @@ export default class DeviceManager {
                         throw new Error(`peripheral "${id}" generator module has no registerGenerators export`);
                     }
                     registerGenerators(this._scratchBlocks.arduinoGenerator, this._scratchBlocks.ArduinoOrder);
-                }
-                // The simulator's codegen mirrors the Arduino codegen; a pack without it still
-                // uploads, and the simulator names its blocks as not simulated yet.
-                if (manifest.sim && this._scratchBlocks.simGenerator) {
-                    const {registerSimGenerators} = await this._importPackModule(
-                        `${base}/${manifest.sim.replace(/^\.\//, '')}`
-                    );
-                    registerSimGenerators(this._scratchBlocks.simGenerator, this._scratchBlocks.ArduinoOrder);
                 }
             }
             this.peripheralRegistry.register({id: manifest.id, toolbox, libs, base});

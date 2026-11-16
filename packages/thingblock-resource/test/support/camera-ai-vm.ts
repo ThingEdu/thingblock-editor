@@ -8,11 +8,6 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import {
-  handsOnStage,
-  headOnStage,
-  type CameraSnapshot as GradedSnapshot,
-} from '../../../thingblock-sim/src/checker/camera'
 
 const require = createRequire(import.meta.url)
 const VM_BUNDLE = join(__dirname, '../../../thingblock-vm/dist/node/thingblock-vm.js')
@@ -22,9 +17,6 @@ const CAMERA_COMMAND = 'CAMERA_AI_CAMERA_COMMAND'
 const CAMERA_STATUS = 'CAMERA_AI_CAMERA_STATUS'
 const VISION_RESULTS = 'CAMERA_AI_VISION_RESULTS'
 const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE'
-const MOTION = 'CAMERA_AI_MOTION'
-/** A flap or a nod counts for a lesson rule this long, as in the editor's lesson panel. */
-const MOTION_MS = 2000
 const STAGE_WIDTH = 480
 const STAGE_HEIGHT = 360
 const FRAME_MS = 33
@@ -150,8 +142,6 @@ const handAt = ({ x, y, gesture }: HandPose) => {
 export class CameraAiRun {
   readonly vm: VirtualMachine
   snapshot: CameraAiSnapshot = { cameraOn: false, hands: [], head: null, playground: EMPTY }
-  /** When each movement ('flap', 'nod', 'tilt') the extension recognised last happened, in ms. */
-  readonly motions: Record<string, number> = {}
   /** Every playground state the VM sent, oldest first. */
   readonly history: PlaygroundState[] = []
   private timer: ReturnType<typeof setInterval> | null = null
@@ -178,9 +168,6 @@ export class CameraAiRun {
       if (typeof command.device === 'string') return
       run.snapshot = { ...run.snapshot, cameraOn: Boolean(command.on) }
       events.emit(CAMERA_STATUS, { on: Boolean(command.on), ready: Boolean(command.on) })
-    })
-    events.on(MOTION, (motion: { kind: string }) => {
-      run.motions[motion.kind] = Date.now()
     })
     events.on(PLAYGROUND_UPDATE, (state: PlaygroundState) => {
       run.snapshot = { ...run.snapshot, playground: state }
@@ -233,24 +220,6 @@ export class CameraAiRun {
     return done(this.snapshot)
   }
 
-  /**
-   * What a lesson's Camera AI rules are graded on, built as the editor's lesson panel builds it.
-   * @returns The snapshot of the camera, the hands on the stage and the playground.
-   */
-  graded(): GradedSnapshot {
-    const { playground, cameraOn } = this.snapshot
-    const now = Date.now()
-    return {
-      cameraOn,
-      hands: handsOnStage(this.vision),
-      head: headOnStage(this.vision),
-      motions: Object.keys(this.motions).filter((kind) => now - this.motions[kind] <= MOTION_MS),
-      objects: playground.objects,
-      scores: playground.scores,
-      say: playground.say,
-    }
-  }
-
   stop(): void {
     if (this.timer) clearInterval(this.timer)
     this.vm.stopAll()
@@ -269,27 +238,4 @@ export const reachFor =
   ({ playground }) => {
     const o = playground.objects.find((obj) => obj.name === name)
     return o ? { x: o.x, y: o.y, gesture } : { x: 0, y: 0, gesture }
-  }
-
-/** How long one flap of the arms takes, and how often the flapping player flaps. */
-const FLAP_MS = 300
-
-/**
- * A player who flaps both arms every `every` ms: the hands go from high up to below the middle in 0.3 s,
- * then rest low. The head stays in the middle.
- * @param every Time between the starts of two flaps, in ms.
- * @returns The player.
- */
-export const flapper =
-  (every = 900): Player =>
-  () => {
-    const p = (Date.now() % every) / FLAP_MS
-    const y = p < 1 ? 140 - 220 * p : -80
-    return {
-      hands: [
-        { x: -110, y, gesture: 'open' },
-        { x: 110, y, gesture: 'open' },
-      ],
-      head: { x: 0, y: 60 },
-    }
   }

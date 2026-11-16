@@ -89,21 +89,12 @@ npx tsx scripts/check-examples.mjs            # generate each sketch with the re
 ```
 
 `scripts/examples/lessons-k12.mjs` writes the K12 and FanRoc programs and `cobot.mjs` the CoBot ones, with
-the block helpers in `dsl.mjs`; `sim-lessons.json` holds the reference solutions of the thingbot-sim lessons; `camera-ai.mjs`
-holds the Camera AI games. `check-examples` (which skips the boardless Camera AI games)
+the block helpers in `dsl.mjs`; `camera-ai.mjs` holds the Camera AI games. `check-examples` (which skips the boardless Camera AI games)
 needs `arduino-cli` (`ARDUINO_CLI`) and the ESP32 core (`ARDUINO_DIRECTORIES_DATA`), so it is run by hand;
 `test/examples.test.ts` covers the rest in `npm test` (every block registered, field values valid, inputs
 type-compatible, sketch generated). `test/examples-camera-ai.test.ts` loads each Camera AI game in the
 built VM (`thingblock-vm/dist/node`, so `npm run build:libs` first) and plays it with a synthetic hand
 until it scores.
-
-## Tutorials
-
-Lessons are Markdown under `src/tutorials/<id>/lesson.<lang>.md`, with `solutions/pass*.tb` and
-`fail-<n>.tb` fixtures beside them; `src/tutorials/README.md` documents the format. `scripts/build-lessons.mjs` (part of
-`npm run build`) compiles them to `dist/thingblock-resource/tutorials/` plus an `index.json`, and fails on a bad
-rule, a missing image or an unknown tour anchor. `test/lessons/lessons.test.ts` grades every lesson's fixtures
-with the simulator's checker.
 
 ## Adding a pack
 

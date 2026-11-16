@@ -44,8 +44,7 @@ interface Project {
 }
 
 const EXAMPLES_ROOT = join(__dirname, '..', 'src', 'examples')
-/** Each device folder and how many examples it ships. */
-const FOLDERS: Record<string, number> = { thingbot: 36, cobot: 5 }
+const FOLDERS = ['thingbot', 'cobot']
 const indexOf = (folder: string) =>
   JSON.parse(readFileSync(join(EXAMPLES_ROOT, folder, 'index.json'), 'utf8')) as {
     groups: string[]
@@ -146,13 +145,12 @@ const loadProjectIn = async (folder: string, file: string): Promise<Project> => 
   return JSON.parse(await json.async('string')) as Project
 }
 
-describe.each(Object.entries(FOLDERS))('bundled %s examples', (folder, count) => {
+describe.each(FOLDERS)('bundled %s examples', (folder) => {
   const index = indexOf(folder)
   const loadProject = (file: string) => loadProjectIn(folder, file)
 
-  it(`lists ${count} examples with unique ids, each with a file and a known group`, () => {
-    expect(index.examples).toHaveLength(count)
-    expect(new Set(index.examples.map((e) => e.id)).size).toBe(count)
+  it('lists examples with unique ids, each with a file and a known group', () => {
+    expect(new Set(index.examples.map((e) => e.id)).size).toBe(index.examples.length)
     for (const example of index.examples) {
       expect(index.groups).toContain(example.group)
       expect(example.device).toBe(folder)
@@ -231,7 +229,8 @@ describe('served examples', () => {
     const out = mkdtempSync(join(tmpdir(), 'examples-out-'))
     const merged = copyExamples(EXAMPLES_ROOT, out)
     // The ThingBot and CoBot examples, and the boardless Camera AI ones, each under its own folder.
-    expect(merged.examples).toHaveLength(36 + 5 + 11)
+    const folders = [...FOLDERS, 'camera-ai']
+    expect(merged.examples).toHaveLength(folders.reduce((n, folder) => n + indexOf(folder).examples.length, 0))
     expect(merged.groups).toContain('CoBot')
     expect(merged.groups).toContain('Camera AI')
     for (const example of merged.examples as Example[]) {

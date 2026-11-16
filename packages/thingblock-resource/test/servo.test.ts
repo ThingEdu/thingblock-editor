@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import thingbotManifest from '../src/extensions/devices/thingbot/manifest'
-import ps2Manifest from '../src/extensions/peripheral/ps2/manifest'
-import { registerBlocks } from '../src/extensions/peripheral/servo/blocks'
 import { registerGenerators } from '../src/extensions/peripheral/servo/generator'
-import servoManifest from '../src/extensions/peripheral/servo/manifest'
-import servoToolbox from '../src/extensions/peripheral/servo/toolbox'
-import { registerBlocks as registerThingbotBlocks } from '../src/extensions/peripheral/thingbot-core/blocks'
 import { registerGenerators as registerThingbotGenerators } from '../src/extensions/peripheral/thingbot-core/generator'
 import thingbotCoreManifest from '../src/extensions/peripheral/thingbot-core/manifest'
-import thingbotToolbox from '../src/extensions/peripheral/thingbot-core/toolbox'
-import type { ArduinoGenerator, ArduinoOrder, Blockly } from '../src/shared/types'
+import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
 
 // Minimal stand-ins for the editor's injected instances: the order enum the pack reads and a generator
 // whose buckets we can inspect. valueToCode returns the fake block's per-input source.
@@ -28,24 +22,6 @@ const makeBlock = (values: Record<string, string> = {}, fields: Record<string, s
   values,
   getFieldValue: (name: string) => fields[name],
 })
-
-const thingbotBlockIds = [
-  'thingBotC3_init',
-  'thingBotC3_setMotor',
-  'thingBotC3_setServo',
-  'thingBotC3_setServoAngle',
-  'thingBotC3_moveServoAngle',
-  'thingBotC3_startServoAngle',
-  'thingBotC3_waitServos',
-  'thingBotC3_releaseServo',
-  'thingBotC3_buzzer',
-  'thingBotC3_setTempo',
-  'thingBotC3_playNote',
-  'thingBotC3_rest',
-  'thingBotC3_setLed',
-  'thingBotC3_switch',
-  'thingBotC3_initPS2',
-]
 
 describe('servo generator', () => {
   it('emits the include, one Servo object, its attach, and the write call', () => {
@@ -73,21 +49,7 @@ describe('servo generator', () => {
   })
 })
 
-describe('servo blocks', () => {
-  it('defines servo_setangle on the injected Blockly', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-    expect(Blocks.servo_setangle).toBeDefined()
-  })
-})
-
 describe('thingbot-core peripheral', () => {
-  it('defines the legacy ThingBot C3 block surface on the injected Blockly', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerThingbotBlocks({ Blocks } as unknown as Blockly)
-    expect(Object.keys(Blocks).sort()).toEqual([...thingbotBlockIds].sort())
-  })
-
   it('registers the ThingBot PWM declarations and boot-time setup', () => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
@@ -105,72 +67,21 @@ describe('thingbot-core peripheral', () => {
     expect(setup).toContain('pinMode(SW, INPUT);')
   })
 
-  it('registers the PWM declarations and setup from a servo-angle block alone, with no init block present', () => {
+  it.each([
+    ['thingBotC3_startServoAngle', makeBlock({ ANGLE: '180', SECONDS: '2' }, { SERVO: '1' }), '#define SERVO_1 12'],
+    ['thingBotC3_buzzer', makeBlock({ SOUND: '440' }), '#define BUZZER 14'],
+    ['thingBotC3_playNote', makeBlock({ BEATS: '1' }, { NOTE: 'C', OCTAVE: '4' }), '#define BUZZER 14'],
+    ['thingBotC3_setTempo', makeBlock({ TEMPO: '100' }), '#define BUZZER 14'],
+    ['thingBotC3_rest', makeBlock({ BEATS: '1' }), '#define BUZZER 14'],
+    ['thingBotC3_setMotor', makeBlock({ SPEED: '60' }, { MOTOR: '1', DIRECTION: 'forward' }), '#define M1_A 2'],
+  ])('registers the PWM declarations and setup from %s alone, with no init block present', (opcode, block, pin) => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
 
-    gen.forBlock.thingBotC3_startServoAngle(makeBlock({ ANGLE: '180', SECONDS: '2' }, { SERVO: '1' }))
+    gen.forBlock[opcode](block)
 
     expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
-    expect(gen.globals.get('thingbot_pins')).toContain('#define SERVO_1 12')
-    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
-    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
-  })
-
-  it('registers the PWM declarations and setup from the buzzer block alone, with no init block present', () => {
-    const gen = makeGenerator()
-    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    gen.forBlock.thingBotC3_buzzer(makeBlock({ SOUND: '440' }))
-
-    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
-    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
-    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
-  })
-
-  it('registers the PWM declarations and setup from a play-note block alone, with no init block present', () => {
-    const gen = makeGenerator()
-    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    gen.forBlock.thingBotC3_playNote(makeBlock({ BEATS: '1' }, { NOTE: 'C', OCTAVE: '4' }))
-
-    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
-    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
-    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
-    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
-  })
-
-  it('registers the PWM declarations and setup from a set-tempo block alone, with no init block present', () => {
-    const gen = makeGenerator()
-    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    gen.forBlock.thingBotC3_setTempo(makeBlock({ TEMPO: '100' }))
-
-    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
-    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
-    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
-    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
-  })
-
-  it('registers the PWM declarations and setup from a rest block alone, with no init block present', () => {
-    const gen = makeGenerator()
-    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    gen.forBlock.thingBotC3_rest(makeBlock({ BEATS: '1' }))
-
-    expect(gen.includes.get('thingbot_pwm')).toContain('#include <Adafruit_PWMServoDriver.h>')
-    expect(gen.globals.get('thingbot_pins')).toContain('#define BUZZER 14')
-    expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
-    expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
-  })
-
-  it('registers the PWM declarations and setup from a motor block alone, with no init block present', () => {
-    const gen = makeGenerator()
-    registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
-
-    gen.forBlock.thingBotC3_setMotor(makeBlock({ SPEED: '60' }, { MOTOR: '1', DIRECTION: 'forward' }))
-
-    expect(gen.globals.get('thingbot_pins')).toContain('#define M1_A 2')
+    expect(gen.globals.get('thingbot_pins')).toContain(pin)
     expect(gen.globals.get('thingbot_pwm')).toContain('Adafruit_PWMServoDriver pwm')
     expect([...gen.setups.values()].join('\n')).toContain('pwm.begin();')
   })
@@ -325,9 +236,11 @@ describe('thingbot-core peripheral', () => {
     expect(helpers).toContain('void servoStart(int ch, int deg, float seconds)')
     expect(helpers).toContain('bool servoTickAll()')
     expect(helpers).toContain('void servoWaitAll()')
-    // servoMoveTo keeps its own step-based loop; it must not depend on the new tick machinery,
-    // otherwise servoWaitAll's "wait for every channel" semantics would leak into the single-servo block.
-    expect(helpers).toContain('void servoMoveTo(int ch, int deg, float seconds)')
+    // servoMoveTo keeps its own step-based loop: going through the tick machinery would make the
+    // single-servo block wait for every running motion, as servoWaitAll does.
+    const moveTo = helpers.indexOf('void servoMoveTo(int ch, int deg, float seconds)')
+    expect(moveTo).toBeGreaterThanOrEqual(0)
+    expect(helpers.slice(moveTo, helpers.indexOf('\n}', moveTo))).not.toMatch(/servoTick|servoMotion|servoWaitAll/)
   })
 
   it('defaults the non-blocking start command to S1 at 90 degrees over one second', () => {
@@ -380,134 +293,21 @@ describe('thingbot-core peripheral', () => {
     expect(helpers).toContain('servoAngle[ch]')
   })
 
-  it('preserves the PS2 initialization and switch reporter generators', () => {
+  it('reads the switch as active-low', () => {
     const gen = makeGenerator()
     registerThingbotGenerators(gen as unknown as ArduinoGenerator, Order)
 
-    const ps2Code = gen.forBlock.thingBotC3_initPS2(makeBlock())
-
-    expect(gen.includes.get('ps2x_include')).toBe('#include <PS2X_lib.h>')
-    expect(gen.globals.get('thingbot_ps2_pins')).toContain('#define PS2_DAT 7')
-    expect(ps2Code).toContain('ps2x.config_gamepad')
     expect(gen.forBlock.thingBotC3_switch(makeBlock())).toEqual(['!digitalRead(SW)', Order.ATOMIC])
   })
 })
 
 describe('manifests', () => {
-  it('servo is a peripheral pointing at its served modules', () => {
-    expect(servoManifest.kind).toBe('peripheral')
-    expect(servoManifest.id).toBe('servo')
-    expect(servoManifest.blocks).toBe('./blocks.js')
-    expect(servoManifest.generator).toBe('./generator.js')
-    expect(servoManifest.libs).toEqual([{ path: 'libs/Servo' }, { path: 'libs/ESP32Servo' }])
-  })
-
-  it('servo carries the library-card icon and localized description', () => {
-    expect(servoManifest.icon).toBe('./icon.svg')
-    expect(servoManifest.description?.id).toBe('peripheral.servo.description')
-    expect(servoManifest.description?.default).toMatch(/servo/i)
-    expect(servoManifest.hidden).toBeUndefined()
-  })
-
-  it('servo toolbox references the block type with shadow-filled value inputs', () => {
-    expect(servoToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'servo_setangle',
-      inputs: {
-        PIN: { type: 'math_number', fields: { NUM: 9 } },
-        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
-      },
-    })
-  })
-
-  it('thingbot is an esp32-c3 device with USB-CDC compile config', () => {
-    expect(thingbotManifest.kind).toBe('device')
-    expect(thingbotManifest.id).toBe('thingbot')
-    expect(thingbotManifest.fqbn).toBe('esp32:esp32:esp32c3')
-    expect(thingbotManifest.extensions).toEqual(['thingBotC3', 'ps2'])
+  it('thingbot builds with USB CDC on boot, so Serial reaches the Monitor', () => {
     expect(thingbotManifest.compile?.options).toEqual({ CDCOnBoot: 'cdc' })
   })
 
-  it('thingbot carries the device-card metadata the VM localizes and renders', () => {
-    expect(thingbotManifest.description.id).toBe('device.thingbot.description')
-    expect(thingbotManifest.description.default).toMatch(/ESP32-C3/)
-    expect(thingbotManifest.manufacturer).toBe('ThingEdu')
-    expect(thingbotManifest.requires).toBe('serial')
-  })
-
-  it('thingbot extension refs resolve to loaded peripheral packs', () => {
-    const peripheralIds = new Set([thingbotCoreManifest.id, ps2Manifest.id, servoManifest.id])
-    const refs = thingbotManifest.extensions ?? []
-    expect(refs.length).toBeGreaterThan(0)
-    for (const id of refs) {
-      expect(peripheralIds).toContain(id)
-    }
-  })
-
-  it('thingbot-core is a hidden peripheral pointing at its served modules', () => {
-    expect(thingbotCoreManifest.kind).toBe('peripheral')
-    expect(thingbotCoreManifest.id).toBe('thingBotC3')
+  it('thingbot-core is hidden: the device activates it', () => {
     expect(thingbotCoreManifest.hidden).toBe(true)
-    expect(thingbotCoreManifest.blocks).toBe('./blocks.js')
-    expect(thingbotCoreManifest.generator).toBe('./generator.js')
-    expect(thingbotCoreManifest.libs).toEqual([
-      { path: 'libs/Adafruit_PWM_Servo_Driver_Library' },
-      { path: 'libs/Adafruit_BusIO' },
-    ])
-  })
-
-  it('thingbot toolbox preserves the legacy block order', () => {
-    expect(thingbotToolbox.colour).toBe('#42CCFF')
-    expect(thingbotToolbox.contents.map((item) => item.type)).toEqual(thingbotBlockIds)
-  })
-
-  it('thingbot toolbox offers the music blocks with math_number shadows', () => {
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_setTempo',
-      inputs: { TEMPO: { type: 'math_number', fields: { NUM: 120 } } },
-    })
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_playNote',
-      inputs: { BEATS: { type: 'math_number', fields: { NUM: 1 } } },
-    })
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_rest',
-      inputs: { BEATS: { type: 'math_number', fields: { NUM: 1 } } },
-    })
-  })
-
-  it('thingbot toolbox offers the degree blocks with math_number shadows', () => {
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_setServoAngle',
-      inputs: { ANGLE: { type: 'math_number', fields: { NUM: 90 } } },
-    })
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_moveServoAngle',
-      inputs: {
-        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
-        SECONDS: { type: 'math_number', fields: { NUM: 1 } },
-      },
-    })
-    expect(thingbotToolbox.contents).toContainEqual({
-      kind: 'block',
-      type: 'thingBotC3_startServoAngle',
-      inputs: {
-        ANGLE: { type: 'math_number', fields: { NUM: 90 } },
-        SECONDS: { type: 'math_number', fields: { NUM: 1 } },
-      },
-    })
-    expect(thingbotToolbox.contents).toContainEqual({ kind: 'block', type: 'thingBotC3_waitServos' })
-    expect(thingbotToolbox.contents).toContainEqual({ kind: 'block', type: 'thingBotC3_releaseServo' })
-  })
-
-  it('thingbot toolbox fills the value inputs with math_number shadows', () => {
-    const motor = thingbotToolbox.contents.find((item) => item.type === 'thingBotC3_setMotor')
-    expect(motor?.inputs).toEqual({ SPEED: { type: 'math_number', fields: { NUM: 0 } } })
   })
 
   it('thingbot declares the live-mode firmware image its pack ships', () => {

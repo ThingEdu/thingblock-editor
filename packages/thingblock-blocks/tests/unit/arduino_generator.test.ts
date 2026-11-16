@@ -5,7 +5,6 @@
 import * as Blockly from 'blockly/core'
 import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest'
 import { arduinoGenerator } from '../../src/generators/arduino'
-import { simGenerator } from '../../src/generators/sim'
 
 // The generator only reads opcodes, inputs, and fields by name, so these minimal
 // definitions stand in for the real Scratch blocks (which carry rendering and
@@ -435,12 +434,6 @@ describe('ArduinoGenerator', () => {
     expect(code).toContain('unsigned long scratchTimerStart = 0;')
     expect(code).toContain('scratchTimerStart = millis();')
     expect(code).toContain('(millis() - scratchTimerStart) / 1000.0')
-
-    // The simulator restarts its timer the same way.
-    const sim = simGenerator.workspaceToCode(workspace)
-    expect(sim).toContain('let scratchTimerStart = 0;')
-    expect(sim).toContain('scratchTimerStart = $.millis();')
-    expect(sim).toContain('(($.millis() - scratchTimerStart) / 1000.0)')
   })
 
   it('declares the timer start for reset timer used without the timer reporter', () => {
@@ -476,50 +469,6 @@ describe('ArduinoGenerator', () => {
     expect(code).toContain('delay(1 * 1000);')
     // The function is file-scope: it precedes setup().
     expect(code.indexOf('void blink()')).toBeLessThan(code.indexOf('void setup()'))
-  })
-
-  it('runs the Arduino pin blocks in the simulator: write, read, analog read, delay', () => {
-    Blockly.defineBlocksWithJsonArray([
-      {
-        type: 'arduino_digitalRead',
-        message0: 'read %1',
-        args0: [{ type: 'input_value', name: 'PIN' }],
-        output: null,
-      },
-      {
-        type: 'arduino_analogRead',
-        message0: 'analog %1',
-        args0: [{ type: 'input_value', name: 'PIN' }],
-        output: null,
-      },
-      {
-        type: 'arduino_pinMode',
-        message0: 'mode %1 %2',
-        args0: [
-          { type: 'input_value', name: 'PIN' },
-          { type: 'field_input', name: 'MODE', text: 'INPUT_PULLUP' },
-        ],
-        previousStatement: null,
-        nextStatement: null,
-      },
-    ])
-    const begin = workspace.newBlock('event_whenarduinobegin')
-    const mode = workspace.newBlock('arduino_pinMode')
-    connectValue(mode, 'PIN', num(4))
-    const write = workspace.newBlock('arduino_digitalWrite')
-    write.setFieldValue('LOW', 'LEVEL')
-    const set = workspace.newBlock('data_setvariableto')
-    const read = workspace.newBlock('arduino_digitalRead')
-    connectValue(read, 'PIN', num(4))
-    connectValue(set, 'VALUE', read)
-    connectNext(begin, mode)
-    connectNext(mode, write)
-    connectNext(write, set)
-    const sim = simGenerator.workspaceToCode(workspace)
-    expect(sim).toContain('$.pinMode((4), 2);')
-    expect(sim).toContain('$.digitalWrite(13, 0);')
-    expect(sim).toContain('$.digitalRead((4))')
-    expect(simGenerator.diagnostics).toEqual([])
   })
 
   it('passes custom-block parameters: float for number/text, bool for boolean', () => {
@@ -577,10 +526,6 @@ describe('ArduinoGenerator', () => {
     const name = /void (jump\w*)\(/.exec(code)?.[1]
     expect(code).toContain('delay(height * 1000);')
     expect(code).toContain(`${name}(10, false);`)
-
-    const sim = simGenerator.workspaceToCode(workspace)
-    expect(sim).toContain(`function* ${name}(height, ok) {`)
-    expect(sim).toContain(`yield* ${name}(10, false);`)
   })
 
   it('compares a numeric variable against a numeric-looking literal unquoted', () => {

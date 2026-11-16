@@ -59,8 +59,7 @@ export const CameraAiEvent = {
     CAMERA_DEVICES: 'CAMERA_AI_CAMERA_DEVICES', // (devices: string[]) the cameras' names, as the GUI found them
     VISION_RESULTS: 'CAMERA_AI_VISION_RESULTS', // (results: VisionResults)
     PLAYGROUND_UPDATE: 'CAMERA_AI_PLAYGROUND_UPDATE', // (state: PlaygroundState)
-    PLAYGROUND_COMMAND: 'CAMERA_AI_PLAYGROUND_COMMAND', // (command: {type: 'reset'})
-    MOTION: 'CAMERA_AI_MOTION' // (motion: {kind: 'flap' | 'nod' | 'tilt', dir?: 'left' | 'right', t: number})
+    PLAYGROUND_COMMAND: 'CAMERA_AI_PLAYGROUND_COMMAND' // (command: {type: 'reset'})
 };
 
 /** Emitted by the board link about the connected board. */

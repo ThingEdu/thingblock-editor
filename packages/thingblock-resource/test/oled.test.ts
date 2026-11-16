@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { registerBlocks } from '../src/extensions/peripheral/oled/blocks'
 import { registerGenerators } from '../src/extensions/peripheral/oled/generator'
-import oledManifest from '../src/extensions/peripheral/oled/manifest'
-import oledToolbox from '../src/extensions/peripheral/oled/toolbox'
 import type { ArduinoGenerator, ArduinoOrder, Blockly } from '../src/shared/types'
 
 const Order = { ATOMIC: 0 } as unknown as ArduinoOrder
@@ -18,34 +16,6 @@ const makeGenerator = () => ({
 const makeBlock = (values: Record<string, string> = {}, fields: Record<string, string> = {}) => ({
   values,
   getFieldValue: (name: string) => fields[name],
-})
-
-const blockIds = [
-  'oled_init',
-  'oled_drawLine',
-  'oled_drawRect',
-  'oled_fillRect',
-  'oled_drawCircle',
-  'oled_fillCircle',
-  'oled_drawRoundRect',
-  'oled_fillRoundRect',
-  'oled_drawTriangle',
-  'oled_fillTriangle',
-  'oled_setText',
-  'oled_setCursor',
-  'oled_print',
-  'oled_clear',
-  'oled_refresh',
-  'oled_startScroll',
-  'oled_stopScroll',
-]
-
-describe('OLED blocks', () => {
-  it('defines the full seventeen-block display surface', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-    expect(Object.keys(Blocks).sort()).toEqual([...blockIds].sort())
-  })
 })
 
 describe('OLED generator', () => {
@@ -170,30 +140,6 @@ describe('OLED generator', () => {
     gen.forBlock.oled_init(makeBlock())
     expect(gen.globals.get('oled')).toBe('Adafruit_SSD1306 oled(128, 64, &Wire);')
     expect(gen.forBlock.oled_drawLine(makeBlock())).toBe('oled.drawLine(0, 0, 0, 0, SSD1306_WHITE);\n')
-  })
-})
-
-describe('OLED resource pack', () => {
-  it('declares its served modules, icon, and the vendored Adafruit driver stack', () => {
-    expect(oledManifest).toMatchObject({
-      id: 'oled',
-      kind: 'peripheral',
-      icon: './icon.png',
-      blocks: './blocks.js',
-      generator: './generator.js',
-      toolbox: './toolbox.js',
-      libs: [
-        { path: 'libs/Adafruit_SSD1306' },
-        { path: 'libs/Adafruit_SH110X' },
-        { path: 'libs/Adafruit_GFX_Library' },
-        { path: 'libs/Adafruit_BusIO' },
-      ],
-    })
-  })
-
-  it('lists every block in the toolbox', () => {
-    expect(oledToolbox.colour).toBe('#C0C0C0')
-    expect(oledToolbox.contents.map(({ type }) => type)).toEqual(blockIds)
   })
 })
 

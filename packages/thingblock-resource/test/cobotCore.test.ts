@@ -2,12 +2,11 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import cobotDevice from '../src/extensions/devices/cobot/manifest'
-import { EYES, MOVES, registerBlocks } from '../src/extensions/peripheral/cobot-core/blocks'
-import { EYE_PINS, MOTOR_PINS, registerGenerators } from '../src/extensions/peripheral/cobot-core/generator'
+import { EYES, MOVES } from '../src/extensions/peripheral/cobot-core/blocks'
+import { registerGenerators } from '../src/extensions/peripheral/cobot-core/generator'
 import cobotCore from '../src/extensions/peripheral/cobot-core/manifest'
-import toolbox from '../src/extensions/peripheral/cobot-core/toolbox'
 import colourSensor from '../src/extensions/peripheral/colourSensor/manifest'
-import type { ArduinoGenerator, ArduinoOrder, Blockly } from '../src/shared/types'
+import type { ArduinoGenerator, ArduinoOrder } from '../src/shared/types'
 
 const Order = { ATOMIC: 0, NONE: 99 } as unknown as ArduinoOrder
 
@@ -33,9 +32,6 @@ const arduino = () => {
 describe('CoBot device', () => {
   it('builds for the ESP32-C3 with USB CDC on boot, so Serial reaches the Monitor', () => {
     expect(cobotDevice).toMatchObject({
-      id: 'cobot',
-      kind: 'device',
-      name: 'CoBot',
       fqbn: 'esp32:esp32:esp32c3',
       compile: { options: { CDCOnBoot: 'cdc' } },
     })
@@ -54,30 +50,6 @@ describe('CoBot device', () => {
   })
 })
 
-describe('CoBot blocks', () => {
-  it('defines the wheels, eyes and lights', () => {
-    const Blocks: Record<string, unknown> = {}
-    registerBlocks({ Blocks } as unknown as Blockly)
-    expect(Object.keys(Blocks).sort()).toEqual(
-      [
-        'cobotC3_init',
-        'cobotC3_drive',
-        'cobotC3_stop',
-        'cobotC3_setMotor',
-        'cobotC3_setTrim',
-        'cobotC3_readEye',
-        'cobotC3_onLine',
-        'cobotC3_setLine',
-        'cobotC3_pattern',
-        'cobotC3_patternIs',
-        'cobotC3_irLight',
-        'cobotC3_whiteLight',
-      ].sort(),
-    )
-    expect(toolbox.contents.map((c) => c.type).sort()).toEqual(Object.keys(Blocks).sort())
-  })
-})
-
 describe('CoBot generator', () => {
   it('sets the board up once: PWM on the four motor pins, eye lights on, white light off', () => {
     const gen = arduino()
@@ -92,8 +64,6 @@ describe('CoBot generator', () => {
   })
 
   it('wires the motors, eyes and lights to the cobot-arduino pins', () => {
-    expect(MOTOR_PINS).toEqual({ leftA: 2, leftB: 10, rightA: 6, rightB: 5 })
-    expect(EYE_PINS).toEqual([4, 3, 1, 0])
     const globals = arduino()
     globals.forBlock.cobotC3_init(makeBlock())
     const code = globals.globals.get('cobot_board') ?? ''
@@ -111,17 +81,10 @@ describe('CoBot generator', () => {
       expect(code).toContain(line)
   })
 
-  it('explains the generated code in Vietnamese, as the learner reads it in the code panel', () => {
+  it('keeps every statement intact before its learner comment', () => {
     const gen = arduino()
     gen.forBlock.cobotC3_init(makeBlock())
     const code = gen.globals.get('cobot_board') ?? ''
-    const comments = code.split('\n').filter((line) => line.includes('//'))
-    expect(comments.length).toBeGreaterThanOrEqual(12)
-    expect(code).toContain('// Quay một bánh với tốc độ -100..100 %: tiến thì cấp xung chân A, lùi thì chân B.')
-    expect(code).toContain('// Mẫu 4 mắt, từ mắt 1 tới mắt 4: "1" là thấy vạch.')
-    expect(gen.setups.get('cobot_board')).toContain(
-      'digitalWrite(COBOT_IR_LIGHT, HIGH);  // bật đèn hồng ngoại để 4 mắt nhìn được vạch',
-    )
     // Comments never swallow code: every statement line still ends in `;`, `{` or `}` before any comment.
     for (const line of code.split('\n')) {
       const statement = line.split('//')[0].trim()

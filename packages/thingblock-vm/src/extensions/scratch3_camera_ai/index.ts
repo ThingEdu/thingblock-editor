@@ -53,8 +53,8 @@ const item = (value: string, id: string, def: string): MenuItem => ({
 });
 
 /**
- * Camera AI: blocks that see the learner through the webcam and play on a small stage beside the
- * simulator. The blocks run on the computer; the GUI's playground panel runs the camera and the
+ * Camera AI: blocks that see the learner through the webcam and play on a small stage in the side
+ * panel. The blocks run on the computer; the GUI's playground panel runs the camera and the
  * hand tracker and sends every frame's results here. Nothing in this extension generates code
  * for a board.
  *
@@ -140,14 +140,10 @@ class CameraAiExtension implements Extension {
         this._gestureState = next;
     }
 
-    // Flaps, nods and leans start their hats once each time they happen, and tell the GUI (lesson checks).
+    // Flaps, nods and leans start their hats once each time they happen.
     _fireMotionHats (t: number) {
-        const motion = (kind: string, dir?: Lean) =>
-            this.runtime.events.emit(CameraAiEvent.MOTION, dir ? {kind, dir, t} : {kind, t});
-
         if (this._flap.update(t, this._flapPoints())) {
             this._startHats('whenFlap');
-            motion('flap');
         }
 
         const head = this.vision.head();
@@ -157,13 +153,11 @@ class CameraAiExtension implements Extension {
         const drop = shoulders ? Math.max(10, shoulders.width * 0.12) : Math.max(10, (head ? head.radius : 0) * 0.4);
         if (this._nod.update(t, above, drop)) {
             this._startHats('whenNod');
-            motion('nod');
         }
 
         const lean = this._tilt.update(head ? head.tilt : null);
         if (lean) {
             this._startHats('whenHeadTilt', {DIR: lean});
-            motion('tilt', lean);
         }
     }
 

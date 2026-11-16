@@ -1,9 +1,0 @@
-@import "../../css/units.css";
-@import "../../css/colors.css";
-
-.status {
-    padding: calc($space * 2);
-    color: $text-primary;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 1rem;
-}

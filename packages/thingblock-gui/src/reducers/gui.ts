@@ -8,7 +8,6 @@ import blockDragReducer, {blockDragInitialState} from './block-drag';
 import dynamicAssetsReducer, {dynamicAssetsInitialState} from './dynamic-assets';
 import editorTabReducer, {editorTabInitialState} from './editor-tab';
 import hoveredTargetReducer, {hoveredTargetInitialState} from './hovered-target';
-import lessonReducer, {lessonInitialState} from './lesson';
 import menuReducer, {menuInitialState} from './menus';
 import micIndicatorReducer, {micIndicatorInitialState} from './mic-indicator';
 import modalReducer, {modalsInitialState} from './modals';
@@ -44,7 +43,6 @@ const buildInitialState = (config: GUIConfig) => ({
     alerts: alertsInitialState,
     assetDrag: assetDragInitialState,
     blockDrag: blockDragInitialState,
-    lesson: lessonInitialState,
     colorPicker: colorPickerInitialState,
     config,
     connectionModal: connectionModalInitialState,
@@ -139,7 +137,6 @@ const guiReducer = combineReducers({
     alerts: alertsReducer,
     assetDrag: assetDragReducer,
     blockDrag: blockDragReducer,
-    lesson: lessonReducer,
     colorPicker: colorPickerReducer,
     connectionModal: connectionModalReducer,
     config: configReducer,

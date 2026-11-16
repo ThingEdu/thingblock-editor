@@ -39,9 +39,9 @@ locally.
 
 ### English for development
 
-Everything a developer or lesson author types is English: identifiers, keys and values, file and folder names,
-comments, commit messages and error messages. Vietnamese is used only for learner-facing content, such as lesson
-text and the translations in `src/locales/vi.json`.
+Everything a developer or content author types is English: identifiers, keys and values, file and folder names,
+comments, commit messages and error messages. Vietnamese is used only for learner-facing content, such as example
+notes and the translations in `src/locales/vi.json`.
 
 ### User-visible strings
 

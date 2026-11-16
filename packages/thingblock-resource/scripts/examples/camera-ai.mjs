@@ -114,7 +114,6 @@ const headX = () => cam('headX')
 const headY = () => cam('headY')
 const headTilt = () => cam('headTilt')
 const whenNod = (...then) => stack(cam('whenNod'), ...then)
-const whenHeadTilt = (dir, ...then) => stack(cam('whenHeadTilt', { DIR: dir }), ...then)
 const whenFlap = (...then) => stack(cam('whenFlap'), ...then)
 // Attach a Vietnamese note to a block (shown beside it in the editor).
 const comment = (text, block) => ({ ...block, comment: text })
@@ -662,33 +661,3 @@ export const CAMERA_AI_EXAMPLES = [
   hardware: HARDWARE,
   device: null,
 }))
-
-/** The block helpers, for the Camera AI lessons' `solutions` fixtures. */
-export const cameraBlocks = {
-  add,
-  addScore,
-  atEdge,
-  headTilt,
-  headX,
-  headY,
-  moveTo,
-  mul,
-  objectTouching,
-  setGravity,
-  setVelocity,
-  whenFlap,
-  whenHeadTilt,
-  whenNod,
-  cameraOn,
-  forever,
-  ifThen,
-  moveRandom,
-  moveToHand,
-  say,
-  setScore,
-  spawn,
-  touching,
-  wait,
-  whenFlag,
-  whenGesture,
-}

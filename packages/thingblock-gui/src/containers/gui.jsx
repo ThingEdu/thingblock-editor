@@ -185,7 +185,6 @@ const mapStateToProps = (state, ownProps) => {
         isFullScreen: state.scratchGui.mode.isFullScreen,
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
         isRtl: state.locales.isRtl,
-        lessonOpen: Boolean(state.scratchGui.lesson.lesson),
         isShowingProject: getIsShowingProject(loadingState),
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         platform: ownProps.platform,
@@ -195,7 +194,6 @@ const mapStateToProps = (state, ownProps) => {
         generatedCode: state.scratchGui.code.generatedCode,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
         telemetryModalVisible: state.scratchGui.modals.telemetryModal,
-        tipsLibraryVisible: state.scratchGui.modals.tipsLibrary,
         vm: state.scratchGui.vm
     };
 };

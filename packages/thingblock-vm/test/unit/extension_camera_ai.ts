@@ -428,8 +428,6 @@ test('head blocks read the pose, ask the GUI for the body tracker, and start the
     const {ext, runtime, results, hats} = makeExtension();
     const commands: object[] = [];
     runtime.events.on(CameraAiEvent.CAMERA_COMMAND, (c: object) => commands.push(c));
-    const motions: object[] = [];
-    runtime.events.on(CameraAiEvent.MOTION, (m: object) => motions.push(m));
 
     ext.cameraOn({MIRROR: 'mirror'});
     t.same(commands, [{on: true, mirror: true, pose: false}], 'a project without head blocks needs no body tracker');
@@ -455,7 +453,6 @@ test('head blocks read the pose, ask the GUI for the body tracker, and start the
     results(two(0.15), true, {t: now + 500});
     results(two(0.6), true, {t: now + 750});
     t.equal(hats.filter(([op]) => op === 'cameraAi_whenFlap').length, 1);
-    t.same(motions.map(m => (m as {kind: string}).kind), ['tilt', 'nod', 'flap']);
 
     ext.spawn({KIND: 'star', NAME: 'sao', X: 0, Y: 0, SIZE: 40});
     results([], true, {pose: poseAt(0.5, 0.5), t: Date.now()});
