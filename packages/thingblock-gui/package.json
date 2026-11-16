@@ -132,7 +132,7 @@
     "driver.js": "1.4.0",
     "es6-object-assign": "1.1.0",
     "fastestsmallesttextencoderdecoder": "1.0.22",
-    "immutable": "3.8.3",
+    "immutable": "3.8.4",
     "intl": "1.2.5",
     "keymirror": "0.1.1",
     "lodash.bindall": "4.4.0",
