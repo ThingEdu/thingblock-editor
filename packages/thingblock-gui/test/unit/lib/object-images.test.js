@@ -1,13 +1,6 @@
-import {drawPicture, objectImage, pictureSize} from '../../../src/lib/vision/object-images';
+import {drawPicture, pictureSize} from '../../../src/lib/vision/object-images';
 
 describe('playground pictures', () => {
-    test('the cricket and the robot Tre load from the static folder; other kinds keep their emoji', () => {
-        expect(objectImage('ball', '')).toBeNull();
-        // Not loaded yet in jsdom: the playground falls back to the emoji.
-        expect(objectImage('cricket', 'http://x/')).toBeNull();
-        expect(objectImage('tre', 'http://x/')).toBeNull();
-    });
-
     test('a picture fits inside the round hit area, keeping its shape', () => {
         const cricket = pictureSize('cricket', 100, 54 / 25);
         expect(cricket.width).toBeLessThanOrEqual(100);

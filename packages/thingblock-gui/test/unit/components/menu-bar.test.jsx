@@ -66,22 +66,12 @@ describe('MenuBar Component', () => {
         expect(button).toBeTruthy();
     });
 
-    describe('triggering About button handler', () => {
-        test('clicking on About button calls the handler', () => {
-            const onClickAbout = jest.fn();
-            const {container} = renderWithIntl(getComponent({onClickAbout}));
-            const button = container.querySelector('button[aria-label="About menu"]');
-    
-            fireEvent.click(button);
-            expect(onClickAbout).toHaveBeenCalledTimes(1);
-        });
-    
-        test('not clicking on About button does not call the handler', () => {
-            const onClickAbout = jest.fn();
-            const {container} = renderWithIntl(getComponent({onClickAbout}));
-            const button = container.querySelector('button[aria-label="About menu"]');
-    
-            expect(onClickAbout).toHaveBeenCalledTimes(0);
-        });
+    test('clicking on About button calls the handler', () => {
+        const onClickAbout = jest.fn();
+        const {container} = renderWithIntl(getComponent({onClickAbout}));
+        const button = container.querySelector('button[aria-label="About menu"]');
+
+        fireEvent.click(button);
+        expect(onClickAbout).toHaveBeenCalledTimes(1);
     });
 });

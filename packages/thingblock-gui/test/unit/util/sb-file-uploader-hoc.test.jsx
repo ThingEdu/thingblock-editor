@@ -20,27 +20,6 @@ describe('SBFileUploaderHOC', () => {
         return SBFileUploaderHOC(Component);
     };
 
-    const unwrappedInstance = () => {
-        const WrappedComponent = getContainer();
-        // default starting state: looking at a project you created, not logged in
-        const wrapper = renderWithIntl(
-            <WrappedComponent
-                projectChanged
-                canSave={false}
-                cancelFileUpload={jest.fn()}
-                closeFileMenu={jest.fn()}
-                requestProjectUpload={jest.fn()}
-                userOwnsProject={false}
-                vm={vm}
-                onLoadingFinished={jest.fn()}
-                onLoadingStarted={jest.fn()}
-                onUpdateProjectTitle={jest.fn()}
-                store={store}
-            />
-        );
-        return wrapper;
-    };
-
     beforeEach(() => {
         vm = new VM();
         store = mockStore({

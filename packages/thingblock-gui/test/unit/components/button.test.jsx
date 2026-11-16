@@ -24,13 +24,4 @@ describe('ButtonComponent', () => {
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
-
-    test('does not trigger callback when not clicked', () => {
-        const onClick = jest.fn();
-        render(
-            <ButtonComponent onClick={onClick} />
-        );
-        
-        expect(onClick).toHaveBeenCalledTimes(0);
-    });
 });

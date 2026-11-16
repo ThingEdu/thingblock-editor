@@ -117,7 +117,7 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   goes in `src/locales/vi.json` (keyed by message id, edited by hand) and is merged over scratch-l10n's `vi` in
   `reducers/locales.js`.
 - Integration tests (`test/integration/`) require a browser environment via Jest + jsdom; they are slow and
-  should not be run unnecessarily. Smoke tests (`test/smoke/`) require a live server.
+  should not be run unnecessarily.
 - **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is `components/side-panel`. With a
   board selected it shows `CodeView` and `containers/board-monitor.jsx` (board serial, baud rate); with none it
   shows only `containers/host-monitor.jsx` (block print output, "ask and wait"). Each pane can be hidden from the

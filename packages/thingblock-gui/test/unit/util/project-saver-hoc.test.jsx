@@ -563,10 +563,8 @@ describe('projectSaverHOC', () => {
 
     test('when starting to remix, onRemixing should be called with param true', () => {
         const mockedOnRemixing = jest.fn();
-        const mockedStoreProject = jest.fn(() => Promise.resolve());
         const Component = () => <div />;
         const WrappedComponent = projectSaverHOC(Component);
-        WrappedComponent.WrappedComponent.prototype.storeProject = mockedStoreProject;
         const {rerender} = render(
             <WrappedComponent
                 isRemixing={false}
@@ -586,12 +584,10 @@ describe('projectSaverHOC', () => {
         expect(mockedOnRemixing).toHaveBeenCalledWith(true);
     });
 
-    test('when starting to remix, onRemixing should be called with param false', () => {
+    test('when remixing ends, onRemixing should be called with param false', () => {
         const mockedOnRemixing = jest.fn();
-        const mockedStoreProject = jest.fn(() => Promise.resolve());
         const Component = () => <div />;
         const WrappedComponent = projectSaverHOC(Component);
-        WrappedComponent.WrappedComponent.prototype.storeProject = mockedStoreProject;
         const {rerender} = render(
             <WrappedComponent
                 isRemixing
