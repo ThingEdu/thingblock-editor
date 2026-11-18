@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import {
   DARK_MODE,
   DEFAULT_MODE,
@@ -19,15 +19,6 @@ describe('color modes', () => {
 })
 
 describe('color mode persistence', () => {
-  beforeEach(() => {
-    // jsdom has no matchMedia; this system has no contrast preference
-    vi.stubGlobal('matchMedia', () => ({ matches: false }))
-  })
-
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
   test('returns the color mode stored in a cookie', () => {
     document.cookie = `scratchtheme=${HIGH_CONTRAST_MODE}`
     expect(detectColorMode()).toBe(HIGH_CONTRAST_MODE)

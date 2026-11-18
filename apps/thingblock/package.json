@@ -31,6 +31,7 @@
   "dependencies": {
     "@thingblock/thingblock-blocks": "0.8.0-preview-20261115",
     "@thingblock/thingblock-storage": "0.8.0-preview-20261115",
+    "@thingblock/thingblock-vm": "0.8.0-preview-20261115",
     "cookie": "0.6.0",
     "lodash.defaultsdeep": "4.6.1",
     "react": "18.3.1",

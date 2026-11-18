@@ -144,6 +144,8 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   editor, and a GUI change to an already-ported area must be ported too.
 - State and UI left over from Scratch's stage, sprites and online features (player mode, time travel, account
   login, telemetry) are not ported.
+- It types the VM with `thingblock-vm`'s generated declarations in its gitignored `dist/types`, so a fresh checkout
+  or a VM change needs `npm run build:libs` before the app's `tsc` sees it.
 - Reducers type their `action` as only the actions they handle, so `src/reducers/**` turns off
   `@typescript-eslint/no-unnecessary-condition` for the `default` branch that unrelated actions reach.
 
@@ -176,6 +178,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
   from the runtime, an `emit` function and the sibling parts it uses, never the VM itself; add new behavior to
   the part it belongs to. The runtime holds the only copy of the editing target.
+- `npm run build` also emits type declarations into `dist/types` (`build:types`), exposed through the `types` export
+  condition. `tsc` turns a JS `require('./x').default` into an invalid `import X = Y.default` when that value's
+  type reaches a declaration, so such requires are destructured (`const {default: X} = require('./x')`).
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
   maps for VM devices.
