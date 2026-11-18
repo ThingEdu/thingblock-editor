@@ -137,6 +137,16 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
   run against a stale bundle.
 
+### thingblock (app) specifics
+
+- A TypeScript port of `thingblock-gui`, written batch by batch from the leaves up (reducers, `lib/`, components,
+  then the GUI root). It does not run until the root is ported; until then `thingblock-gui` stays the live
+  editor, and a GUI change to an already-ported area must be ported too.
+- State and UI left over from Scratch's stage, sprites and online features (player mode, time travel, account
+  login, telemetry) are not ported.
+- Reducers type their `action` as only the actions they handle, so `src/reducers/**` turns off
+  `@typescript-eslint/no-unnecessary-condition` for the `default` branch that unrelated actions reach.
+
 ### thingblock-virtualspace specifics
 
 - Its UI components are TSX copies of `thingblock-gui` components in `src/components/`, styled with plain CSS
