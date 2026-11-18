@@ -5,7 +5,8 @@
  */
 
 const vmPackage = require('../../package.json');
-const Target = require('../engine/target').default;
+// Destructured, not `require(...).default`, so the emitted .d.ts stays valid TypeScript
+const {default: Target} = require('../engine/target');
 const Variable = require('../engine/variable').default;
 const Comment = require('../engine/comment').default;
 const MonitorRecord = require('../engine/monitor-record').default;
