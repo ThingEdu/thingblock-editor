@@ -74,7 +74,7 @@ rejected by the pre-commit hook.
 
 ```text
 apps/
-├── thingblock/               Editor web app (bare scaffold, not used yet)
+├── thingblock/               Future main editor app; replaces thingblock-gui once it is split into libraries
 └── thingblock-virtualspace/  Web-only virtual robot environment (private, never published)
 packages/
 ├── thingblock-gui/         React-based editor UI
