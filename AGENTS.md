@@ -144,6 +144,14 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   editor, and a GUI change to an already-ported area must be ported too.
 - State and UI left over from Scratch's stage, sprites and online features (player mode, time travel, account
   login, telemetry) are not ported.
+- `src/lib/` is grouped by editor feature (`project/`, `blocks/`, `preferences/`, `ui/`, `alerts/`, `settings/`,
+  `boards/`) rather than mirroring the GUI's flat `lib/`; helpers used across areas (`log`, `platform`,
+  `shared-messages`) sit at its top. Each extension's code and assets live in its own folder under `extensions/`,
+  next to `extensions/index.tsx`, the extension library list: Camera AI's tracker, from the GUI's `lib/vision/`, is
+  in `extensions/camera-ai/`.
+- File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported GUI file keeps its name
+  (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a changed GUI file
+  is found by its name.
 - It types the VM with `thingblock-vm`'s generated declarations in its gitignored `dist/types`, so a fresh checkout
   or a VM change needs `npm run build:libs` before the app's `tsc` sees it.
 - Reducers type their `action` as only the actions they handle, so `src/reducers/**` turns off
