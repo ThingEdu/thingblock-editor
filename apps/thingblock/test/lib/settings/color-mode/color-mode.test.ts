@@ -5,8 +5,8 @@ import {
   HIGH_CONTRAST_MODE,
   defaultColors,
   getColorsForMode,
-} from '../../src/lib/settings/color-mode'
-import { detectColorMode, persistColorMode } from '../../src/lib/settings/color-mode/persistence'
+} from '../../../../src/lib/settings/color-mode'
+import { detectColorMode, persistColorMode } from '../../../../src/lib/settings/color-mode/persistence'
 
 describe('color modes', () => {
   test('a mode overrides the default colors', () => {

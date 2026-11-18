@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import type { Dispatch } from 'redux'
 import alertsData, { type AlertData, AlertLevels, type AlertLevel, type AlertType, AlertTypes } from '../lib/alerts'
-import extensionData from '../lib/libraries/extensions'
+import extensionData from '../lib/extensions'
 
 const SHOW_ALERT = 'scratch-gui/alerts/SHOW_ALERT'
 const SHOW_EXTENSION_ALERT = 'scratch-gui/alerts/SHOW_EXTENSION_ALERT'

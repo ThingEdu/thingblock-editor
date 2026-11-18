@@ -1,5 +1,5 @@
 import * as ScratchBlocks from '@thingblock/thingblock-blocks'
-import { type BlockColors, defaultColors } from './settings/color-mode'
+import { type BlockColors, defaultColors } from '../settings/color-mode'
 
 type CategoryColors = BlockColors['event']
 

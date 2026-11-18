@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import makeToolboxXML from '../../src/lib/make-toolbox-xml'
-import { defaultColors } from '../../src/lib/settings/color-mode'
+import makeToolboxXML from '../../../src/lib/blocks/make-toolbox-xml'
+import { defaultColors } from '../../../src/lib/settings/color-mode'
 
 describe('makeToolboxXML board mode gating', () => {
   test('host mode (no board) shows host-only core blocks', () => {

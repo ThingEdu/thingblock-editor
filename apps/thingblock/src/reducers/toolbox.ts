@@ -1,4 +1,4 @@
-import makeToolboxXML from '../lib/make-toolbox-xml'
+import makeToolboxXML from '../lib/blocks/make-toolbox-xml'
 
 const UPDATE_TOOLBOX = 'scratch-gui/toolbox/UPDATE_TOOLBOX'
 

@@ -1,9 +1,9 @@
 import type { ReactElement } from 'react'
 import { FormattedMessage } from 'react-intl'
-import cameraAiInsetIconURL from './cameraAi/camera-ai-small.svg'
-import cameraAiIconURL from './cameraAi/camera-ai.svg'
-import thingbotTelemetrixInsetIconURL from './thingbotTelemetrix/thingbot-telemetrix-small.svg'
-import thingbotTelemetrixIconURL from './thingbotTelemetrix/thingbot-telemetrix.svg'
+import cameraAiInsetIconURL from './camera-ai/camera-ai-small.svg'
+import cameraAiIconURL from './camera-ai/camera-ai.svg'
+import thingbotTelemetrixInsetIconURL from './thingbot-telemetrix/thingbot-telemetrix-small.svg'
+import thingbotTelemetrixIconURL from './thingbot-telemetrix/thingbot-telemetrix.svg'
 
 /** An entry in the extension library. */
 export interface ExtensionInfo {
