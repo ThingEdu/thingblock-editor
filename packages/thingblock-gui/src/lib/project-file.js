@@ -4,7 +4,7 @@
  * In the desktop app (Tauri) "Lưu" opens the native Save dialog the first time, then writes back to
  * the same file; "Lưu thành…" always asks. Opening a project through the native Open dialog makes
  * that file the current one, so Ctrl+S overwrites it. Loading anything else (New, an example, a
- * lesson, a browser file input) forgets the current file, so a save never lands on the wrong project.
+ * browser file input) forgets the current file, so a save never lands on the wrong project.
  *
  * In a browser, the File System Access API (`showSaveFilePicker`) gives the same behaviour where it
  * exists; elsewhere a save falls back to a download.

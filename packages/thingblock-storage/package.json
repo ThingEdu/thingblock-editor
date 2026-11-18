@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-storage",
-  "version": "14.1.0",
+  "version": "0.8.0-preview-20261115",
   "description": "Load and store project and asset files for Scratch 3.0",
   "homepage": "https://github.com/ThingEdu/thingblock-editor#readme",
   "repository": {

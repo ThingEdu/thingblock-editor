@@ -33,16 +33,12 @@ const valueInputs = (register: RegisterBlocks): [string, string[] | null][] => {
   const found: [string, string[] | null][] = []
   for (const [opcode, def] of Object.entries(Blocks)) {
     let json: Json | undefined
-    try {
-      def.init?.call(
-        new Proxy(
-          { jsonInit: (j: Json) => (json = j) },
-          { get: (t, k: string) => (k in t ? t[k as keyof typeof t] : () => undefined) },
-        ),
-      )
-    } catch {
-      // Blocks built imperatively (not through jsonInit) have nothing to check here.
-    }
+    def.init?.call(
+      new Proxy(
+        { jsonInit: (j: Json) => (json = j) },
+        { get: (t, k: string) => (k in t ? t[k as keyof typeof t] : () => undefined) },
+      ),
+    )
     if (!json) continue
     for (const [key, value] of Object.entries(json)) {
       if (!key.startsWith('args') || !Array.isArray(value)) continue

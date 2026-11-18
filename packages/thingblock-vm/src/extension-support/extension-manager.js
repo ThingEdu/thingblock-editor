@@ -15,6 +15,7 @@ const builtinExtensions = {
     // These are the non-core built-in extensions.
     // `.default` because they are TypeScript: they compile to ES modules, not `module.exports`.
     thingbotTelemetrix: () => require('../extensions/scratch3_thingbot_telemetrix').default,
+    cameraAi: () => require('../extensions/scratch3_camera_ai').default,
     arduino: () => require('../extensions/common-board').default
 };
 

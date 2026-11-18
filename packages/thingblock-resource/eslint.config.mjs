@@ -2,17 +2,13 @@ import { eslintConfigScratch } from 'eslint-config-scratch'
 import { globalIgnores } from 'eslint/config'
 import globals from 'globals'
 
-// The lesson test is excluded from tsconfig.json (see its header), so it is linted as a default-project file.
-// Every typed block shares this setting: typescript-eslint builds one project service for the whole run.
-const projectService = { allowDefaultProject: ['test/lessons/lessons.test.ts', 'test/sim/examples.test.ts'] }
-
 export default eslintConfigScratch.defineConfig(
   eslintConfigScratch.recommended,
   {
     files: ['src/**'],
     languageOptions: {
       parserOptions: {
-        projectService,
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -27,7 +23,7 @@ export default eslintConfigScratch.defineConfig(
   {
     files: ['**/*.{ts,mts}'],
     languageOptions: {
-      parserOptions: { projectService, tsconfigRootDir: import.meta.dirname },
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
   },
   globalIgnores(['coverage/**', 'dist/**', 'node_modules/**', 'src/**/libs/**']),

@@ -8,7 +8,6 @@ import blockDragReducer, {blockDragInitialState} from './block-drag';
 import dynamicAssetsReducer, {dynamicAssetsInitialState} from './dynamic-assets';
 import editorTabReducer, {editorTabInitialState} from './editor-tab';
 import hoveredTargetReducer, {hoveredTargetInitialState} from './hovered-target';
-import lessonReducer, {lessonInitialState} from './lesson';
 import menuReducer, {menuInitialState} from './menus';
 import micIndicatorReducer, {micIndicatorInitialState} from './mic-indicator';
 import modalReducer, {modalsInitialState} from './modals';
@@ -33,6 +32,7 @@ import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace
 import boardReducer, {boardInitialState} from './board';
 import codeReducer, {codeInitialState} from './code';
 import thingbotTelemetrixReducer, {thingbotTelemetrixInitialState} from './thingbot-telemetrix';
+import cameraAiReducer, {cameraAiInitialState} from './camera-ai';
 import throttle from 'redux-throttle';
 
 import {GUIConfig} from '../gui-config';
@@ -43,7 +43,6 @@ const buildInitialState = (config: GUIConfig) => ({
     alerts: alertsInitialState,
     assetDrag: assetDragInitialState,
     blockDrag: blockDragInitialState,
-    lesson: lessonInitialState,
     colorPicker: colorPickerInitialState,
     config,
     connectionModal: connectionModalInitialState,
@@ -74,7 +73,8 @@ const buildInitialState = (config: GUIConfig) => ({
     workspaceMetrics: workspaceMetricsInitialState,
     board: boardInitialState,
     code: codeInitialState,
-    thingbotTelemetrix: thingbotTelemetrixInitialState
+    thingbotTelemetrix: thingbotTelemetrixInitialState,
+    cameraAi: cameraAiInitialState
 });
 
 const initPlayer = function (currentState) {
@@ -137,7 +137,6 @@ const guiReducer = combineReducers({
     alerts: alertsReducer,
     assetDrag: assetDragReducer,
     blockDrag: blockDragReducer,
-    lesson: lessonReducer,
     colorPicker: colorPickerReducer,
     connectionModal: connectionModalReducer,
     config: configReducer,
@@ -168,7 +167,8 @@ const guiReducer = combineReducers({
     workspaceMetrics: workspaceMetricsReducer,
     board: boardReducer,
     code: codeReducer,
-    thingbotTelemetrix: thingbotTelemetrixReducer
+    thingbotTelemetrix: thingbotTelemetrixReducer,
+    cameraAi: cameraAiReducer
 });
 
 export {

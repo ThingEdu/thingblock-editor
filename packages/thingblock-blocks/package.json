@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-blocks",
-  "version": "14.1.0",
+  "version": "0.8.0-preview-20261115",
   "description": "Scratch Blocks is a library for building creative computing interfaces.",
   "author": "Massachusetts Institute of Technology",
   "license": "Apache-2.0",
@@ -39,11 +39,12 @@
   "devDependencies": {
     "@commitlint/cli": "20.5.3",
     "@commitlint/config-conventional": "20.5.3",
-    "@vitest/browser": "4.1.8",
-    "@vitest/browser-playwright": "4.1.8",
+    "@vitest/browser": "4.1.12",
+    "@vitest/browser-playwright": "4.1.12",
     "eslint": "9.39.4",
     "eslint-config-scratch": "14.1.30",
     "husky": "9.1.7",
+    "jsdom": "26.1.0",
     "playwright": "1.60.0",
     "prettier": "3.8.4",
     "scratch-semantic-release-config": "4.0.1",
@@ -51,7 +52,7 @@
     "source-map-loader": "5.0.0",
     "ts-loader": "9.6.0",
     "typescript": "5.9.3",
-    "vitest": "4.1.8",
+    "vitest": "4.1.12",
     "webpack": "5.107.2",
     "webpack-cli": "6.0.1",
     "webpack-dev-server": "5.2.5"

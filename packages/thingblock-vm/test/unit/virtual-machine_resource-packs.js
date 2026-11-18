@@ -307,16 +307,6 @@ test('flashFirmware rejects an unknown image id', async t => {
     t.end();
 });
 
-test('getTutorialsOrigin sits next to the extensions under the same resource root', t => {
-    const vm = new VirtualMachine();
-
-    t.equal(vm.devices.getTutorialsOrigin(), 'http://127.0.0.1:3030/resources/tutorials', 'link mode');
-    vm.link.setLinkMode('cloud');
-    t.equal(vm.devices.getTutorialsOrigin(), 'http://localhost:8080/resources/tutorials', 'cloud mode');
-
-    t.end();
-});
-
 test('a board applied while packs are still loading waits for its peripherals', async t => {
     const vm = new VirtualMachine();
     // The device pack has registered but its peripheral pack has not yet: the helper index lists device

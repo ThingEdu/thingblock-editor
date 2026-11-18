@@ -1,0 +1,734 @@
+{
+  "targets": [
+    {
+      "isStage": true,
+      "name": "Stage",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {},
+      "comments": {},
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 0,
+      "tempo": 60,
+      "videoTransparency": 50,
+      "videoState": "on",
+      "textToSpeechLanguage": null
+    },
+    {
+      "isStage": false,
+      "name": "Sprite1",
+      "variables": {},
+      "lists": {},
+      "broadcasts": {},
+      "blocks": {
+        "b1": {
+          "opcode": "event_whenflagclicked",
+          "next": "b2",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 40,
+          "y": 60
+        },
+        "b2": {
+          "opcode": "cameraAi_cameraOn",
+          "next": "b3",
+          "parent": "b1",
+          "inputs": {},
+          "fields": {
+            "MIRROR": [
+              "mirror",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b3": {
+          "opcode": "cameraAi_spawn",
+          "next": "b4",
+          "parent": "b2",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "bong"
+              ]
+            ],
+            "X": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ],
+            "SIZE": [
+              1,
+              [
+                4,
+                "44"
+              ]
+            ]
+          },
+          "fields": {
+            "KIND": [
+              "ball",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b4": {
+          "opcode": "cameraAi_spawn",
+          "next": "b5",
+          "parent": "b3",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "de"
+              ]
+            ],
+            "X": [
+              1,
+              [
+                4,
+                "120"
+              ]
+            ],
+            "Y": [
+              1,
+              [
+                4,
+                "60"
+              ]
+            ],
+            "SIZE": [
+              1,
+              [
+                4,
+                "70"
+              ]
+            ]
+          },
+          "fields": {
+            "KIND": [
+              "cricket",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b5": {
+          "opcode": "cameraAi_setScore",
+          "next": "b7",
+          "parent": "b4",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b6"
+            ],
+            "N": [
+              1,
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b6": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b5",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b7": {
+          "opcode": "cameraAi_startTimer",
+          "next": "b8",
+          "parent": "b5",
+          "inputs": {
+            "SECONDS": [
+              1,
+              [
+                4,
+                "30"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b8": {
+          "opcode": "cameraAi_say",
+          "next": "b20",
+          "parent": "b7",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "Chạm ngón trỏ vào con dế!"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b9": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b18",
+          "parent": "b20",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "bong"
+              ]
+            ],
+            "X": [
+              3,
+              "b10",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              3,
+              "b11",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b10": {
+          "opcode": "cameraAi_handX",
+          "next": null,
+          "parent": "b9",
+          "inputs": {},
+          "fields": {
+            "PART": [
+              "indexTip",
+              null
+            ],
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b11": {
+          "opcode": "cameraAi_handY",
+          "next": null,
+          "parent": "b9",
+          "inputs": {},
+          "fields": {
+            "PART": [
+              "indexTip",
+              null
+            ],
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b12": {
+          "opcode": "cameraAi_addScore",
+          "next": "b14",
+          "parent": "b18",
+          "inputs": {
+            "N": [
+              1,
+              [
+                4,
+                "1"
+              ]
+            ],
+            "PLAYER": [
+              1,
+              "b13"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b13": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b12",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b14": {
+          "opcode": "cameraAi_moveTo",
+          "next": "b17",
+          "parent": "b12",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "de"
+              ]
+            ],
+            "X": [
+              3,
+              "b15",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              3,
+              "b16",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b15": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b14",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-200"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "200"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b16": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b14",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-140"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "140"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b17": {
+          "opcode": "control_wait",
+          "next": null,
+          "parent": "b14",
+          "inputs": {
+            "DURATION": [
+              1,
+              [
+                5,
+                "0.3"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b18": {
+          "opcode": "control_if",
+          "next": null,
+          "parent": "b9",
+          "inputs": {
+            "CONDITION": [
+              2,
+              "b19"
+            ],
+            "SUBSTACK": [
+              2,
+              "b12"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b19": {
+          "opcode": "cameraAi_touching",
+          "next": null,
+          "parent": "b18",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "de"
+              ]
+            ]
+          },
+          "fields": {
+            "PART": [
+              "indexTip",
+              null
+            ],
+            "HAND": [
+              "ANY",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": false
+        },
+        "b20": {
+          "opcode": "control_forever",
+          "next": null,
+          "parent": "b8",
+          "inputs": {
+            "SUBSTACK": [
+              2,
+              "b9"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b21": {
+          "opcode": "cameraAi_whenTimeUp",
+          "next": "b23",
+          "parent": null,
+          "inputs": {},
+          "fields": {},
+          "shadow": false,
+          "topLevel": true,
+          "x": 520,
+          "y": 60
+        },
+        "b23": {
+          "opcode": "cameraAi_say",
+          "next": "b26",
+          "parent": "b21",
+          "inputs": {
+            "TEXT": [
+              3,
+              "b22",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b22": {
+          "opcode": "operator_join",
+          "next": null,
+          "parent": "b23",
+          "inputs": {
+            "STRING1": [
+              1,
+              [
+                10,
+                "Hết giờ! Điểm: "
+              ]
+            ],
+            "STRING2": [
+              3,
+              "b24",
+              [
+                10,
+                ""
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b24": {
+          "opcode": "cameraAi_score",
+          "next": null,
+          "parent": "b22",
+          "inputs": {
+            "PLAYER": [
+              1,
+              "b25"
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b25": {
+          "opcode": "cameraAi_menu_PLAYER",
+          "next": null,
+          "parent": "b24",
+          "inputs": {},
+          "fields": {
+            "PLAYER": [
+              "1",
+              null
+            ]
+          },
+          "shadow": true,
+          "topLevel": false
+        },
+        "b26": {
+          "opcode": "cameraAi_remove",
+          "next": null,
+          "parent": "b23",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "de"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b27": {
+          "opcode": "cameraAi_whenGesture",
+          "next": "b28",
+          "parent": null,
+          "inputs": {},
+          "fields": {
+            "HAND": [
+              "ANY",
+              null
+            ],
+            "GESTURE": [
+              "FIST",
+              null
+            ]
+          },
+          "shadow": false,
+          "topLevel": true,
+          "x": 520,
+          "y": 260
+        },
+        "b28": {
+          "opcode": "cameraAi_say",
+          "next": "b29",
+          "parent": "b27",
+          "inputs": {
+            "TEXT": [
+              1,
+              [
+                10,
+                "Nắm tay: dế nhảy!"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b29": {
+          "opcode": "cameraAi_moveTo",
+          "next": null,
+          "parent": "b28",
+          "inputs": {
+            "NAME": [
+              1,
+              [
+                10,
+                "de"
+              ]
+            ],
+            "X": [
+              3,
+              "b30",
+              [
+                4,
+                "0"
+              ]
+            ],
+            "Y": [
+              3,
+              "b31",
+              [
+                4,
+                "0"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b30": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b29",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-200"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "200"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        },
+        "b31": {
+          "opcode": "operator_random",
+          "next": null,
+          "parent": "b29",
+          "inputs": {
+            "FROM": [
+              1,
+              [
+                4,
+                "-140"
+              ]
+            ],
+            "TO": [
+              1,
+              [
+                4,
+                "140"
+              ]
+            ]
+          },
+          "fields": {},
+          "shadow": false,
+          "topLevel": false
+        }
+      },
+      "comments": {
+        "c1": {
+          "blockId": null,
+          "x": 40,
+          "y": -60,
+          "width": 560,
+          "height": 90,
+          "minimized": false,
+          "text": "Bắt Dế · Camera AI\nQuả bóng đi theo ngón trỏ của em. Chạm vào con dế để ghi điểm trong 30 giây. Nắm tay: dế nhảy chỗ khác."
+        }
+      },
+      "currentCostume": 0,
+      "costumes": [
+        {
+          "name": "costume1",
+          "assetId": "cd21514d0531fdffb22204e0ec5ed84a",
+          "md5ext": "cd21514d0531fdffb22204e0ec5ed84a.svg",
+          "dataFormat": "svg"
+        }
+      ],
+      "sounds": [],
+      "volume": 100,
+      "layerOrder": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "size": 100,
+      "direction": 90,
+      "draggable": false,
+      "rotationStyle": "all around"
+    }
+  ],
+  "monitors": [],
+  "extensions": [
+    "cameraAi"
+  ],
+  "meta": {
+    "semver": "3.0.0",
+    "vm": "14.1.0",
+    "agent": "camera-ai demo"
+  }
+}

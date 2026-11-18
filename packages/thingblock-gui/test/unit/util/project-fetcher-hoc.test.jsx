@@ -39,7 +39,7 @@ describe('ProjectFetcherHOC', () => {
         );
         expect(mockSetProjectIdFunc.mock.calls[0][0]).toBe('100');
     });
-    test('when there is a reduxProjectId and isFetchingWithProjectId is true, it loads the project', () => {
+    test('when there is a reduxProjectId and isFetchingWithProjectId is true, it loads the project', async () => {
         const mockedOnFetchedProject = jest.fn();
         const originalLoad = storage.load;
         storage.load = jest.fn((type, id) => Promise.resolve({data: id}));
@@ -70,11 +70,8 @@ describe('ProjectFetcherHOC', () => {
             storage.AssetType.Project, '100', storage.DataFormat.JSON
         );
         storage.load = originalLoad;
-        // delay needed since storage.load is async, and onFetchedProject is called in its then()
-        setTimeout(
-            () => expect(mockedOnFetchedProject)
-                .toHaveBeenLastCalledWith('100', LoadingState.FETCHING_WITH_ID),
-            1
-        );
+        // storage.load is async, and onFetchedProjectData is called in its then()
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(mockedOnFetchedProject).toHaveBeenLastCalledWith('100', LoadingState.FETCHING_WITH_ID);
     });
 });

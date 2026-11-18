@@ -46,11 +46,7 @@ const blocksIn = (register: RegisterBlocks, locale: string): Record<string, Json
         out[opcode] = j
       },
     })
-    try {
-      def.init?.call(new Proxy(self, { get: (t, k: string) => (k in t ? t[k] : () => undefined) }))
-    } catch {
-      // Imperatively built blocks are not translated through JSON.
-    }
+    def.init?.call(new Proxy(self, { get: (t, k: string) => (k in t ? t[k] : () => undefined) }))
   }
   return out
 }

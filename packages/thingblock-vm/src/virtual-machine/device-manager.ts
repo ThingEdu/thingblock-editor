@@ -60,7 +60,6 @@ type PeripheralPackManifest = {
     toolbox?: string
     blocks?: string
     generator?: string
-    sim?: string
     libs?: Array<{path: string}>
 };
 
@@ -68,13 +67,12 @@ type Pack<M> = {manifest: M, base: string};
 
 type Board = {device: string, peripherals?: string[]};
 
-type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown, simGenerator?: unknown};
+type ScratchBlocks = {arduinoGenerator: unknown, ArduinoOrder: unknown};
 
 type PackModule = {
     default?: unknown
     registerBlocks?: (scratchBlocks: ScratchBlocks) => void
     registerGenerators?: (generator: unknown, order: unknown) => void
-    registerSimGenerators?: (generator: unknown, order: unknown) => void
 };
 
 type ModuleImporter = (url: string) => Promise<PackModule>;
@@ -234,16 +232,6 @@ export default class DeviceManager {
     getExamplesOrigin (): string | null {
         const origin = this.linkResourceOrigin();
         return origin && `${origin}/examples`;
-    }
-
-    /**
-     * The HTTP base the bundled lessons are served from: `index.json` lists them and each lesson's
-     * files sit under `<ma>/`. Null when the active link backend serves no packs.
-     * @returns the lessons base, e.g. `http://127.0.0.1:3030/resources/tutorials`.
-     */
-    getTutorialsOrigin (): string | null {
-        const origin = this.linkResourceOrigin();
-        return origin && `${origin}/tutorials`;
     }
 
     /**
@@ -657,14 +645,6 @@ export default class DeviceManager {
                         throw new Error(`peripheral "${id}" generator module has no registerGenerators export`);
                     }
                     registerGenerators(this._scratchBlocks.arduinoGenerator, this._scratchBlocks.ArduinoOrder);
-                }
-                // The simulator's codegen mirrors the Arduino codegen; a pack without it still
-                // uploads, and the simulator names its blocks as not simulated yet.
-                if (manifest.sim && this._scratchBlocks.simGenerator) {
-                    const {registerSimGenerators} = await this._importPackModule(
-                        `${base}/${manifest.sim.replace(/^\.\//, '')}`
-                    );
-                    registerSimGenerators(this._scratchBlocks.simGenerator, this._scratchBlocks.ArduinoOrder);
                 }
             }
             this.peripheralRegistry.register({id: manifest.id, toolbox, libs, base});

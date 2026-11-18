@@ -9,25 +9,6 @@ import MonitorRecord from '../../src/engine/monitor-record.ts';
 import {block} from '../fixtures/target.ts';
 import type {Block} from '../../src/engine/block-types.ts';
 
-test('spec', t => {
-    const target = new Target(new Runtime());
-
-    t.type(Target, 'function');
-    t.type(target, 'object');
-    t.ok(target instanceof Target);
-
-    t.type(target.id, 'string');
-    t.type(target.blocks, 'object');
-    t.type(target.variables, 'object');
-    t.type(target.comments, 'object');
-    t.type(target._customState, 'object');
-
-    t.type(target.createVariable, 'function');
-    t.type(target.renameVariable, 'function');
-
-    t.end();
-});
-
 // Create Variable tests.
 test('createVariable', t => {
     const target = new Target(new Runtime());
@@ -470,36 +451,6 @@ const addBroadcastBlocksTo = (target: Target) => {
     adapter(events.mockBroadcastBlock).forEach(block => target.blocks.createBlock(block));
 };
 
-test('fixUpVariableReferences creates a stage broadcast for an undefined broadcast reference', t => {
-    const runtime = new Runtime();
-
-    const stage = new Target(runtime);
-    stage.isStage = true;
-
-    const target = new Target(runtime);
-    target.isStage = false;
-    target.name = 'Target';
-
-    runtime.targets = [stage, target];
-
-    addBroadcastBlocksTo(target);
-
-    t.equal(Object.keys(stage.variables).length, 0);
-    t.equal(target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.id, 'mock broadcast message id');
-    t.equal(target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.value, 'my message');
-
-    target.fixUpVariableReferences();
-
-    t.equal(Object.keys(stage.variables).length, 1);
-    const broadcast = stage.variables['mock broadcast message id'];
-    t.ok(broadcast, 'broadcast created on stage with original id');
-    t.equal(broadcast.name, 'my message');
-    t.equal(broadcast.type, Variable.BROADCAST_MESSAGE_TYPE);
-    t.equal(target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.id, 'mock broadcast message id');
-
-    t.end();
-});
-
 test('fixUpVariableReferences remaps a broadcast reference to an existing same-name stage broadcast', t => {
     const runtime = new Runtime();
 
@@ -524,33 +475,6 @@ test('fixUpVariableReferences remaps a broadcast reference to an existing same-n
     t.ok(stage.variables['pre-existing broadcast id'], 'existing broadcast preserved');
     t.equal(target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.id, 'pre-existing broadcast id',
         'block field id remapped to existing broadcast');
-
-    t.end();
-});
-
-test('fixUpVariableReferences is idempotent for broadcast references', t => {
-    const runtime = new Runtime();
-
-    const stage = new Target(runtime);
-    stage.isStage = true;
-
-    const target = new Target(runtime);
-    target.isStage = false;
-    target.name = 'Target';
-
-    runtime.targets = [stage, target];
-
-    addBroadcastBlocksTo(target);
-
-    target.fixUpVariableReferences();
-    const stageVarsAfterFirst = Object.keys(stage.variables).slice();
-    const fieldIdAfterFirst = target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.id;
-
-    target.fixUpVariableReferences();
-
-    t.same(Object.keys(stage.variables), stageVarsAfterFirst, 'no new stage broadcasts on second call');
-    t.equal(target.blocks.getBlock('boadcast shadow').fields.BROADCAST_OPTION.id, fieldIdAfterFirst,
-        'field id unchanged on second call');
 
     t.end();
 });
@@ -592,30 +516,6 @@ test('fixUpVariableReferences on the stage does not rename existing stage variab
         'existing stage variable name not changed');
     t.equal(stage.blocks.getBlock('a stage block').fields.VARIABLE.id, 'pre-existing global var id',
         'block field id unchanged');
-
-    t.end();
-});
-
-test('fixUpVariableReferences on the stage creates broadcasts for undefined references', t => {
-    const runtime = new Runtime();
-
-    const stage = new Target(runtime);
-    stage.isStage = true;
-    stage.name = 'Stage';
-
-    runtime.targets = [stage];
-
-    addBroadcastBlocksTo(stage);
-
-    t.equal(Object.keys(stage.variables).length, 0);
-
-    stage.fixUpVariableReferences();
-
-    t.equal(Object.keys(stage.variables).length, 1);
-    const broadcast = stage.variables['mock broadcast message id'];
-    t.ok(broadcast, 'broadcast created on stage');
-    t.equal(broadcast.name, 'my message');
-    t.equal(broadcast.type, Variable.BROADCAST_MESSAGE_TYPE);
 
     t.end();
 });

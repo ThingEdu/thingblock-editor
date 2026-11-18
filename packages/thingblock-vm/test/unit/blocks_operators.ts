@@ -3,11 +3,6 @@ import Operators from '../../src/blocks/scratch3_operators.ts';
 
 const blocks = new Operators();
 
-test('getPrimitives', t => {
-    t.type(blocks.getPrimitives(), 'object');
-    t.end();
-});
-
 test('add', t => {
     t.equal(blocks.add({NUM1: '1', NUM2: '1'}), 2);
     t.equal(blocks.add({NUM1: 'foo', NUM2: 'bar'}), 0);

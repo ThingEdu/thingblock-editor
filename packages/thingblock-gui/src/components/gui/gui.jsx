@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
-import React, {useEffect, useCallback, useRef, useState} from 'react';
+import React, {useEffect, useCallback, useState} from 'react';
 import {defineMessages, FormattedMessage, useIntl} from 'react-intl';
 import {connect} from 'react-redux';
 import MediaQuery from 'react-responsive';
@@ -16,9 +16,6 @@ import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
 
 import ExtensionsButton from '../extension-button/extension-button.jsx';
-import LessonLibrary from '../../containers/lesson-library.jsx';
-import LessonPanel from '../../containers/lesson-panel.jsx';
-import LeftPanel from '../left-panel/left-panel.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
@@ -42,9 +39,6 @@ import {setTheme} from '../../reducers/settings.js';
 import {PLATFORM} from '../../lib/platform.js';
 import {MenuRefProvider} from '../../contexts/menu-ref-context.jsx';
 import {ModalFocusProvider} from '../../contexts/modal-focus-context.jsx';
-
-/** Widest the device panel starts while a lesson is open, so the workspace keeps room beside the lesson. */
-const LESSON_DEVICE_PANEL_WIDTH = 380;
 
 const ariaMessages = defineMessages({
     menuBar: {
@@ -110,7 +104,6 @@ const GUIComponent = props => {
         isShared,
         isTelemetryEnabled,
         isTotallyNormal,
-        lessonOpen,
         loading,
         logo,
         menuBarHidden,
@@ -139,12 +132,12 @@ const GUIComponent = props => {
         showNewFeatureCallouts,
         stageSizeMode,
         selectedDeviceId,
+        cameraAiLoaded,
         generatedCode,
         settingsModalVisible,
         telemetryModalVisible,
         colorMode,
         theme,
-        tipsLibraryVisible,
         useExternalPeripheralList,
         username,
         userOwnsProject,
@@ -179,19 +172,6 @@ const GUIComponent = props => {
     useEffect(() => {
         window.dispatchEvent(new Event('resize'));
     }, [devicePanelWidth]);
-
-    // The lesson column takes room from the workspace, so the device panel narrows while a lesson is open
-    // and goes back to the width it had when the lesson closes.
-    const widthBeforeLesson = useRef(null);
-    useEffect(() => {
-        if (lessonOpen) {
-            widthBeforeLesson.current = devicePanelWidth;
-            setDevicePanelWidth(Math.min(devicePanelWidth, LESSON_DEVICE_PANEL_WIDTH));
-        } else if (widthBeforeLesson.current !== null) {
-            setDevicePanelWidth(widthBeforeLesson.current);
-            widthBeforeLesson.current = null;
-        }
-    }, [lessonOpen]);
 
     const handleResizeMouseDown = useCallback(e => {
         const startX = e.clientX;
@@ -257,7 +237,6 @@ const GUIComponent = props => {
                     {isCreating ? (
                         <Loader messageId="gui.loader.creating" />
                     ) : null}
-                    {tipsLibraryVisible ? <LessonLibrary /> : null}
                     <BoardLibrary />
                     {onStartLoadingExample ? <ExampleLibrary onSelectExample={onStartLoadingExample} /> : null}
                     <PeripheralLibrary />
@@ -321,11 +300,6 @@ const GUIComponent = props => {
                     </MenuRefProvider>
                     }
                     <Box className={classNames(boxStyles, styles.flexWrapper)}>
-                        {lessonOpen && (
-                            <LeftPanel>
-                                <LessonPanel />
-                            </LeftPanel>
-                        )}
                         <Box
                             role="main"
                             aria-label={intl.formatMessage(ariaMessages.editor)}
@@ -413,6 +387,7 @@ const GUIComponent = props => {
                             onMouseDown={handleResizeMouseDown}
                         />
                         <SidePanel
+                            cameraAiLoaded={cameraAiLoaded}
                             generatedCode={generatedCode}
                             selectedDeviceId={selectedDeviceId}
                             vm={vm}
@@ -457,7 +432,6 @@ GUIComponent.propTypes = {
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
     isTotallyNormal: PropTypes.bool,
-    lessonOpen: PropTypes.bool,
     loading: PropTypes.bool,
     logo: PropTypes.string,
     menuBarHidden: PropTypes.bool,
@@ -485,6 +459,7 @@ GUIComponent.propTypes = {
     renderLogin: PropTypes.func,
     setTheme: PropTypes.func.isRequired,
     selectedDeviceId: PropTypes.string,
+    cameraAiLoaded: PropTypes.bool,
     generatedCode: PropTypes.string,
     settingsModalVisible: PropTypes.bool,
     showNewFeatureCallouts: PropTypes.bool,
@@ -493,7 +468,6 @@ GUIComponent.propTypes = {
     telemetryModalVisible: PropTypes.bool,
     colorMode: PropTypes.string,
     theme: PropTypes.string,
-    tipsLibraryVisible: PropTypes.bool,
     useExternalPeripheralList: PropTypes.bool, // true for CDM, false for normal Scratch Link
     username: PropTypes.string,
     userOwnsProject: PropTypes.bool,

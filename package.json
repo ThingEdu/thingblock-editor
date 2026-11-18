@@ -1,6 +1,6 @@
 {
   "name": "thingblock-editor",
-  "version": "14.1.0",
+  "version": "0.8.0-preview-20261115",
   "private": "true",
   "description": "ThingBlock editor mono-repository",
   "keywords": [],
@@ -21,7 +21,6 @@
     "packages/thingblock-vm",
     "packages/thingblock-gui",
     "packages/thingblock-resource",
-    "packages/thingblock-sim",
     "packages/thingblock-ui",
     "apps/thingblock",
     "apps/thingblock-virtualspace"
@@ -50,7 +49,7 @@
     "cross-env": "7.0.3",
     "globals": "16.5.0",
     "husky": "8.0.3",
-    "npm": "11.18.0",
+    "npm": "11.21.2",
     "semantic-release": "25.0.5",
     "ts-node": "10.9.2"
   }

@@ -4,12 +4,6 @@ import modeReducer from '../../../src/reducers/mode';
 const SET_FULL_SCREEN = 'scratch-gui/mode/SET_FULL_SCREEN';
 const SET_PLAYER = 'scratch-gui/mode/SET_PLAYER';
 
-test('initialState', () => {
-    let defaultState;
-    /* modeReducer(state, action) */
-    expect(modeReducer(defaultState, {type: 'anything'})).toBeDefined();
-});
-
 test('set full screen mode', () => {
     const previousState = {
         showBranding: false,

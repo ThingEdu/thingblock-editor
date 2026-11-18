@@ -46,14 +46,6 @@ const baseConfig = new ScratchWebpackConfigBuilder(
             // dist directory (the regular and the standalone version)
             clean: false
         },
-        optimization: {
-            splitChunks: {
-                // The simulator's worker loads its chunks relative to its own URL, which sits in the
-                // chunk directory itself; split out, its vendor chunk would resolve one directory too
-                // deep. Keep it whole, and split other async chunks as before.
-                chunks: chunk => !chunk.canBeInitial() && chunk.name !== 'sim-worker'
-            }
-        },
         resolve: {
             fallback: {
                 Buffer: require.resolve('buffer/'),
@@ -75,17 +67,6 @@ const baseConfig = new ScratchWebpackConfigBuilder(
         options: {
             configFile: path.resolve(__dirname, '../thingblock-vm/tsconfig.json'),
             transpileOnly: true
-        }
-    })
-    // The simulator package is consumed from its TypeScript source, like the VM.
-    .addModuleRule({
-        test: /\.ts$/,
-        include: /node_modules[\\/]@thingblock[\\/]thingblock-sim[\\/]src[\\/]/,
-        loader: 'ts-loader',
-        options: {
-            configFile: path.resolve(__dirname, '../thingblock-sim/tsconfig.json'),
-            transpileOnly: true,
-            compilerOptions: {noEmit: false, allowImportingTsExtensions: false}
         }
     })
     .addPlugin(new webpack.DefinePlugin({
@@ -110,6 +91,12 @@ const baseConfig = new ScratchWebpackConfigBuilder(
                 from: 'src/lib/settings/color-mode/high-contrast/blocks-media',
                 to: 'static/blocks-media/high-contrast',
                 force: true
+            },
+            {
+                // The Camera AI hand tracker runs this WASM runtime offline; see src/lib/vision/hand-tracker.js.
+                context: '../../node_modules/@mediapipe/tasks-vision/wasm',
+                from: '*',
+                to: 'static/mediapipe/wasm'
             },
             {
                 context: '../../node_modules/@thingblock/thingblock-vm/dist/web',

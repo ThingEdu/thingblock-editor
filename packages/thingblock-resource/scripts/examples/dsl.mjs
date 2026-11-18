@@ -148,3 +148,31 @@ export const mpuInit = () =>
   stmt('mpu6050_init', { AR: 'MPU6050_RANGE_8_G', GR: 'MPU6050_RANGE_500_DEG', FB: 'MPU6050_BAND_21_HZ' })
 export const mpuRead = () => stmt('mpu6050_readData')
 export const acceleration = (axis) => stmt('mpu6050_acceleration', { AXIS: axis })
+
+// ---- Serial ----------------------------------------------------------------------------------
+export const serialBegin = (baud = 115200) => stmt('serial_begin', { BAUD: String(baud) })
+export const serialPrint = (x) => stmt('serial_print', null, { VALUE: value('text', x) })
+export const serialPrintln = (x) => stmt('serial_println', null, { VALUE: value('text', x) })
+
+// ---- CoBot board -----------------------------------------------------------------------------
+// The car moves: forward, backward, turnLeft, turnRight, spinLeft, spinRight.
+export const cobotInit = () => stmt('cobotC3_init')
+export const cobotDrive = (move, speed) => stmt('cobotC3_drive', { MOVE: move }, { SPEED: numberValue(speed) })
+export const cobotStop = () => stmt('cobotC3_stop')
+export const cobotMotor = (side, speed) => stmt('cobotC3_setMotor', { MOTOR: side }, { SPEED: numberValue(speed) })
+export const cobotTrim = (percent) => stmt('cobotC3_setTrim', null, { PERCENT: numberValue(percent) })
+export const eye = (n) => stmt('cobotC3_readEye', { EYE: String(n) })
+export const onLine = (n) => stmt('cobotC3_onLine', { EYE: String(n) })
+export const lineWhen = (side, threshold) =>
+  stmt('cobotC3_setLine', { SIDE: side }, { THRESHOLD: numberValue(threshold) })
+export const pattern = () => stmt('cobotC3_pattern')
+export const patternIs = (p) => stmt('cobotC3_patternIs', null, { PATTERN: value('text', p) })
+export const irLight = (on) => stmt('cobotC3_irLight', { STATE: on ? 'HIGH' : 'LOW' })
+export const whiteLight = (on) => stmt('cobotC3_whiteLight', { STATE: on ? 'HIGH' : 'LOW' })
+
+// ---- colour sensor ---------------------------------------------------------------------------
+// Colour codes: 0 black, 1 red, 2 green, 3 blue, 4 yellow, 5 white.
+export const colourInit = () => stmt('colourSensor_init')
+export const colourRead = (channel) => stmt('colourSensor_read', { CHANNEL: String(channel) })
+export const colourIs = (code) => stmt('colourSensor_is', { COLOUR: String(code) })
+export const colourName = () => stmt('colourSensor_name')

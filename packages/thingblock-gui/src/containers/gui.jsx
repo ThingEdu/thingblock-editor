@@ -185,16 +185,15 @@ const mapStateToProps = (state, ownProps) => {
         isFullScreen: state.scratchGui.mode.isFullScreen,
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
         isRtl: state.locales.isRtl,
-        lessonOpen: Boolean(state.scratchGui.lesson.lesson),
         isShowingProject: getIsShowingProject(loadingState),
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         platform: ownProps.platform,
         projectId: state.scratchGui.projectState.projectId,
         selectedDeviceId: state.scratchGui.board.selectedDeviceId,
+        cameraAiLoaded: state.scratchGui.cameraAi.loaded,
         generatedCode: state.scratchGui.code.generatedCode,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
         telemetryModalVisible: state.scratchGui.modals.telemetryModal,
-        tipsLibraryVisible: state.scratchGui.modals.tipsLibrary,
         vm: state.scratchGui.vm
     };
 };

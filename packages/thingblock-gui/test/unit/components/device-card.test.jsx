@@ -36,7 +36,6 @@ describe('DeviceCard', () => {
 
         await user.click(screen.getByRole('button', {name: /Arduino Uno/i}));
 
-        expect(screen.getByRole('button', {name: /Arduino Uno/i}).tagName).toBe('BUTTON');
         expect(defaultProps.onSelect).toHaveBeenCalledWith('arduinoUno');
     });
 

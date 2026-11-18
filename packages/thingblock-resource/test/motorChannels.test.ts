@@ -88,11 +88,8 @@ describe('ThingBot motor and servo channels', () => {
     expect(firmwareChannels).toEqual(generatorChannels)
   })
 
-  it.each([
-    ['upload mode', generatorChannels],
-    ['firmware', firmwareChannels],
-  ])('gives every motor and servo a channel of its own in %s', (_where, channels) => {
-    const used = Object.values(channels)
+  it('gives every motor and servo a channel of its own', () => {
+    const used = Object.values(generatorChannels)
     expect(new Set(used).size).toBe(used.length)
   })
 

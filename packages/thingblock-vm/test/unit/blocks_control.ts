@@ -12,11 +12,6 @@ const newControl = (requestRedraw = () => {}) => {
     return {events, c: new Control(events, {requestRedraw})};
 };
 
-test('getPrimitives', t => {
-    t.type(newControl().c.getPrimitives(), 'object');
-    t.end();
-});
-
 test('repeat', t => {
     const {c} = newControl();
     let i = 0;

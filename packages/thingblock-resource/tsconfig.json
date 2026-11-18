@@ -22,6 +22,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "test"],
-  "exclude": ["test/lessons/lessons.test.ts", "test/sim/examples.test.ts"]
+  "include": ["src", "test"]
 }

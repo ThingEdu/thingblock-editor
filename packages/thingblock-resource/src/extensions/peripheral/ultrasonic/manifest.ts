@@ -17,7 +17,6 @@ const manifest: PeripheralManifest = {
   },
   blocks: './blocks.js',
   generator: './generator.js',
-  sim: './sim.js',
   toolbox: './toolbox.js',
   libs: [{ path: 'libs/Ultrasonic' }],
 }

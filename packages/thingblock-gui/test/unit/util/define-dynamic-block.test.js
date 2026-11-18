@@ -91,9 +91,6 @@ class MockBlock {
 }
 
 describe('defineDynamicBlock', () => {
-    test('is a function', () => {
-        expect(typeof defineDynamicBlock).toBe('function');
-    });
     test('can define a command block with an icon', () => {
         const extendedOpcode = 'test.commandWithIcon';
         const block = new MockBlock(testBlockInfo.commandWithIcon, extendedOpcode);

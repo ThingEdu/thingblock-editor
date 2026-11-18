@@ -31,15 +31,20 @@ const groupMessages = defineMessages({
         description: 'Example library tag: tunes played on the ThingBot buzzer',
         id: 'gui.exampleLibrary.groupMusic'
     },
-    'Mô phỏng ThingBot Sim': {
-        defaultMessage: 'ThingBot Sim lessons',
-        description: 'Example library tag: the lessons of the ThingBot simulator',
-        id: 'gui.exampleLibrary.groupSim'
+    'CoBot': {
+        defaultMessage: 'CoBot',
+        description: 'Example library tag: the CoBot line-following robot of the Maker Village',
+        id: 'gui.exampleLibrary.groupCoBot'
     },
     'FanRoc': {
         defaultMessage: 'FanRoc',
         description: 'Example library tag: competition robot samples for the FanRoc contest',
         id: 'gui.exampleLibrary.groupFanRoc'
+    },
+    'Camera AI': {
+        defaultMessage: 'Camera AI',
+        description: 'Example library tag: games played with a hand in front of the webcam, no board needed',
+        id: 'gui.exampleLibrary.groupCameraAi'
     }
 });
 

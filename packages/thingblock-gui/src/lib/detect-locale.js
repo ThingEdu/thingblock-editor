@@ -3,7 +3,6 @@
  * Utility function to detect locale from the browser setting or paramenter on the URL.
  */
 
-import queryString from 'query-string';
 import {loadPreference} from './user-preferences';
 
 /**
@@ -29,9 +28,8 @@ const detectLocale = supportedLocales => {
         }
     }
 
-    const queryParams = queryString.parse(location.search);
-    // Flatten potential arrays and remove falsy values
-    const potentialLocales = [].concat(queryParams.locale, queryParams.lang).filter(l => l);
+    const queryParams = new URLSearchParams(location.search);
+    const potentialLocales = [...queryParams.getAll('locale'), ...queryParams.getAll('lang')].filter(l => l);
     if (!potentialLocales.length) {
         return locale;
     }

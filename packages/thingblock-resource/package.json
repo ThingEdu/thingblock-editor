@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-resource",
-  "version": "0.5.0",
+  "version": "0.8.0-preview-20261115",
   "description": "Scratch-plane resource pack: device manifests, peripheral blocks, Arduino codegen, and vendored library sources, built to importable ESM and served by the local helper.",
   "keywords": [
     "arduino",
@@ -14,7 +14,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-assets.mjs && node scripts/build-lessons.mjs && node scripts/emit-index.mjs && node scripts/copy-examples.mjs && node scripts/zip-pack.mjs",
+    "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-assets.mjs && node scripts/emit-index.mjs && node scripts/copy-examples.mjs && node scripts/zip-pack.mjs",
     "clean": "rimraf dist",
     "deploy": "node scripts/deploy.mjs",
     "format": "prettier --write . && eslint --fix",
@@ -25,7 +25,7 @@
     "vite": "npm:rolldown-vite@7.3.1"
   },
   "devDependencies": {
-    "@thingblock/thingblock-blocks": "14.1.0",
+    "@thingblock/thingblock-blocks": "0.8.0-preview-20261115",
     "eslint": "9.39.4",
     "eslint-config-scratch": "14.1.30",
     "jszip": "3.10.1",
@@ -33,6 +33,6 @@
     "rimraf": "6.1.2",
     "typescript": "5.9.3",
     "vite": "npm:rolldown-vite@7.3.1",
-    "vitest": "4.1.8"
+    "vitest": "4.1.12"
   }
 }
