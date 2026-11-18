@@ -21,7 +21,6 @@
     "packages/thingblock-vm",
     "packages/thingblock-gui",
     "packages/thingblock-resource",
-    "packages/thingblock-ui",
     "apps/thingblock",
     "apps/thingblock-virtualspace"
   ],

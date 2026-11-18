@@ -2,10 +2,10 @@
 
 exports[`Button > matches snapshot 1`] = `
 <button
-  class="_outlinedButton_2b13e7"
+  class="_outlinedButton_f0e802"
 >
   <div
-    class="_content_2b13e7"
+    class="_content_f0e802"
   />
 </button>
 `;

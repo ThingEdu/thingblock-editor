@@ -81,7 +81,6 @@ packages/
 ├── thingblock-vm/          Virtual machine that runs Scratch projects
 ├── thingblock-blocks/      Blockly-based block editor (workspace fork)
 ├── thingblock-storage/     Asset and project file storage layer
-├── thingblock-ui/          UI components shared by ThingBlock apps (private, source-only)
 └── task-herder/            Async task scheduler with rate limiting
 scripts/                    Monorepo-level utility scripts
 ```
@@ -98,7 +97,6 @@ libraries.
 | `thingblock-blocks` | TypeScript | webpack | Vitest |
 | `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
-| `thingblock-ui` | TypeScript | none (consumers bundle its source) | Vitest |
 | `thingblock` (app) | TypeScript | Vite | Vitest |
 | `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
 
@@ -139,15 +137,11 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
   run against a stale bundle.
 
-### thingblock-ui specifics
+### thingblock-virtualspace specifics
 
-- React 18 components in TSX, exported from `src/index.ts` and consumed from source; the consumer's bundler
-  compiles them. `react` is a peer dependency.
-- Styles are CSS modules named `*.module.css`, with camelCase class names so `styles.fooBar` works in both
-  webpack and Vite. They use the `$variable` tokens in `css/` (`colors`, `units`, `z-index`, exported as
-  `@thingblock/thingblock-ui/css/*`), so a consumer needs `postcss-import` and `postcss-simple-vars`.
-- `thingblock-virtualspace` consumes it through Vite, with the two plugins in its `postcss.config.mjs`.
-  `thingblock-gui` still has its own copies of these components and tokens and does not use `thingblock-ui` yet.
+- Its UI components are TSX copies of `thingblock-gui` components in `src/components/`, styled with plain CSS
+  modules (`*.module.css`, no PostCSS). They are not shared with the GUI, so a change to one copy does not reach
+  the other.
 
 ### thingblock-blocks specifics
 

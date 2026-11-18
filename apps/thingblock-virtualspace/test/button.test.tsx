@@ -1,7 +1,6 @@
 import { fireEvent, render } from '@testing-library/react'
-import React from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { Button } from '../src'
+import { Button } from '../src/components/button/button'
 
 describe('Button', () => {
   test('matches snapshot', () => {
