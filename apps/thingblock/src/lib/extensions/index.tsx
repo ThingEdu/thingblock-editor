@@ -14,7 +14,13 @@ export interface ExtensionInfo {
   description: ReactElement
   featured: boolean
   useAutoScan?: boolean
+  /** A picture of the device, shown while it connects. */
+  connectionIconURL?: string
   connectionSmallIconURL?: string
+  /** A hint picture, such as the button to press, shown while the device is searched for. */
+  connectionTipIconURL?: string
+  /** The page the connection modal's Help buttons open. */
+  helpLink?: string
   firmware?: { deviceId: string; firmwareId: string }
   connectingMessage?: ReactElement
   prescanMessage?: ReactElement
