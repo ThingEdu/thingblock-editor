@@ -7,6 +7,9 @@ import cameraAiIconURL from './camera-ai/camera-ai.svg'
 import thingbotTelemetrixInsetIconURL from './thingbot-telemetrix/thingbot-telemetrix-small.svg'
 import thingbotTelemetrixIconURL from './thingbot-telemetrix/thingbot-telemetrix.svg'
 
+/** Something an extension needs to work, shown as an icon under "Requires" on its card. */
+export type Requirement = 'bluetooth' | 'webcam'
+
 /** An entry in the extension library. */
 export interface ExtensionInfo {
   name: string
@@ -15,6 +18,7 @@ export interface ExtensionInfo {
   insetIconURL: string
   description: ReactElement
   featured: boolean
+  requires?: Requirement[]
   useAutoScan?: boolean
   /** A picture of the device, shown while it connects. */
   connectionIconURL?: string
@@ -45,6 +49,7 @@ const extensions: ExtensionInfo[] = [
       />
     ),
     featured: true,
+    requires: ['webcam'],
     pane: ExtensionPaneCameraAi,
   },
   {
@@ -60,6 +65,7 @@ const extensions: ExtensionInfo[] = [
       />
     ),
     featured: true,
+    requires: ['bluetooth'],
     pane: ExtensionPaneThingbotTelemetrix,
     // Helper backend streams multiple named devices, so let the user pick from a
     // list (ScanningStep). The Web Bluetooth backend has no such list — its native

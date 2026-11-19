@@ -109,10 +109,34 @@
   padding-right: 1.25rem;
 }
 
+/* Always two lines tall, cut with an ellipsis, so every card's "Requires" row sits at the same height */
 .featured-description {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  height: 2.75rem;
+  margin: 0.3125rem 0 0.25rem;
   font-weight: normal;
   line-height: 1.375rem;
-  padding-top: 0.3125rem;
-  padding-bottom: 0.25rem;
+}
+
+.featured-extension-metadata {
+  padding: 0 1.25rem 1rem;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+[dir='ltr'] .featured-extension-metadata {
+  text-align: left;
+}
+
+[dir='rtl'] .featured-extension-metadata {
+  text-align: right;
+}
+
+.featured-extension-metadata-detail {
+  display: flex;
+  gap: 0.25rem;
+  padding-top: 0.4rem;
 }

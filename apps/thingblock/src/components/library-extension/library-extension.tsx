@@ -51,6 +51,7 @@ const LibraryExtension = ({ onCategorySelected }: { onCategorySelected: (extensi
           iconURL={item.iconURL}
           insetIconURL={item.insetIconURL}
           name={item.name}
+          requires={item.requires}
           onSelect={onSelect}
         />
       )}
