@@ -1,18 +1,18 @@
 import { expect, test } from 'vitest'
 import projectStateReducer, {
+  type LoadingStateName,
   type ProjectState,
   type ProjectStateAction,
-  projectStateInitialState,
   LoadingState,
   onFetchedProjectData,
   onLoadedProject,
   projectError,
+  projectStateInitialState,
   requestNewProject,
   requestProjectUpload,
-  setProjectId,
 } from '../../src/reducers/project-state'
 
-const unrelatedAction = { type: 'anything' } as unknown as ProjectStateAction
+const inState = (loadingState: LoadingStateName): ProjectState => ({ ...projectStateInitialState, loadingState })
 
 /**
  * Applies an action creator's result to a state.
@@ -26,266 +26,62 @@ const reduce = (state: ProjectState, action: ProjectStateAction | undefined) => 
 }
 
 test('initialState', () => {
-  /* projectStateReducer(state, action) */
-  expect(projectStateReducer(undefined, unrelatedAction)).toBeDefined()
-  expect(projectStateReducer(undefined, unrelatedAction).error).toBe(null)
-  expect(projectStateReducer(undefined, unrelatedAction).projectData).toBe(null)
-  expect(projectStateReducer(undefined, unrelatedAction).projectId).toBe(null)
-  expect(projectStateReducer(undefined, unrelatedAction).loadingState).toBe(LoadingState.NOT_LOADED)
-})
-
-test('onFetchedProjectData with id loads project data into vm', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
+  const unrelatedAction = { type: 'anything' } as unknown as ProjectStateAction
+  expect(projectStateReducer(undefined, unrelatedAction)).toEqual({
+    error: null,
     projectData: null,
-    loadingState: LoadingState.FETCHING_WITH_ID,
-  }
-  const action = onFetchedProjectData('1010101', initialState.loadingState)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_WITH_ID)
-  expect(resultState.projectData).toBe('1010101')
-})
-
-test('onFetchedProjectData new loads project data into vm', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectData: null,
-    loadingState: LoadingState.FETCHING_NEW_DEFAULT,
-  }
-  const action = onFetchedProjectData('1010101', initialState.loadingState)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_NEW_DEFAULT)
-  expect(resultState.projectData).toBe('1010101')
-})
-
-// onLoadedProject: LOADING_VM_WITH_ID
-
-test('onLoadedProject(LOADING_VM_WITH_ID, true) results in state SHOWING_WITH_ID', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '100',
-    loadingState: LoadingState.LOADING_VM_WITH_ID,
-  }
-  const action = onLoadedProject(initialState.loadingState, true)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITH_ID)
-  expect(resultState.projectId).toBe('100')
-})
-
-// case where we started out viewing a project with a projectId, then
-// started to load another project; but loading fails. We go back to
-// showing the original project.
-test('onLoadedProject(LOADING_VM_WITH_ID, false), with project id, ' + 'results in state SHOWING_WITH_ID', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '100',
-    loadingState: LoadingState.LOADING_VM_WITH_ID,
-  }
-  const action = onLoadedProject(initialState.loadingState, false)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITH_ID)
-  expect(resultState.projectId).toBe('100')
-})
-
-// case where we started out viewing a project with default projectId, then
-// started to load one with an id, such as in standalone mode when user adds
-// '#PROJECT_ID_NUMBER' to the URI; but loading fails. We go back to
-// showing the original project.
-test(
-  'onLoadedProject(LOADING_VM_WITH_ID, false), with no project id, ' + 'results in state SHOWING_WITHOUT_ID',
-  () => {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      projectId: '0',
-      loadingState: LoadingState.LOADING_VM_WITH_ID,
-    }
-    const action = onLoadedProject(initialState.loadingState, false)
-    const resultState = reduce(initialState, action)
-    expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITHOUT_ID)
-    expect(resultState.projectId).toBe('0')
-  },
-)
-
-// onLoadedProject: LOADING_VM_FILE_UPLOAD
-
-test('onLoadedProject(LOADING_VM_FILE_UPLOAD, true) results in state SHOWING_WITHOUT_ID', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '0',
-    loadingState: LoadingState.LOADING_VM_FILE_UPLOAD,
-  }
-  const action = onLoadedProject(initialState.loadingState, true)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITHOUT_ID)
-  expect(resultState.projectId).toBe('0')
-})
-
-test(
-  'onLoadedProject(LOADING_VM_FILE_UPLOAD, false), when we know project id, ' + 'results in state SHOWING_WITH_ID',
-  () => {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      projectId: '100',
-      loadingState: LoadingState.LOADING_VM_FILE_UPLOAD,
-    }
-    const action = onLoadedProject(initialState.loadingState, false)
-    const resultState = reduce(initialState, action)
-    expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITH_ID)
-    expect(resultState.projectId).toBe('100')
-  },
-)
-
-test(
-  'onLoadedProject(LOADING_VM_FILE_UPLOAD, false), when we ' +
-    "don't know project id, results in state SHOWING_WITHOUT_ID",
-  () => {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      projectId: '0',
-      loadingState: LoadingState.LOADING_VM_FILE_UPLOAD,
-    }
-    const action = onLoadedProject(initialState.loadingState, false)
-    const resultState = reduce(initialState, action)
-    expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITHOUT_ID)
-    expect(resultState.projectId).toBe('0')
-  },
-)
-
-// onLoadedProject: LOADING_VM_NEW_DEFAULT
-
-test('onLoadedProject(LOADING_VM_NEW_DEFAULT, true) results in state SHOWING_WITHOUT_ID', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '0',
-    loadingState: LoadingState.LOADING_VM_NEW_DEFAULT,
-  }
-  const action = onLoadedProject(initialState.loadingState, true)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITHOUT_ID)
-  expect(resultState.projectId).toBe('0')
-})
-
-test('onLoadedProject(LOADING_VM_NEW_DEFAULT, false) results in ERROR state', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '0',
-    loadingState: LoadingState.LOADING_VM_NEW_DEFAULT,
-  }
-  const action = onLoadedProject(initialState.loadingState, false)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.ERROR)
-  expect(resultState.projectId).toBe('0')
-})
-
-test('calling setProjectId, using with same id as already showing, ' + 'results in state SHOWING_WITH_ID', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '100',
-    loadingState: LoadingState.SHOWING_WITH_ID,
-  }
-  const action = setProjectId('100')
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.SHOWING_WITH_ID)
-  expect(resultState.projectId).toBe('100')
-})
-
-test(
-  'calling setProjectId, using different id from project already showing, ' + 'results in state FETCHING_WITH_ID',
-  () => {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      projectId: 99,
-      loadingState: LoadingState.SHOWING_WITH_ID,
-    }
-    const action = setProjectId('100')
-    const resultState = reduce(initialState, action)
-    expect(resultState.loadingState).toBe(LoadingState.FETCHING_WITH_ID)
-    expect(resultState.projectId).toBe('100')
-  },
-)
-
-test(
-  'setProjectId, with same id as before, but not same type, ' +
-    'results in FETCHING_WITH_ID because the two projectIds are not strictly equal',
-  () => {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      projectId: '100',
-      loadingState: LoadingState.SHOWING_WITH_ID,
-    }
-    const action = setProjectId(100)
-    const resultState = reduce(initialState, action)
-    expect(resultState.loadingState).toBe(LoadingState.FETCHING_WITH_ID)
-    expect(resultState.projectId).toBe(100)
-  },
-)
-
-test('requestNewProject results in FETCHING_NEW_DEFAULT', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '0',
-    loadingState: LoadingState.SHOWING_WITHOUT_ID,
-  }
-  const action = requestNewProject()
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.FETCHING_NEW_DEFAULT)
-  expect(resultState.projectId).toBe('0')
-})
-
-test('requestProjectUpload when project not loaded results in state LOADING_VM_FILE_UPLOAD', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: null,
     loadingState: LoadingState.NOT_LOADED,
-  }
-  const action = requestProjectUpload(initialState.loadingState)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_FILE_UPLOAD)
-  expect(resultState.projectId).toBe(null)
+  })
 })
 
-test('requestProjectUpload when showing project with id results in state LOADING_VM_FILE_UPLOAD', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: '100',
-    loadingState: LoadingState.SHOWING_WITH_ID,
+test('requestNewProject fetches the default project at startup and while showing a project', () => {
+  for (const loadingState of [LoadingState.NOT_LOADED, LoadingState.SHOWING]) {
+    expect(reduce(inState(loadingState), requestNewProject()).loadingState).toBe(LoadingState.FETCHING_NEW_DEFAULT)
   }
-  const action = requestProjectUpload(initialState.loadingState)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_FILE_UPLOAD)
-  expect(resultState.projectId).toBe('100')
 })
 
-test('requestProjectUpload when showing project without id results in state LOADING_VM_FILE_UPLOAD', () => {
-  const initialState: ProjectState = {
-    ...projectStateInitialState,
-    projectId: null,
-    loadingState: LoadingState.SHOWING_WITHOUT_ID,
-  }
-  const action = requestProjectUpload(initialState.loadingState)
-  const resultState = reduce(initialState, action)
-  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_FILE_UPLOAD)
-  expect(resultState.projectId).toBe(null)
+test('requestNewProject does nothing while a project is loading', () => {
+  const state = inState(LoadingState.LOADING_VM_FILE_UPLOAD)
+  expect(reduce(state, requestNewProject())).toBe(state)
 })
 
-test('fatal projectError should show error state', () => {
-  const startStates = [
-    LoadingState.FETCHING_NEW_DEFAULT,
-    LoadingState.FETCHING_WITH_ID,
-    LoadingState.LOADING_VM_NEW_DEFAULT,
-    LoadingState.LOADING_VM_WITH_ID,
-  ]
-  for (const startState of startStates) {
-    const initialState: ProjectState = {
-      ...projectStateInitialState,
-      error: null,
-      projectId: '100',
-      loadingState: startState,
-    }
-    const action = projectError('Error string')
-    const resultState = reduce(initialState, action)
+test('onFetchedProjectData loads the fetched default project into the VM', () => {
+  const resultState = reduce(inState(LoadingState.FETCHING_NEW_DEFAULT), onFetchedProjectData('foo'))
+  expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_NEW_DEFAULT)
+  expect(resultState.projectData).toBe('foo')
+})
+
+test('onLoadedProject shows the default project, or the error state when it fails to load', () => {
+  const state = inState(LoadingState.LOADING_VM_NEW_DEFAULT)
+  expect(reduce(state, onLoadedProject(state.loadingState, true)).loadingState).toBe(LoadingState.SHOWING)
+  expect(reduce(state, onLoadedProject(state.loadingState, false)).loadingState).toBe(LoadingState.ERROR)
+})
+
+test('onLoadedProject shows the project after a file upload, whether or not the file loaded', () => {
+  const state = inState(LoadingState.LOADING_VM_FILE_UPLOAD)
+  expect(reduce(state, onLoadedProject(state.loadingState, true)).loadingState).toBe(LoadingState.SHOWING)
+  expect(reduce(state, onLoadedProject(state.loadingState, false)).loadingState).toBe(LoadingState.SHOWING)
+})
+
+test('requestProjectUpload loads a file before any project and while showing one, but not while fetching', () => {
+  for (const loadingState of [LoadingState.NOT_LOADED, LoadingState.SHOWING]) {
+    expect(reduce(inState(loadingState), requestProjectUpload()).loadingState).toBe(
+      LoadingState.LOADING_VM_FILE_UPLOAD,
+    )
+  }
+  const fetching = inState(LoadingState.FETCHING_NEW_DEFAULT)
+  expect(reduce(fetching, requestProjectUpload())).toBe(fetching)
+})
+
+test('projectError while fetching or loading the default project shows the error state', () => {
+  for (const loadingState of [LoadingState.FETCHING_NEW_DEFAULT, LoadingState.LOADING_VM_NEW_DEFAULT]) {
+    const resultState = reduce(inState(loadingState), projectError('Error string'))
     expect(resultState.loadingState).toBe(LoadingState.ERROR)
-    expect(resultState.error).toEqual('Error string')
-    expect(resultState.projectId).toBe('100')
+    expect(resultState.error).toBe('Error string')
   }
+})
+
+test('projectError while showing a project changes nothing', () => {
+  const state = inState(LoadingState.SHOWING)
+  expect(reduce(state, projectError('Error string'))).toBe(state)
 })

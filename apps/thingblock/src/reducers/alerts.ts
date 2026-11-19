@@ -1,10 +1,8 @@
 import type { ReactElement } from 'react'
 import type { Dispatch } from 'redux'
-import alertsData, { type AlertData, AlertLevels, type AlertLevel, type AlertType, AlertTypes } from '../lib/alerts'
-import extensionData from '../lib/extensions'
+import alertsData, { type AlertData, type AlertLevel, type AlertType, AlertTypes } from '../lib/alerts'
 
 const SHOW_ALERT = 'scratch-gui/alerts/SHOW_ALERT'
-const SHOW_EXTENSION_ALERT = 'scratch-gui/alerts/SHOW_EXTENSION_ALERT'
 const CLOSE_ALERT = 'scratch-gui/alerts/CLOSE_ALERT'
 const CLOSE_ALERTS_WITH_ID = 'scratch-gui/alerts/CLOSE_ALERTS_WITH_ID'
 const CLOSE_ALERT_WITH_ID = 'scratch-gui/alerts/CLOSE_ALERT_WITH_ID'
@@ -15,14 +13,11 @@ export interface Alert {
   alertType?: AlertType
   closeButton?: boolean
   content?: ReactElement
-  extensionId?: string
-  extensionName?: string
   iconSpinner?: boolean
   iconURL?: string
   level: AlertLevel
   message?: string
   showDownload?: boolean
-  showReconnect?: boolean
   showSaveNow?: boolean
 }
 
@@ -33,7 +28,6 @@ export interface AlertsState {
 
 type AlertsAction =
   | { type: typeof SHOW_ALERT; alertId: string; data?: AlertData }
-  | { type: typeof SHOW_EXTENSION_ALERT; data: { extensionId: string; message?: string } }
   | { type: typeof CLOSE_ALERT; index: number }
   | { type: typeof CLOSE_ALERT_WITH_ID; alertId: string }
   | { type: typeof CLOSE_ALERTS_WITH_ID; alertId: string }
@@ -44,16 +38,13 @@ export const alertsInitialState: AlertsState = {
 }
 
 export const filterPopupAlerts = (alertsList: Alert[]) =>
-  alertsList.filter(
-    (curAlert) => curAlert.alertType === AlertTypes.STANDARD || curAlert.alertType === AlertTypes.EXTENSION,
-  )
+  alertsList.filter((curAlert) => curAlert.alertType === AlertTypes.STANDARD)
 
 export const filterInlineAlerts = (alertsList: Alert[]) =>
   alertsList.filter((curAlert) => curAlert.alertType === AlertTypes.INLINE)
 
 const reducer = (state = alertsInitialState, action: AlertsAction): AlertsState => {
   switch (action.type) {
-    // Shows standard and inline alerts, but not extension alerts
     case SHOW_ALERT: {
       const alertData = alertsData.find((thisAlertData) => thisAlertData.alertId === action.alertId)
       // If the alert is not found, show nothing
@@ -74,28 +65,6 @@ const reducer = (state = alertsInitialState, action: AlertsAction): AlertsState 
         showSaveNow: alertData.showSaveNow,
       })
       return { ...state, alertsList: newList }
-    }
-    case SHOW_EXTENSION_ALERT: {
-      const extensionId = action.data.extensionId
-      const extension = extensionData.find((ext) => ext.extensionId === extensionId)
-      // If the extension is not found, show nothing
-      if (!extension) return state
-
-      return {
-        ...state,
-        alertsList: [
-          ...state.alertsList,
-          {
-            alertType: AlertTypes.EXTENSION,
-            closeButton: true,
-            extensionId,
-            extensionName: extension.name,
-            iconURL: extension.connectionSmallIconURL,
-            level: AlertLevels.WARN,
-            showReconnect: true,
-          },
-        ],
-      }
     }
     case CLOSE_ALERT_WITH_ID:
     case CLOSE_ALERT: {
@@ -143,18 +112,6 @@ export const closeAlertWithId = (alertId: string): AlertsAction => ({ type: CLOS
 export const showStandardAlert = (alertId: string, data?: AlertData): AlertsAction => ({
   type: SHOW_ALERT,
   alertId,
-  data,
-})
-
-/**
- * Shows the alert for an extension that lost its connection.
- * @param data - What to show.
- * @param data.extensionId - Which extension lost its connection.
- * @param data.message - An optional message.
- * @returns The action.
- */
-export const showExtensionAlert = (data: { extensionId: string; message?: string }): AlertsAction => ({
-  type: SHOW_EXTENSION_ALERT,
   data,
 })
 

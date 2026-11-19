@@ -6,7 +6,6 @@
   "arduino.digitalWrite": "ghi số chân [PIN] [LEVEL]",
   "arduino.name": "Arduino",
   "arduino.pinMode": "đặt chân [PIN] chế độ [MODE]",
-  "gui.alerts.loadingExtensionData": "Đang tải phần mở rộng...",
   "gui.alerts.saveToFileError": "Không lưu được dự án: {message}",
   "gui.alerts.savedToFile": "Đã lưu: {path}",
   "gui.boardLibrary.chooseADevice": "Chọn mạch",

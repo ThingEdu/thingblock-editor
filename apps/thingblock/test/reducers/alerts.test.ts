@@ -7,7 +7,6 @@ import alertsReducer, {
   closeAlertWithId,
   filterInlineAlerts,
   filterPopupAlerts,
-  showExtensionAlert,
   showStandardAlert,
 } from '../../src/reducers/alerts'
 
@@ -27,9 +26,9 @@ test('initialState', () => {
 })
 
 test('create one standard alert', () => {
-  const resultState = alertsReducer(undefined, showStandardAlert('loadingExtensionData'))
+  const resultState = alertsReducer(undefined, showStandardAlert('savedToFile'))
   expect(resultState.alertsList.length).toBe(1)
-  expect(resultState.alertsList[0].alertId).toBe('loadingExtensionData')
+  expect(resultState.alertsList[0].alertId).toBe('savedToFile')
   expect(resultState.alertsList[0].alertType).toBe(AlertTypes.STANDARD)
   expect(resultState.alertsList[0].level).toBe(AlertLevels.SUCCESS)
 })
@@ -57,7 +56,7 @@ test('an unknown alert id shows nothing', () => {
 test('can close alerts by index', () => {
   let resultState = alertsReducer(withAlerts([errorAlert]), closeAlert(0))
   expect(resultState.alertsList.length).toBe(0)
-  resultState = alertsReducer(resultState, showStandardAlert('loadingExtensionData'))
+  resultState = alertsReducer(resultState, showStandardAlert('savedToFile'))
   expect(resultState.alertsList.length).toBe(1)
 })
 
@@ -78,9 +77,9 @@ test('can close a single alert by id', () => {
 })
 
 test('related alerts can clear each other', () => {
-  const loadingAlert: Alert = { ...errorAlert, alertId: 'loadingExtensionData' }
-  const resultState = alertsReducer(withAlerts([errorAlert, loadingAlert]), showStandardAlert('savedToFile'))
-  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['loadingExtensionData', 'savedToFile'])
+  const otherAlert: Alert = { ...errorAlert, alertId: 'other' }
+  const resultState = alertsReducer(withAlerts([errorAlert, otherAlert]), showStandardAlert('savedToFile'))
+  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['other', 'savedToFile'])
 })
 
 test('several related alerts can be cleared at once', () => {
@@ -92,21 +91,7 @@ test('several related alerts can be cleared at once', () => {
   expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['saveToFileError'])
 })
 
-test('showExtensionAlert adds a reconnect alert for a known extension', () => {
-  const resultState = alertsReducer(undefined, showExtensionAlert({ extensionId: 'thingbotTelemetrix' }))
-  expect(resultState.alertsList).toEqual([
-    expect.objectContaining({
-      alertType: AlertTypes.EXTENSION,
-      extensionId: 'thingbotTelemetrix',
-      extensionName: 'ThingBot Telemetrix',
-      showReconnect: true,
-    }),
-  ])
-  expect(alertsReducer(undefined, showExtensionAlert({ extensionId: 'noSuchExtension' })).alertsList).toEqual([])
-})
-
 const mixedAlerts: Alert[] = [
-  { alertId: 'extension', alertType: AlertTypes.EXTENSION, level: AlertLevels.WARN },
   { alertId: 'inline', alertType: AlertTypes.INLINE, level: AlertLevels.WARN },
   { alertId: 'standard', alertType: AlertTypes.STANDARD, level: AlertLevels.WARN },
 ]
@@ -115,6 +100,6 @@ test('filterInlineAlerts only returns inline type alerts', () => {
   expect(filterInlineAlerts(mixedAlerts).map((a) => a.alertId)).toEqual(['inline'])
 })
 
-test('filterPopupAlerts returns standard and extension type alerts', () => {
-  expect(filterPopupAlerts(mixedAlerts).map((a) => a.alertId)).toEqual(['extension', 'standard'])
+test('filterPopupAlerts only returns standard type alerts', () => {
+  expect(filterPopupAlerts(mixedAlerts).map((a) => a.alertId)).toEqual(['standard'])
 })

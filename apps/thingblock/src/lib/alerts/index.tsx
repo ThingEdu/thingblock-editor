@@ -5,7 +5,6 @@ import successImage from '../assets/icon--success.svg'
 
 export const AlertTypes = {
   STANDARD: 'STANDARD',
-  EXTENSION: 'EXTENSION',
   INLINE: 'INLINE',
 } as const
 
@@ -76,20 +75,6 @@ const alerts: AlertDefinition[] = [
     iconURL: failImage,
     level: AlertLevels.WARN,
     maxDisplaySecs: 10,
-  },
-  {
-    alertId: 'loadingExtensionData',
-    alertType: AlertTypes.STANDARD,
-    clearList: ['loadingExtensionData'],
-    content: (
-      <FormattedMessage
-        defaultMessage="Loading extension..."
-        description="Message indicating that extension is in process of loading"
-        id="gui.alerts.loadingExtensionData"
-      />
-    ),
-    iconSpinner: true,
-    level: AlertLevels.SUCCESS,
   },
 ]
 
