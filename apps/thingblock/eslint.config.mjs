@@ -22,7 +22,7 @@ export default eslintConfigScratch.defineConfig(
     },
   },
   {
-    files: ['*'], // files in the root of the package (not subdirectories)
+    files: ['*', 'scripts/**'], // the package's config files and its Node scripts
     languageOptions: {
       globals: globals.node,
     },

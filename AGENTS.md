@@ -149,7 +149,8 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `boards/`) rather than mirroring the GUI's flat `lib/`; helpers used across areas (`log`, `platform`,
   `shared-messages`) sit at its top. Each extension's code and assets live in its own folder under `extensions/`,
   next to `extensions/index.tsx`, the extension library list: Camera AI's tracker, from the GUI's `lib/vision/`, is
-  in `extensions/camera-ai/`.
+  in `extensions/camera-ai/`. Its models are not committed: `scripts/fetch-ai-models.mjs` downloads them into
+  `public/static/ai-models/` before `dev` and `build`.
 - File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported `lib/` or reducer file
   keeps its GUI name (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a
   changed GUI file is found by its name.

@@ -10,8 +10,11 @@
     "build": "tsc && vite build",
     "clean": "rimraf dist",
     "dev": "vite",
+    "fetch:ai-models": "node scripts/fetch-ai-models.mjs",
     "format": "prettier --write . && eslint --fix",
     "lint": "eslint && prettier --check .",
+    "prebuild": "npm run fetch:ai-models",
+    "predev": "npm run fetch:ai-models",
     "preview": "vite preview",
     "test": "npm run lint && tsc && vitest run --passWithNoTests"
   },
