@@ -231,8 +231,6 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
   skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
   cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
-- `test/examples-camera-ai.test.ts` in `thingblock-resource` runs the Camera AI example games in the built VM
-  (`thingblock-vm/dist/node`) with a synthetic hand, so it needs `npm run build:libs`.
 - Camera AI's head and body blocks read a `pose` (MediaPipe pose landmarker, 33 points) carried in the same
   `CAMERA_AI_VISION_RESULTS` frame as the hands. The GUI runs that model only when the VM's `CAMERA_COMMAND` says
   `pose: true` (the project has a head/body block or the flap hat).
