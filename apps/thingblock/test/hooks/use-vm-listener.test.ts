@@ -25,7 +25,7 @@ test('VM events reach the store', () => {
   const state = store.getState().scratchGui
   expect(state.vmStatus).toEqual({ started: true, running: true, turbo: true })
   expect(state.projectChanged).toBe(true)
-  expect(state.cameraAi.loaded).toBe(true)
+  expect(state.loadedExtensions).toEqual(['cameraAi'])
   expect(state.board.selectedDeviceId).toBe('thingbot')
 
   vm.events.emit('PROJECT_RUN_STOP')
@@ -34,14 +34,6 @@ test('VM events reach the store', () => {
 
   expect(store.getState().scratchGui.vmStatus).toEqual({ started: true, running: false, turbo: false })
   expect(store.getState().scratchGui.board.selectedDeviceId).toBeNull()
-})
-
-test('other extensions do not show the Camera AI panel', () => {
-  const { store, vm } = setUp()
-
-  vm.events.emit('EXTENSION_ADDED', { id: 'arduino' })
-
-  expect(store.getState().scratchGui.cameraAi.loaded).toBe(false)
 })
 
 test('nothing is forwarded once unmounted', () => {

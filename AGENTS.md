@@ -157,6 +157,10 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `Library`, `button-close` is a kind of button, `modal-settings` renders `Modal`), and a part with one user sits in
   that user's folder, named after it (`library-board/library-board-card`, `alerts/alerts-item`). Component names
   follow their files (`LibraryBoard`, `ButtonClose`).
+- An extension's pane in the side panel is the `pane` of its entry in `lib/extensions/index.tsx`: a component named
+  `extension-pane-<extension>` that renders `ExtensionPane` (Camera AI's is `extension-pane-camera-ai`). The side
+  panel shows the panes of the extensions in the project (the `loadedExtensions` slice, filled from the VM's
+  `EXTENSION_ADDED`) and lists each in its menu, where it can be hidden. No other code names a specific extension.
 - The GUI's higher-order components are hooks in `src/hooks/`. `src/app/` holds the store (`createEditorStore`, with
   the typed `useAppSelector` and `useAppDispatch`), the providers, `App` and `Editor`, the port of
   `containers/gui.jsx`, which runs the hooks that serve the whole editor. The state keeps the GUI's `scratchGui`

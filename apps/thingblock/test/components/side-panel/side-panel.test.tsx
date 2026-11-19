@@ -4,6 +4,7 @@ import { createEditorStore } from '../../../src/app/store'
 import SidePanel from '../../../src/components/side-panel/side-panel'
 import { setDevice } from '../../../src/reducers/board'
 import { setGeneratedCode } from '../../../src/reducers/code'
+import { extensionLoaded } from '../../../src/reducers/loaded-extensions'
 import { renderInEditor, vmOf } from '../render-in-editor'
 
 const setUp = () => {
@@ -46,4 +47,18 @@ test('with every pane hidden from its menu, it says how to show one', () => {
 
   expect(screen.queryByPlaceholderText('Send message...')).toBeNull()
   expect(screen.getByText(/No panel shown/)).toBeTruthy()
+})
+
+test('an extension’s pane shows once the extension is in the project, and hides from the menu', () => {
+  const { store } = setUp()
+  expect(screen.queryByText('Playground')).toBeNull()
+
+  act(() => {
+    store.dispatch(extensionLoaded('cameraAi'))
+  })
+  expect(screen.getByText('Playground')).toBeTruthy()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Show panels' }))
+  fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Camera AI' }))
+  expect(screen.queryByText('Playground')).toBeNull()
 })

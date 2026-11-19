@@ -50,3 +50,22 @@ export const usePaneCollapsed = (pane: string, fallback: boolean): [boolean, () 
   }, [pane])
   return [collapsed, toggle]
 }
+
+/**
+ * Whether each of several side panes is hidden, remembered across reloads.
+ * @param panes The panes' names; read once, so the list must not change.
+ * @returns Whether a pane is hidden, and a function that toggles it.
+ */
+export const useHiddenPanes = (panes: string[]): [(pane: string) => boolean, (pane: string) => void] => {
+  const [hidden, setHidden] = useState(() => new Set(panes.filter((pane) => readCollapsed(pane, false))))
+  const toggle = useCallback((pane: string) => {
+    setHidden((current) => {
+      const next = new Set(current)
+      if (next.has(pane)) next.delete(pane)
+      else next.add(pane)
+      writeCollapsed(pane, next.has(pane))
+      return next
+    })
+  }, [])
+  return [(pane) => hidden.has(pane), toggle]
+}

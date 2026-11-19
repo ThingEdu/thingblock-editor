@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useAppDispatch } from '../app/store'
 import { setDevice } from '../reducers/board'
-import { cameraAiLoaded } from '../reducers/camera-ai'
+import { extensionLoaded } from '../reducers/loaded-extensions'
 import { setProjectChanged } from '../reducers/project-changed'
 import { setRunningState, setStartedState, setTurboState } from '../reducers/vm-status'
 import { useVm } from './use-vm'
@@ -21,10 +21,8 @@ export const useVmListener = () => {
       PROJECT_RUN_STOP: () => dispatch(setRunningState(false)),
       RUNTIME_STARTED: () => dispatch(setStartedState(true)),
       PROJECT_CHANGED: () => dispatch(setProjectChanged()),
-      // The Camera AI playground panel shows once its extension is in the project
-      EXTENSION_ADDED: (categoryInfo: { id: string }) => {
-        if (categoryInfo.id === 'cameraAi') dispatch(cameraAiLoaded())
-      },
+      // An extension's pane shows in the side panel once the extension is in the project
+      EXTENSION_ADDED: (categoryInfo: { id: string }) => dispatch(extensionLoaded(categoryInfo.id)),
       // A loaded project carries its board; selecting it puts the editor in (or out of) board mode to match
       BOARD_RESTORED: (board: { device: string | null }) => dispatch(setDevice(board.device)),
     }

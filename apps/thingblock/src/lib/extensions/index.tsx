@@ -1,5 +1,6 @@
-import type { ReactElement } from 'react'
+import type { ComponentType, ReactElement } from 'react'
 import { FormattedMessage } from 'react-intl'
+import ExtensionPaneCameraAi from '../../components/extension-pane-camera-ai/extension-pane-camera-ai'
 import cameraAiInsetIconURL from './camera-ai/camera-ai-small.svg'
 import cameraAiIconURL from './camera-ai/camera-ai.svg'
 import thingbotTelemetrixInsetIconURL from './thingbot-telemetrix/thingbot-telemetrix-small.svg'
@@ -25,6 +26,8 @@ export interface ExtensionInfo {
   connectingMessage?: ReactElement
   prescanMessage?: ReactElement
   scanBeginMessage?: ReactElement
+  /** The extension's pane in the side panel, built on `ExtensionPane`; shown while the extension is in the project. */
+  pane?: ComponentType
 }
 
 const extensions: ExtensionInfo[] = [
@@ -41,6 +44,7 @@ const extensions: ExtensionInfo[] = [
       />
     ),
     featured: true,
+    pane: ExtensionPaneCameraAi,
   },
   {
     name: 'ThingBot Telemetrix',

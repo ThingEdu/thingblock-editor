@@ -13,7 +13,8 @@ import { type Gesture, trackHands, type VisionFrame } from '../../lib/extensions
 import { trackMouse } from '../../lib/extensions/camera-ai/mouse-hand'
 import { replayHands } from '../../lib/extensions/camera-ai/replay'
 import log from '../../lib/log'
-import styles from './playground-panel.module.css'
+import ExtensionPane from '../extension-pane/extension-pane'
+import styles from './extension-pane-camera-ai.module.css'
 
 // The events shared with the VM's Camera AI extension
 const CAMERA_COMMAND = 'CAMERA_AI_CAMERA_COMMAND'
@@ -230,11 +231,11 @@ const PanelButton = (props: PanelButtonProps) => {
 }
 
 /**
- * The Camera AI playground: runs the webcam and the hand tracker, sends every frame's hands to the VM, and shows the
+ * Camera AI's pane, the playground: runs the webcam and the hand tracker, sends every frame's hands to the VM, and shows the
  * camera with the tracked hands, the objects the program created, the scoreboard and the countdown.
  * @returns The camera controls over the stage.
  */
-const PlaygroundPanel = () => {
+const ExtensionPaneCameraAi = () => {
   const intl = useIntl()
   const vm = useVm()
   const labels = useMemo(
@@ -498,67 +499,72 @@ const PlaygroundPanel = () => {
   const offerMouse = !mouse && (status === 'error' || (status === 'off' && cameras.length === 0))
 
   return (
-    <div className={styles.playgroundPanel}>
-      <div className={styles.header}>
-        <span className={styles.title}>
-          {intl.formatMessage(messages.title)}
-          {showVideo && fps > 0 && <span className={styles.fps}> · {intl.formatMessage(messages.fps, { fps })}</span>}
-        </span>
-        {on ? (
+    <ExtensionPane
+      actions={
+        <>
+          {on ? (
+            <PanelButton
+              icon="stop"
+              label={intl.formatMessage(messages.cameraOff)}
+              tip={intl.formatMessage(messages.cameraOffTip)}
+              onClick={stop}
+            />
+          ) : (
+            <PanelButton
+              primary
+              icon="camera"
+              label={intl.formatMessage(messages.cameraOn)}
+              tip={intl.formatMessage(messages.cameraOnTip)}
+              onClick={() => {
+                void start()
+              }}
+            />
+          )}
+          <select
+            aria-label={intl.formatMessage(messages.device)}
+            className={styles.device}
+            title={intl.formatMessage(messages.device)}
+            value={known ? deviceName : 'default'}
+            onChange={(e) => {
+              chooseCamera(e.target.value)
+            }}
+          >
+            <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
+            {cameras.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+            <option value={MOUSE}>{intl.formatMessage(messages.mouse)}</option>
+          </select>
           <PanelButton
-            icon="stop"
-            label={intl.formatMessage(messages.cameraOff)}
-            tip={intl.formatMessage(messages.cameraOffTip)}
-            onClick={stop}
-          />
-        ) : (
-          <PanelButton
-            primary
-            icon="camera"
-            label={intl.formatMessage(messages.cameraOn)}
-            tip={intl.formatMessage(messages.cameraOnTip)}
+            icon="mirror"
+            label={intl.formatMessage(messages.mirror)}
+            pressed={mirror}
+            primary={mirror}
+            tip={intl.formatMessage(messages.mirrorTip)}
             onClick={() => {
-              void start()
+              mirrorRef.current = !mirrorRef.current
+              setMirror(mirrorRef.current)
             }}
           />
-        )}
-        <select
-          aria-label={intl.formatMessage(messages.device)}
-          className={styles.device}
-          title={intl.formatMessage(messages.device)}
-          value={known ? deviceName : 'default'}
-          onChange={(e) => {
-            chooseCamera(e.target.value)
-          }}
-        >
-          <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
-          {cameras.map((c) => (
-            <option key={c.id} value={c.name}>
-              {c.name}
-            </option>
-          ))}
-          <option value={MOUSE}>{intl.formatMessage(messages.mouse)}</option>
-        </select>
-        <PanelButton
-          icon="mirror"
-          label={intl.formatMessage(messages.mirror)}
-          pressed={mirror}
-          primary={mirror}
-          tip={intl.formatMessage(messages.mirrorTip)}
-          onClick={() => {
-            mirrorRef.current = !mirrorRef.current
-            setMirror(mirrorRef.current)
-          }}
-        />
-        <PanelButton
-          icon="clear"
-          label={intl.formatMessage(messages.clear)}
-          tip={intl.formatMessage(messages.clearTip)}
-          onClick={() => {
-            vm.events.emit(PLAYGROUND_COMMAND, { type: 'reset' })
-          }}
-        />
-      </div>
+          <PanelButton
+            icon="clear"
+            label={intl.formatMessage(messages.clear)}
+            tip={intl.formatMessage(messages.clearTip)}
+            onClick={() => {
+              vm.events.emit(PLAYGROUND_COMMAND, { type: 'reset' })
+            }}
+          />
+        </>
+      }
+      title={
+        <>
+          {intl.formatMessage(messages.title)}
+          {showVideo && fps > 0 && <span className={styles.fps}> · {intl.formatMessage(messages.fps, { fps })}</span>}
+        </>
+      }
+    >
       <div ref={stageRef} className={classNames(styles.stage, { [styles.mouseStage]: mouse && status === 'ready' })}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the live camera picture, which has no sound */}
         <video
@@ -600,8 +606,8 @@ const PlaygroundPanel = () => {
         )}
         {playground.say && <div className={styles.say}>{playground.say}</div>}
       </div>
-    </div>
+    </ExtensionPane>
   )
 }
 
-export default PlaygroundPanel
+export default ExtensionPaneCameraAi

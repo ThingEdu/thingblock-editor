@@ -1,11 +1,11 @@
 import { combineReducers } from 'redux'
 import alertsReducer, { alertsInitialState } from './alerts'
 import boardReducer, { boardInitialState } from './board'
-import cameraAiReducer, { cameraAiInitialState } from './camera-ai'
 import codeReducer, { codeInitialState } from './code'
 import connectionModalReducer, { connectionModalInitialState } from './connection-modal'
 import customProceduresReducer, { customProceduresInitialState } from './custom-procedures'
 import editorTabReducer, { editorTabInitialState } from './editor-tab'
+import loadedExtensionsReducer, { loadedExtensionsInitialState } from './loaded-extensions'
 import modalReducer, { modalsInitialState } from './modals'
 import platformReducer, { platformInitialState } from './platform'
 import projectChangedReducer, { projectChangedInitialState } from './project-changed'
@@ -26,11 +26,11 @@ import workspaceMetricsReducer, { workspaceMetricsInitialState } from './workspa
 export const buildInitialState = () => ({
   alerts: alertsInitialState,
   board: boardInitialState,
-  cameraAi: cameraAiInitialState,
   code: codeInitialState,
   connectionModal: connectionModalInitialState,
   customProcedures: customProceduresInitialState,
   editorTab: editorTabInitialState,
+  loadedExtensions: loadedExtensionsInitialState,
   modals: modalsInitialState,
   platform: platformInitialState,
   projectChanged: projectChangedInitialState,
@@ -48,11 +48,11 @@ export const buildInitialState = () => ({
 const guiReducer = combineReducers({
   alerts: alertsReducer,
   board: boardReducer,
-  cameraAi: cameraAiReducer,
   code: codeReducer,
   connectionModal: connectionModalReducer,
   customProcedures: customProceduresReducer,
   editorTab: editorTabReducer,
+  loadedExtensions: loadedExtensionsReducer,
   modals: modalReducer,
   platform: platformReducer,
   projectChanged: projectChangedReducer,
