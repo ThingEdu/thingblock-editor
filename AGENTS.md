@@ -73,6 +73,9 @@ rejected by the pre-commit hook.
 ## Repository layout
 
 ```text
+apps/
+├── thingblock/               Future main editor app; replaces thingblock-gui once it is split into libraries
+└── thingblock-virtualspace/  Web-only virtual robot environment (private, never published)
 packages/
 ├── thingblock-gui/         React-based editor UI
 ├── thingblock-vm/          Virtual machine that runs Scratch projects
@@ -81,6 +84,9 @@ packages/
 └── task-herder/            Async task scheduler with rate limiting
 scripts/                    Monorepo-level utility scripts
 ```
+
+`apps/` holds deployed applications; they are private workspaces, not npm packages. `packages/` holds the
+libraries.
 
 ## Packages at a glance
 
@@ -91,6 +97,8 @@ scripts/                    Monorepo-level utility scripts
 | `thingblock-blocks` | TypeScript | webpack | Vitest |
 | `thingblock-storage` | JavaScript | webpack | Jest |
 | `task-herder` | TypeScript | Vite | Vitest |
+| `thingblock` (app) | TypeScript | Vite | Vitest |
+| `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
 
 `task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
 the same test framework (Vitest) but retains webpack as its bundler. The remaining packages reflect the legacy
@@ -128,6 +136,12 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `thingblock-vm` source — needs
   `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
   run against a stale bundle.
+
+### thingblock-virtualspace specifics
+
+- Its UI components are TSX copies of `thingblock-gui` components in `src/components/`, styled with plain CSS
+  modules (`*.module.css`, no PostCSS). They are not shared with the GUI, so a change to one copy does not reach
+  the other.
 
 ### thingblock-blocks specifics
 

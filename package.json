@@ -20,12 +20,14 @@
     "packages/thingblock-storage",
     "packages/thingblock-vm",
     "packages/thingblock-gui",
-    "packages/thingblock-resource"
+    "packages/thingblock-resource",
+    "apps/thingblock",
+    "apps/thingblock-virtualspace"
   ],
   "scripts": {
-    "build": "cross-env NODE_ENV=production npm run --workspaces build",
+    "build": "cross-env NODE_ENV=production npm run --workspaces --if-present build",
     "build:libs": "cross-env NODE_ENV=production npm run build --workspace=@scratch/task-herder --workspace=@thingblock/thingblock-blocks --workspace=@thingblock/thingblock-storage --workspace=@thingblock/thingblock-vm",
-    "clean": "npm run --workspaces clean",
+    "clean": "npm run --workspaces --if-present clean",
     "prepare": "husky install",
     "start": "npm --workspace @thingblock/thingblock-gui start",
     "test": "npm test --workspaces",
