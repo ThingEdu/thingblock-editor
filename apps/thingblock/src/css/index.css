@@ -1,0 +1,21 @@
+@import './colors.css';
+@import './units.css';
+@import './z-index.css';
+@import './typography.css';
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+
+  /* Setting min height/width makes the UI scroll below those sizes */
+  min-width: 1024px;
+  /* Laptops at 1366x768 leave ~650px; the device panel scrolls inside itself below that. */
+  min-height: 480px;
+}
+
+* {
+  box-sizing: border-box;
+}
