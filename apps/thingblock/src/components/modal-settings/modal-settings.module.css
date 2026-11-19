@@ -1,0 +1,144 @@
+.modal-content {
+  width: 600px;
+  max-width: calc(100vw - 2rem);
+}
+
+.body {
+  display: flex;
+  flex-direction: row;
+  background: var(--ui-white);
+  min-height: 360px;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  width: 168px;
+  padding: 1rem 0.75rem;
+  background: var(--ui-secondary);
+  border-inline-end: 1px solid var(--ui-black-transparent);
+}
+
+.tab {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.tab-active {
+  background: var(--looks-transparent);
+  color: var(--looks-secondary);
+  font-weight: bold;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 1.5rem 1.75rem;
+}
+
+.content-heading {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.content-description {
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary-transparent);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--ui-black-transparent);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.option:hover {
+  border-color: var(--looks-transparent);
+}
+
+.option-selected,
+.option-selected:hover {
+  border-color: var(--looks-secondary);
+  background: var(--looks-transparent);
+}
+
+.option-disabled,
+.option-disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--ui-black-transparent);
+  background: none;
+}
+
+/* Custom radio dot so the control reads as Scratch's motion blue, not the OS default. */
+.option-radio {
+  appearance: none;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0.125rem 0 0;
+  border: 2px solid var(--ui-black-transparent);
+  border-radius: 100%;
+  cursor: pointer;
+}
+
+.option-radio:checked {
+  border-color: var(--looks-secondary);
+  background: radial-gradient(var(--looks-secondary) 0 45%, transparent 50%);
+}
+
+.option-radio:disabled {
+  cursor: not-allowed;
+}
+
+.option-badge {
+  margin-inline-start: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--ui-black-transparent);
+  font-size: 0.6875rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: var(--text-primary-transparent);
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.option-label {
+  font-weight: bold;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.option-description {
+  font-size: 0.8125rem;
+  color: var(--text-primary-transparent);
+}
