@@ -56,6 +56,12 @@ export const colorModeMap = {
   },
 }
 
+/** The color modes the editor offers; dark mode is not offered yet. */
+export const offeredColorModes = {
+  [DEFAULT_MODE]: colorModeMap[DEFAULT_MODE],
+  [HIGH_CONTRAST_MODE]: colorModeMap[HIGH_CONTRAST_MODE],
+}
+
 export const getColorsForMode = (colorMode: ColorMode): BlockColors => colorModeMap[colorMode].colors
 
 /**

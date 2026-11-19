@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../app/store'
 import { useMenuNavigation } from '../../hooks/use-menu-navigation'
 import dropdownCaret from '../../lib/assets/icon--dropdown-caret.svg'
 import settingsIcon from '../../lib/assets/icon--settings.svg'
-import { type ColorMode, colorModeMap, DEFAULT_MODE, HIGH_CONTRAST_MODE } from '../../lib/settings/color-mode'
+import { type ColorMode, offeredColorModes } from '../../lib/settings/color-mode'
 import { persistColorMode } from '../../lib/settings/color-mode/persistence'
 import { type Theme, themeMap } from '../../lib/settings/theme'
 import { persistTheme } from '../../lib/settings/theme/persistence'
@@ -35,12 +35,6 @@ const submenuLabels = defineMessages({
     id: 'gui.menuBar.colorMode',
   },
 })
-
-// Dark mode is not offered yet
-const colorModes = {
-  [DEFAULT_MODE]: colorModeMap[DEFAULT_MODE],
-  [HIGH_CONTRAST_MODE]: colorModeMap[HIGH_CONTRAST_MODE],
-}
 
 /**
  * The menu bar's Settings menu: the language, the block theme and the color mode, each remembered on this machine, and
@@ -95,7 +89,7 @@ const MenuSettings = () => {
               depth={2}
             />
             <MenuPreference
-              itemsMap={colorModes}
+              itemsMap={offeredColorModes}
               onChange={handleChangeColorMode}
               submenuLabel={submenuLabels.colorMode}
               selectedItemKey={colorMode}

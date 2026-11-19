@@ -16,6 +16,7 @@ test('choosing the link client sets the link mode in the store, the cookie and t
   const setVmLinkMode = vi.spyOn(vm.link, 'setLinkMode').mockReturnValue()
   const loadResourcePacks = vi.spyOn(vm.devices, 'loadResourcePacks').mockResolvedValue()
   renderInEditor(<ModalSettings onRequestClose={vi.fn()} />, store)
+  fireEvent.click(screen.getByRole('button', { name: 'Link' }))
 
   expect(screen.getByRole('radio', { name: /Cloud client/ })).toHaveProperty('disabled', true)
   fireEvent.click(screen.getByRole('radio', { name: /Link client/ }))

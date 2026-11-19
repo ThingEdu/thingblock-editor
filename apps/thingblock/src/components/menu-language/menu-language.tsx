@@ -13,7 +13,8 @@ import { MenuItem, MenuSubmenu } from '../menu/menu'
 import languageIcon from './icon--language.svg'
 import styles from './menu-language.module.css'
 
-const SUPPORTED_LOCALES = ['en', 'vi']
+/** The languages the editor offers. */
+export const SUPPORTED_LOCALES = ['en', 'vi']
 
 const languageMenu = defineMessage({
   id: 'gui.aria.languageMenu',
