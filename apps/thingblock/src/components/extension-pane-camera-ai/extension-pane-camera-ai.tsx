@@ -2,6 +2,7 @@ import classNames from 'classnames'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defineMessages, useIntl } from 'react-intl'
 import { useVm } from '../../hooks/use-vm'
+import clearIcon from '../../lib/assets/icon--clear.svg'
 import { attachStream, listCameras, startCamera, stopCamera } from '../../lib/extensions/camera-ai/camera'
 import { loadDeviceName, MOUSE, saveDeviceName } from '../../lib/extensions/camera-ai/camera-choice'
 import {
@@ -14,7 +15,11 @@ import { trackMouse } from '../../lib/extensions/camera-ai/mouse-hand'
 import { replayHands } from '../../lib/extensions/camera-ai/replay'
 import log from '../../lib/log'
 import ExtensionPane from '../extension-pane/extension-pane'
+import Fab from '../fab/fab'
 import styles from './extension-pane-camera-ai.module.css'
+import cameraIcon from './icon--camera.svg'
+import mirrorIcon from './icon--mirror.svg'
+import stopIcon from './icon--stop.svg'
 
 // The events shared with the VM's Camera AI extension
 const CAMERA_COMMAND = 'CAMERA_AI_CAMERA_COMMAND'
@@ -25,20 +30,15 @@ const PLAYGROUND_UPDATE = 'CAMERA_AI_PLAYGROUND_UPDATE'
 const PLAYGROUND_COMMAND = 'CAMERA_AI_PLAYGROUND_COMMAND'
 
 const messages = defineMessages({
-  title: {
-    defaultMessage: 'Playground',
-    description: 'Title of the panel that shows the webcam and the Camera AI playground',
-    id: 'gui.playgroundPanel.title',
+  actions: {
+    defaultMessage: 'Camera actions',
+    description: 'Tooltip of the floating button that opens the playground camera actions',
+    id: 'gui.playgroundPanel.actions',
   },
   cameraOn: {
     defaultMessage: 'Camera',
     description: 'Button that turns the webcam on',
     id: 'gui.playgroundPanel.cameraOn',
-  },
-  cameraOff: {
-    defaultMessage: 'Stop',
-    description: 'Button that turns the webcam off',
-    id: 'gui.playgroundPanel.cameraOff',
   },
   cameraOnTip: {
     defaultMessage: 'Turn the webcam on and start seeing hands',
@@ -49,11 +49,6 @@ const messages = defineMessages({
     defaultMessage: 'Turn the webcam off',
     description: 'Tooltip of the button that turns the webcam off',
     id: 'gui.playgroundPanel.cameraOffTip',
-  },
-  mirror: {
-    defaultMessage: 'Mirror',
-    description: 'Button that flips the camera picture like a mirror',
-    id: 'gui.playgroundPanel.mirror',
   },
   mirrorTip: {
     defaultMessage: 'Flip the picture like a mirror',
@@ -91,11 +86,6 @@ const messages = defineMessages({
       'The index finger (or the head, in head games) follows the mouse. Hold the left button: fist. Right button or keys 1–7: another gesture. Hold ← →: lean the head, ↑: straight, ↓: nod, space: flap both hands.',
     description: 'Shown on the playground while the hand follows the mouse',
     id: 'gui.playgroundPanel.mouseHint',
-  },
-  clear: {
-    defaultMessage: 'Clear',
-    description: 'Button that removes every object and score from the playground',
-    id: 'gui.playgroundPanel.clear',
   },
   clearTip: {
     defaultMessage: 'Remove all objects, scores and the countdown',
@@ -189,43 +179,31 @@ const replayFrames = () => {
  */
 const assetBase = () => document.querySelector('base')?.href ?? ''
 
-const ICONS: Record<'camera' | 'stop' | 'mirror' | 'mouse' | 'clear', ReactNode> = {
+const ICONS: Record<'camera' | 'mouse', ReactNode> = {
   camera: <path d="M4 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />,
-  stop: <rect height="12" rx="2" width="12" x="6" y="6" />,
-  mirror: <path d="M11 3h2v18h-2zM3 7l6 5-6 5zM21 7l-6 5 6 5z" />,
   mouse: <path d="M12 2a6 6 0 0 0-6 6v8a6 6 0 0 0 12 0V8a6 6 0 0 0-6-6zm-1 3h2v5h-2z" />,
-  clear: <path d="M6 7h12l-1 13H7zM9 4h6v2H9zM4 6h16v2H4z" />,
 }
 
-interface PanelButtonProps {
+interface StageButtonProps {
   icon: keyof typeof ICONS
   label: string
   tip: string
-  primary?: boolean
-  pressed?: boolean
   onClick: () => void
 }
 
 /**
- * A header button of the panel, with an icon and a label that hides when the panel is narrow.
- * @param props - The button's icon, label, tooltip, look and click handler.
+ * A button on the stage while the camera is off, with an icon and a label.
+ * @param props - The button's icon, label, tooltip and click handler.
  * @returns A `button` with the icon and the label.
  */
-const PanelButton = (props: PanelButtonProps) => {
-  const { icon, label, onClick, pressed, primary, tip } = props
+const StageButton = (props: StageButtonProps) => {
+  const { icon, label, onClick, tip } = props
   return (
-    <button
-      aria-label={label}
-      aria-pressed={pressed}
-      className={classNames(styles.button, { [styles.primary]: primary })}
-      title={tip}
-      type="button"
-      onClick={onClick}
-    >
+    <button aria-label={label} className={styles.button} title={tip} type="button" onClick={onClick}>
       <svg aria-hidden="true" className={styles.icon} fill="currentColor" viewBox="0 0 24 24">
         {ICONS[icon]}
       </svg>
-      <span className={styles.buttonLabel}>{label}</span>
+      {label}
     </button>
   )
 }
@@ -233,7 +211,7 @@ const PanelButton = (props: PanelButtonProps) => {
 /**
  * Camera AI's pane, the playground: runs the webcam and the hand tracker, sends every frame's hands to the VM, and shows the
  * camera with the tracked hands, the objects the program created, the scoreboard and the countdown.
- * @returns The camera controls over the stage.
+ * @returns The stage, with the camera's controls.
  */
 const ExtensionPaneCameraAi = () => {
   const intl = useIntl()
@@ -498,73 +476,13 @@ const ExtensionPaneCameraAi = () => {
   // Without a webcam the mouse is the way to play, so it is offered whenever the camera cannot be used
   const offerMouse = !mouse && (status === 'error' || (status === 'off' && cameras.length === 0))
 
+  const toggleMirror = () => {
+    mirrorRef.current = !mirrorRef.current
+    setMirror(mirrorRef.current)
+  }
+
   return (
-    <ExtensionPane
-      actions={
-        <>
-          {on ? (
-            <PanelButton
-              icon="stop"
-              label={intl.formatMessage(messages.cameraOff)}
-              tip={intl.formatMessage(messages.cameraOffTip)}
-              onClick={stop}
-            />
-          ) : (
-            <PanelButton
-              primary
-              icon="camera"
-              label={intl.formatMessage(messages.cameraOn)}
-              tip={intl.formatMessage(messages.cameraOnTip)}
-              onClick={() => {
-                void start()
-              }}
-            />
-          )}
-          <select
-            aria-label={intl.formatMessage(messages.device)}
-            className={styles.device}
-            title={intl.formatMessage(messages.device)}
-            value={known ? deviceName : 'default'}
-            onChange={(e) => {
-              chooseCamera(e.target.value)
-            }}
-          >
-            <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
-            {cameras.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-            <option value={MOUSE}>{intl.formatMessage(messages.mouse)}</option>
-          </select>
-          <PanelButton
-            icon="mirror"
-            label={intl.formatMessage(messages.mirror)}
-            pressed={mirror}
-            primary={mirror}
-            tip={intl.formatMessage(messages.mirrorTip)}
-            onClick={() => {
-              mirrorRef.current = !mirrorRef.current
-              setMirror(mirrorRef.current)
-            }}
-          />
-          <PanelButton
-            icon="clear"
-            label={intl.formatMessage(messages.clear)}
-            tip={intl.formatMessage(messages.clearTip)}
-            onClick={() => {
-              vm.events.emit(PLAYGROUND_COMMAND, { type: 'reset' })
-            }}
-          />
-        </>
-      }
-      title={
-        <>
-          {intl.formatMessage(messages.title)}
-          {showVideo && fps > 0 && <span className={styles.fps}> · {intl.formatMessage(messages.fps, { fps })}</span>}
-        </>
-      }
-    >
+    <ExtensionPane>
       <div ref={stageRef} className={classNames(styles.stage, { [styles.mouseStage]: mouse && status === 'ready' })}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the live camera picture, which has no sound */}
         <video
@@ -575,9 +493,37 @@ const ExtensionPaneCameraAi = () => {
         {placeholder && (
           <div className={classNames(styles.placeholder, { [styles.problem]: status === 'error' })}>
             {placeholder}
+            {!on && (
+              <div className={styles.startRow}>
+                <select
+                  aria-label={intl.formatMessage(messages.device)}
+                  className={styles.device}
+                  title={intl.formatMessage(messages.device)}
+                  value={known ? deviceName : 'default'}
+                  onChange={(e) => {
+                    chooseCamera(e.target.value)
+                  }}
+                >
+                  <option value="default">{intl.formatMessage(messages.defaultCamera)}</option>
+                  {cameras.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                  <option value={MOUSE}>{intl.formatMessage(messages.mouse)}</option>
+                </select>
+                <StageButton
+                  icon="camera"
+                  label={intl.formatMessage(messages.cameraOn)}
+                  tip={intl.formatMessage(messages.cameraOnTip)}
+                  onClick={() => {
+                    void start()
+                  }}
+                />
+              </div>
+            )}
             {offerMouse && (
-              <PanelButton
-                primary
+              <StageButton
                 icon="mouse"
                 label={intl.formatMessage(messages.useMouse)}
                 tip={intl.formatMessage(messages.mouseHint)}
@@ -605,7 +551,33 @@ const ExtensionPaneCameraAi = () => {
           </div>
         )}
         {playground.say && <div className={styles.say}>{playground.say}</div>}
+        {showVideo && fps > 0 && <div className={styles.fps}>{intl.formatMessage(messages.fps, { fps })}</div>}
       </div>
+      {/* Beside the stage rather than in it, so the mouse hand, which follows the pointer over the stage, ignores it */}
+      <Fab
+        className={styles.fab}
+        img={cameraIcon}
+        items={[
+          on
+            ? { img: stopIcon, title: intl.formatMessage(messages.cameraOffTip), onClick: stop }
+            : {
+                img: cameraIcon,
+                title: intl.formatMessage(messages.cameraOnTip),
+                onClick: () => {
+                  void start()
+                },
+              },
+          { img: mirrorIcon, title: intl.formatMessage(messages.mirrorTip), pressed: mirror, onClick: toggleMirror },
+          {
+            img: clearIcon,
+            title: intl.formatMessage(messages.clearTip),
+            onClick: () => {
+              vm.events.emit(PLAYGROUND_COMMAND, { type: 'reset' })
+            },
+          },
+        ]}
+        title={intl.formatMessage(messages.actions)}
+      />
     </ExtensionPane>
   )
 }

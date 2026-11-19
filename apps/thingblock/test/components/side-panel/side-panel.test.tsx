@@ -51,14 +51,15 @@ test('with every pane hidden from its menu, it says how to show one', () => {
 
 test('an extension’s pane shows once the extension is in the project, and hides from the menu', () => {
   const { store } = setUp()
-  expect(screen.queryByText('Playground')).toBeNull()
+  const cameraActions = () => screen.queryByRole('button', { name: 'Camera actions' })
+  expect(cameraActions()).toBeNull()
 
   act(() => {
     store.dispatch(extensionLoaded('cameraAi'))
   })
-  expect(screen.getByText('Playground')).toBeTruthy()
+  expect(cameraActions()).toBeTruthy()
 
   fireEvent.click(screen.getByRole('button', { name: 'Show panels' }))
   fireEvent.click(screen.getByRole('menuitemcheckbox', { name: 'Camera AI' }))
-  expect(screen.queryByText('Playground')).toBeNull()
+  expect(cameraActions()).toBeNull()
 })

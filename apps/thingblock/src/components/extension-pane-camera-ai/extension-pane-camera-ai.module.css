@@ -1,9 +1,4 @@
-.fps {
-  font-weight: 400;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
-}
-
+/* The stage's buttons, shown while the camera is off */
 .button {
   display: inline-flex;
   align-items: center;
@@ -13,31 +8,14 @@
   font-weight: 600;
   padding: 0 0.5rem;
   border-radius: 0.375rem;
-  border: 1px solid var(--ui-black-transparent);
-  background: var(--ui-white);
-  color: var(--text-primary);
+  border: 1px solid #6d28d9;
+  background: #7c3aed;
+  color: var(--ui-white);
   cursor: pointer;
 }
 
-.button:hover:not(:disabled) {
-  background: var(--ui-secondary);
-  color: var(--motion-tertiary);
-}
-
-.primary {
-  background: #7c3aed;
-  border-color: #6d28d9;
-  color: var(--ui-white);
-}
-
-.primary:hover:not(:disabled) {
+.button:hover {
   background: #6d28d9;
-  color: var(--ui-white);
-}
-
-.button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 .icon {
@@ -46,10 +24,9 @@
   flex-shrink: 0;
 }
 
-@container extension-pane-header (max-width: 22rem) {
-  .button-label {
-    display: none;
-  }
+.start-row {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* The stage: 4:3 like the camera and the Scratch stage, black where no picture shows. */
@@ -179,4 +156,20 @@
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.7);
   pointer-events: none;
+}
+
+.fps {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+.fab {
+  position: absolute;
+  right: var(--space);
+  bottom: var(--space);
 }

@@ -4,7 +4,7 @@ import { createEditorStore } from '../../../src/app/store'
 import ExtensionPaneCameraAi from '../../../src/components/extension-pane-camera-ai/extension-pane-camera-ai'
 import { renderInEditor, vmOf } from '../render-in-editor'
 
-test('playing with the mouse needs no webcam, and the VM hears when the camera is ready and when it stops', () => {
+test('playing with the mouse needs no webcam, and the VM hears when the camera starts from the stage and stops from the actions', () => {
   const store = createEditorStore()
   const onStatus = vi.fn()
   vmOf(store).events.on('CAMERA_AI_CAMERA_STATUS', onStatus)
@@ -15,6 +15,6 @@ test('playing with the mouse needs no webcam, and the VM hears when the camera i
   expect(onStatus).toHaveBeenLastCalledWith({ on: true, ready: true })
   expect(screen.getByText(/follows the mouse/)).toBeTruthy()
 
-  fireEvent.click(screen.getByRole('button', { name: 'Stop' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Turn the webcam off' }))
   expect(onStatus).toHaveBeenLastCalledWith({ on: false, ready: false })
 })

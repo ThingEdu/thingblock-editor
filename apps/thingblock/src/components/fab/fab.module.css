@@ -119,6 +119,10 @@
   background: var(--looks-secondary-dark);
 }
 
+.more-button.pressed {
+  background: var(--looks-secondary);
+}
+
 .more-icon {
   width: calc(var(--more-button-size) - 1rem);
   height: calc(var(--more-button-size) - 1rem);

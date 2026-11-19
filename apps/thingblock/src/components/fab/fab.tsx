@@ -13,6 +13,8 @@ export interface FabItem {
   title: string
   /** What the button does; without it, the button shows as coming soon. */
   onClick?: () => void
+  /** Whether the button's setting is on; a button without it toggles nothing. */
+  pressed?: boolean
 }
 
 interface FabProps {
@@ -189,7 +191,11 @@ const Fab = (props: FabProps) => {
                     itemRefs.current[index] = button
                   }}
                   aria-label={item.title}
-                  className={classNames(styles.button, styles.moreButton, { [styles.comingSoon]: comingSoon })}
+                  aria-pressed={item.pressed}
+                  className={classNames(styles.button, styles.moreButton, {
+                    [styles.comingSoon]: comingSoon,
+                    [styles.pressed]: item.pressed,
+                  })}
                   data-for={tooltipId}
                   data-tip={item.title}
                   tabIndex={-1}
