@@ -1,0 +1,19 @@
+:root {
+  --space: 0.5rem;
+
+  --menu-bar-height: 3rem;
+  --stage-menu-height: 2.75rem;
+
+  --library-header-height: 3.125rem;
+  --library-filter-bar-height: 2.5rem;
+
+  --stage-standard-border-width: 0.0625rem;
+
+  --form-radius: calc(var(--space) / 2);
+
+  --menu-bar-standard-font-size: 0.75rem;
+  --menu-bar-large-font-size: 0.875rem;
+  --menu-bar-button-size: 2rem;
+
+  --menu-bar-item-max-width: 12rem;
+}

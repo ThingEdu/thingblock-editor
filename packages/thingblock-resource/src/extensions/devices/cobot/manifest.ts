@@ -23,7 +23,7 @@ const manifest: DeviceManifest = {
       'The Maker Village line-following robot: an ESP32-C3 with two motors, four line eyes and an I2C colour sensor.',
     description: 'Description of the CoBot device',
   },
-  manufacturer: 'ThingEdu · MakerViet',
+  manufacturer: 'ThingEdu',
   requires: 'serial',
   learnMore: 'https://github.com/makerviet/cobot-arduino',
   extensions: ['cobotC3', 'colourSensor'],

@@ -1,0 +1,226 @@
+.page-wrapper {
+  height: 100%;
+}
+
+.body-wrapper {
+  height: calc(100% - var(--menu-bar-height));
+  background-color: var(--ui-primary);
+}
+
+.body-wrapper * {
+  box-sizing: border-box;
+}
+
+:global(*:focus-visible) {
+  outline-color: var(--ui-black);
+}
+
+.flex-wrapper {
+  display: flex;
+
+  /* Two columns: the blocks workspace, and the side panel */
+  flex-direction: row;
+
+  /*
+    Stop scrollbar popping in and out from scratch-blocks border issue
+    https://github.com/LLK/scratch-gui/issues/318
+  */
+  overflow-y: hidden;
+}
+
+.editor-wrapper {
+  /* The GUI's minimum width is 1024px, less the side panel's width there */
+  flex-basis: calc(1024px - 420px);
+  flex-grow: 1;
+  flex-shrink: 0;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* Body of the tabs */
+.tabs {
+  position: relative;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-list {
+  height: var(--stage-menu-height);
+  width: 250px; /* Match width of the toolbox */
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.tab {
+  position: relative;
+  bottom: -1px;
+  flex-grow: 1;
+  height: 80%;
+  margin-bottom: 0;
+
+  border-radius: 1rem 1rem 0 0;
+  border: 1px solid var(--ui-black-transparent);
+
+  padding: 0.125rem 1.25rem 0;
+  font-size: 0.75rem;
+
+  background-color: var(--ui-tertiary);
+  color: var(--text-primary-transparent);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+[dir='ltr'] .tab {
+  margin-left: -0.5rem;
+}
+
+[dir='rtl'] .tab {
+  margin-right: -0.5rem;
+}
+
+[dir='ltr'] .tab:nth-of-type(1) {
+  margin-left: 0;
+}
+
+[dir='rtl'] .tab:nth-of-type(1) {
+  margin-right: 0;
+}
+
+/* Use z-indices to force left-on-top for tabs */
+.tab:nth-of-type(1) {
+  z-index: 3;
+}
+.tab:nth-of-type(2) {
+  z-index: 2;
+}
+.tab:nth-of-type(3) {
+  z-index: 1;
+}
+
+.tab:hover {
+  background-color: var(--ui-primary);
+}
+
+.tab:focus {
+  outline: none;
+}
+
+.tab.is-selected {
+  height: 90%;
+  color: var(--looks-secondary);
+  background-color: var(--ui-white);
+  z-index: 4; /* Make sure selected is always above */
+}
+
+.tab img {
+  width: 1.375rem;
+  filter: grayscale(100%);
+}
+
+[dir='ltr'] .tab img {
+  margin-right: 0.125rem;
+}
+
+[dir='rtl'] .tab img {
+  margin-left: 0.125rem;
+}
+
+/* Mirror the code tab's icon */
+[dir='rtl'] .tab:nth-of-type(1) img {
+  transform: scaleX(-1);
+}
+
+.tab.is-selected img {
+  filter: none;
+}
+
+.tab.is-selected:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: var(--ui-black-transparent);
+}
+
+/* Focus outline for tabs */
+.tab:focus-visible,
+.tab.is-selected:focus-visible {
+  outline: 0.0625rem auto var(--ui-black);
+  outline-offset: -0.125rem; /* Looks better, otherwise it gets cut off by the canvas below */
+  z-index: 5; /* Display above tabs */
+}
+
+.tab-panel {
+  position: relative;
+  flex-grow: 1;
+  display: none;
+  min-height: 0;
+}
+
+.tab-panel.is-selected {
+  display: flex;
+}
+
+.blocks-wrapper {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  min-height: 0;
+}
+
+.resize-handle {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+  z-index: 1;
+}
+
+.resize-handle:hover {
+  background-color: var(--motion-primary);
+}
+
+/* Menu */
+
+.menu-bar-position {
+  position: relative;
+  z-index: var(--z-index-menu-bar);
+}
+
+/* Alerts */
+
+body .alerts-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  z-index: var(--z-index-alerts);
+  position: absolute;
+  margin-top: 53px;
+  pointer-events: none;
+}
+
+/*
+  Make the (background) page not scrollable when modals are open
+  This CSS class is automatically added to the body when react-modal is open
+*/
+:global(.ReactModal__Body--open) {
+  overflow: hidden;
+}

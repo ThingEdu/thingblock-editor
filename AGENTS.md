@@ -137,6 +137,46 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
   run against a stale bundle.
 
+### thingblock (app) specifics
+
+- A TypeScript port of `thingblock-gui`, written batch by batch from the leaves up (reducers, `lib/`, components,
+  then the GUI root). It runs (`npm run dev`), but `thingblock-gui` stays the live editor until the app replaces
+  it, so a GUI change must be ported too.
+- State and UI left over from Scratch's stage, sprites and online features (player mode, time travel, account
+  login, telemetry, the project server) are not ported. A project is either the default project, built in
+  memory, or a file; there is no project storage and no project id.
+- `src/lib/` is grouped by editor feature (`project/`, `blocks/`, `preferences/`, `ui/`, `alerts/`, `settings/`,
+  `boards/`) rather than mirroring the GUI's flat `lib/`; helpers used across areas (`log`, `platform`,
+  `shared-messages`) sit at its top. Each extension's code and assets live in its own folder under `extensions/`,
+  next to `extensions/index.tsx`, the extension library list: Camera AI's tracker, from the GUI's `lib/vision/`, is
+  in `extensions/camera-ai/`.
+- File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported `lib/` or reducer file
+  keeps its GUI name (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a
+  changed GUI file is found by its name.
+- Components are named parent first. A component built on a reusable one is named after it (`library-board` renders
+  `Library`, `button-close` is a kind of button, `modal-settings` renders `Modal`), and a part with one user sits in
+  that user's folder, named after it (`library-board/library-board-card`, `alerts/alerts-item`). Component names
+  follow their files (`LibraryBoard`, `ButtonClose`).
+- Components are function components, except the Blockly workspace (`components/blocks`, a class with `connect`) and
+  `ErrorBoundary`. A feature component reads the store itself (`useAppSelector`, `useAppDispatch`, `useVm`); a
+  reusable one (`library`, `modal`, `menu`, `monitor-view`, `button`) takes only props. There is no
+  `src/containers/`. Each component's styles are a CSS module (`x.module.css`, no PostCSS) using the custom
+  properties (colors, units, z-index) defined on `:root` in `src/css/`. `components/gui` is the editor's page,
+  rendered by `Editor`.
+- An extension's pane in the side panel is the `pane` of its entry in `lib/extensions/index.tsx`: a component named
+  `extension-pane-<extension>` that renders `ExtensionPane` (Camera AI's is `extension-pane-camera-ai`). The side
+  panel shows the panes of the extensions in the project (the `loadedExtensions` slice, filled from the VM's
+  `EXTENSION_ADDED`) and lists each in its menu, where it can be hidden. No other code names a specific extension.
+- The GUI's higher-order components are hooks in `src/hooks/`. `src/app/` holds the store (`createEditorStore`, with
+  the typed `useAppSelector` and `useAppDispatch`), the providers, `App` and `Editor`, the port of
+  `containers/gui.jsx`, which runs the hooks that serve the whole editor and renders its page. The state keeps the
+  GUI's `scratchGui` key, so a ported selector reads as it does in the GUI.
+- It types the VM with `thingblock-vm`'s generated declarations in its gitignored `dist/types`, so a fresh checkout
+  or a VM change needs `npm run build:libs` before the app's `tsc` sees it. The VM's browser bundle is UMD, so
+  `vite.config.mjs` has the dev server pre-bundle it.
+- Reducers type their `action` as only the actions they handle, so `src/reducers/**` turns off
+  `@typescript-eslint/no-unnecessary-condition` for the `default` branch that unrelated actions reach.
+
 ### thingblock-virtualspace specifics
 
 - Its UI components are TSX copies of `thingblock-gui` components in `src/components/`, styled with plain CSS
@@ -166,6 +206,9 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
   from the runtime, an `emit` function and the sibling parts it uses, never the VM itself; add new behavior to
   the part it belongs to. The runtime holds the only copy of the editing target.
+- `npm run build` also emits type declarations into `dist/types` (`build:types`), exposed through the `types` export
+  condition. `tsc` turns a JS `require('./x').default` into an invalid `import X = Y.default` when that value's
+  type reaches a declaration, so such requires are destructured (`const {default: X} = require('./x')`).
 - Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
   `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
   maps for VM devices.

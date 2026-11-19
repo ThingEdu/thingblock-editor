@@ -1,0 +1,65 @@
+<svg width="600" height="372" viewBox="0 0 600 372" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="372" fill="hsl(163, 85%, 40%)"/>
+
+  <g stroke="white" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Board outline -->
+    <rect x="150" y="80" width="300" height="212" rx="8" stroke-width="3" fill="rgba(255,255,255,0.06)"/>
+
+    <!-- Corner mounting holes -->
+    <circle cx="168" cy="98"  r="7" stroke-width="2"/>
+    <circle cx="432" cy="98"  r="7" stroke-width="2"/>
+    <circle cx="168" cy="274" r="7" stroke-width="2"/>
+    <circle cx="432" cy="274" r="7" stroke-width="2"/>
+
+    <!-- Central IC chip -->
+    <rect x="252" y="144" width="96" height="84" rx="5" stroke-width="2.5" fill="rgba(255,255,255,0.1)"/>
+    <!-- IC notch (semicircle cut into top edge) -->
+    <path d="M 278,144 a 22,22 0 0,0 44,0" stroke-width="2"/>
+
+    <!-- Pins — left -->
+    <line x1="240" y1="160" x2="252" y2="160" stroke-width="3"/>
+    <line x1="240" y1="178" x2="252" y2="178" stroke-width="3"/>
+    <line x1="240" y1="196" x2="252" y2="196" stroke-width="3"/>
+    <line x1="240" y1="214" x2="252" y2="214" stroke-width="3"/>
+
+    <!-- Pins — right -->
+    <line x1="348" y1="160" x2="360" y2="160" stroke-width="3"/>
+    <line x1="348" y1="178" x2="360" y2="178" stroke-width="3"/>
+    <line x1="348" y1="196" x2="360" y2="196" stroke-width="3"/>
+    <line x1="348" y1="214" x2="360" y2="214" stroke-width="3"/>
+
+    <!-- Pins — top -->
+    <line x1="272" y1="132" x2="272" y2="144" stroke-width="3"/>
+    <line x1="300" y1="132" x2="300" y2="144" stroke-width="3"/>
+    <line x1="328" y1="132" x2="328" y2="144" stroke-width="3"/>
+
+    <!-- Pins — bottom -->
+    <line x1="272" y1="228" x2="272" y2="240" stroke-width="3"/>
+    <line x1="300" y1="228" x2="300" y2="240" stroke-width="3"/>
+    <line x1="328" y1="228" x2="328" y2="240" stroke-width="3"/>
+
+    <!-- Trace: top-left pin → resistor → left rail -->
+    <polyline points="272,132 272,114 212,114" stroke-width="2"/>
+    <rect x="188" y="108" width="24" height="12" rx="3" stroke-width="2"/>
+    <line x1="188" y1="114" x2="170" y2="114" stroke-width="2"/>
+
+    <!-- Trace: right pin → LED -->
+    <polyline points="360,178 400,178" stroke-width="2"/>
+    <circle cx="412" cy="178" r="11" stroke-width="2"/>
+    <circle cx="412" cy="178" r="4" fill="white" stroke="none"/>
+
+    <!-- Trace: bottom center pin → resistor → right -->
+    <polyline points="300,240 300,262 338,262" stroke-width="2"/>
+    <rect x="338" y="256" width="24" height="12" rx="3" stroke-width="2"/>
+    <line x1="362" y1="262" x2="382" y2="262" stroke-width="2"/>
+
+    <!-- Trace: top-right pin → pin header connector -->
+    <polyline points="328,132 328,108 368,108" stroke-width="2"/>
+    <rect x="368" y="98" width="32" height="20" rx="3" stroke-width="2"/>
+    <line x1="377" y1="98" x2="377" y2="118" stroke-width="1.5"/>
+    <line x1="385" y1="98" x2="385" y2="118" stroke-width="1.5"/>
+    <line x1="393" y1="98" x2="393" y2="118" stroke-width="1.5"/>
+
+  </g>
+</svg>

@@ -1,0 +1,35 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: var(--space);
+  background-color: var(--ui-white);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+}
+
+.status {
+  flex: 1;
+  font-weight: 600;
+}
+
+.status.connected {
+  color: var(--ui-green);
+}
+
+.button {
+  background-color: var(--motion-primary);
+  color: var(--ui-white);
+  border: none;
+  border-radius: calc(var(--space) / 2);
+  padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.button:hover {
+  background-color: var(--motion-tertiary);
+}

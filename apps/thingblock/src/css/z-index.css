@@ -1,0 +1,19 @@
+/*
+  The z-index values of elements in the global stacking context. Values used only inside one component stay in that
+  component, so no two components pick the same value by accident.
+*/
+:root {
+  /* Toolbox z-index: 40; set in thingblock-blocks */
+  --z-index-extension-button: 42;
+  --z-index-add-button: 46;
+
+  --z-index-card: 480;
+  --z-index-tooltip: 490;
+  --z-index-alerts: 490;
+  --z-index-menu-bar: 491; /* menu-bar should go over alerts and tooltips */
+  --z-index-loader: 500;
+  --z-index-modal: 510;
+
+  --z-index-drag-layer: 1000;
+  /* Block drag z-index: 1000; default 50 is overriden in blocks.css */
+}

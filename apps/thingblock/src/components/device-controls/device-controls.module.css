@@ -1,0 +1,83 @@
+/* Fixed-height row matching the tab strip on the left, so the Generated Code
+   panel below aligns with the canvas top. The buttons are vertically centered,
+   keeping them clear of the menu bar above. */
+.controls-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  flex-shrink: 0;
+  height: var(--stage-menu-height);
+}
+
+.connect-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 2.25rem;
+  border: 1px solid var(--ui-green-2);
+  border-radius: var(--space);
+  background-color: var(--ui-white);
+  color: var(--ui-green);
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 calc(var(--space) * 2);
+}
+
+.connect-button:hover {
+  background-color: var(--ui-secondary);
+}
+
+.connect-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: var(--space);
+  min-width: 7rem;
+  height: 2.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--space);
+  background-color: var(--ui-green-2);
+  color: var(--ui-white);
+  cursor: pointer;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 calc(var(--space) * 2.5);
+}
+
+.primary-button:hover {
+  background-color: var(--ui-green);
+}
+
+.upload-button {
+  background-color: var(--ui-green-2);
+}
+
+.upload-button:hover {
+  background-color: var(--ui-green);
+}
+
+.stop-button {
+  background-color: var(--red-primary);
+}
+
+.stop-button:hover {
+  background-color: var(--red-tertiary);
+}
+
+.primary-icon {
+  flex-shrink: 0;
+  /* Render the flag/stop glyph white to sit on the solid button background. */
+  filter: brightness(0) invert(1);
+}

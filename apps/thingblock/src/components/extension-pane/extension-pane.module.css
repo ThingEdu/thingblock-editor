@@ -1,0 +1,13 @@
+.extension-pane {
+  contain: layout paint style;
+  /* Holds the pane's floating controls */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  border-radius: var(--space);
+  border: 1px solid var(--ui-black-transparent);
+  overflow: hidden;
+  margin-bottom: var(--space);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
