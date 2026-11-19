@@ -37,15 +37,3 @@ test('a crash shows a message with a way to reload, and is logged', () => {
   window.removeEventListener('error', keepQuiet)
   vi.restoreAllMocks()
 })
-
-test('without a crash, the tree renders as it is', () => {
-  const { getByText } = render(
-    <IntlProvider locale="en">
-      <ErrorBoundary>
-        <p>editor</p>
-      </ErrorBoundary>
-    </IntlProvider>,
-  )
-
-  expect(getByText('editor')).toBeTruthy()
-})

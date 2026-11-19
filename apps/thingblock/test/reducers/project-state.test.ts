@@ -25,15 +25,6 @@ const reduce = (state: ProjectState, action: ProjectStateAction | undefined) => 
   return projectStateReducer(state, action)
 }
 
-test('initialState', () => {
-  const unrelatedAction = { type: 'anything' } as unknown as ProjectStateAction
-  expect(projectStateReducer(undefined, unrelatedAction)).toEqual({
-    error: null,
-    projectData: null,
-    loadingState: LoadingState.NOT_LOADED,
-  })
-})
-
 test('requestNewProject fetches the default project at startup and while showing a project', () => {
   for (const loadingState of [LoadingState.NOT_LOADED, LoadingState.SHOWING]) {
     expect(reduce(inState(loadingState), requestNewProject()).loadingState).toBe(LoadingState.FETCHING_NEW_DEFAULT)

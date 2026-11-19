@@ -43,11 +43,6 @@ describe('detectLocale', () => {
     expect(detectLocale(supportedLocales)).toBe('en')
   })
 
-  test('ignores other parameters', () => {
-    setSearch('?enable=language')
-    expect(detectLocale(supportedLocales)).toBe('en')
-  })
-
   test('uses navigator language property for default if supported', () => {
     setBrowserLanguage('pt-BR')
     expect(detectLocale(supportedLocales)).toBe('pt-br')

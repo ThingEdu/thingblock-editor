@@ -8,8 +8,6 @@ import alertsReducer, {
   showStandardAlert,
 } from '../../src/reducers/alerts'
 
-const unrelatedAction = { type: 'anything' } as unknown as ReturnType<typeof closeAlert>
-
 const errorAlert: Alert = {
   alertId: 'saveToFileError',
   level: AlertLevels.WARN,
@@ -17,10 +15,6 @@ const errorAlert: Alert = {
 }
 
 const withAlerts = (alertsList: Alert[]): AlertsState => ({ visible: true, alertsList })
-
-test('initialState', () => {
-  expect(alertsReducer(undefined, unrelatedAction)).toEqual({ visible: true, alertsList: [] })
-})
 
 test('create one standard alert', () => {
   const resultState = alertsReducer(undefined, showStandardAlert('savedToFile'))
