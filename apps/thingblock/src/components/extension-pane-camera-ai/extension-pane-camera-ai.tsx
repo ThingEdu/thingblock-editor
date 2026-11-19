@@ -1,17 +1,16 @@
 import classNames from 'classnames'
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defineMessages, useIntl } from 'react-intl'
 import { useVm } from '../../hooks/use-vm'
 import clearIcon from '../../lib/assets/icon--clear.svg'
 import { attachStream, listCameras, startCamera, stopCamera } from '../../lib/extensions/camera-ai/camera'
-import { loadDeviceName, MOUSE, saveDeviceName } from '../../lib/extensions/camera-ai/camera-choice'
+import { loadDeviceName, saveDeviceName } from '../../lib/extensions/camera-ai/camera-choice'
 import {
   drawPlayground,
   EMPTY_PLAYGROUND,
   type PlaygroundState,
 } from '../../lib/extensions/camera-ai/draw-playground'
 import { type Gesture, trackHands, type VisionFrame } from '../../lib/extensions/camera-ai/hand-tracker'
-import { trackMouse } from '../../lib/extensions/camera-ai/mouse-hand'
 import { replayHands } from '../../lib/extensions/camera-ai/replay'
 import log from '../../lib/log'
 import ExtensionPane from '../extension-pane/extension-pane'
@@ -70,22 +69,6 @@ const messages = defineMessages({
       'No webcam? Use a phone: with an iPhone and a Mac turn on Continuity Camera; on Android or Windows install DroidCam or Iriun, then choose that camera here.',
     description: 'Shown when the computer has no camera or the camera is off',
     id: 'gui.playgroundPanel.phoneHint',
-  },
-  mouse: {
-    defaultMessage: 'Mouse (no webcam)',
-    description: 'Choice in the list of cameras: play with a hand that follows the mouse',
-    id: 'gui.playgroundPanel.mouse',
-  },
-  useMouse: {
-    defaultMessage: 'Play with the mouse',
-    description: 'Button shown when there is no webcam: play with a hand that follows the mouse',
-    id: 'gui.playgroundPanel.useMouse',
-  },
-  mouseHint: {
-    defaultMessage:
-      'The index finger (or the head, in head games) follows the mouse. Hold the left button: fist. Right button or keys 1–7: another gesture. Hold ← →: lean the head, ↑: straight, ↓: nod, space: flap both hands.',
-    description: 'Shown on the playground while the hand follows the mouse',
-    id: 'gui.playgroundPanel.mouseHint',
   },
   clearTip: {
     defaultMessage: 'Remove all objects, scores and the countdown',
@@ -179,35 +162,6 @@ const replayFrames = () => {
  */
 const assetBase = () => document.querySelector('base')?.href ?? ''
 
-const ICONS: Record<'camera' | 'mouse', ReactNode> = {
-  camera: <path d="M4 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />,
-  mouse: <path d="M12 2a6 6 0 0 0-6 6v8a6 6 0 0 0 12 0V8a6 6 0 0 0-6-6zm-1 3h2v5h-2z" />,
-}
-
-interface StageButtonProps {
-  icon: keyof typeof ICONS
-  label: string
-  tip: string
-  onClick: () => void
-}
-
-/**
- * A button on the stage while the camera is off, with an icon and a label.
- * @param props - The button's icon, label, tooltip and click handler.
- * @returns A `button` with the icon and the label.
- */
-const StageButton = (props: StageButtonProps) => {
-  const { icon, label, onClick, tip } = props
-  return (
-    <button aria-label={label} className={styles.button} title={tip} type="button" onClick={onClick}>
-      <svg aria-hidden="true" className={styles.icon} fill="currentColor" viewBox="0 0 24 24">
-        {ICONS[icon]}
-      </svg>
-      {label}
-    </button>
-  )
-}
-
 /**
  * Camera AI's pane, the playground: runs the webcam and the hand tracker, sends every frame's hands to the VM, and shows the
  * camera with the tracked hands, the objects the program created, the scoreboard and the countdown.
@@ -225,7 +179,6 @@ const ExtensionPaneCameraAi = () => {
   )
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const trackerRef = useRef<{ stop(): void } | null>(null)
   // The frame loop draws from refs, so it never restarts as these change
@@ -330,18 +283,8 @@ const ExtensionPaneCameraAi = () => {
     setStatus('starting')
     emitStatus(true, false)
     const frames = replayFrames()
-    if (frames || deviceNameRef.current === MOUSE) {
-      if (frames) {
-        trackerRef.current = replayHands(frames, handleResults)
-      } else {
-        if (!stageRef.current) throw new Error('PlaygroundPanel: the stage is not rendered')
-        trackerRef.current = trackMouse(
-          stageRef.current,
-          handleResults,
-          () => mirrorRef.current,
-          () => poseWantedRef.current,
-        )
-      }
+    if (frames) {
+      trackerRef.current = replayHands(frames, handleResults)
       startingRef.current = false
       fpsRef.current = { count: 0, since: performance.now() }
       setStatus('ready')
@@ -458,8 +401,7 @@ const ExtensionPaneCameraAi = () => {
   }, [])
 
   const on = status === 'starting' || status === 'ready'
-  const mouse = deviceName === MOUSE
-  const showVideo = status === 'ready' && !mouse
+  const showVideo = status === 'ready'
 
   let placeholder: string | null = null
   if (status === 'off') placeholder = intl.formatMessage(messages.off)
@@ -470,11 +412,9 @@ const ExtensionPaneCameraAi = () => {
     else placeholder = intl.formatMessage(messages.failed, { error: error?.message ?? '?' })
   }
 
-  const known = mouse || cameras.some((c) => c.name === deviceName)
+  const known = cameras.some((c) => c.name === deviceName)
   const noCamera = status === 'error' && error?.name === 'NotFoundError'
-  const showPhoneHint = !mouse && (status === 'off' || noCamera)
-  // Without a webcam the mouse is the way to play, so it is offered whenever the camera cannot be used
-  const offerMouse = !mouse && (status === 'error' || (status === 'off' && cameras.length === 0))
+  const showPhoneHint = status === 'off' || noCamera
 
   const toggleMirror = () => {
     mirrorRef.current = !mirrorRef.current
@@ -483,7 +423,7 @@ const ExtensionPaneCameraAi = () => {
 
   return (
     <ExtensionPane>
-      <div ref={stageRef} className={classNames(styles.stage, { [styles.mouseStage]: mouse && status === 'ready' })}>
+      <div className={styles.stage}>
         {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the live camera picture, which has no sound */}
         <video
           ref={videoRef}
@@ -510,34 +450,24 @@ const ExtensionPaneCameraAi = () => {
                       {c.name}
                     </option>
                   ))}
-                  <option value={MOUSE}>{intl.formatMessage(messages.mouse)}</option>
                 </select>
-                <StageButton
-                  icon="camera"
-                  label={intl.formatMessage(messages.cameraOn)}
-                  tip={intl.formatMessage(messages.cameraOnTip)}
+                <button
+                  className={styles.button}
+                  title={intl.formatMessage(messages.cameraOnTip)}
+                  type="button"
                   onClick={() => {
                     void start()
                   }}
-                />
+                >
+                  <svg aria-hidden="true" className={styles.icon} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+                  </svg>
+                  {intl.formatMessage(messages.cameraOn)}
+                </button>
               </div>
-            )}
-            {offerMouse && (
-              <StageButton
-                icon="mouse"
-                label={intl.formatMessage(messages.useMouse)}
-                tip={intl.formatMessage(messages.mouseHint)}
-                onClick={() => {
-                  chooseCamera(MOUSE)
-                  void start()
-                }}
-              />
             )}
             {showPhoneHint && <div className={styles.hint}>{intl.formatMessage(messages.phoneHint)}</div>}
           </div>
-        )}
-        {mouse && status === 'ready' && (
-          <div className={styles.mouseHint}>{intl.formatMessage(messages.mouseHint)}</div>
         )}
         {playground.showScoreboard && (
           <div className={styles.scoreboard}>
@@ -553,7 +483,6 @@ const ExtensionPaneCameraAi = () => {
         {playground.say && <div className={styles.say}>{playground.say}</div>}
         {showVideo && fps > 0 && <div className={styles.fps}>{intl.formatMessage(messages.fps, { fps })}</div>}
       </div>
-      {/* Beside the stage rather than in it, so the mouse hand, which follows the pointer over the stage, ignores it */}
       <Fab
         className={styles.fab}
         img={cameraIcon}
