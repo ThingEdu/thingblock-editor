@@ -47,6 +47,7 @@
     "react-intl": "6.8.9",
     "react-modal": "3.16.3",
     "react-redux": "9.3.1",
+    "react-tabs": "5.2.0",
     "react-tooltip": "4.5.1",
     "redux": "5.0.1",
     "scratch-l10n": "6.1.142",
