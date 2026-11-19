@@ -1,6 +1,7 @@
 import type { ComponentType, ReactElement } from 'react'
 import { FormattedMessage } from 'react-intl'
 import ExtensionPaneCameraAi from '../../components/extension-pane-camera-ai/extension-pane-camera-ai'
+import ExtensionPaneThingbotTelemetrix from '../../components/extension-pane-thingbot-telemetrix/extension-pane-thingbot-telemetrix'
 import cameraAiInsetIconURL from './camera-ai/camera-ai-small.svg'
 import cameraAiIconURL from './camera-ai/camera-ai.svg'
 import thingbotTelemetrixInsetIconURL from './thingbot-telemetrix/thingbot-telemetrix-small.svg'
@@ -59,6 +60,7 @@ const extensions: ExtensionInfo[] = [
       />
     ),
     featured: true,
+    pane: ExtensionPaneThingbotTelemetrix,
     // Helper backend streams multiple named devices, so let the user pick from a
     // list (ScanningStep). The Web Bluetooth backend has no such list — its native
     // OS chooser is treated as an external list and forces AutoScanningStep instead;

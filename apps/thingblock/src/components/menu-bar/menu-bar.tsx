@@ -11,7 +11,6 @@ import MenuBoard from '../menu-board/menu-board'
 import MenuEdit from '../menu-edit/menu-edit'
 import MenuFile from '../menu-file/menu-file'
 import MenuSettings from '../menu-settings/menu-settings'
-import MenuBarConnectThingbot from './menu-bar-connect-thingbot'
 import MenuBarLogo from './menu-bar-logo'
 import styles from './menu-bar.module.css'
 
@@ -41,8 +40,8 @@ const ariaMessages = defineMessages({
 const HOME_URL = 'https://github.com/ThingEdu'
 
 /**
- * The editor's top bar: the logo, the Settings, File, Edit and board menus, the project title, the debug tips, the
- * ThingBot connection and the settings modal.
+ * The editor's top bar: the logo, the Settings, File, Edit and board menus, the project title, the debug tips and
+ * the settings button.
  * @param props - React props.
  * @param props.className - An extra class, to place the bar.
  * @returns The bar, as the page's header.
@@ -89,7 +88,6 @@ const MenuBar = ({ className }: { className?: string }) => {
         </div>
       </div>
       <div className={styles.accountInfoGroup}>
-        <MenuBarConnectThingbot className={classNames(styles.menuBarItem, styles.hoverable)} />
         <button
           aria-label={intl.formatMessage(ariaMessages.settings)}
           className={classNames(styles.menuBarItem, styles.hoverable, styles.settingsButton)}
