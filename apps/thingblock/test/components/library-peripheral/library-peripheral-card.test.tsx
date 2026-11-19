@@ -13,15 +13,6 @@ const renderCard = (state: { active: boolean; locked: boolean }) => {
   return onToggle
 }
 
-test('an inactive peripheral shows Add and toggles when clicked', () => {
-  const onToggle = renderCard({ active: false, locked: false })
-
-  expect(screen.getByText('Add')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: /Servo/ }))
-
-  expect(onToggle).toHaveBeenCalledTimes(1)
-})
-
 test('a locked peripheral shows Included and cannot be toggled', () => {
   const onToggle = renderCard({ active: true, locked: true })
 

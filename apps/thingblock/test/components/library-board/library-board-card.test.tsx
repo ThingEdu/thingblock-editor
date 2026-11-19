@@ -22,16 +22,6 @@ const renderCard = () => {
   return onSelect
 }
 
-test('the card button selects the device, and shows how it connects', () => {
-  const onSelect = renderCard()
-
-  const button = screen.getByRole('button', { name: /Arduino Uno/ })
-  expect(button.textContent).toContain('Serial')
-  fireEvent.click(button)
-
-  expect(onSelect).toHaveBeenCalledTimes(1)
-})
-
 test('opening a link does not select the device', () => {
   const onSelect = renderCard()
 

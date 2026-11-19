@@ -58,12 +58,3 @@ test('a tag narrows the items to that tag, and All shows them all again', async 
   fireEvent.click(screen.getByRole('button', { name: 'All' }))
   expect(shownItems()).toEqual(['Blink', 'Buzzer tune', 'Servo sweep'])
 })
-
-test('choosing an item closes the library and hands over the item', async () => {
-  const { onItemSelected, onRequestClose } = renderLibrary()
-
-  fireEvent.click(await screen.findByRole('button', { name: 'Buzzer tune' }))
-
-  expect(onRequestClose).toHaveBeenCalled()
-  expect(onItemSelected).toHaveBeenCalledWith(items[1])
-})

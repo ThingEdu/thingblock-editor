@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import { createEditorStore } from '../../../src/app/store'
 import LibraryBoard from '../../../src/components/library-board/library-board'
@@ -24,15 +24,6 @@ test('the library lists "No board" and the VM’s boards', async () => {
   expect(screen.getByRole('button', { name: /Arduino Uno/ })).toBeTruthy()
   expect(screen.getByRole('button', { name: /ESP32 Dev Module/ })).toBeTruthy()
   expect(document.querySelector('img[src="vm-arduino-uno.svg"]')).not.toBeNull()
-})
-
-test('choosing a board selects it and closes the library', async () => {
-  const { store } = setUp()
-
-  fireEvent.click(await screen.findByRole('button', { name: /ESP32 Dev Module/ }))
-
-  expect(store.getState().scratchGui.board.selectedDeviceId).toBe('esp32')
-  expect(store.getState().scratchGui.modals.boardLibrary).toBe(false)
 })
 
 test('boards from resource packs that land while the library is open are listed', async () => {

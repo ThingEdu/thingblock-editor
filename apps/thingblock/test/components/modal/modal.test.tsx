@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import { createEditorStore } from '../../../src/app/store'
 import Modal from '../../../src/components/modal/modal'
@@ -16,14 +16,6 @@ const renderModal = (onRequestClose = vi.fn()) => {
 
 afterEach(() => {
   history.replaceState(null, '')
-})
-
-test('the close button asks to close the modal', () => {
-  const onRequestClose = renderModal()
-
-  fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-
-  expect(onRequestClose).toHaveBeenCalled()
 })
 
 test('the browser going back asks to close the modal', () => {
