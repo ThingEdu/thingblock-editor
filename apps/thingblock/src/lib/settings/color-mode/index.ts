@@ -58,4 +58,10 @@ export const colorModeMap = {
 
 export const getColorsForMode = (colorMode: ColorMode): BlockColors => colorModeMap[colorMode].colors
 
+/**
+ * @param colorMode - Which mode's media.
+ * @returns The path Blockly loads its media (icons, cursors, sounds) from in that mode, which `vite.config.mjs` serves.
+ */
+export const getBlocksMediaPath = (colorMode: ColorMode) => `static/${colorModeMap[colorMode].blocksMediaFolder}/`
+
 export { defaultColors, type BlockColors }
