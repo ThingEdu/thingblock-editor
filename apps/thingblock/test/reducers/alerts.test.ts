@@ -1,12 +1,10 @@
 import { expect, test } from 'vitest'
-import { AlertLevels, AlertTypes } from '../../src/lib/alerts'
+import { AlertLevels } from '../../src/lib/alerts'
 import alertsReducer, {
   type Alert,
   type AlertsState,
   closeAlert,
   closeAlertWithId,
-  filterInlineAlerts,
-  filterPopupAlerts,
   showStandardAlert,
 } from '../../src/reducers/alerts'
 
@@ -14,7 +12,6 @@ const unrelatedAction = { type: 'anything' } as unknown as ReturnType<typeof clo
 
 const errorAlert: Alert = {
   alertId: 'saveToFileError',
-  alertType: AlertTypes.STANDARD,
   level: AlertLevels.WARN,
   iconURL: '/no_image_here.jpg',
 }
@@ -29,7 +26,6 @@ test('create one standard alert', () => {
   const resultState = alertsReducer(undefined, showStandardAlert('savedToFile'))
   expect(resultState.alertsList.length).toBe(1)
   expect(resultState.alertsList[0].alertId).toBe('savedToFile')
-  expect(resultState.alertsList[0].alertType).toBe(AlertTypes.STANDARD)
   expect(resultState.alertsList[0].level).toBe(AlertLevels.SUCCESS)
 })
 
@@ -39,7 +35,6 @@ test('add several standard alerts', () => {
   resultState = alertsReducer(resultState, action)
   resultState = alertsReducer(resultState, action)
   expect(resultState.alertsList.length).toBe(1)
-  expect(resultState.alertsList[0].alertType).toBe(AlertTypes.STANDARD)
   expect(resultState.alertsList[0].iconURL).not.toBe('/no_image_here.jpg')
   expect(resultState.alertsList[0].alertId).toBe('savedToFile')
 })
@@ -89,17 +84,4 @@ test('several related alerts can be cleared at once', () => {
   resultState = alertsReducer(resultState, savedAction)
   resultState = alertsReducer(resultState, showStandardAlert('saveToFileError'))
   expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['saveToFileError'])
-})
-
-const mixedAlerts: Alert[] = [
-  { alertId: 'inline', alertType: AlertTypes.INLINE, level: AlertLevels.WARN },
-  { alertId: 'standard', alertType: AlertTypes.STANDARD, level: AlertLevels.WARN },
-]
-
-test('filterInlineAlerts only returns inline type alerts', () => {
-  expect(filterInlineAlerts(mixedAlerts).map((a) => a.alertId)).toEqual(['inline'])
-})
-
-test('filterPopupAlerts only returns standard type alerts', () => {
-  expect(filterPopupAlerts(mixedAlerts).map((a) => a.alertId)).toEqual(['standard'])
 })

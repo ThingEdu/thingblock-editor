@@ -150,9 +150,13 @@ Prettier (currently `task-herder`), run `npm run format` in addition to lint.
   `shared-messages`) sit at its top. Each extension's code and assets live in its own folder under `extensions/`,
   next to `extensions/index.tsx`, the extension library list: Camera AI's tracker, from the GUI's `lib/vision/`, is
   in `extensions/camera-ai/`.
-- File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported GUI file keeps its name
-  (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a changed GUI file
-  is found by its name.
+- File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported `lib/` or reducer file
+  keeps its GUI name (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a
+  changed GUI file is found by its name.
+- Components are named parent first. A component built on a reusable one is named after it (`library-board` renders
+  `Library`, `button-close` is a kind of button, `modal-settings` renders `Modal`), and a part with one user sits in
+  that user's folder, named after it (`library-board/library-board-card`, `alerts/alerts-item`). Component names
+  follow their files (`LibraryBoard`, `ButtonClose`).
 - The GUI's higher-order components are hooks in `src/hooks/`. `src/app/` holds the store (`createEditorStore`, with
   the typed `useAppSelector` and `useAppDispatch`), the providers, `App` and `Editor`, the port of
   `containers/gui.jsx`, which runs the hooks that serve the whole editor. The state keeps the GUI's `scratchGui`

@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import type { Dispatch } from 'redux'
-import alertsData, { type AlertData, type AlertLevel, type AlertType, AlertTypes } from '../lib/alerts'
+import alertsData, { type AlertData, type AlertLevel } from '../lib/alerts'
 
 const SHOW_ALERT = 'scratch-gui/alerts/SHOW_ALERT'
 const CLOSE_ALERT = 'scratch-gui/alerts/CLOSE_ALERT'
@@ -10,15 +10,12 @@ const CLOSE_ALERT_WITH_ID = 'scratch-gui/alerts/CLOSE_ALERT_WITH_ID'
 /** An alert being shown. */
 export interface Alert {
   alertId?: string
-  alertType?: AlertType
   closeButton?: boolean
   content?: ReactElement
   iconSpinner?: boolean
   iconURL?: string
   level: AlertLevel
   message?: string
-  showDownload?: boolean
-  showSaveNow?: boolean
 }
 
 export interface AlertsState {
@@ -37,12 +34,6 @@ export const alertsInitialState: AlertsState = {
   alertsList: [],
 }
 
-export const filterPopupAlerts = (alertsList: Alert[]) =>
-  alertsList.filter((curAlert) => curAlert.alertType === AlertTypes.STANDARD)
-
-export const filterInlineAlerts = (alertsList: Alert[]) =>
-  alertsList.filter((curAlert) => curAlert.alertType === AlertTypes.INLINE)
-
 const reducer = (state = alertsInitialState, action: AlertsAction): AlertsState => {
   switch (action.type) {
     case SHOW_ALERT: {
@@ -54,15 +45,12 @@ const reducer = (state = alertsInitialState, action: AlertsAction): AlertsState 
       const data = action.data ?? {}
       newList.push({
         alertId: action.alertId,
-        alertType: alertData.alertType ?? AlertTypes.STANDARD,
         closeButton: alertData.closeButton,
         content: typeof alertData.content === 'function' ? alertData.content(data) : alertData.content,
         iconURL: alertData.iconURL,
         iconSpinner: alertData.iconSpinner,
         level: alertData.level,
         message: data.message,
-        showDownload: alertData.showDownload,
-        showSaveNow: alertData.showSaveNow,
       })
       return { ...state, alertsList: newList }
     }

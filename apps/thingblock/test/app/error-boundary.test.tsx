@@ -22,7 +22,7 @@ test('a crash shows a message with a way to reload, and is logged', () => {
     replace,
   })
 
-  const { getByRole } = render(
+  const { getByRole, getByText } = render(
     <IntlProvider locale="en">
       <ErrorBoundary>
         <Broken />
@@ -30,7 +30,7 @@ test('a crash shows a message with a way to reload, and is logged', () => {
     </IntlProvider>,
   )
 
-  expect(getByRole('alert').textContent).toContain('Oops! Something went wrong.')
+  expect(getByText('Oops! Something went wrong.')).toBeTruthy()
   expect(logError).toHaveBeenCalledWith(expect.stringContaining('broken component'))
   fireEvent.click(getByRole('button', { name: 'Reload' }))
   expect(replace).toHaveBeenCalledWith('http://localhost/editor/')

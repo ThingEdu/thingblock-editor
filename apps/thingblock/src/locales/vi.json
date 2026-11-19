@@ -277,5 +277,6 @@
   "gui.aria.aboutMenu": "Menu Giới thiệu",
   "device.thingbot.description": "Mạch robot ESP32-C3 của ThingEdu, có Wi-Fi và Bluetooth năng lượng thấp (BLE).",
   "device.cobot.description": "Robot dò đường của làng Maker: chip ESP32-C3, hai động cơ, bốn mắt dò line và cảm biến màu I2C.",
-  "device.viaBanhMi.description": "Mạch robot ESP32 của MakerViet, để học sinh Việt Nam làm robot và xe tự hành."
+  "device.viaBanhMi.description": "Mạch robot ESP32 của MakerViet, để học sinh Việt Nam làm robot và xe tự hành.",
+  "gui.crashMessage.reloadToRetry": "Rất tiếc, ThingBlock đã gặp sự cố. Hãy tải lại trang để thử lại."
 }

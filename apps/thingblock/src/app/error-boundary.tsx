@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { FormattedMessage } from 'react-intl'
+import CrashMessage from '../components/crash-message/crash-message'
 import log from '../lib/log'
 
 interface ErrorBoundaryProps {
@@ -28,24 +28,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render() {
     if (!this.state.crashed) return this.props.children
-    return (
-      <div role="alert">
-        <h2>
-          <FormattedMessage
-            defaultMessage="Oops! Something went wrong."
-            description="Crash Message title"
-            id="gui.crashMessage.label"
-          />
-        </h2>
-        <button type="button" onClick={this.handleReload}>
-          <FormattedMessage
-            defaultMessage="Reload"
-            description="Button to reload the page when page crashes"
-            id="gui.crashMessage.reload"
-          />
-        </button>
-      </div>
-    )
+    return <CrashMessage onReload={this.handleReload} />
   }
 }
 
