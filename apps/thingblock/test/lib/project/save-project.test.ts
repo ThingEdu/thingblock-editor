@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { AnyAction } from 'redux'
+import type { UnknownAction } from 'redux'
 import { afterEach, expect, test, vi } from 'vitest'
 import { forgetCurrentFile } from '../../../src/lib/project/project-file'
 import saveProject, { getProjectFilename } from '../../../src/lib/project/save-project'
@@ -30,7 +30,7 @@ test('after saving, says where and names the project after the file', async () =
   const dispatch = vi.fn()
   const saved = await saveProject({ saveProjectSb3: blob, projectTitle: 'Dự án ThingBlock', dispatch })
   expect(saved?.path).toBe('/Users/em/Xe dò line.tb')
-  const actions = dispatch.mock.calls.map(([action]) => action as AnyAction)
+  const actions = dispatch.mock.calls.map(([action]) => action as UnknownAction)
   expect(actions).toEqual(
     expect.arrayContaining([
       expect.objectContaining({ title: 'Xe dò line' }),

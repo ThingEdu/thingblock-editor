@@ -1,7 +1,7 @@
 import cookie from 'cookie'
 import { type ColorMode, DEFAULT_MODE, HIGH_CONTRAST_MODE } from '.'
 
-const PREFERS_HIGH_CONTRAST_QUERY = '(prefers-contrast: more)'
+export const PREFERS_HIGH_CONTRAST_QUERY = '(prefers-contrast: more)'
 // Technically what we are persisting is the color mode, but for historical reasons,
 // we should continue using 'scratchtheme' as the cookie key.
 const COOKIE_KEY = 'scratchtheme'

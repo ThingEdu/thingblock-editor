@@ -10,6 +10,8 @@ interface SaveFilePickerOptions {
 
 interface Window {
   __TAURI_INTERNALS__?: TauriInternals
+  /** The editor's VM, in development, for the browser console. */
+  thingblockVm?: import('@thingblock/thingblock-vm').default
   /** The File System Access API's save dialog, missing from browsers that lack the API. */
   showSaveFilePicker?(options?: SaveFilePickerOptions): Promise<FileSystemFileHandle>
 }

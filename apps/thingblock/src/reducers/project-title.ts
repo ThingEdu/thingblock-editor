@@ -1,6 +1,6 @@
 const SET_PROJECT_TITLE = 'projectTitle/SET_PROJECT_TITLE'
 
-interface ProjectTitleAction {
+export interface ProjectTitleAction {
   type: typeof SET_PROJECT_TITLE
   title: string
 }

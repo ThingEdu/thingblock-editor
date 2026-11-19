@@ -46,21 +46,30 @@ test('requestNewProject does nothing while a project is loading', () => {
 })
 
 test('onFetchedProjectData loads the fetched default project into the VM', () => {
-  const resultState = reduce(inState(LoadingState.FETCHING_NEW_DEFAULT), onFetchedProjectData('foo'))
+  const projectData = { targets: [] }
+  const resultState = reduce(inState(LoadingState.FETCHING_NEW_DEFAULT), onFetchedProjectData(projectData))
   expect(resultState.loadingState).toBe(LoadingState.LOADING_VM_NEW_DEFAULT)
-  expect(resultState.projectData).toBe('foo')
+  expect(resultState.projectData).toBe(projectData)
 })
 
 test('onLoadedProject shows the default project, or the error state when it fails to load', () => {
   const state = inState(LoadingState.LOADING_VM_NEW_DEFAULT)
-  expect(reduce(state, onLoadedProject(state.loadingState, true)).loadingState).toBe(LoadingState.SHOWING)
-  expect(reduce(state, onLoadedProject(state.loadingState, false)).loadingState).toBe(LoadingState.ERROR)
+  expect(reduce(state, onLoadedProject(LoadingState.LOADING_VM_NEW_DEFAULT, true)).loadingState).toBe(
+    LoadingState.SHOWING,
+  )
+  expect(reduce(state, onLoadedProject(LoadingState.LOADING_VM_NEW_DEFAULT, false)).loadingState).toBe(
+    LoadingState.ERROR,
+  )
 })
 
 test('onLoadedProject shows the project after a file upload, whether or not the file loaded', () => {
   const state = inState(LoadingState.LOADING_VM_FILE_UPLOAD)
-  expect(reduce(state, onLoadedProject(state.loadingState, true)).loadingState).toBe(LoadingState.SHOWING)
-  expect(reduce(state, onLoadedProject(state.loadingState, false)).loadingState).toBe(LoadingState.SHOWING)
+  expect(reduce(state, onLoadedProject(LoadingState.LOADING_VM_FILE_UPLOAD, true)).loadingState).toBe(
+    LoadingState.SHOWING,
+  )
+  expect(reduce(state, onLoadedProject(LoadingState.LOADING_VM_FILE_UPLOAD, false)).loadingState).toBe(
+    LoadingState.SHOWING,
+  )
 })
 
 test('requestProjectUpload loads a file before any project and while showing one, but not while fetching', () => {

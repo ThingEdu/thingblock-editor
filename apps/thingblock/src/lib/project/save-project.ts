@@ -1,6 +1,6 @@
 import type { Dispatch } from 'redux'
-import { showAlertWithTimeout } from '../../reducers/alerts'
-import { projectTitleInitialState, setProjectTitle } from '../../reducers/project-title'
+import { type AlertsAction, showAlertWithTimeout } from '../../reducers/alerts'
+import { type ProjectTitleAction, projectTitleInitialState, setProjectTitle } from '../../reducers/project-title'
 import log from '../log'
 import { type SavedProjectFile, saveProjectFile, showFileInWindowTitle } from './project-file'
 import { getProjectTitleFromFilename } from './sb-file-uploader-utils'
@@ -28,7 +28,7 @@ export const getProjectFilename = (curTitle: string | null, defaultTitle = proje
 const saveProject = async (options: {
   saveProjectSb3: () => Promise<Blob>
   projectTitle: string | null
-  dispatch: Dispatch
+  dispatch: Dispatch<AlertsAction | ProjectTitleAction>
   saveAs?: boolean
 }): Promise<SavedProjectFile | null> => {
   const { saveProjectSb3, projectTitle, dispatch, saveAs = false } = options

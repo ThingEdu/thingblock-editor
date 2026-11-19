@@ -33,12 +33,13 @@ export const getIsError = (loadingState: LoadingStateName) => loadingState === L
 
 export interface ProjectState {
   error: unknown
-  projectData: unknown
+  /** The default project's JSON, once built. */
+  projectData: object | null
   loadingState: LoadingStateName
 }
 
 export type ProjectStateAction =
-  | { type: typeof DONE_FETCHING_DEFAULT; projectData: unknown }
+  | { type: typeof DONE_FETCHING_DEFAULT; projectData: object }
   | { type: typeof START_ERROR; error?: unknown }
   | {
       type:
@@ -93,21 +94,19 @@ const reducer = (state = projectStateInitialState, action: ProjectStateAction): 
   }
 }
 
-export const onFetchedProjectData = (projectData: unknown): ProjectStateAction => ({
+export const onFetchedProjectData = (projectData: object): ProjectStateAction => ({
   type: DONE_FETCHING_DEFAULT,
   projectData,
 })
 
-export const onLoadedProject = (loadingState: LoadingStateName, success: boolean): ProjectStateAction | undefined => {
-  switch (loadingState) {
-    case LoadingState.LOADING_VM_FILE_UPLOAD:
-      // A file that fails to load leaves the current project showing
-      return { type: success ? DONE_LOADING_VM : RETURN_TO_SHOWING }
-    case LoadingState.LOADING_VM_NEW_DEFAULT:
-      return success ? { type: DONE_LOADING_VM } : { type: START_ERROR }
-    default:
-      return undefined
-  }
+export const onLoadedProject = (
+  loadingState: typeof LoadingState.LOADING_VM_FILE_UPLOAD | typeof LoadingState.LOADING_VM_NEW_DEFAULT,
+  success: boolean,
+): ProjectStateAction => {
+  // A file that fails to load leaves the current project showing
+  if (loadingState === LoadingState.LOADING_VM_FILE_UPLOAD)
+    return { type: success ? DONE_LOADING_VM : RETURN_TO_SHOWING }
+  return { type: success ? DONE_LOADING_VM : START_ERROR }
 }
 
 export const projectError = (error: unknown): ProjectStateAction => ({

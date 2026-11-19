@@ -26,7 +26,7 @@ export interface AlertsState {
   alertsList: Alert[]
 }
 
-type AlertsAction =
+export type AlertsAction =
   | { type: typeof SHOW_ALERT; alertId: string; data?: AlertData }
   | { type: typeof CLOSE_ALERT; index: number }
   | { type: typeof CLOSE_ALERT_WITH_ID; alertId: string }
