@@ -114,25 +114,3 @@ test('in the desktop app the file comes from the Open dialog, and saving writes 
   expect(getCurrentFile()).toEqual({ path: '/Users/em/Xe dò line.tb', name: 'Xe dò line.tb' })
   expect(document.title).toBe('Xe dò line.tb — ThingBlock')
 })
-
-test('an example is fetched and loaded under its title', async () => {
-  const fetch = vi.spyOn(window, 'fetch').mockResolvedValue(new Response(bytes))
-  const { store, load, uploader } = setUp()
-
-  await act(() => uploader.loadExample({ url: '/examples/blink.tb', title: 'Nháy đèn' }))
-
-  expect(fetch).toHaveBeenCalledWith('/examples/blink.tb')
-  expect(new Uint8Array(load.mock.calls[0][0] as ArrayBuffer)).toEqual(bytes)
-  expect(store.getState().scratchGui.projectTitle).toBe('Nháy đèn')
-})
-
-test('an example that cannot be fetched leaves the project showing, and says so', async () => {
-  vi.spyOn(window, 'fetch').mockResolvedValue(new Response(null, { status: 404 }))
-  const { store, load, uploader } = setUp()
-
-  await act(() => uploader.loadExample({ url: '/examples/missing.tb', title: 'Missing' }))
-
-  expect(load).not.toHaveBeenCalled()
-  expect(window.alert).toHaveBeenCalledWith('The example project could not be loaded.')
-  expect(store.getState().scratchGui.projectState.loadingState).toBe(LoadingState.SHOWING)
-})

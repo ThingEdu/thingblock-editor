@@ -13,7 +13,6 @@ import Blocks from '../blocks/blocks'
 import Box from '../box/box'
 import ButtonExtension from '../button-extension/button-extension'
 import LibraryBoard from '../library-board/library-board'
-import LibraryExample from '../library-example/library-example'
 import LibraryPeripheral from '../library-peripheral/library-peripheral'
 import Loader from '../loader/loader'
 import MenuBar from '../menu-bar/menu-bar'
@@ -91,7 +90,6 @@ const Gui = () => {
         {loading ? <Loader /> : null}
         {isCreating ? <Loader messageId="gui.loader.creating" /> : null}
         <LibraryBoard />
-        <LibraryExample />
         <LibraryPeripheral />
         {alertsVisible ? <Alerts className={styles.alertsContainer} /> : null}
         <ModalConnection />

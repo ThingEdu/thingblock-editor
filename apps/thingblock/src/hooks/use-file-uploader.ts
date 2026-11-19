@@ -16,20 +16,7 @@ const messages = defineMessages({
     defaultMessage: 'The project file that was selected failed to load.',
     description: 'An error that displays when a local project file fails to load.',
   },
-  exampleLoadError: {
-    id: 'gui.projectLoader.exampleLoadError',
-    defaultMessage: 'The example project could not be loaded.',
-    description: 'An error that displays when a bundled example project fails to load.',
-  },
 })
-
-/** A bundled example project. */
-export interface ExampleProject {
-  /** Where its `.tb` file is served. */
-  url: string
-  /** The project title once it loads. */
-  title: string
-}
 
 // Opens the browser's file chooser; resolves with null when the learner cancels it
 const chooseFile = () =>
@@ -49,8 +36,8 @@ const chooseFile = () =>
   })
 
 /**
- * Loads project files into the editor: one from the computer (File > Load from your computer), or a bundled example.
- * @returns The functions that start each kind of load.
+ * Loads a project file from the computer into the editor (File > Load from your computer).
+ * @returns The function that starts the load.
  */
 export const useFileUploader = () => {
   const intl = useIntl()
@@ -117,21 +104,5 @@ export const useFileUploader = () => {
     await load(await file.arrayBuffer(), getProjectTitleFromFilename(file.name), messages.loadError)
   }
 
-  const loadExample = async (example: ExampleProject) => {
-    if (!(await startLoading())) return
-    let data
-    try {
-      const response = await fetch(example.url)
-      if (!response.ok) throw new Error(`example fetch failed: ${response.status} ${example.url}`)
-      data = await response.arrayBuffer()
-    } catch (error) {
-      log.warn(error)
-      alert(intl.formatMessage(messages.exampleLoadError))
-      finishLoading(false)
-      return
-    }
-    await load(data, example.title, messages.exampleLoadError)
-  }
-
-  return { loadFromComputer, loadExample }
+  return { loadFromComputer }
 }

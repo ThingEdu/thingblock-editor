@@ -11,7 +11,6 @@ import { confirmReplaceProject } from '../../lib/project/native-dialogs'
 import { showFileInWindowTitle, trackProjectLoads } from '../../lib/project/project-file'
 import saveProject from '../../lib/project/save-project'
 import sharedMessages from '../../lib/shared-messages'
-import { openExampleLibrary } from '../../reducers/modals'
 import { requestNewProject } from '../../reducers/project-state'
 import menuBarStyles from '../menu-bar/menu-bar.module.css'
 import Menu, { MenuItem, MenuSection } from '../menu/menu'
@@ -26,7 +25,7 @@ const fileMenu = defineMessage({
 const isMac = navigator.platform.includes('Mac')
 
 /**
- * The menu bar's File menu: a new project, the examples, loading a file, and saving to one. It also handles Ctrl+S
+ * The menu bar's File menu: a new project, loading a file, and saving to one. It also handles Ctrl+S
  * (Cmd+S on a Mac), and forgets the project's file whenever another project loads.
  * @returns The menu's button, with the menu while it is open.
  */
@@ -66,7 +65,7 @@ const MenuFile = () => {
   }, [save])
 
   useEffect(() => {
-    // Every project load (New, an example, a file) forgets which file the previous
+    // Every project load (New, a file) forgets which file the previous
     // project was saved in, so Ctrl+S never overwrites another project's file.
     const stopTrackingProjectLoads = trackProjectLoads(vm.events)
     const handleProjectLoaded = () => showFileInWindowTitle(null)
@@ -110,17 +109,6 @@ const MenuFile = () => {
             </MenuItem>
           </MenuSection>
           <MenuSection>
-            <MenuItem
-              onClick={() => dispatch(openExampleLibrary())}
-              isDataMenuItem
-              onParentKeyDown={handleKeyDownOpenMenu}
-            >
-              <FormattedMessage
-                defaultMessage="Examples..."
-                description="Menu bar item for opening the library of bundled example projects"
-                id="gui.menuBar.examples"
-              />
-            </MenuItem>
             <MenuItem onClick={() => void loadFromComputer()} isDataMenuItem onParentKeyDown={handleKeyDownOpenMenu}>
               {intl.formatMessage(sharedMessages.loadFromComputerTitle)}
             </MenuItem>

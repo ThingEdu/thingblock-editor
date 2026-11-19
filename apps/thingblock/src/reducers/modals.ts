@@ -3,7 +3,6 @@ const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL'
 
 export const MODAL_BOARD_LIBRARY = 'boardLibrary'
 export const MODAL_DEBUG = 'debugModal'
-export const MODAL_EXAMPLE_LIBRARY = 'exampleLibrary'
 export const MODAL_EXTENSION_LIBRARY = 'extensionLibrary'
 export const MODAL_LOADING_PROJECT = 'loadingProject'
 export const MODAL_PERIPHERAL_LIBRARY = 'peripheralLibrary'
@@ -14,7 +13,6 @@ export const MODAL_TIPS_LIBRARY = 'tipsLibrary'
 export type Modal =
   | typeof MODAL_BOARD_LIBRARY
   | typeof MODAL_DEBUG
-  | typeof MODAL_EXAMPLE_LIBRARY
   | typeof MODAL_EXTENSION_LIBRARY
   | typeof MODAL_LOADING_PROJECT
   | typeof MODAL_PERIPHERAL_LIBRARY
@@ -33,7 +31,6 @@ interface ModalsAction {
 export const modalsInitialState: ModalsState = {
   [MODAL_BOARD_LIBRARY]: false,
   [MODAL_DEBUG]: false,
-  [MODAL_EXAMPLE_LIBRARY]: false,
   [MODAL_EXTENSION_LIBRARY]: false,
   [MODAL_LOADING_PROJECT]: false,
   [MODAL_PERIPHERAL_LIBRARY]: false,
@@ -58,7 +55,6 @@ const closeModal = (modal: Modal): ModalsAction => ({ type: CLOSE_MODAL, modal }
 
 export const openBoardLibrary = () => openModal(MODAL_BOARD_LIBRARY)
 export const openDebugModal = () => openModal(MODAL_DEBUG)
-export const openExampleLibrary = () => openModal(MODAL_EXAMPLE_LIBRARY)
 export const openExtensionLibrary = () => openModal(MODAL_EXTENSION_LIBRARY)
 export const openLoadingProject = () => openModal(MODAL_LOADING_PROJECT)
 export const openPeripheralLibrary = () => openModal(MODAL_PERIPHERAL_LIBRARY)
@@ -67,7 +63,6 @@ export const openSettingsModal = () => openModal(MODAL_SETTINGS)
 export const openTipsLibrary = () => openModal(MODAL_TIPS_LIBRARY)
 export const closeBoardLibrary = () => closeModal(MODAL_BOARD_LIBRARY)
 export const closeDebugModal = () => closeModal(MODAL_DEBUG)
-export const closeExampleLibrary = () => closeModal(MODAL_EXAMPLE_LIBRARY)
 export const closeExtensionLibrary = () => closeModal(MODAL_EXTENSION_LIBRARY)
 export const closeLoadingProject = () => closeModal(MODAL_LOADING_PROJECT)
 export const closePeripheralLibrary = () => closeModal(MODAL_PERIPHERAL_LIBRARY)

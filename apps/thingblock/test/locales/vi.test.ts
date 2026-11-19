@@ -9,7 +9,6 @@ const REQUIRED: (keyof typeof vi)[] = [
   'gui.serialLog.clearMonitor',
   'gui.sharedMessages.loadFromComputerTitle',
   'gui.sharedMessages.replaceProjectWarning',
-  'gui.exampleLibrary.groupCameraAi',
   // Playing Camera AI without a webcam.
   'gui.playgroundPanel.mouse',
   'gui.playgroundPanel.useMouse',

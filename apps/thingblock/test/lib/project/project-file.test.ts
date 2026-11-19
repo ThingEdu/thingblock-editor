@@ -135,7 +135,7 @@ describe('desktop app', () => {
     const stop = trackProjectLoads(events)
     installTauri({ savePaths: ['/a/one.tb', '/a/two.tb'] })
     await saveProjectFile(project(), { suggestedName: 'x.tb' })
-    events.emit('PROJECT_LOADED') // e.g. an example opened
+    events.emit('PROJECT_LOADED') // e.g. File > New
     expect(getCurrentFile()).toBeNull()
     const saved = await saveProjectFile(project(), { suggestedName: 'x.tb' })
     expect(saved?.path).toBe('/a/two.tb')
