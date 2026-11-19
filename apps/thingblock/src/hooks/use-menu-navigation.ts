@@ -24,12 +24,13 @@ interface MenuNavigationOptions {
  * `aria-expanded={isExpanded()}`, and must be focusable; the menu's items take `onKeyDown={handleKeyDownOpenMenu}`.
  * Items are found by `data-menu-item`, either on the item itself or on the item inside a `data-menu-item-wrapper`
  * (see the settings menu's language and preference menus).
+ * @template T - The opener's element type, for `menuRef`.
  * @param options - The menu's depth, the item to focus on opening, and its direction.
  * @returns The ref for the menu's opener, whether the menu is open, and its handlers.
  */
-export const useMenuNavigation = (options: MenuNavigationOptions = {}) => {
+export const useMenuNavigation = <T extends HTMLElement = HTMLElement>(options: MenuNavigationOptions = {}) => {
   const { depth = 1, defaultIndexOnOpen = 0, isRtl: isRtlOption } = options
-  const menuRef = useRef<HTMLElement>(null)
+  const menuRef = useRef<T>(null)
   const isRtlFromStore = useAppSelector((state) => state.locales.isRtl)
   const menuContext = useContext(MenuRefContext)
   if (!menuContext) throw new Error('useMenuNavigation: the menu is not inside a MenuRefProvider')

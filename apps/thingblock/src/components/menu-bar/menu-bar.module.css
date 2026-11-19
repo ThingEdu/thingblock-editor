@@ -1,0 +1,159 @@
+/* The logo's lettering */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+.menu-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+
+  /*
+        For most things, we shouldn't explicitly set height, and let the
+        content push the element to whatever fits. Using a fixed height
+        instead, will help us subtract the value we assign from the body,
+        adding up to a perfect 100%. This means we don't need to set
+        overflow: hidden, which makes it hard to debug. border-box
+        simplifies by all of this by removing padding from the equation.
+    */
+  box-sizing: border-box;
+  height: var(--menu-bar-height);
+
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: var(--menu-bar-standard-font-size);
+  font-weight: bold;
+  background-color: var(--motion-primary);
+  color: var(--ui-white);
+}
+
+.main-menu {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.logo {
+  height: 1.6rem;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.menu-bar-item {
+  display: flex;
+  padding: 0 0.25rem;
+  text-decoration: none;
+  color: var(--ui-white);
+  user-select: none;
+  align-self: center;
+  position: relative;
+  align-items: center;
+  white-space: nowrap;
+  height: var(--menu-bar-height);
+
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.menu-bar-item.active,
+.menu-bar-item.hoverable:hover {
+  background-color: var(--ui-black-transparent);
+}
+
+.menu-bar-item.growable {
+  max-width: var(--menu-bar-item-max-width);
+  flex: 1;
+}
+
+.title-field-growable {
+  flex-grow: 1;
+  width: 2rem;
+}
+
+.file-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.file-group .menu-bar-item {
+  margin: 0 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.file-group .no-offset {
+  margin: 0 0.25rem;
+  padding: 0 0.25rem;
+}
+
+.menu-bar-menu {
+  margin-top: var(--menu-bar-height);
+  z-index: var(--z-index-menu-bar);
+}
+
+.divider {
+  margin: 0 0.5rem;
+  height: 34px;
+}
+
+.account-info-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.account-info-group .menu-bar-item {
+  margin: 0 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.help-icon {
+  margin: 0 0.25rem 0 0;
+}
+
+[dir='rtl'] .help-icon {
+  margin: 0 0 0 0.25rem;
+}
+
+.settings-button {
+  padding: 0 0.25rem;
+}
+
+.settings-icon {
+  height: 1.25rem;
+  vertical-align: middle;
+}
+
+.collapsible-label {
+  margin: 0 0.5rem 0 0.25rem;
+}
+
+[dir='rtl'] .collapsible-label {
+  margin: 0 0.25rem 0 0.5rem;
+}
+
+@media only screen and (max-width: 1024px) {
+  .collapsible-label,
+  .debug-label {
+    display: none;
+  }
+
+  .help-icon {
+    margin-right: 0;
+  }
+}
+
+.menu-shortcut {
+  margin-inline-start: 1.5rem;
+  float: right;
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+[dir='rtl'] .menu-shortcut {
+  float: left;
+}

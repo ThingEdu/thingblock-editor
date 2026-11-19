@@ -1,0 +1,30 @@
+.title-field {
+  border: 1px dashed var(--ui-black-transparent);
+  border-radius: var(--form-radius);
+  background-color: var(--ui-white-transparent);
+  background-clip: padding-box;
+  height: auto;
+  padding: 0.5rem;
+  color: var(--ui-white);
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.title-field::placeholder {
+  color: var(--ui-white);
+  font-weight: normal;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.title-field:hover {
+  background-color: hsla(0, 100%, 100%, 0.5);
+}
+
+.title-field:focus {
+  outline: none;
+  border: 1px solid var(--ui-transparent);
+  box-shadow: 0 0 0 calc(var(--space) * 0.5) var(--ui-white-transparent);
+  background-color: var(--ui-white);
+  color: var(--text-primary);
+}

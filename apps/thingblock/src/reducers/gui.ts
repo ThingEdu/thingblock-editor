@@ -11,7 +11,6 @@ import platformReducer, { platformInitialState } from './platform'
 import projectChangedReducer, { projectChangedInitialState } from './project-changed'
 import projectStateReducer, { projectStateInitialState } from './project-state'
 import projectTitleReducer, { projectTitleInitialState } from './project-title'
-import restoreDeletionReducer, { restoreDeletionInitialState } from './restore-deletion'
 import settingsReducer, { settingsInitialState } from './settings'
 import thingbotTelemetrixReducer, { thingbotTelemetrixInitialState } from './thingbot-telemetrix'
 import toolboxReducer, { toolboxInitialState } from './toolbox'
@@ -36,7 +35,6 @@ export const buildInitialState = () => ({
   projectChanged: projectChangedInitialState,
   projectState: projectStateInitialState,
   projectTitle: projectTitleInitialState,
-  restoreDeletion: restoreDeletionInitialState,
   settings: settingsInitialState,
   thingbotTelemetrix: thingbotTelemetrixInitialState,
   toolbox: toolboxInitialState,
@@ -58,7 +56,6 @@ const guiReducer = combineReducers({
   projectChanged: projectChangedReducer,
   projectState: projectStateReducer,
   projectTitle: projectTitleReducer,
-  restoreDeletion: restoreDeletionReducer,
   settings: settingsReducer,
   thingbotTelemetrix: thingbotTelemetrixReducer,
   toolbox: toolboxReducer,
