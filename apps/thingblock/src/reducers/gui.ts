@@ -1,5 +1,4 @@
 import { combineReducers } from 'redux'
-import type { GUIConfig } from '../gui-config'
 import alertsReducer, { alertsInitialState } from './alerts'
 import boardReducer, { boardInitialState } from './board'
 import cameraAiReducer, { cameraAiInitialState } from './camera-ai'
@@ -24,15 +23,13 @@ import workspaceMetricsReducer, { workspaceMetricsInitialState } from './workspa
 
 /**
  * Builds the editor's initial state.
- * @param config - What the host gives the editor.
- * @returns The initial state, with a VM attached to the host's storage.
+ * @returns The initial state, with a new VM.
  */
-export const buildInitialState = (config: GUIConfig) => ({
+export const buildInitialState = () => ({
   alerts: alertsInitialState,
   board: boardInitialState,
   cameraAi: cameraAiInitialState,
   code: codeInitialState,
-  config,
   connectionModal: connectionModalInitialState,
   customProcedures: customProceduresInitialState,
   editorTab: editorTabInitialState,
@@ -47,20 +44,16 @@ export const buildInitialState = (config: GUIConfig) => ({
   thingbotTelemetrix: thingbotTelemetrixInitialState,
   timeout: timeoutInitialState,
   toolbox: toolboxInitialState,
-  vm: vmInitialState(config),
+  vm: vmInitialState(),
   vmStatus: vmStatusInitialState,
   workspaceMetrics: workspaceMetricsInitialState,
 })
-
-// The config is set once, in the initial state
-const configReducer = (state: GUIConfig | null = null) => state
 
 const guiReducer = combineReducers({
   alerts: alertsReducer,
   board: boardReducer,
   cameraAi: cameraAiReducer,
   code: codeReducer,
-  config: configReducer,
   connectionModal: connectionModalReducer,
   customProcedures: customProceduresReducer,
   editorTab: editorTabReducer,

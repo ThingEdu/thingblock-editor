@@ -1,6 +1,14 @@
-import type { MessageObject, TranslatorFunction } from '../../../gui-config'
 import sharedMessages from '../../shared-messages'
 import messages from './messages'
+
+interface MessageObject {
+  id: string
+  description: string
+  defaultMessage: string
+}
+
+/** Localizes a message, as react-intl's `formatMessage` does. */
+type TranslatorFunction = (message: MessageObject, values?: { index: number }) => string
 
 // scratch-parser requires every target to carry a costume and a sounds list. Targets have neither, so the default
 // project uses the VM's placeholder costume (see `serialization/sb3.js`), which references no asset data.

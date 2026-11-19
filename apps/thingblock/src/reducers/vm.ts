@@ -1,5 +1,4 @@
 import VM from '@thingblock/thingblock-vm'
-import type { GUIConfig } from '../gui-config'
 
 const SET_VM = 'scratch-gui/vm/SET_VM'
 
@@ -8,11 +7,7 @@ interface VmAction {
   vm: VM
 }
 
-export const vmInitialState = (config: GUIConfig): VM => {
-  const vm = new VM()
-  vm.attachStorage(config.storage.scratchStorage)
-  return vm
-}
+export const vmInitialState = (): VM => new VM()
 
 const reducer = (state: VM | null = null, action: VmAction): VM | null => {
   switch (action.type) {
