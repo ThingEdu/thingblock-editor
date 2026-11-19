@@ -6,7 +6,6 @@ import codeReducer, { codeInitialState } from './code'
 import connectionModalReducer, { connectionModalInitialState } from './connection-modal'
 import customProceduresReducer, { customProceduresInitialState } from './custom-procedures'
 import editorTabReducer, { editorTabInitialState } from './editor-tab'
-import fontsLoadedReducer, { fontsLoadedInitialState } from './fonts-loaded'
 import modalReducer, { modalsInitialState } from './modals'
 import platformReducer, { platformInitialState } from './platform'
 import projectChangedReducer, { projectChangedInitialState } from './project-changed'
@@ -15,7 +14,6 @@ import projectTitleReducer, { projectTitleInitialState } from './project-title'
 import restoreDeletionReducer, { restoreDeletionInitialState } from './restore-deletion'
 import settingsReducer, { settingsInitialState } from './settings'
 import thingbotTelemetrixReducer, { thingbotTelemetrixInitialState } from './thingbot-telemetrix'
-import timeoutReducer, { timeoutInitialState } from './timeout'
 import toolboxReducer, { toolboxInitialState } from './toolbox'
 import vmReducer, { vmInitialState } from './vm'
 import vmStatusReducer, { vmStatusInitialState } from './vm-status'
@@ -33,7 +31,6 @@ export const buildInitialState = () => ({
   connectionModal: connectionModalInitialState,
   customProcedures: customProceduresInitialState,
   editorTab: editorTabInitialState,
-  fontsLoaded: fontsLoadedInitialState,
   modals: modalsInitialState,
   platform: platformInitialState,
   projectChanged: projectChangedInitialState,
@@ -42,7 +39,6 @@ export const buildInitialState = () => ({
   restoreDeletion: restoreDeletionInitialState,
   settings: settingsInitialState,
   thingbotTelemetrix: thingbotTelemetrixInitialState,
-  timeout: timeoutInitialState,
   toolbox: toolboxInitialState,
   vm: vmInitialState(),
   vmStatus: vmStatusInitialState,
@@ -57,7 +53,6 @@ const guiReducer = combineReducers({
   connectionModal: connectionModalReducer,
   customProcedures: customProceduresReducer,
   editorTab: editorTabReducer,
-  fontsLoaded: fontsLoadedReducer,
   modals: modalReducer,
   platform: platformReducer,
   projectChanged: projectChangedReducer,
@@ -66,7 +61,6 @@ const guiReducer = combineReducers({
   restoreDeletion: restoreDeletionReducer,
   settings: settingsReducer,
   thingbotTelemetrix: thingbotTelemetrixReducer,
-  timeout: timeoutReducer,
   toolbox: toolboxReducer,
   vm: vmReducer,
   vmStatus: vmStatusReducer,

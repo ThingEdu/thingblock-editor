@@ -42,15 +42,6 @@ export interface AlertDefinition {
   showSaveNow?: boolean
 }
 
-const projectAlerts = [
-  'createCopySuccess',
-  'creatingCopy',
-  'createRemixSuccess',
-  'creatingRemix',
-  'saveSuccess',
-  'saving',
-]
-
 const alerts: AlertDefinition[] = [
   {
     alertId: 'savedToFile',
@@ -85,121 +76,6 @@ const alerts: AlertDefinition[] = [
     iconURL: failImage,
     level: AlertLevels.WARN,
     maxDisplaySecs: 10,
-  },
-  {
-    alertId: 'createCopySuccess',
-    alertType: AlertTypes.STANDARD,
-    clearList: projectAlerts,
-    content: (
-      <FormattedMessage
-        defaultMessage="Project saved as a copy."
-        description="Message indicating that project was successfully created"
-        id="gui.alerts.createcopysuccess"
-      />
-    ),
-    iconURL: successImage,
-    level: AlertLevels.SUCCESS,
-    maxDisplaySecs: 5,
-  },
-  {
-    alertId: 'createRemixSuccess',
-    alertType: AlertTypes.STANDARD,
-    clearList: projectAlerts,
-    content: (
-      <FormattedMessage
-        defaultMessage="Project saved as a remix."
-        description="Message indicating that project was successfully created"
-        id="gui.alerts.createremixsuccess"
-      />
-    ),
-    iconURL: successImage,
-    level: AlertLevels.SUCCESS,
-    maxDisplaySecs: 5,
-  },
-  {
-    alertId: 'creatingCopy',
-    alertType: AlertTypes.STANDARD,
-    clearList: projectAlerts,
-    content: (
-      <FormattedMessage
-        defaultMessage="Copying project…"
-        description="Message indicating that project is in process of copying"
-        id="gui.alerts.creatingCopy"
-      />
-    ),
-    iconSpinner: true,
-    level: AlertLevels.SUCCESS,
-  },
-  {
-    alertId: 'creatingRemix',
-    alertType: AlertTypes.STANDARD,
-    clearList: projectAlerts,
-    content: (
-      <FormattedMessage
-        defaultMessage="Remixing project…"
-        description="Message indicating that project is in process of remixing"
-        id="gui.alerts.creatingRemix"
-      />
-    ),
-    iconSpinner: true,
-    level: AlertLevels.SUCCESS,
-  },
-  {
-    alertId: 'creatingError',
-    clearList: projectAlerts,
-    closeButton: true,
-    content: (
-      <FormattedMessage
-        defaultMessage="Could not create the project. Please try again!"
-        description="Message indicating that project could not be created"
-        id="gui.alerts.creatingError"
-      />
-    ),
-    level: AlertLevels.WARN,
-  },
-  {
-    alertId: 'savingError',
-    clearList: projectAlerts,
-    showDownload: true,
-    showSaveNow: true,
-    closeButton: false,
-    content: (
-      <FormattedMessage
-        defaultMessage="Project could not save."
-        description="Message indicating that project could not be saved"
-        id="gui.alerts.savingError"
-      />
-    ),
-    level: AlertLevels.WARN,
-  },
-  {
-    alertId: 'saveSuccess',
-    alertType: AlertTypes.INLINE,
-    clearList: ['saveSuccess', 'saving', 'savingError'],
-    content: (
-      <FormattedMessage
-        defaultMessage="Project saved."
-        description="Message indicating that project was successfully saved"
-        id="gui.alerts.savesuccess"
-      />
-    ),
-    iconURL: successImage,
-    level: AlertLevels.SUCCESS,
-    maxDisplaySecs: 3,
-  },
-  {
-    alertId: 'saving',
-    alertType: AlertTypes.INLINE,
-    clearList: ['saveSuccess', 'saving', 'savingError'],
-    content: (
-      <FormattedMessage
-        defaultMessage="Saving project…"
-        description="Message indicating that project is in process of saving"
-        id="gui.alerts.saving"
-      />
-    ),
-    iconSpinner: true,
-    level: AlertLevels.INFO,
   },
   {
     alertId: 'loadingExtensionData',

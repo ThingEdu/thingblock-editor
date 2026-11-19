@@ -13,10 +13,10 @@ import alertsReducer, {
 
 const unrelatedAction = { type: 'anything' } as unknown as ReturnType<typeof closeAlert>
 
-const savingAlert: Alert = {
-  alertId: 'saving',
-  alertType: AlertTypes.INLINE,
-  level: AlertLevels.SUCCESS,
+const errorAlert: Alert = {
+  alertId: 'saveToFileError',
+  alertType: AlertTypes.STANDARD,
+  level: AlertLevels.WARN,
   iconURL: '/no_image_here.jpg',
 }
 
@@ -27,30 +27,22 @@ test('initialState', () => {
 })
 
 test('create one standard alert', () => {
-  const resultState = alertsReducer(undefined, showStandardAlert('creatingCopy'))
+  const resultState = alertsReducer(undefined, showStandardAlert('loadingExtensionData'))
   expect(resultState.alertsList.length).toBe(1)
-  expect(resultState.alertsList[0].alertId).toBe('creatingCopy')
+  expect(resultState.alertsList[0].alertId).toBe('loadingExtensionData')
   expect(resultState.alertsList[0].alertType).toBe(AlertTypes.STANDARD)
   expect(resultState.alertsList[0].level).toBe(AlertLevels.SUCCESS)
 })
 
 test('add several standard alerts', () => {
-  const action = showStandardAlert('creatingCopy')
-  let resultState = alertsReducer(withAlerts([savingAlert]), action)
+  const action = showStandardAlert('savedToFile')
+  let resultState = alertsReducer(withAlerts([errorAlert]), action)
   resultState = alertsReducer(resultState, action)
   resultState = alertsReducer(resultState, action)
   expect(resultState.alertsList.length).toBe(1)
   expect(resultState.alertsList[0].alertType).toBe(AlertTypes.STANDARD)
   expect(resultState.alertsList[0].iconURL).not.toBe('/no_image_here.jpg')
-  expect(resultState.alertsList[0].alertId).toBe('creatingCopy')
-})
-
-test('create one inline alert message', () => {
-  const resultState = alertsReducer(undefined, showStandardAlert('saving'))
-  expect(resultState.alertsList.length).toBe(1)
-  expect(resultState.alertsList[0].alertId).toBe('saving')
-  expect(resultState.alertsList[0].alertType).toBe(AlertTypes.INLINE)
-  expect(resultState.alertsList[0].level).toBe(AlertLevels.INFO)
+  expect(resultState.alertsList[0].alertId).toBe('savedToFile')
 })
 
 test('alert content can depend on the data it is shown with', () => {
@@ -63,9 +55,9 @@ test('an unknown alert id shows nothing', () => {
 })
 
 test('can close alerts by index', () => {
-  let resultState = alertsReducer(withAlerts([savingAlert]), closeAlert(0))
+  let resultState = alertsReducer(withAlerts([errorAlert]), closeAlert(0))
   expect(resultState.alertsList.length).toBe(0)
-  resultState = alertsReducer(resultState, showStandardAlert('creatingCopy'))
+  resultState = alertsReducer(resultState, showStandardAlert('loadingExtensionData'))
   expect(resultState.alertsList.length).toBe(1)
 })
 
@@ -86,18 +78,18 @@ test('can close a single alert by id', () => {
 })
 
 test('related alerts can clear each other', () => {
-  const creatingAlert: Alert = { ...savingAlert, alertId: 'creatingCopy', alertType: AlertTypes.STANDARD }
-  const resultState = alertsReducer(withAlerts([savingAlert, creatingAlert]), showStandardAlert('saveSuccess'))
-  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['creatingCopy', 'saveSuccess'])
+  const loadingAlert: Alert = { ...errorAlert, alertId: 'loadingExtensionData' }
+  const resultState = alertsReducer(withAlerts([errorAlert, loadingAlert]), showStandardAlert('savedToFile'))
+  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['loadingExtensionData', 'savedToFile'])
 })
 
 test('several related alerts can be cleared at once', () => {
-  const createAction = showStandardAlert('creatingCopy')
-  let resultState = alertsReducer(undefined, createAction)
-  resultState = alertsReducer(resultState, createAction)
-  resultState = alertsReducer(resultState, createAction)
-  resultState = alertsReducer(resultState, showStandardAlert('createCopySuccess'))
-  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['createCopySuccess'])
+  const savedAction = showStandardAlert('savedToFile')
+  let resultState = alertsReducer(undefined, savedAction)
+  resultState = alertsReducer(resultState, savedAction)
+  resultState = alertsReducer(resultState, savedAction)
+  resultState = alertsReducer(resultState, showStandardAlert('saveToFileError'))
+  expect(resultState.alertsList.map((a) => a.alertId)).toEqual(['saveToFileError'])
 })
 
 test('showExtensionAlert adds a reconnect alert for a known extension', () => {
