@@ -2,8 +2,7 @@ import classNames from 'classnames'
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl'
 import { useAppDispatch } from '../../app/store'
 import debugIcon from '../../lib/assets/icon--debug.svg'
-import settingsIcon from '../../lib/assets/icon--settings.svg'
-import { openDebugModal, openSettingsModal } from '../../reducers/modals'
+import { openDebugModal } from '../../reducers/modals'
 import Box from '../box/box'
 import Divider from '../divider/divider'
 import InputProjectTitle from '../input-project-title/input-project-title'
@@ -25,11 +24,6 @@ const ariaMessages = defineMessages({
     defaultMessage: 'Debug',
     description: 'accessibility text for the debug button',
   },
-  settings: {
-    id: 'gui.menuBar.settingsButton',
-    defaultMessage: 'Settings',
-    description: 'accessibility text for the settings button',
-  },
   home: {
     id: 'gui.menuBar.home',
     defaultMessage: 'Home',
@@ -40,8 +34,8 @@ const ariaMessages = defineMessages({
 const HOME_URL = 'https://github.com/ThingEdu'
 
 /**
- * The editor's top bar: the logo, the Settings, File, Edit and board menus, the project title, the debug tips and
- * the settings button.
+ * The editor's top bar: the logo, the File, Edit and board menus, the project title, the debug tips and, at the far
+ * end, the Settings menu.
  * @param props - React props.
  * @param props.className - An extra class, to place the bar.
  * @returns The bar, as the page's header.
@@ -65,7 +59,6 @@ const MenuBar = ({ className }: { className?: string }) => {
           >
             <MenuBarLogo className={styles.logo} />
           </button>
-          <MenuSettings />
           <MenuFile />
           <MenuEdit />
           <MenuBoard />
@@ -87,14 +80,8 @@ const MenuBar = ({ className }: { className?: string }) => {
           </button>
         </div>
       </div>
-      <div className={styles.accountInfoGroup}>
-        <button
-          aria-label={intl.formatMessage(ariaMessages.settings)}
-          className={classNames(styles.menuBarItem, styles.hoverable, styles.settingsButton)}
-          onClick={() => dispatch(openSettingsModal())}
-        >
-          <img alt="" className={styles.settingsIcon} src={settingsIcon} />
-        </button>
+      <div className={styles.settingsGroup}>
+        <MenuSettings />
       </div>
     </Box>
   )

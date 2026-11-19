@@ -43,12 +43,13 @@
   margin: 0 0.25rem 0 0.5rem;
 }
 
+/* Points the way the submenus open: toward the middle of the bar */
 .expand-caret {
-  transform: rotate(-90deg);
+  transform: rotate(90deg);
 }
 
 [dir='rtl'] .expand-caret {
-  transform: rotate(90deg);
+  transform: rotate(-90deg);
 }
 
 @media only screen and (max-width: 1024px) {

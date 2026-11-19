@@ -97,32 +97,12 @@
   height: 34px;
 }
 
-.account-info-group {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.account-info-group .menu-bar-item {
-  margin: 0 0.25rem;
-  padding: 0 0.75rem;
-}
-
 .help-icon {
   margin: 0 0.25rem 0 0;
 }
 
 [dir='rtl'] .help-icon {
   margin: 0 0 0 0.25rem;
-}
-
-.settings-button {
-  padding: 0 0.25rem;
-}
-
-.settings-icon {
-  height: 1.25rem;
-  vertical-align: middle;
 }
 
 .collapsible-label {
@@ -153,4 +133,9 @@
 
 [dir='rtl'] .menu-shortcut {
   float: left;
+}
+
+.settings-group {
+  display: flex;
+  padding: 0 0.5rem;
 }

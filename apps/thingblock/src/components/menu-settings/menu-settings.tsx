@@ -8,11 +8,12 @@ import { type ColorMode, colorModeMap, DEFAULT_MODE, HIGH_CONTRAST_MODE } from '
 import { persistColorMode } from '../../lib/settings/color-mode/persistence'
 import { type Theme, themeMap } from '../../lib/settings/theme'
 import { persistTheme } from '../../lib/settings/theme/persistence'
+import { openSettingsModal } from '../../reducers/modals'
 import { setColorMode, setTheme } from '../../reducers/settings'
 import menuBarStyles from '../menu-bar/menu-bar.module.css'
 import MenuLanguage from '../menu-language/menu-language'
 import MenuPreference from '../menu-preference/menu-preference'
-import Menu, { MenuSection } from '../menu/menu'
+import Menu, { MenuItem, MenuSection } from '../menu/menu'
 import themeIcon from './icon--theme.svg'
 import styles from './menu-settings.module.css'
 
@@ -42,7 +43,8 @@ const colorModes = {
 }
 
 /**
- * The menu bar's Settings menu: the language, the block theme and the color mode, each remembered on this machine.
+ * The menu bar's Settings menu: the language, the block theme and the color mode, each remembered on this machine, and
+ * the item that opens the settings modal.
  * @returns The menu's button, with the menu while it is open.
  */
 const MenuSettings = () => {
@@ -51,7 +53,8 @@ const MenuSettings = () => {
   const isRtl = useAppSelector((state) => state.locales.isRtl)
   const colorMode = useAppSelector((state) => state.scratchGui.settings.colorMode)
   const theme = useAppSelector((state) => state.scratchGui.settings.theme)
-  const { isExpanded, handleOnOpen, handleOnClose, handleKeyDown, menuRef } = useMenuNavigation<HTMLButtonElement>()
+  const { isExpanded, handleOnOpen, handleOnClose, handleKeyDown, handleKeyDownOpenMenu, menuRef } =
+    useMenuNavigation<HTMLButtonElement>()
 
   const handleChangeColorMode = (newColorMode: ColorMode) => {
     dispatch(setColorMode(newColorMode))
@@ -79,7 +82,8 @@ const MenuSettings = () => {
       </span>
       <img alt="" src={dropdownCaret} />
       <div className={menuBarStyles.menuBarMenu}>
-        <Menu open={isExpanded()} place={isRtl ? 'left' : 'right'} onRequestClose={handleOnClose}>
+        {/* At the bar's far end, so it and its submenus open inward */}
+        <Menu open={isExpanded()} place={isRtl ? 'right' : 'left'} onRequestClose={handleOnClose}>
           <MenuSection>
             <MenuLanguage depth={2} />
             <MenuPreference
@@ -97,6 +101,19 @@ const MenuSettings = () => {
               selectedItemKey={colorMode}
               depth={2}
             />
+          </MenuSection>
+          <MenuSection>
+            <MenuItem
+              onClick={() => dispatch(openSettingsModal())}
+              isDataMenuItem
+              onParentKeyDown={handleKeyDownOpenMenu}
+            >
+              <FormattedMessage
+                defaultMessage="More settings…"
+                description="Settings menu item that opens the settings modal"
+                id="gui.menuBar.moreSettings"
+              />
+            </MenuItem>
           </MenuSection>
         </Menu>
       </div>

@@ -47,7 +47,7 @@ const MenuPreference = <K extends string>(props: MenuPreferenceProps<K>) => {
         </span>
         <img alt="" className={styles.expandCaret} src={dropdownCaret} />
       </button>
-      <MenuSubmenu place={isRtl ? 'left' : 'right'}>
+      <MenuSubmenu place={isRtl ? 'right' : 'left'}>
         {itemKeys.map((itemKey) => {
           const isSelected = itemKey === selectedItemKey
           const item = itemsMap[itemKey]

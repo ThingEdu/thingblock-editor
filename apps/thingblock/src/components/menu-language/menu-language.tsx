@@ -69,7 +69,7 @@ const MenuLanguage = ({ depth }: { depth: number }) => {
         </span>
         <img alt="" className={stylesSettingsMenu.expandCaret} src={dropdownCaret} />
       </button>
-      <MenuSubmenu className={styles.languageSubmenu} place={isRtl ? 'left' : 'right'}>
+      <MenuSubmenu className={styles.languageSubmenu} place={isRtl ? 'right' : 'left'}>
         {SUPPORTED_LOCALES.map((locale) => {
           const isSelected = currentLocale === locale
           return (
