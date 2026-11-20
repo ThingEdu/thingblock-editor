@@ -1,272 +1,46 @@
-# Agent Guide: scratch-editor
+# Agent Guide: thingblock-editor
 
-## AI-assisted development policy
+## What this is
 
-See [CONTRIBUTING.AI.md](https://github.com/scratchfoundation/.github/blob/main/CONTRIBUTING.AI.md) for Scratch's
-org-wide policy on AI-assisted contributions. The short version: human developers remain responsible for all code
-they submit. Do not submit code you cannot explain and defend in a review.
+`thingblock-editor` is an npm workspaces monorepo that turns the Scratch editor into a block-based firmware IDE for Arduino-compatible hardware. Packages use the `@thingblock/` scope, except `task-herder` (`@scratch/`). `thingblock-desktop` builds the editor from a sibling checkout of this repo.
 
-## Agent defaults
-
-Use these defaults unless the user asks otherwise:
-
-1. Keep changes minimal and scoped to the user request. Do not refactor surrounding code, add features, or clean up
-   style in areas you weren't asked to touch.
-2. Do not preserve backward compatibility when it isn't required. When all callers are internal to a package,
-   rename or restructure freely. All packages in this repo are published to npm and consumed externally, so treat
-   each package's public exports as a contract and preserve compatibility unless explicitly told otherwise.
-3. Write comments that explain the current code, not its history. Do not reference prior implementations,
-   intermediate states, or what the code "used to do." If an approach seems counterintuitive, explain why it is
-   correct now — not why it changed.
-4. Prefer fixing root causes over adding surface-level workarounds or assertions.
-5. When fixing a bug, start by adding one or more failing tests that reproduce it, then implement the fix. Iterate
-   until all tests pass, including but not limited to the new tests. Use the test framework already in use in that
-   package — see "Packages at a glance" below.
-6. When adding runtime guards for states that should never happen, log actionable context (function name, relevant
-   IDs, key flags) rather than failing silently. Use `console.warn` for recoverable states and `console.error` for
-   invalid required data.
-7. Preserve failure semantics when refactoring. An implicit crash (null dereference, `!` assertion) should become
-   an explicit `throw` with a useful message — not silent failure. Code that previously wouldn't crash still
-   shouldn't, but consider whether a warning is warranted. Replacing a potential null dereference with
-   `if (!foo) return` could make a bug harder to find; `if (!foo) throw new Error(...)` surfaces it.
-8. Do not add error handling, fallbacks, or validation for scenarios that cannot happen. Trust internal code and
-   framework guarantees. Only validate at system boundaries (user input, external APIs).
-
-## What this repository is
-
-`scratch-editor` is an npm workspaces monorepo that extends the Scratch visual programming environment into a
-drag-and-drop firmware development IDE for Arduino-compatible hardware. Users program physical devices —
-motors, sensors, servos, LEDs — using Scratch blocks, with the extension architecture designed to support any
-Arduino-compatible device without changes to the core editor.
-
-The longer-term directions include educational hardware programming (making physical computing accessible to
-beginners through Scratch's block metaphor) and a general-purpose hardware extension platform reusable for
-future device integrations.
-
-Packages use the `@thingblock/` npm scope, except `task-herder`, which keeps its upstream `@scratch/` name. The
-desktop shell (`thingblock-desktop`) builds `thingblock-gui` from a sibling checkout of this repo.
-
-## Build and lint
-
-Run workspace-wide commands from the repo root:
-
-```sh
-npm run build    # Build all packages (production)
-npm test         # Test all packages
-npm run clean    # Clean all packages
-```
-
-Run per-package commands from the package directory, or from the root with `--workspace`:
-
-```sh
-cd packages/thingblock-vm && npm test
-# or equivalently:
-npm test --workspace=packages/thingblock-vm
-```
-
-Each package defines its own `test` and `build` scripts; see "Packages at a glance" for specifics.
-
-**Commit messages are enforced.** Husky + commitlint validate every commit against the
-[Conventional Commits](https://www.conventionalcommits.org/) format. A commit that doesn't conform will be
-rejected by the pre-commit hook.
-
-## Repository layout
+## Layout
 
 ```text
-apps/
-├── thingblock/               Future main editor app; replaces thingblock-gui once it is split into libraries
-└── thingblock-virtualspace/  Web-only virtual robot environment (private, never published)
-packages/
-├── thingblock-gui/         React-based editor UI
-├── thingblock-vm/          Virtual machine that runs Scratch projects
-├── thingblock-blocks/      Blockly-based block editor (workspace fork)
-├── thingblock-storage/     Asset and project file storage layer
-└── task-herder/            Async task scheduler with rate limiting
-scripts/                    Monorepo-level utility scripts
+apps/                        deployed apps (private workspaces)
+├── thingblock/              TypeScript editor app, a port of thingblock-gui
+└── thingblock-virtualspace/ web-only virtual robot environment
+packages/                    libraries
+├── thingblock-gui/          React editor UI
+├── thingblock-vm/           VM that runs projects
+├── thingblock-blocks/       Blockly-based block editor (has its own AGENTS.md)
+├── thingblock-resource/     resource packs: device manifests, peripheral blocks, Arduino codegen
+├── thingblock-storage/      asset and project storage
+└── task-herder/             async task scheduler
+scripts/                     monorepo utility scripts
 ```
 
-`apps/` holds deployed applications; they are private workspaces, not npm packages. `packages/` holds the
-libraries.
+Each package has its own language, bundler and test framework; check its `package.json` and follow what is already there.
 
-## Packages at a glance
+## Commands
 
-| Package | Language | Bundler | Tests |
-| - | - | - | - |
-| `thingblock-gui` | JavaScript / JSX (some TypeScript) | webpack | Jest |
-| `thingblock-vm` | JavaScript (migrating to TypeScript) | webpack | Tap |
-| `thingblock-blocks` | TypeScript | webpack | Vitest |
-| `thingblock-storage` | JavaScript | webpack | Jest |
-| `task-herder` | TypeScript | Vite | Vitest |
-| `thingblock` (app) | TypeScript | Vite | Vitest |
-| `thingblock-virtualspace` (app) | TypeScript | Vite | Vitest |
-
-`task-herder` represents the target stack for new packages (TypeScript + Vite + Vitest). `thingblock-blocks` uses
-the same test framework (Vitest) but retains webpack as its bundler. The remaining packages reflect the legacy
-stack and are being migrated incrementally.
-
-## Technology conventions by package
-
-**For existing packages**: follow the conventions already in use in that package — language, bundler, test
-framework, and style. Do not introduce TypeScript into a JavaScript package, or Vitest into a Jest package,
-unless that migration is the explicit goal of the task.
-
-**For new packages**: follow the org defaults — TypeScript, Vite, Vitest, `eslint-config-scratch`.
-
-All packages use ESLint 9 flat config (`eslint.config.mjs`) with `eslint-config-scratch`. If a package also uses
-Prettier (currently `task-herder`), run `npm run format` in addition to lint.
-
-### thingblock-gui specifics
-
-- React functional components with hooks for new code; class components exist in older code.
-- Keep components presentational where possible; connect to Redux only in container files.
-- Use `react-intl` / `FormattedMessage` for all user-visible strings. Do not hardcode English in JSX.
-- After adding or changing messages, run `npm run i18n:src` to update the translation source file.
-- ThingBlock's own GUI strings are not in `scratch-l10n`: English is each message's `defaultMessage`, Vietnamese
-  goes in `src/locales/vi.json` (keyed by message id, edited by hand) and is merged over scratch-l10n's `vi` in
-  `reducers/locales.js`.
-- Integration tests (`test/integration/`) require a browser environment via Jest + jsdom; they are slow and
-  should not be run unnecessarily.
-- **Sprite UI is removed.** The right panel (formerly stage + sprite selector) is `components/side-panel`. With a
-  board selected it shows `CodeView` and `containers/board-monitor.jsx` (board serial, baud rate); with none it
-  shows only `containers/host-monitor.jsx` (block print output, "ask and wait"). Each pane can be hidden from the
-  panel's menu. Both monitors own their state and render `components/monitor-view`. The VM still runs one implicit
-  device target, but no sprite UI renders.
-- `thingblock-gui`'s webpack build (and dev server) compiles `@thingblock/thingblock-vm` from source through its
-  `webpack` export condition; the GUI's `webpack.config.js` adds the ts-loader rule for the VM's `.ts` files. Jest instead
-  resolves the gitignored `dist/` bundle, so a fresh checkout — or any change to `thingblock-vm` source — needs
-  `npx webpack --progress` in `packages/thingblock-vm` before `thingblock-gui` tests see it; otherwise they silently
-  run against a stale bundle.
-
-### thingblock (app) specifics
-
-- A TypeScript port of `thingblock-gui`, written batch by batch from the leaves up (reducers, `lib/`, components,
-  then the GUI root). It runs (`npm run dev`), but `thingblock-gui` stays the live editor until the app replaces
-  it, so a GUI change must be ported too.
-- State and UI left over from Scratch's stage, sprites and online features (player mode, time travel, account
-  login, telemetry, the project server) are not ported. A project is either the default project, built in
-  memory, or a file; there is no project storage and no project id.
-- `src/lib/` is grouped by editor feature (`project/`, `blocks/`, `preferences/`, `ui/`, `alerts/`, `settings/`,
-  `boards/`) rather than mirroring the GUI's flat `lib/`; helpers used across areas (`log`, `platform`,
-  `shared-messages`) sit at its top. Each extension's code and assets live in its own folder under `extensions/`,
-  next to `extensions/index.tsx`, the extension library list: Camera AI's tracker, from the GUI's `lib/vision/`, is
-  in `extensions/camera-ai/`. Its models are not committed: `scripts/fetch-ai-models.mjs` downloads them into
-  `public/static/ai-models/` before `dev` and `build`.
-- File and folder names are kebab-case, and tests mirror `src/` under `test/`. A ported `lib/` or reducer file
-  keeps its GUI name (kebab-cased), except `lib/blocks.js`, which is `lib/blocks/connect-blocks.ts`, so the port of a
-  changed GUI file is found by its name.
-- Components are named parent first. A component built on a reusable one is named after it (`library-board` renders
-  `Library`, `button-close` is a kind of button, `modal-settings` renders `Modal`), and a part with one user sits in
-  that user's folder, named after it (`library-board/library-board-card`, `alerts/alerts-item`). Component names
-  follow their files (`LibraryBoard`, `ButtonClose`).
-- Components are function components, except the Blockly workspace (`components/blocks`, a class with `connect`) and
-  `ErrorBoundary`. A feature component reads the store itself (`useAppSelector`, `useAppDispatch`, `useVm`); a
-  reusable one (`library`, `modal`, `menu`, `monitor-view`, `button`) takes only props. There is no
-  `src/containers/`. Each component's styles are a CSS module (`x.module.css`, no PostCSS) using the custom
-  properties (colors, units, z-index) defined on `:root` in `src/css/`. `components/gui` is the editor's page,
-  rendered by `Editor`.
-- An extension's pane in the side panel is the `pane` of its entry in `lib/extensions/index.tsx`: a component named
-  `extension-pane-<extension>` that renders `ExtensionPane` (Camera AI's is `extension-pane-camera-ai`). The side
-  panel shows the panes of the extensions in the project (the `loadedExtensions` slice, filled from the VM's
-  `EXTENSION_ADDED`) and lists each in its menu, where it can be hidden. No other code names a specific extension.
-- The GUI's higher-order components are hooks in `src/hooks/`. `src/app/` holds the store (`createEditorStore`, with
-  the typed `useAppSelector` and `useAppDispatch`), the providers, `App` and `Editor`, the port of
-  `containers/gui.jsx`, which runs the hooks that serve the whole editor and renders its page. The state keeps the
-  GUI's `scratchGui` key, so a ported selector reads as it does in the GUI.
-- It types the VM with `thingblock-vm`'s generated declarations in its gitignored `dist/types`, so a fresh checkout
-  or a VM change needs `npm run build:libs` before the app's `tsc` sees it. The VM's browser bundle is UMD, so
-  `vite.config.mjs` has the dev server pre-bundle it.
-- Reducers type their `action` as only the actions they handle, so `src/reducers/**` turns off
-  `@typescript-eslint/no-unnecessary-condition` for the `default` branch that unrelated actions reach.
-
-### thingblock-virtualspace specifics
-
-- Its UI components are TSX copies of `thingblock-gui` components in `src/components/`, styled with plain CSS
-  modules (`*.module.css`, no PostCSS). They are not shared with the GUI, so a change to one copy does not reach
-  the other.
-
-### thingblock-blocks specifics
-
-- Block definitions live in `src/blocks/`. Each file registers blocks via `Blockly.Blocks.<block_id> = { init() }`.
-- `src/index.ts` imports all block files and exports the configured Blockly instance.
-- Uses TypeScript throughout; follow the existing patterns when adding or removing block definitions.
-
-### thingblock-vm specifics
-
-- Extension entry points live in `src/extensions/`. Each extension exports a class with `getInfo()` and block
-  implementation methods. New and converted extensions are TypeScript and implement `Extension` from
-  `src/extensions/extension.ts`; because they compile to ES modules, `extension-manager.js` must require them
-  with `.default`. `npm run typecheck` (part of `npm test`) is what checks them — eslint alone does not.
-- TS unit tests are `test/unit/*.ts`. Tap runs them through ts-node with `tsconfig.test.json` (CommonJS output),
-  which the tap scripts select via `TS_NODE_PROJECT`. JS code that `require`s a TS module takes its `.default` (or
-  a named export), since TS compiles to ES modules.
-- The engine (`src/engine/`) is TypeScript. Every event goes through one untyped `EventBus` per VM
-  (`src/event/event-bus.ts`), shared as `vm.events` and `runtime.events`, with names grouped by the code that emits
-  them in `src/event/event-name.ts`. The GUI subscribes on `vm.events`.
-- `VirtualMachine` (`src/virtual-machine/index.ts`) keeps only lifecycle and setup methods flat; the rest lives
-  in owned parts: `vm.workspace` (Blockly events, editing target, workspace rendering), `vm.project` (load,
-  save), `vm.devices` (boards, resource packs, peripherals) and `vm.link` (board operations). Each part is built
-  from the runtime, an `emit` function and the sibling parts it uses, never the VM itself; add new behavior to
-  the part it belongs to. The runtime holds the only copy of the editing target.
-- `npm run build` also emits type declarations into `dist/types` (`build:types`), exposed through the `types` export
-  condition. `tsc` turns a JS `require('./x').default` into an invalid `import X = Y.default` when that value's
-  type reaches a declaration, so such requires are destructured (`const {default: X} = require('./x')`).
-- Firmware device manifests live in `src/extensions/devices/`. Board-selection icons belong in each device's
-  `assets/icon.svg` and are exposed through `vm.devices.getDeviceList()` as `iconURL`; do not add GUI-side icon
-  maps for VM devices.
-- i18n is manual: the editor ships English and Vietnamese only. English lives inline as each `formatMessage`
-  call's `default`; Vietnamese belongs in `src/locales/vi.json`, keyed by message id, and reaches the runtime
-  through `vm.setLocale()`. There is no extraction step — add and remove ids in `vi.json` by hand.
-- The target model is firmware-only: a project is a stage plus one device, each an `engine/target.ts` `Target`
-  hosting blocks, variables and comments — no sprites, clones, costumes, sounds, rendering or motion.
-  Projects are `.tb` files in sb3 format (`serialization/sb3.js`), persisting blocks/variables plus the firmware
-  `board` field; saves carry a placeholder costume and an empty sounds list only because scratch-parser requires
-  them. Scratch 1/2 projects (`.sb`/`.sb2`) are not supported, and saved projects no longer round-trip through
-  stock Scratch.
-- Resource packs are served by the link helper (`LinkController.resourceOrigin` → the helper backend's `/resources` route) unless the
-  host supplies its own base through `globalThis.__THINGBLOCK_RESOURCE_BASE__`, read once in `link-controller.ts`
-  and passed to the helper backend as `resourceBase`. That global is the seam for a host that ships the packs itself —
-  the Tauri desktop shell does, because Chromium blocks the editor's cross-address-space HTTP calls into
-  loopback. Keep the editor host-agnostic: no shell-specific assets or paths belong in its build.
-- A peripheral pack's manifest `id` must equal the opcode prefix its `blocks.ts` registers (pack `serial` owns
-  `serial_*`). The sb3 deserializer derives a saved project's extension ids from opcode prefixes, and project load
-  skips any id `DeviceManager.isDeviceExtension` owns before asking `ExtensionManager`, so a pack whose id differs
-  cannot be recognized as a device extension. `test/packIds.test.ts` enforces this across every pack.
-- Camera AI's head and body blocks read a `pose` (MediaPipe pose landmarker, 33 points) carried in the same
-  `CAMERA_AI_VISION_RESULTS` frame as the hands. The GUI runs that model only when the VM's `CAMERA_COMMAND` says
-  `pose: true` (the project has a head/body block or the flap hat).
-- `virtual-machine/resource-pack-manager.ts` is a placeholder recording the direction for resource packs as the
-  general feature unit (not only devices/peripherals); read its header before adding a new pack kind.
-
-## npm workflow
-
-Use `npm ci` from the repo root to install all workspace dependencies from `package-lock.json`.
-
-When adding or updating a dependency in a specific package:
+From the repo root:
 
 ```sh
-npm install some-package@version --workspace=packages/thingblock-vm
+npm ci
+npm start           # thingblock-gui dev server
+npm run build       # build all workspaces
+npm run build:libs  # build the libraries only
+npm test            # test all workspaces
 ```
 
-This updates both `package.json` in the target package and the root `package-lock.json`.
+Per package: `npm test --workspace=packages/<name>`, or run scripts from the package directory. Add a dependency with `npm install <pkg>@<version> --workspace=packages/<name>`.
 
-Keep each section of a package's `package.json` (`dependencies`, `devDependencies`, `scripts`) in alphabetical
-order. The same applies to the root `package.json`.
+Build order matters:
 
-**Do not publish packages manually.** Every package has a `prepublishOnly` script that will error if you try.
-Publishing is handled exclusively by the CI release pipeline.
+- `thingblock-gui` Jest tests resolve `thingblock-vm`'s `dist/` bundle; rebuild the VM (`npx webpack --progress` in `packages/thingblock-vm`) after changing it.
+- `apps/thingblock` types the VM from `dist/types`; run `npm run build:libs` before its `tsc`.
 
-## Before submitting changes
+After changing GUI messages, run `npm run i18n:src` in `packages/thingblock-gui`.
 
-Review all changes and confirm:
-
-- **Scope**: Changes are confined to the user request; nothing extra was added or modified.
-- **Correctness**: Logic is sound and edge cases were considered.
-- **Comments**: Comments are necessary, short, and clear; self-explanatory code has none.
-- **Simplicity**: Implementation is as simple as possible; no speculative abstractions remain.
-- **Documentation**: Update `AGENTS.md` and any other documentation files whose content is affected by the change
-  (commands, repo structure, conventions, etc.). The "Packages at a glance" table is particularly prone to going
-  stale when a package migrates its tooling.
-- **Commit format**: Commit message follows Conventional Commits — the husky hook will reject it otherwise.
-- **Build passes**: `npm run build` (or `npm run build` in the affected package) completes successfully.
-- **Tests pass**: `npm test` (or `npm test` in the affected package) completes with no failures.
-- **No lint errors**: `npm run test:lint` (or `npm run lint`) passes in the affected package.
+Commits must follow Conventional Commits; a commitlint hook rejects others. Packages are published by CI only.
