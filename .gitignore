@@ -139,3 +139,6 @@ dist
 
 # Depricated thingblock external resources (for migration)
 thingblock-external-resources-main
+
+# Nix Environment 
+flake.lock
