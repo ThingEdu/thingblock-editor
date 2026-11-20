@@ -142,3 +142,4 @@ thingblock-external-resources-main
 
 # Nix Environment 
 flake.lock
+flake.nix
