@@ -1,6 +1,6 @@
 {
   "name": "@thingblock/thingblock-vm",
-  "version": "0.8.0-preview-20261115",
+  "version": "0.9.0-preview-20261120",
   "description": "Virtual Machine for Scratch 3.0",
   "keywords": [],
   "homepage": "https://github.com/ThingEdu/thingblock-editor#readme",
@@ -61,7 +61,7 @@
     "allow-incomplete-coverage": true
   },
   "dependencies": {
-    "@thingblock/thingblock-storage": "0.8.0-preview-20261115",
+    "@thingblock/thingblock-storage": "0.9.0-preview-20261120",
     "@vernier/godirect": "1.8.3",
     "arraybuffer-loader": "1.0.8",
     "atob": "2.1.2",
